@@ -9,7 +9,7 @@ The architecture must provide:
 - one authoritative, deterministic gameplay engine shared by browser play and headless simulation;
 - versioned rules that preserve the researched Trigger Knight behavior;
 - stable boundaries between gameplay, presentation, persistence, input, sound, and simulation;
-- replayable state and programmatic single-run and batch execution;
+- reproducible complete runs and programmatic single-run and batch execution;
 - replaceable adapters without turning the project into a generalized game engine.
 
 ## 2. Architecture
@@ -74,7 +74,7 @@ interface GameplayEngine {
 
 `step()` is a deterministic state transition for one 30 Hz logical opportunity. Commands express gameplay intent, such as buying, using an item, pausing, or dismissing a tutorial; they never contain device-specific input. Gates may prevent active gameplay systems from advancing while still allowing commands to be processed.
 
-`GameEvent` reports authoritative outcomes such as encounter changes, damage, purchases, rewards, achievements, and death. `GameObservation` exposes the gameplay information available to an automated player, while `GameView` is the read-only world and HUD model exposed to presentation. Neither exposes mutable domain state. `RunState`, including its randomness state, must be serializable for checkpoints and exact replay.
+`GameEvent` reports authoritative outcomes such as encounter changes, damage, purchases, rewards, achievements, and death. `GameObservation` exposes the gameplay information available to an automated player, while `GameView` is the read-only world and HUD model exposed to presentation. Neither exposes mutable domain state. `RunState` includes the explicit randomness state needed for deterministic transitions. Complete runs are reproduced from their initial inputs and policy; mid-run checkpoint restoration is not required.
 
 ### Presentation boundary
 
@@ -100,9 +100,19 @@ Persistence is also an application boundary. It loads the initial profile and at
 ### Simulation boundary
 
 ```ts
-interface PlayerPolicy {
-  readonly id: string;
+interface PolicyDescriptor {
+  id: string;
+  version: string;
+  config: PolicyConfig;
+}
+
+interface PlayerAgent {
   decide(observation: GameObservation): readonly GameCommand[];
+}
+
+interface PlayerPolicy {
+  readonly descriptor: PolicyDescriptor;
+  createAgent(): PlayerAgent;
 }
 
 interface SimulationRequest {
@@ -115,7 +125,9 @@ interface RunResult {
   schemaVersion: number;
   ruleset: RuleSetId;
   seed: string;
-  policy: string;
+  initialProfileFingerprint: string;
+  policy: PolicyDescriptor;
+  maxSteps: number;
   steps: number;
   activeTicks: number;
   terminalReason: "lifespan" | "combat" | "step-limit";
@@ -135,9 +147,17 @@ interface SimulationRunner {
 }
 ```
 
+The policy descriptor contains a stable identity, an implementation version, and all normalized serializable configuration that can affect decisions. Changing policy behavior or configuration creates a different experiment. `PolicyConfig` is the policy-specific normalized configuration; its concrete representation is selected with the policy implementation.
+
+`createAgent()` returns a fresh agent for every run. An agent may keep private memory during that run, but no mutable state is shared between runs. Starting from a fresh agent, the same observation sequence must produce the same command sequence without ambient randomness, wall-clock input, worker identity, or batch-order dependence. If a future policy intentionally uses randomness, its explicit policy seed becomes part of the experiment inputs and remains separate from gameplay randomness.
+
 Every simulation requires a positive finite `maxSteps`. The budget counts every engine step, including paused or tutorial-gated steps, so a non-progressing policy cannot block a batch indefinitely. Reaching the budget returns `step-limit`; it is a runner termination, not a gameplay death.
 
-Batch execution must be reproducible from the requests and must return normalized results independent of concurrency or completion order. Baseline and candidate rulesets can therefore be compared using the same seeds, profiles, policies, and step limits. Reporting formats and execution strategy are ticket-level decisions built on this contract.
+Every run starts from its initial configuration and executes continuously to gameplay termination or `step-limit`. Mid-run simulation persistence and resumption are not part of this boundary.
+
+Each result directly identifies the inputs that produced it: ruleset, seed, a versioned canonical fingerprint of the initial profile, the policy descriptor, and the configured step limit. The profile snapshot corresponding to the fingerprint is retained with the simulation inputs rather than copied into every result. This keeps results compact while preventing records produced from different profiles, policies, or limits from sharing an apparent identity. A live policy or agent object is never serialized.
+
+Batch execution must be reproducible from its requests and must return normalized results independent of concurrency or completion order. Its purpose is Monte Carlo analysis: vary gameplay seeds, complete every run, and aggregate metrics such as run length, score, progression, encounters, and terminal reasons to characterize the distribution produced by encounter randomness. Baseline and candidate rulesets or policies can use the same seeds, profiles, and step limits for paired per-seed comparisons that distinguish systematic changes from random variation. Reporting formats, shared-input deduplication, and execution strategy are ticket-level decisions built on this contract.
 
 ## 4. Compatibility and modernization boundary
 
@@ -199,7 +219,8 @@ Implementation work must provide evidence that:
 
 - confirmed gameplay behavior and known gameplay-affecting quirks match the research specification;
 - identical complete inputs reproduce identical state, results, and trace hashes;
-- checkpoint replay matches uninterrupted execution;
+- fresh agents given the same observation sequence produce the same command sequence;
+- retained simulation requests and run-result identifiers preserve the complete inputs needed to distinguish and reproduce runs;
 - browser play and headless simulation use the same gameplay engine;
 - presentation changes, output resolution, render rate, and input adapter do not change domain outcomes;
 - a non-progressing policy terminates at its configured step limit;
