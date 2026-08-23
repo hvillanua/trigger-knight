@@ -7,5 +7,6 @@ A future implementation belongs here and should be based on the behavioral speci
 ## Design documents
 
 - [`PRD.md`](PRD.md) — product scope and requirements. This is the product contract to use when breaking the work into implementation tasks.
-- [`TDD.md`](TDD.md) — selected architecture, domain boundaries, technology choices, headless API, deterministic simulation design, and testing strategy.
-- [`PLAN.md`](PLAN.md) — earlier detailed implementation-planning notes retained as supporting context. Where it conflicts with the PRD or TDD, the PRD/TDD take precedence.
+- [`TDD.md`](TDD.md) — durable architecture, system boundaries, and the public contracts between gameplay, presentation, persistence, and simulation.
+
+Task sequencing and implementation details belong in tickets created when that work is ready to begin; they are intentionally not prescribed here.

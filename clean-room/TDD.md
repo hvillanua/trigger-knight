@@ -1,89 +1,53 @@
 # Technical Design Document — Trigger Knight Browser Reimplementation
 
-## 1. Design goals
+## 1. Purpose and scope
 
-The implementation must have one authoritative gameplay engine that:
+This document records the durable architecture and contracts for the browser reimplementation. It deliberately does not prescribe ticket-sized implementation choices such as package selection, source layout, algorithms, task order, CI commands, worker strategy, renderer math, or individual test cases. Those decisions belong in the implementation work that needs them.
 
-- reproduces the versioned Trigger Knight rules;
-- runs identically with or without the browser UI;
-- is deterministic and replayable;
-- can execute large numbers of runs programmatically;
-- keeps rendering, audio, persistence, and input outside gameplay logic;
-- remains easy to extend without turning the project into a generalized game engine.
+The architecture must provide:
 
-The design uses DDD selectively: domain language and boundaries should match the game, but the code remains a single modular application rather than a collection of services.
+- one authoritative, deterministic gameplay engine shared by browser play and headless simulation;
+- versioned rules that preserve the researched Trigger Knight behavior;
+- stable boundaries between gameplay, presentation, persistence, input, sound, and simulation;
+- replayable state and programmatic single-run and batch execution;
+- replaceable adapters without turning the project into a generalized game engine.
 
-## 2. Selected architecture
+## 2. Architecture
 
-Use a **TypeScript modular monolith** with a pure deterministic domain core and separate adapters for browser presentation and batch simulation.
+Use a TypeScript modular application with a pure gameplay domain and adapters around a shared application API.
 
 ```text
-                         +----------------------+
-                         |   Browser adapters   |
-                         | render/input/audio   |
-                         | persistence/scaling  |
-                         +----------+-----------+
-                                    |
-                              commands/events
-                                    |
-+-------------------+      +--------v---------+
-| Headless runners  |----->| Application API  |
-| policies/batches  |      | create/step/run  |
-+-------------------+      +--------+---------+
-                                    |
-                         +----------v-----------+
-                         |    Gameplay domain   |
-                         | Run aggregate        |
-                         | encounters/combat    |
-                         | economy/progression  |
-                         +----------+-----------+
-                                    |
-                         +----------v-----------+
-                         | RuleSet + seeded RNG |
-                         +----------------------+
+                    +-----------------------+
+                    | Browser presentation  |
+                    | view/input/sound/store|
+                    +-----------+-----------+
+                                |
+                         commands/views/events
+                                |
++-------------------+    +------v---------+
+| Simulation runner |--->| Application API|
+| policies/batches  |    | create/step/run|
++-------------------+    +------+---------+
+                                |
+                    +-----------v-----------+
+                    |   Gameplay domain     |
+                    | run and game rules    |
+                    +-----------+-----------+
+                                |
+                    +-----------v-----------+
+                    | RuleSet + explicit RNG|
+                    +-----------------------+
 ```
 
-The browser and simulation tooling must call the same application/domain API. There is no simplified simulation implementation.
+The browser and simulator call the same gameplay API. There is no reduced or approximate simulation model. Dependencies point inward: presentation, persistence, and simulation may depend on application and domain contracts; the domain must not depend on browser, rendering, storage, audio, filesystem, worker, or wall-clock APIs.
 
-## 3. Domain model and boundaries
+The domain uses game-oriented boundaries around run lifecycle, encounters, combat, economy, progression, rules, and randomness. These are logical modules inside one application, not separately deployed services.
 
-### Run aggregate
+## 3. Public contracts
 
-`Run` is the aggregate root for one playthrough. It owns authoritative run state and coordinates gameplay transitions.
+The following contracts define what surrounding systems may rely on. Concrete types may gain fields as the model is implemented, but their responsibilities and dependency direction are architectural constraints.
 
-Representative state includes:
-
-- lifecycle state: running, battle, paused/tutorial-gated, ended;
-- tick, distance, day, score, lifespan, gold;
-- hero equipment, HP, inventory, and combat state;
-- encounter queue and current encounter;
-- enemy and battle state;
-- per-run progression and achievement state;
-- ruleset identity and RNG state.
-
-### Domain modules
-
-Use game-oriented modules rather than enterprise-style service boundaries:
-
-- **Run** — lifecycle, fixed-tick progression, movement, lifespan, score, death;
-- **Encounters** — queue generation, shops, enemies, dragon eligibility;
-- **Combat** — actor state machine, attack timing, damage, items, rewards;
-- **Economy** — gold, prices, purchases, equipment and inventory;
-- **Progression** — profile EXP, collections, achievements, high score;
-- **Rules** — versioned constants, formulas, compatibility switches;
-- **Randomness** — deterministic random state and semantic draw contexts.
-
-These are logical domain boundaries inside one package. They should depend on shared domain types and rules, not on browser or filesystem code.
-
-### Outside the domain
-
-- **Browser presentation:** Canvas rendering, animation interpolation, HUD, screens, pointer/keyboard input, and sound effects. Background music is deferred.
-- **Persistence adapter:** browser-local profile/settings storage and migrations.
-- **Simulation tooling:** automated policies, batch orchestration, metrics, comparisons, CLI/reporting.
-
-## 4. Core execution API
-
-The core advances in discrete 30 Hz logical ticks, matching the researched game timing. Wall-clock time may control how often the browser asks for ticks, but it must never alter the result of a tick.
+### Gameplay engine
 
 ```ts
 interface RunConfig {
@@ -92,205 +56,134 @@ interface RunConfig {
   initialProfile: ProfileState;
 }
 
-interface RunOptions {
-  maxSteps: number;
-}
-
 interface StepResult {
   state: RunState;
   events: readonly GameEvent[];
 }
 
-function createRun(config: RunConfig): RunState;
-
-function step(
-  state: Readonly<RunState>,
-  commands: readonly GameCommand[],
-): StepResult;
-
-function run(
-  config: RunConfig,
-  policy: PlayerPolicy,
-  options: RunOptions,
-): RunResult;
+interface GameplayEngine {
+  createRun(config: RunConfig): RunState;
+  step(
+    state: Readonly<RunState>,
+    commands: readonly GameCommand[],
+  ): StepResult;
+  observe(state: Readonly<RunState>): GameObservation;
+  view(state: Readonly<RunState>): GameView;
+}
 ```
 
-Commands express gameplay intent (`buy`, `useItem`, `pause`, `dismissTutorial`) rather than screen coordinates. Domain events describe observable results such as encounter changes, damage, purchases, rewards, achievements, and death.
+`step()` is a deterministic state transition for one 30 Hz logical opportunity. Commands express gameplay intent, such as buying, using an item, pausing, or dismissing a tutorial; they never contain device-specific input. Gates may prevent active gameplay systems from advancing while still allowing commands to be processed.
 
-`RunState`, including RNG state, must be serializable so a run can be checkpointed and replayed exactly.
+`GameEvent` reports authoritative outcomes such as encounter changes, damage, purchases, rewards, achievements, and death. `GameObservation` exposes the gameplay information available to an automated player, while `GameView` is the read-only world and HUD model exposed to presentation. Neither exposes mutable domain state. `RunState`, including its randomness state, must be serializable for checkpoints and exact replay.
 
-Every headless `run()` call requires a positive finite `maxSteps`. The runner consumes one step from this budget for every `step()` invocation, including invocations during pause or tutorial gates where active gameplay does not advance. Reaching the budget returns a normal result with terminal reason `step-limit`. This runner-level budget is deliberately distinct from active gameplay ticks, so a policy that pauses forever, never dismisses a tutorial, or otherwise makes no progress cannot block a batch worker or CI job indefinitely.
+### Presentation boundary
 
-## 5. Compatibility and modernization boundary
+```ts
+interface PresentationFrame {
+  previous: Readonly<GameView>;
+  current: Readonly<GameView>;
+  interpolation: number;
+  events: readonly GameEvent[];
+}
 
-The compatibility target is the gameplay model, not the limitations of the Flash container. Presentation adapters may modernize freely provided that the same initial state, seed, and command sequence produce the same domain result.
+interface PresentationPort {
+  present(frame: PresentationFrame): void;
+}
+```
 
-| Concern | Preserve as gameplay behavior | Abstract or modernize in adapters |
-|---|---|---|
-| Time | Fixed 30 Hz logical steps; active-tick lifespan, movement, score, delays, combat hit/finish points, pause and tutorial gating | Render with `requestAnimationFrame` at any refresh rate and interpolate visuals; do not advance gameplay from render-frame counts or animation callbacks |
-| Space | Abstract world units using the original coordinate scale for `original-v1.3`, plus mechanic-bearing thresholds such as encounter positions, movement distances, and purchase windows | A camera initially showing 480x320 world units; responsive CSS size, device-pixel-ratio backing resolution, fullscreen, letterboxing/layout, and camera transforms |
-| Animation | Domain emits mechanic-bearing events at the required logical tick | Menu motion, transitions, parallax treatment, particles, damage numbers, fades, and other visual-only timing |
-| Input | Commands and their domain eligibility, including whether a shop or item can currently be used | Mouse, pointer, touch, keyboard, remapping, larger accessible hit targets, and gamepad later; all map to the same commands |
-| HUD and screens | Gameplay-relevant values, available actions, pause/tutorial behavior, and final progression result | Responsive arrangement, typography, accessibility semantics, navigation, and visual styling; the SWF's ten-frame main timeline is not an application architecture |
-| Audio | Domain events expose gameplay outcomes without naming files, codecs, or playback operations | An audio port maps relevant events to sound-effect cues; Web Audio/HTML media implementation, codecs, latency, mixing, SFX level, and focus behavior remain replaceable; background music is deferred |
-| Persistence | Versioned profile meaning, progression formulas, collections, achievements, settings, migrations, and deterministic initial profile input | `localStorage` or IndexedDB instead of `SharedObject`; commit final progression atomically before optional score/EXP count-up animation |
-| Host integration | Nothing is required by the gameplay domain | Remove Flash preload mechanics, portal site locks, Kongregate/Newgrounds APIs, store/more-games links, and legacy share actions; add modern integrations only from a separate adapter when justified |
-| Cosmetic randomness | No cosmetic draw may perturb domain RNG state or deterministic trace hashes | Use a separate presentation RNG or nondeterministic effects for cosmetic motion and particles |
+The presentation may interpolate between views, but only `current` is authoritative for displayed values and action eligibility. Visual animation never calls gameplay rules or decides when damage, purchases, rewards, or other domain transitions occur.
 
-The original coordinate values become world units without conversion: for example, an encounter can still enter at world `x=600`, become actionable below world `x=420`, and move by the researched number of world units per active tick. World space is not bounded to the visible viewport; `x=600` is valid even though the initial camera shows world `x=0..480`. The numbers belong to the ruleset and are not CSS or backing-store pixels.
+Input adapters translate pointer, touch, keyboard, or future devices into `GameCommand` values. A sound-effects adapter maps domain events and UI actions to semantic cues without putting file paths or playback operations in the domain. Background music is outside the initial scope; a future music controller can observe application or screen lifecycle without changing gameplay contracts or deterministic state.
 
-The initial camera viewport covers 480x320 world units, but the output bitmap is unrestricted. A renderer may keep a 3:2 game viewport, rearrange surrounding controls at narrow sizes, or render at higher resolution. Pointer positions are transformed through the inverse camera projection before the adapter identifies an intended action, while the domain remains authoritative for whether that action is valid.
+Persistence is also an application boundary. It loads the initial profile and atomically stores completed progression and settings. Persistence timing and technology must not become gameplay rules.
 
-### Canvas viewport adapter
-
-The selected browser stack supplies the platform primitives, while a small adapter owns the policy:
-
-- `ResizeObserver` measures the available CSS viewport and `devicePixelRatio` selects a sharp Canvas backing-store size;
-- a contain-fit camera computes scale and letterbox offsets from the 480x320-world-unit reference viewport;
-- the Canvas 2D transform projects world coordinates to backing pixels, and its inverse maps pointer coordinates back to world space;
-- `requestAnimationFrame` supplies render opportunities, while a fixed-step accumulator independently requests 30 Hz domain steps and computes an interpolation fraction;
-- render snapshots interpolate only visual transforms; the current authoritative state supplies HUD values and action eligibility;
-- Vitest covers camera/inverse-camera math and tick-rate invariance, while Playwright covers representative viewport sizes and device pixel ratios.
-
-Canvas 2D does not provide the fixed-step loop or state interpolation automatically; those are small application adapters rather than domain concerns. Vite provides the browser build and development loop, not game timing. If the presentation later moves to PixiJS or Phaser, the world-unit, camera, command, and domain-event contracts remain unchanged.
-
-### Audio extension point
-
-The initial browser adapter implements sound effects only. It maps domain events and UI actions to semantic cues through a small presentation-layer audio port; the domain never emits file paths or playback commands. No background-music assets, player, sequencing, fades, or music settings are required initially.
-
-A future music controller can observe application lifecycle and screen changes, own its playlist and transitions, and use the same browser audio infrastructure without changing the domain API, deterministic state, or trace hashes. Until that work is selected, no placeholder music state is added to `RunState` or `RuleSet`.
-
-Browser scheduling must not turn a high-refresh display into faster gameplay. The adapter accumulates time and requests 30 Hz logical steps independently of rendering. It must also apply an explicit visibility/suspension policy rather than replaying an unbounded backlog after a tab was hidden; that policy affects browser scheduling only and cannot change `step()` semantics.
-
-Combat sprites may be redrawn, resampled, or interpolated, but damage and attack completion stay tied to their compatibility tick offsets in the domain. Conversely, pregame/post-death waits, score-count animations, menu tweens, visual fades, and similar non-interactive presentation delays may be shortened, skipped, or made accessibility-aware once any associated state has already been committed.
-
-## 6. Randomness and reproducibility
-
-Do not use `Math.random()` inside the domain.
-
-Use a small explicit seeded PRNG with stable integer behavior across Node and browsers. The initial choice is **xoshiro128\*\*** with a documented 128-bit seed expansion because it has compact state, good statistical quality for this use case, and can be implemented entirely with deterministic 32-bit integer operations in JavaScript.
-
-The original Flash PRNG sequence is unknown, so the compatibility target is the confirmed random ranges, probabilities, and draw order—not identical Adobe Flash seed sequences.
-
-Every random draw should have an optional semantic context (`shop-type`, `dragon-roll`, `damage-roll`, `attack-delay`, etc.) for diagnostic traces. Tests must also support scripted random values for exact boundary scenarios.
-
-## 7. Monte Carlo and headless simulation
-
-Simulation is an application-layer consumer of the gameplay API.
-
-A `PlayerPolicy` converts public game observations into commands:
+### Simulation boundary
 
 ```ts
 interface PlayerPolicy {
   readonly id: string;
-  decide(observation: Observation): readonly GameCommand[];
+  decide(observation: GameObservation): readonly GameCommand[];
+}
+
+interface SimulationRequest {
+  config: RunConfig;
+  policy: PlayerPolicy;
+  maxSteps: number;
+}
+
+interface RunResult {
+  schemaVersion: number;
+  ruleset: RuleSetId;
+  seed: string;
+  policy: string;
+  steps: number;
+  activeTicks: number;
+  terminalReason: "lifespan" | "combat" | "step-limit";
+  score: number;
+  day: number;
+  distance: number;
+  gold: number;
+  traceHash: string;
+  metrics: Readonly<Record<string, number>>;
+}
+
+interface SimulationRunner {
+  run(request: SimulationRequest): RunResult;
+  runBatch(
+    requests: readonly SimulationRequest[],
+  ): Promise<readonly RunResult[]>;
 }
 ```
 
-Initial reusable policies should include at least:
+Every simulation requires a positive finite `maxSteps`. The budget counts every engine step, including paused or tutorial-gated steps, so a non-progressing policy cannot block a batch indefinitely. Reaching the budget returns `step-limit`; it is a runner termination, not a gameplay death.
 
-- no actions;
-- buy affordable upgrades/items;
-- survival-oriented purchasing;
-- damage-oriented purchasing;
-- scripted scenario policy.
+Batch execution must be reproducible from the requests and must return normalized results independent of concurrency or completion order. Baseline and candidate rulesets can therefore be compared using the same seeds, profiles, policies, and step limits. Reporting formats and execution strategy are ticket-level decisions built on this contract.
 
-A batch runner must be able to execute a configurable number of seeded runs without creating a browser or renderer. Each run produces a compact result record including at least:
+## 4. Compatibility and modernization boundary
 
-- seed and ruleset;
-- steps executed, active gameplay ticks, and run duration;
-- score;
-- final day and distance;
-- gold;
-- terminal reason (`lifespan`, `combat`, or `step-limit`);
-- enemies/dragons encountered and killed;
-- purchase/item-use counts;
-- selected progression metrics;
-- deterministic trace/result hash.
+The compatibility target is gameplay behavior, not the limitations of the Flash container. Presentation adapters may modernize freely when the same initial state, seed, and command sequence still produce the same domain result.
 
-For rule or feature changes, baseline and candidate rulesets should normally be evaluated with the same seed set and policy so per-seed deltas can be compared directly.
+| Concern | Preserve as gameplay behavior | Free to adapt outside the domain |
+|---|---|---|
+| Time | Fixed 30 Hz logical steps; active-tick lifespan, movement, score, delays, combat hit/finish points, pause and tutorial gates | Display refresh rate, interpolation, visibility handling, and visual-only timing |
+| Space | Abstract world units using the original coordinate scale; mechanic-bearing positions, distances, speeds, and action thresholds | Camera projection, output resolution, pixel density, fullscreen, letterboxing, and responsive layout |
+| Animation | Mechanic-bearing events occur at domain ticks | Menu motion, transitions, parallax treatment, particles, damage numbers, and fades |
+| Input | Semantic commands and domain action eligibility | Input devices, bindings, accessible targets, and coordinate projection |
+| HUD and screens | Gameplay-relevant information, available actions, pause/tutorial behavior, and final progression | Arrangement, typography, accessibility, navigation, and styling |
+| Sound | Domain events expose outcomes without playback details | Sound-effect assets, decoding, mixing, levels, and focus behavior; music remains deferred |
+| Persistence | Versioned profile meaning and progression results | Browser storage technology, migrations, and when presentation animations occur |
+| Host integration | Nothing | Loading presentation, links, sharing, and optional future platform adapters |
+| Cosmetic randomness | Must not perturb domain randomness or trace hashes | Separate presentation randomness and nondeterministic effects |
 
-Reports should provide aggregate statistics such as mean, median, percentiles, spread, terminal-reason mix, and largest divergent seeds. Detailed traces remain opt-in and are used to replay interesting failures or balance changes.
+For `original-v1.3`, one original coordinate unit becomes one abstract world unit without conversion. The initial camera shows a 480x320-world-unit viewport, while world positions may exist outside it—for example, an encounter can enter at `x=600`. Those values belong to the ruleset, not to the physical canvas or CSS layout.
 
-Use Node `worker_threads` to parallelize large batches only above the domain layer. A single-thread execution path remains authoritative for debugging, and normalized output must not depend on worker count or completion order.
+Rendering may run at any display rate, but it cannot make gameplay faster or slower. Combat visuals may be interpolated or redesigned while damage and attack completion remain tied to domain ticks. Non-interactive presentation delays may be shortened, skipped, or made accessibility-aware after their associated state has been committed.
 
-## 8. Technology choices considered
+## 5. Determinism and rulesets
 
-| Option | Advantages | Drawbacks | Decision |
-|---|---|---|---|
-| **TypeScript pure core + Canvas 2D + Vite/Vitest/Playwright** | One language in browser and Node; direct headless execution; minimal runtime; easy deterministic tests; simple deployment | More rendering code must be written directly | **Selected** |
-| TypeScript pure core + Phaser or PixiJS presentation | Better sprite/animation tooling; useful if presentation grows substantially | More dependency/runtime surface; Phaser can encourage gameplay/UI coupling; unnecessary for the current fixed 2D scene | Keep as renderer-adapter upgrade path |
-| Rust core compiled to WebAssembly + TypeScript UI | High simulation throughput; strong type/control over numeric behavior | Extra language/toolchain, WASM boundary and serialization complexity, slower iteration for a small project | Not justified initially |
-| Godot/Unity web export | Rich editor, animation and asset workflows | Larger browser runtime; awkward Node/headless API; harder to keep the authoritative rules engine independent and cheaply batchable | Rejected for this project |
+The domain receives an explicit seeded random source whose complete state is serializable and stable across supported browser and headless runtimes. The concrete algorithm and seed-expansion scheme are selected during implementation and then versioned as part of the reproducibility contract. Domain code must never draw from ambient or presentation randomness.
 
-### Why the selected combination
+The original Flash random sequence is unknown, so compatibility targets the confirmed ranges, probabilities, and gameplay draw order rather than claiming identical Flash seeds.
 
-The game is mechanically small but rule-dense. The main technical risk is behavioral correctness and future balance analysis, not high-end rendering.
+`original-v1.3` domain behavior becomes immutable after its compatibility baseline is established. Changes to gameplay behavior use a new ruleset identity. Unknown original behavior must remain labeled as an explicit decision rather than silently becoming a compatibility claim.
 
-A pure TypeScript core therefore gives the shortest path between researched rules, executable tests, the browser, and headless simulations. Canvas 2D is sufficient for a responsive renderer using the original coordinate scale and an initial 480x320-world-unit camera, and it keeps rendering replaceable. Its backing surface should follow CSS size and device pixel ratio rather than remaining a 480x320 physical bitmap. If visual requirements later exceed Canvas ergonomics, PixiJS or Phaser can be introduced behind the presentation boundary without changing the gameplay domain.
+## 6. Technology direction
 
-## 9. Toolchain
+The initial direction is a shared TypeScript gameplay/application layer, a browser presentation using Canvas 2D, and a Node-capable simulator. Canvas is behind `PresentationPort`, so a later renderer can replace it without changing gameplay or simulation contracts.
 
-Selected initial stack:
+Specific build tools, test libraries, storage APIs, audio APIs, threading strategy, directory layout, and third-party dependencies are selected by the tickets that introduce them. They are not architectural commitments in this document.
 
-- **TypeScript** — domain, simulation, browser adapters;
-- **Vite** — browser development/build;
-- **Vitest** — unit, compatibility, scenario, deterministic simulation tests;
-- **Canvas 2D** — initial renderer;
-- **Playwright** — thin browser integration and visual/input smoke tests;
-- **Node.js worker_threads** — parallel batch execution;
-- no frontend framework initially.
+## 7. Verification responsibilities
 
-Suggested structure:
+Implementation work must provide evidence that:
 
-```text
-clean-room/
-  src/
-    domain/
-      run/
-      encounters/
-      combat/
-      economy/
-      progression/
-      rules/
-      randomness/
-    application/
-      game-api/
-      policies/
-      simulation/
-    adapters/
-      browser/
-      persistence/
-      cli/
-  tests/
-    unit/
-    compatibility/
-    scenarios/
-    simulation/
-    browser/
-  baselines/
-```
+- confirmed gameplay behavior and known gameplay-affecting quirks match the research specification;
+- identical complete inputs reproduce identical state, results, and trace hashes;
+- checkpoint replay matches uninterrupted execution;
+- browser play and headless simulation use the same gameplay engine;
+- presentation changes, output resolution, render rate, and input adapter do not change domain outcomes;
+- a non-progressing policy terminates at its configured step limit;
+- cosmetic randomness cannot consume domain randomness;
+- profile progression is durable before optional result-counting animation completes.
 
-Dependency direction is always inward: adapters -> application -> domain. Domain code must not import browser, Node filesystem, renderer, audio, persistence, or worker APIs.
-
-## 10. Testing strategy
-
-- **Formula/unit tests:** exact formulas and boundaries from `research/mechanics.md`.
-- **Compatibility characterization tests:** every confirmed original rule and known quirk that affects gameplay.
-- **Scenario tests:** scripted RNG plus commands across encounters, purchases, battles, rewards, items, dragon behavior, and death.
-- **Determinism tests:** identical complete inputs produce identical states, results, and trace hashes; checkpoint replay matches uninterrupted execution.
-- **Simulation regression:** stable seed manifests and policies detect emergent balance/progression changes; a non-progressing policy terminates at the configured step limit.
-- **Browser adapter tests:** confirm input mapping, responsive/HiDPI rendering, persistence, and browser/headless state parity across different viewport sizes and render refresh rates without duplicating domain formula tests.
-- **Presentation-boundary tests:** visual-only animation and cosmetic randomness cannot consume domain RNG or trigger domain transitions; final progression is durable before score-count animation completes.
-
-Unknown original behavior must be labeled as an explicit design decision before it becomes a compatibility expectation.
-
-## 11. Evolution rules
-
-- `original-v1.3` domain behavior remains immutable once the compatibility baseline is established; renderer, device, storage technology, and host integration are not part of that ruleset identity.
-- Later fixes or balance changes use new ruleset identifiers.
-- Domain changes must remain exercisable through the headless API.
-- Presentation changes must not alter domain results.
-- Physical resolution, render refresh rate, accessibility settings, and input adapter must not become ruleset inputs.
-- Simulation metrics and baseline policies are versioned when their meaning changes.
-- Add a heavier renderer, property-testing library, database, backend, or additional language only after a concrete requirement justifies it.
+The exact test cases, tools, fixtures, tolerances, and CI placement are decided in the implementation tickets.

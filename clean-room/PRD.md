@@ -37,6 +37,8 @@ All gameplay rules and state transitions must be executable independently of ren
 
 The same gameplay implementation used by the browser must be callable programmatically so complete runs and individual state transitions can be exercised without launching the visual interface.
 
+The programmatic interface must support finite, deterministic single runs and batches. It must expose stable results suitable for comparing rulesets with the same seeds, initial profiles, policies, and execution limits.
+
 ### 4. Preserve reproducibility and compatibility
 
 A run must be reproducible from its complete inputs, including its ruleset and randomness source.
@@ -75,6 +77,7 @@ The first complete implementation is acceptable when:
 - the confirmed v1.3 gameplay loop can be played end-to-end in a modern browser;
 - the confirmed mechanics and known compatibility quirks are covered by executable tests;
 - a complete run can be executed headlessly through the same gameplay implementation used by the browser;
+- deterministic batches terminate within their configured execution limits and produce stable comparison inputs;
 - identical complete inputs reproduce identical game outcomes;
 - original-v1.3 behavior remains selectable independently from later rulesets;
 - presentation code can be changed without changing gameplay outcomes;
