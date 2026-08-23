@@ -153,7 +153,7 @@ The policy descriptor contains a stable identity, an implementation version, and
 
 Every simulation requires a positive finite `maxSteps`. The budget counts every engine step, including paused or tutorial-gated steps, so a non-progressing policy cannot block a batch indefinitely. Reaching the budget returns `step-limit`; it is a runner termination, not a gameplay death.
 
-Every run starts from its initial configuration and executes continuously to gameplay termination or `step-limit`. Mid-run simulation persistence and resumption are not part of this boundary. Interrupted batches resume at run granularity by retaining completed results and rerunning only missing seeds.
+Every run starts from its initial configuration and executes continuously to gameplay termination or `step-limit`. Mid-run simulation persistence and resumption are not part of this boundary. Interrupted batches resume at run granularity by retaining completed results and rerunning only requests whose complete result identity is missing.
 
 Each result directly identifies the inputs that produced it: ruleset, seed, a versioned canonical fingerprint of the initial profile, the policy descriptor, and the configured step limit. The profile snapshot corresponding to the fingerprint is retained with the simulation inputs rather than copied into every result. This keeps results compact while preventing records produced from different profiles, policies, or limits from sharing an apparent identity. A live policy or agent object is never serialized.
 
