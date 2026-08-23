@@ -167,11 +167,31 @@ The original Flash random sequence is unknown, so compatibility targets the conf
 
 `original-v1.3` domain behavior becomes immutable after its compatibility baseline is established. Changes to gameplay behavior use a new ruleset identity. Unknown original behavior must remain labeled as an explicit decision rather than silently becoming a compatibility claim.
 
-## 6. Technology direction
+## 6. Technology selection
 
-The initial direction is a shared TypeScript gameplay/application layer, a browser presentation using Canvas 2D, and a Node-capable simulator. Canvas is behind `PresentationPort`, so a later renderer can replace it without changing gameplay or simulation contracts.
+### Language and runtime
 
-Specific build tools, test libraries, storage APIs, audio APIs, threading strategy, directory layout, and third-party dependencies are selected by the tickets that introduce them. They are not architectural commitments in this document.
+- **TypeScript** is used for the gameplay engine, application contracts, browser adapters, and simulator. Sharing one language and type system allows browser play and headless execution to use the same engine without a serialization or foreign-function boundary.
+- **Node.js** hosts headless simulation so the TypeScript engine can run without a browser. How batches are parallelized remains an implementation decision.
+- **Vite** provides the initial browser development and build environment because it has direct TypeScript support and integrates with the selected unit-test tooling without defining the application architecture.
+- **No frontend framework initially.** The product has a small number of screens and one Canvas-centered game view. A framework can be introduced behind the browser adapter if later UI complexity justifies it.
+
+### Rendering choice
+
+| Option | Assessment | Decision |
+|---|---|---|
+| **Canvas 2D** | Directly supports the required 2D drawing, camera transforms, scaling, and drawing of interpolated views with a small runtime and dependency surface | **Selected for the initial renderer** |
+| PixiJS | Adds a capable WebGL renderer, sprite batching, and richer display-object tooling, but that machinery is not yet required by the small fixed scene | Keep as a renderer replacement if measured visual or performance needs justify it |
+| Phaser | Adds scenes, input, animation, physics, and a game loop, much of which overlaps the application and deterministic-engine boundaries already defined here | Do not adopt initially; reconsider only if future presentation requirements outweigh the additional framework surface |
+
+Canvas 2D is selected because the initial rendering problem is modest and the main technical risk is gameplay correctness rather than rendering throughput. It also makes the separation between the authoritative engine and presentation explicit. Canvas remains behind `PresentationPort`, so choosing it now does not prevent a later PixiJS, Phaser, or other presentation adapter from consuming the same views and events.
+
+### Testing frameworks
+
+- **Vitest** is selected for gameplay, compatibility, deterministic simulation, and application-contract tests. It runs the TypeScript engine directly in a fast headless environment and shares the Vite transformation path.
+- **Playwright** is selected for the browser boundary: input mapping, responsive presentation, Canvas integration, persistence, and browser/headless parity. Gameplay formulas and domain rules must not depend on browser tests.
+
+Package versions, configuration, storage and sound APIs, directory layout, fixtures, individual test cases, and CI placement remain ticket-level decisions.
 
 ## 7. Verification responsibilities
 
@@ -186,4 +206,4 @@ Implementation work must provide evidence that:
 - cosmetic randomness cannot consume domain randomness;
 - profile progression is durable before optional result-counting animation completes.
 
-The exact test cases, tools, fixtures, tolerances, and CI placement are decided in the implementation tickets.
+The exact test cases, fixtures, tolerances, commands, and CI placement are decided in the implementation tickets.
