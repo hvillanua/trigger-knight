@@ -50,16 +50,16 @@ into place. A valid Kongregate host is required by the site-lock code.
 
 - Bottom status area: hero HP, weapon and ATK, armor, score, day, and carried
   item.
-- Top status area: lifespan, gold, current encounter, and two upcoming
-  encounters.
+- Top status area: lifespan, gold, one current-event slot, and three queued
+  event slots. The current slot is blank while no event is active.
 - Context cursor: building/item name, description, and cached price or warning.
 - Battle overlay: enemy name and HP bar.
 - Announcements/transitions: event names, purchases, item use, battle, and
   death.
 
-**CONFIRMED** Upcoming-event displays use the three-entry queue. Shop price is
-stored with the queue entry, which is why its display and eventual charge can
-lag behind intervening upgrades.
+**CONFIRMED** The HUD therefore displays up to four events: current plus the
+three-entry queue. Shop price is stored with its queue entry, which is why its
+display and eventual charge can lag behind intervening upgrades.
 
 ### Score
 

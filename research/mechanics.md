@@ -203,7 +203,7 @@ decrements. Death occurs when whole existence becomes negative.
 `1009 + 899L`, for tier `L`. The price shown is the price to advance from the
 prior tier when a fresh shop entry is queued.
 
-| Tier | Weapon | ATK | Upgrade price | Armor | Max HP | Upgrade price | Status |
+| Tier | Weapon | ATK | Fresh price to reach | Armor | Max HP | Fresh price to reach | Status |
 |---:|---|---:|---:|---|---:|---:|---|
 | 1 | Dagger | 216 | Start | Clothing | 1,908 | Start | CONFIRMED |
 | 2 | Sword | 303 | 236 | Protector | 2,807 | 204 | CONFIRMED |
@@ -223,6 +223,19 @@ prior tier when a fresh shop entry is queued.
 price is `150 + 54*currentArmorTier`. The price is cached when the encounter is
 queued, not recalculated when clicked. An armor upgrade recomputes maximum HP
 and fully heals; a weapon upgrade only recomputes attack.
+
+**CONFIRMED** The HUD has one current-event slot plus three queued-event slots.
+The same-type duplicate flags reset as soon as a battle is *queued*, so this
+four-slot window can show two weapon shops or two armor shops when the entries
+are separated by that battle boundary. Both shops may have been priced before
+the first upgrade is purchased.
+
+For example, if two visible weapon shops were queued while the player was at
+weapon tier 1, both cache `200 + 36*1 = 236`. Buying the first advances to tier
+2 for 236 gold; buying the already-queued second advances to tier 3 for another
+236 gold. A weapon shop generated after reaching tier 2 would instead cost 272.
+The equivalent armor case charges 204 twice rather than 204 then 258. All
+values and the cache behavior are **CONFIRMED** directly from the SWF.
 
 **CONFIRMED** At tier 10 the cursor appends `(LV MAX)`. A click with enough gold
 enters the purchase function but performs no upgrade, spends no gold, and does

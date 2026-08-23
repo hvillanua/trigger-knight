@@ -24,7 +24,7 @@ future clean-room build and validation pass.
 | Intended purpose of achievement slot 5 | Six slots are allocated/rendered but only indices 0-4 have names/unlock conditions. | Search author source or developer notes; do not invent a sixth achievement. |
 | Intent of unconditional tutorial page 0 | Code bypasses the tutorial preference only for page 0. | Observe original projector and, if possible, consult author notes. |
 | Intent of dual `WeaponUnlocked` submission | Code sends armor and weapon counts to the same stat; wrapper defines `ArmorUnlocked`. | Treat as a confirmed original defect; decide compatibility policy later. |
-| Intent of cached stale shop prices | Price belongs to queued event, enabling cheaper later-tier upgrades. | Treat as a confirmed original quirk; validate with scripted runtime sequence. |
+| Intent of cached stale shop prices | Price belongs to the queued event, enabling two same-type shops visible across a battle boundary to grant successive upgrades at the same old-tier price. | Treat as confirmed original behavior; only the author's intent is unknown. |
 | Purpose of undefined `checkBattle()` call | A call is present, but no definition exists in any exported primary script. | Check Flash global resolution in a runtime; apparent gameplay resolution is already in AI/damage functions. |
 | Exact dynamic screen composition and transitions | Static timeline renders do not run ActionScript placement. | Run SWF in a controlled Flash projector/Ruffle harness and capture frames. |
 | Exact sound latency/mixing | Host decoder and Flash mixer behavior are outside code export. | Capture projector audio and compare exported streams. |
@@ -40,7 +40,9 @@ These should not be “corrected” silently in a compatibility specification:
 - Profile level-up requires XP strictly greater than the threshold and discards
   excess XP.
 - Kill-score multiplier applies only to the enemy-ATK term.
-- A queued shop retains the price calculated at generation time.
+- A queued shop retains the price calculated at generation time. Two visible
+  same-type shops across a battle boundary can therefore sell successive tiers
+  at the same cached price.
 - At equipment tier 10, an adequately funded upgrade click silently does
   nothing and leaves the building actionable.
 - Other tutorial pages honor the preference, while page 0 is called every run.

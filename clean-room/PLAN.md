@@ -263,6 +263,11 @@ lifespan, strict XP threshold, score precedence, and the one-time forced shrine
 behavior. A future enhanced rule set can intentionally differ while v1.3 tests
 continue to pass against the compatibility configuration.
 
+The cached-price characterization must include the concrete cross-battle case:
+two weapon shops queued at tier 1 both charge 236 while advancing to tiers 2
+and 3; the equivalent armor shops both charge 204. This protects the observed
+four-slot lookahead behavior from an accidental “fix.”
+
 ### 3. Scenario tests
 
 Use scripted RNG and commands to test sequences involving multiple modules:
