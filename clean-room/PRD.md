@@ -25,7 +25,7 @@ Confirmed formulas, timing-sensitive mechanics, probabilities, encounter behavio
 
 ### 2. Reproduce the browser play experience
 
-The browser version must provide the main game screens, HUD information, interactions, transitions, feedback, audio controls, pause behavior, tutorials, and local progression needed to play the game without Flash.
+The browser version must provide the main game screens, HUD information, interactions, transitions, feedback, sound effects and their controls, pause behavior, tutorials, and local progression needed to play the game without Flash.
 
 The original coordinate scale is retained as abstract world units for the `original-v1.3` ruleset: one original stage coordinate unit equals one world unit, and the initial camera shows a 480x320-world-unit viewport. This preserves researched positions, distances, speeds, and thresholds without treating them as physical pixels. The renderer must project that camera into responsive, high-density, and fullscreen output while preserving the intended composition and mapping input back to world coordinates.
 
@@ -60,7 +60,7 @@ This includes:
 - responsive and high-density rendering instead of a fixed 480x320 physical surface;
 - display-refresh-rate animation instead of tying drawing to the 30 Hz simulation;
 - pointer, touch, keyboard, and remappable controls translated into the same gameplay commands;
-- modern browser audio decoding, mixing, mute, and volume controls rather than Flash-specific loop counts or mixer behavior;
+- modern browser sound-effect decoding, mixing, mute, and volume controls rather than Flash-specific mixer behavior;
 - durable, versioned browser storage with atomic progression updates rather than AVM1 `SharedObject` timing and its possible close-before-save data loss;
 - accessible, responsive HUD and menus, while preserving all gameplay-relevant information and action availability;
 - modern loading, navigation, and sharing behavior without SWF preload frames, portal site locks, Kongregate APIs, or obsolete promotional links;
@@ -87,6 +87,7 @@ The first complete implementation is acceptable when:
 - new enemies, items, shops, progression systems, or other original content;
 - intentional balance changes to the original-v1.3 ruleset;
 - exact reproduction of Flash Player's unrecovered PRNG sequence;
-- pixel-identical reproduction of the 480x320 SWF output, Flash audio latency/mixing, or timeline-only visual timing;
+- pixel-identical reproduction of the 480x320 SWF output, Flash sound latency/mixing, or timeline-only visual timing;
+- background music playback, music assets, playlists, transitions, and music controls; the architecture must leave these straightforward to add later;
 - Kongregate/Newgrounds integration, site locks, legacy promotional links, and obsolete social-sharing actions;
 - multiplayer, accounts, or server-side progression.

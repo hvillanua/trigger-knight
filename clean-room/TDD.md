@@ -77,7 +77,7 @@ These are logical domain boundaries inside one package. They should depend on sh
 
 ### Outside the domain
 
-- **Browser presentation:** Canvas rendering, animation interpolation, HUD, screens, pointer/keyboard input, audio.
+- **Browser presentation:** Canvas rendering, animation interpolation, HUD, screens, pointer/keyboard input, and sound effects. Background music is deferred.
 - **Persistence adapter:** browser-local profile/settings storage and migrations.
 - **Simulation tooling:** automated policies, batch orchestration, metrics, comparisons, CLI/reporting.
 
@@ -132,7 +132,7 @@ The compatibility target is the gameplay model, not the limitations of the Flash
 | Animation | Domain emits mechanic-bearing events at the required logical tick | Menu motion, transitions, parallax treatment, particles, damage numbers, fades, and other visual-only timing |
 | Input | Commands and their domain eligibility, including whether a shop or item can currently be used | Mouse, pointer, touch, keyboard, remapping, larger accessible hit targets, and gamepad later; all map to the same commands |
 | HUD and screens | Gameplay-relevant values, available actions, pause/tutorial behavior, and final progression result | Responsive arrangement, typography, accessibility semantics, navigation, and visual styling; the SWF's ten-frame main timeline is not an application architecture |
-| Audio | Which domain events may request music or sound feedback; player preferences remain persistent | Web Audio/HTML media implementation, codecs, latency, mixing, looping, independent music/SFX levels, and focus behavior |
+| Audio | Domain events expose gameplay outcomes without naming files, codecs, or playback operations | An audio port maps relevant events to sound-effect cues; Web Audio/HTML media implementation, codecs, latency, mixing, SFX level, and focus behavior remain replaceable; background music is deferred |
 | Persistence | Versioned profile meaning, progression formulas, collections, achievements, settings, migrations, and deterministic initial profile input | `localStorage` or IndexedDB instead of `SharedObject`; commit final progression atomically before optional score/EXP count-up animation |
 | Host integration | Nothing is required by the gameplay domain | Remove Flash preload mechanics, portal site locks, Kongregate/Newgrounds APIs, store/more-games links, and legacy share actions; add modern integrations only from a separate adapter when justified |
 | Cosmetic randomness | No cosmetic draw may perturb domain RNG state or deterministic trace hashes | Use a separate presentation RNG or nondeterministic effects for cosmetic motion and particles |
@@ -153,6 +153,12 @@ The selected browser stack supplies the platform primitives, while a small adapt
 - Vitest covers camera/inverse-camera math and tick-rate invariance, while Playwright covers representative viewport sizes and device pixel ratios.
 
 Canvas 2D does not provide the fixed-step loop or state interpolation automatically; those are small application adapters rather than domain concerns. Vite provides the browser build and development loop, not game timing. If the presentation later moves to PixiJS or Phaser, the world-unit, camera, command, and domain-event contracts remain unchanged.
+
+### Audio extension point
+
+The initial browser adapter implements sound effects only. It maps domain events and UI actions to semantic cues through a small presentation-layer audio port; the domain never emits file paths or playback commands. No background-music assets, player, sequencing, fades, or music settings are required initially.
+
+A future music controller can observe application lifecycle and screen changes, own its playlist and transitions, and use the same browser audio infrastructure without changing the domain API, deterministic state, or trace hashes. Until that work is selected, no placeholder music state is added to `RunState` or `RuleSet`.
 
 Browser scheduling must not turn a high-refresh display into faster gameplay. The adapter accumulates time and requests 30 Hz logical steps independently of rendering. It must also apply an explicit visibility/suspension policy rather than replaying an unbounded backlog after a tab was hidden; that policy affects browser scheduling only and cannot change `step()` semantics.
 

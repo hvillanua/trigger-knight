@@ -330,7 +330,8 @@ Playwright verifies only integration responsibilities:
   an initial 480x320-world-unit camera, renders sharply at responsive/HiDPI
   output sizes, and advances through the same core API.
 - Pointer/keyboard actions produce expected commands.
-- Pause, menus, persistence adapter, audio toggles, and screen transitions work.
+- Pause, menus, persistence adapter, sound-effect controls, and screen transitions
+  work.
 - A known seed reaches the same checkpoint in browser and Node.
 - The same command schedule produces the same domain result at representative
   30, 60, and 120 Hz render cadences.
@@ -508,8 +509,9 @@ seeds. Normalized output is identical across configured worker counts.
 
 ### Milestone 6: Browser experience
 
-- Build Canvas renderer, input adapter, screens, HUD, audio, and persistence on
-  top of the completed core.
+- Build Canvas renderer, input adapter, screens, HUD, sound effects, and
+  persistence on top of the completed core. Keep audio behind a presentation
+  port, but defer background music and music controls.
 - Add Playwright functional and screenshot tests.
 
 **Exit:** A browser run and Node run with the same seed, commands, and rule set
@@ -547,3 +549,4 @@ A rule change is complete only when:
 - Adding new content or balance changes before the original-v1.3 baseline is
   frozen.
 - Testing game formulas primarily through the UI.
+- Implementing background music, playlists, transitions, or music controls.
