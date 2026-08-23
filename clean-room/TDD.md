@@ -144,6 +144,7 @@ interface SimulationInputs {
 }
 
 interface SimulationCheckpoint {
+  inputs: SimulationInputs;
   runState: RunState;
   policyState: PolicyState;
   steps: number;
@@ -163,7 +164,23 @@ interface RunResult {
   metrics: Readonly<Record<string, number>>;
 }
 
+type SimulationProgress =
+  | {
+      status: "running";
+      checkpoint: SimulationCheckpoint;
+    }
+  | {
+      status: "completed";
+      result: RunResult;
+    };
+
 interface SimulationRunner {
+  start(request: SimulationRequest): SimulationCheckpoint;
+  advance(
+    request: SimulationRequest,
+    checkpoint: SimulationCheckpoint,
+    maxAdditionalSteps: number,
+  ): SimulationProgress;
   run(request: SimulationRequest): RunResult;
   runBatch(
     requests: readonly SimulationRequest[],
@@ -173,7 +190,9 @@ interface SimulationRunner {
 
 `PolicyState` and every value in `PolicyDescriptor` must be serializable. The descriptor contains a stable policy identity, an implementation version, and all normalized configuration that can affect decisions. `createInitialState()` must derive the same state from the same descriptor. `decide()` is a deterministic transition: given the same observation and policy state, it returns the same commands and next state without mutating either input. This permits policies with memory while preventing hidden object state from making results depend on policy reuse, worker scheduling, or batch order.
 
-Simulation checkpoints contain the gameplay state, policy state, and consumed step count together. Restoring all three must produce the same remaining command stream and result as uninterrupted execution.
+`start()` creates a checkpoint before the first step. Each `advance()` call executes at most a positive finite `maxAdditionalSteps` and returns either a new checkpoint or the completed result. A caller can therefore persist the returned checkpoint between bounded slices and resume it through the same public boundary. `run()` is the convenience operation equivalent to starting and advancing until completion.
+
+Simulation checkpoints contain the normalized experiment inputs, gameplay state, policy state, and consumed step count together. Before advancing a checkpoint, the runner must reject a request whose normalized configuration, policy descriptor, or total `maxSteps` differs from the checkpoint inputs. Restoring a valid checkpoint must produce the same remaining command stream and result as uninterrupted execution. The total step budget remains `SimulationRequest.maxSteps`; `maxAdditionalSteps` only bounds one invocation and cannot reset or extend it.
 
 Every simulation requires a positive finite `maxSteps`. The budget counts every engine step, including paused or tutorial-gated steps, so a non-progressing policy cannot block a batch indefinitely. Reaching the budget returns `step-limit`; it is a runner termination, not a gameplay death.
 
