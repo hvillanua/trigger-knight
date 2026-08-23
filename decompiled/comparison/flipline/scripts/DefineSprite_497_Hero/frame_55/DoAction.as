@@ -1,0 +1,1 @@
+attackfinished = true;

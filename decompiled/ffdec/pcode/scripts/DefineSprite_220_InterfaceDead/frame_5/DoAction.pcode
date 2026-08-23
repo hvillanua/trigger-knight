@@ -1,0 +1,12 @@
+ConstantPool "cause_txt", "text", "msg1", "protip_txt", "msg2"
+Stop
+Push "cause_txt"
+GetVariable
+Push "text", "msg1"
+GetVariable
+SetMember
+Push "protip_txt"
+GetVariable
+Push "text", "msg2"
+GetVariable
+SetMember

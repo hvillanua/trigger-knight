@@ -1,0 +1,7 @@
+Push "game", 1, "this"
+GetVariable
+Push "_parent"
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop

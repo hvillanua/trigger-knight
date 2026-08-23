@@ -1,0 +1,10 @@
+Stop
+Push "this"
+GetVariable
+Push "mint"
+GetMember
+Push "onRelease"
+DefineFunction "", 0 {
+GetURL "http://www.mintsphere.com/", "_blank"
+}
+SetMember

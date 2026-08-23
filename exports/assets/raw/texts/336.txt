@@ -1,0 +1,5 @@
+Defeating enemies grants you gold, which you can spend to trigger 
+--- RECORDSEPARATOR ---
+events (such as upgrading your weapon, etc. Enemies get stronger 
+--- RECORDSEPARATOR ---
+over time, so you should too!)

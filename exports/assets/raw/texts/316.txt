@@ -1,0 +1,3 @@
+Game will end if your lifespan or HP becomes 
+--- RECORDSEPARATOR ---
+0, so be careful.

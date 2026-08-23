@@ -1,0 +1,12 @@
+Push "announce_txt"
+GetVariable
+Push "text", "msg"
+GetVariable
+SetMember
+Push "avanow"
+GetVariable
+Push 1, "annava"
+GetVariable
+Push "gotoAndStop"
+CallMethod
+Pop

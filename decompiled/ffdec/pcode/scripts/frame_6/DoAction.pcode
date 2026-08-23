@@ -1,0 +1,11 @@
+Stop
+Push "screenstate", "credits"
+SetVariable
+Push 3, "tb", "TransBlack", 3, "this"
+GetVariable
+Push "attachMovie"
+CallMethod
+Pop
+Push "buttonstate", 0.0
+SetVariable
+Stop

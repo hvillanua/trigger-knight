@@ -1,0 +1,3 @@
+Stop
+Push "attackfinished", true
+SetVariable

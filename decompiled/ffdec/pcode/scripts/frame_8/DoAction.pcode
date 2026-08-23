@@ -1,0 +1,199 @@
+ConstantPool "screenstate", "score", "screenbefore", "tb", "TransBlack", "this", "attachMovie", "scoreover", "retry_btn", "enabled", "end_btn", "playerdata", "issaved", "newhigh", "sfxapplause", "start", "onRollOver", "sfxbuttonselect", "achievement_btn", "moregames_btn", "onRelease", "retry", "sfxgeneral", "stop", "sfxbuttonpress", "TransitionBattle", "bgmgeneral", "tweet_btn", "urlnow", "http://twitter.com/?status=I+got+", "+points+on+Trigger+Knight!+Play+it+at+http%3A%2F%2Fgoo.gl%2FJkbwh+%23TKnight", "_blank", "Score", "_root", "kongregateStats", "submit", "HasKilledDragon"
+Push "screenstate", "score"
+SetVariable
+Push "screenbefore", "score"
+SetVariable
+Push 3, "tb", "TransBlack", 3, "this"
+GetVariable
+Push "attachMovie"
+CallMethod
+Pop
+Push "scoreover", 0.0
+SetVariable
+Stop
+Push "retry_btn"
+GetVariable
+Push "enabled", true
+SetMember
+Push "end_btn"
+GetVariable
+Push "enabled", true
+SetMember
+Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 5, 1
+SetMember
+Push "issaved", false
+SetVariable
+Push "newhigh", false
+SetVariable
+Push 1, 0.0, 2, "sfxapplause"
+GetVariable
+Push "start"
+CallMethod
+Pop
+Push "retry_btn"
+GetVariable
+Push "onRollOver"
+DefineFunction "", 0 {
+Push 1, 0.0, 2, "sfxbuttonselect"
+GetVariable
+Push "start"
+CallMethod
+Pop
+}
+SetMember
+Push "achievement_btn"
+GetVariable
+Push "onRollOver"
+DefineFunction "", 0 {
+Push 1, 0.0, 2, "sfxbuttonselect"
+GetVariable
+Push "start"
+CallMethod
+Pop
+}
+SetMember
+Push "end_btn"
+GetVariable
+Push "onRollOver"
+DefineFunction "", 0 {
+Push 1, 0.0, 2, "sfxbuttonselect"
+GetVariable
+Push "start"
+CallMethod
+Pop
+}
+SetMember
+Push "moregames_btn"
+GetVariable
+Push "onRollOver"
+DefineFunction "", 0 {
+Push 1, 0.0, 2, "sfxbuttonselect"
+GetVariable
+Push "start"
+CallMethod
+Pop
+}
+SetMember
+Push "retry_btn"
+GetVariable
+Push "onRelease"
+DefineFunction "", 0 {
+Push "retry", true
+SetVariable
+Push 0.0, "sfxgeneral"
+GetVariable
+Push "stop"
+CallMethod
+Pop
+Push 1, 0.0, 2, "sfxbuttonpress"
+GetVariable
+Push "start"
+CallMethod
+Pop
+Push "retry_btn"
+GetVariable
+Push "enabled", false
+SetMember
+Push 3, "tb", "TransitionBattle", 3, "attachMovie"
+CallFunction
+Pop
+}
+SetMember
+Push "end_btn"
+GetVariable
+Push "onRelease"
+DefineFunction "", 0 {
+Push 0.0, "sfxgeneral"
+GetVariable
+Push "stop"
+CallMethod
+Pop
+Push 0.0, "bgmgeneral"
+GetVariable
+Push "stop"
+CallMethod
+Pop
+Push 1, 0.0, 2, "sfxbuttonpress"
+GetVariable
+Push "start"
+CallMethod
+Pop
+GoToLabel "title"
+}
+SetMember
+Push "achievement_btn"
+GetVariable
+Push "onRelease"
+DefineFunction "", 0 {
+Push 0.0, "sfxgeneral"
+GetVariable
+Push "stop"
+CallMethod
+Pop
+Push 1, 0.0, 2, "sfxbuttonpress"
+GetVariable
+Push "start"
+CallMethod
+Pop
+GoToLabel "achievement"
+}
+SetMember
+Push "moregames_btn"
+GetVariable
+Push "onRelease"
+DefineFunction "", 0 {
+Push 1, 0.0, 2, "sfxbuttonpress"
+GetVariable
+Push "start"
+CallMethod
+Pop
+GetURL "http://www.kongregate.com/?haref=triggerknight&src=spon-rpg-triggerknight-site-x", "_blank"
+}
+SetMember
+Push "tweet_btn"
+GetVariable
+Push "onRelease"
+DefineFunction "", 0 {
+Push 1, 0.0, 2, "sfxbuttonpress"
+GetVariable
+Push "start"
+CallMethod
+Pop
+Push "urlnow", "http://twitter.com/?status=I+got+", "score"
+GetVariable
+Add2
+Push "+points+on+Trigger+Knight!+Play+it+at+http%3A%2F%2Fgoo.gl%2FJkbwh+%23TKnight"
+Add2
+SetVariable
+Push "urlnow"
+GetVariable
+Push "_blank"
+GetURL2 false, false, 0
+}
+SetMember
+Push "score"
+GetVariable
+Push "Score", 2, "_root"
+GetVariable
+Push "kongregateStats"
+GetMember
+Push "submit"
+CallMethod
+Pop
+Push "playerdata"
+GetVariable
+Push 3
+GetMember
+Push 0.0
+GetMember
+Push "HasKilledDragon", 2, "_root"
+GetVariable
+Push "kongregateStats"
+GetMember
+Push "submit"
+CallMethod
+Pop

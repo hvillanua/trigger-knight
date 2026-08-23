@@ -1,0 +1,5 @@
+You are about to encounter an "Event". The cursor will change
+--- RECORDSEPARATOR ---
+depends on what event you encounter, be it upgrading your 
+--- RECORDSEPARATOR ---
+weapon, armor (it restores HP too!), or buying items.

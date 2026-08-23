@@ -1,0 +1,153 @@
+ConstantPool ".", "/", "_url", "split", "length", "com", "kongregate", "true", "_x", "_y", "_root", "kongregateServices", "connect", "siteLock", "kong_btn", "onRelease", "preloading", "loaded", "getBytesLoaded", "total", "getBytesTotal", "percent", "preloaderbar", "_xscale", "this", "onEnterFrame", "Math", "ceil", "preload_txt", "text", "%", "yeah!", "loader", "gotoAndPlay"
+DefineFunction2 "siteLock", 0, 3, false, false, true, false, true, false, false, true, false {
+Push ".", 1, "/", 1, register1, "_url"
+GetMember
+Push "split"
+CallMethod
+Push 2
+GetMember
+Push "split"
+CallMethod
+StoreRegister 2
+Pop
+Push register2, register2, "length"
+GetMember
+Push 1
+Subtract
+GetMember
+Push "com"
+Equals2
+PushDuplicate
+Not
+If loc018b
+Pop
+Push register2, register2, "length"
+GetMember
+Push 2
+Subtract
+GetMember
+Push "kongregate"
+Equals2
+loc018b:Not
+If loc019c
+Push "true"
+Trace
+Jump loc01b6
+loc019c:Push register1, "_x", -50000
+SetMember
+Push register1, "_y", -50000
+SetMember
+}
+loc01b6:Stop
+Push 0.0, "_root"
+GetVariable
+Push "kongregateServices"
+GetMember
+Push "connect"
+CallMethod
+Pop
+Push 0.0, "siteLock"
+CallFunction
+Pop
+Push "kong_btn"
+GetVariable
+Push "onRelease"
+DefineFunction "", 0 {
+GetURL "http://www.kongregate.com/?haref=triggerknight&src=spon-rpg-triggerknight-site-x", "_blank"
+}
+SetMember
+Push "preloading", true
+SetVariable
+Push "loaded", 0.0, "getBytesLoaded"
+CallFunction
+SetVariable
+Push "total", 0.0, "getBytesTotal"
+CallFunction
+SetVariable
+Push "percent", 0.0
+SetVariable
+Push "preloaderbar"
+GetVariable
+Push "_xscale", 0.0
+SetMember
+Push "this"
+GetVariable
+Push "onEnterFrame"
+DefineFunction2 "", 0, 2, false, false, true, false, true, false, false, true, false {
+Push "preloading"
+GetVariable
+Push true
+Equals2
+Not
+If loc03b1
+Push "loaded", 0.0, "getBytesLoaded"
+CallFunction
+SetVariable
+Push "total", 0.0, "getBytesTotal"
+CallFunction
+SetVariable
+Push "loaded"
+GetVariable
+Trace
+Push "total"
+GetVariable
+Trace
+Push "percent"
+GetVariable
+Trace
+Push "percent", "loaded"
+GetVariable
+Push "total"
+GetVariable
+Divide
+Push 100
+Multiply
+Push 1, "Math"
+GetVariable
+Push "ceil"
+CallMethod
+SetVariable
+Push "preload_txt"
+GetVariable
+Push "text", "preloaderbar"
+GetVariable
+Push "_xscale"
+GetMember
+Push "%"
+Add2
+SetMember
+Push "preloaderbar"
+GetVariable
+Push "_xscale"
+GetMember
+Push "percent"
+GetVariable
+Less2
+Not
+If loc0377
+Push "preloaderbar"
+GetVariable
+Push "_xscale", "preloaderbar"
+GetVariable
+Push "_xscale"
+GetMember
+Increment
+SetMember
+loc0377:Push "preloaderbar"
+GetVariable
+Push "_xscale"
+GetMember
+Push 100
+Less2
+Not
+Not
+If loc03b1
+Push "preloading", false
+SetVariable
+Push "yeah!"
+Trace
+Push "loader", 1, register1, "gotoAndPlay"
+CallMethod
+Pop
+}
+loc03b1:SetMember

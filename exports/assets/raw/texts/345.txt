@@ -1,0 +1,5 @@
+Ouchie! The Blademaster is low on HP! If it reaches 0, she'll 
+--- RECORDSEPARATOR ---
+die! Help!
+--- RECORDSEPARATOR ---
+Solution :  Use an Elixir or Upgrade your Armor.

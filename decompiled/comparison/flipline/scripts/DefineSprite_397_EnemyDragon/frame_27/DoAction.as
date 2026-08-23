@@ -1,0 +1,1 @@
+animestate = "attacking";

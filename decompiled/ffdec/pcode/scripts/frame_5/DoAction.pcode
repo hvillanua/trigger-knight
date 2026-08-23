@@ -1,0 +1,277 @@
+ConstantPool "screenstate", "achievement", "tb", "TransBlack", "this", "attachMovie", "buttonstate", "i", "inow", "playerdata", "wpn", "gotoAndStop", "p:", "arm", "ach", "wepcalc", "armcalc", "achcalc", "progresscalc", "gameprogress_txt", "text", "Game Progress - ", "%", "WeaponUnlocked", "_root", "kongregateStats", "submit", "Level", "HasKilledDragon", "GameProgress"
+Push "screenstate", "achievement"
+SetVariable
+Push 3, "tb", "TransBlack", 3, "this"
+GetVariable
+Push "attachMovie"
+CallMethod
+Pop
+Push "buttonstate", 0.0
+SetVariable
+Stop
+Push "i", 0.0
+SetVariable
+loc0154:Push "i"
+GetVariable
+Push 10
+Less2
+Not
+If loc01df
+Push "inow", "i"
+GetVariable
+Push 1
+Add2
+SetVariable
+Push "playerdata"
+GetVariable
+Push 1
+GetMember
+Push "i"
+GetVariable
+GetMember
+Push 1
+Add2
+Push 1, "this"
+GetVariable
+Push "wpn", "inow"
+GetVariable
+Add2
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop
+Push "p:", "playerdata"
+GetVariable
+Push 1
+GetMember
+Push "i"
+GetVariable
+GetMember
+Add2
+Trace
+Push "i", "i"
+GetVariable
+Increment
+SetVariable
+Jump loc0154
+loc01df:Push "i", 0.0
+SetVariable
+loc01ee:Push "i"
+GetVariable
+Push 10
+Less2
+Not
+If loc025f
+Push "inow", "i"
+GetVariable
+Push 1
+Add2
+SetVariable
+Push "playerdata"
+GetVariable
+Push 2
+GetMember
+Push "i"
+GetVariable
+GetMember
+Push 1
+Add2
+Push 1, "this"
+GetVariable
+Push "arm", "inow"
+GetVariable
+Add2
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop
+Push "i", "i"
+GetVariable
+Increment
+SetVariable
+Jump loc01ee
+loc025f:Push "i", 0.0
+SetVariable
+loc026e:Push "i"
+GetVariable
+Push 6
+Less2
+Not
+If loc02cd
+Push "playerdata"
+GetVariable
+Push 3
+GetMember
+Push "i"
+GetVariable
+GetMember
+Push 1
+Add2
+Push 1, "this"
+GetVariable
+Push "ach", "i"
+GetVariable
+Add2
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop
+Push "i", "i"
+GetVariable
+Increment
+SetVariable
+Jump loc026e
+loc02cd:Push "wepcalc", 0.0
+SetVariable
+Push "armcalc", 0.0
+SetVariable
+Push "achcalc", 0.0
+SetVariable
+Push "progresscalc", 0.0
+SetVariable
+Push "i", 0.0
+SetVariable
+loc0318:Push "i"
+GetVariable
+Push 10
+Less2
+Not
+If loc035c
+Push "wepcalc", "wepcalc"
+GetVariable
+Push "playerdata"
+GetVariable
+Push 1
+GetMember
+Push "i"
+GetVariable
+GetMember
+Add2
+SetVariable
+Push "i", "i"
+GetVariable
+Increment
+SetVariable
+Jump loc0318
+loc035c:Push "i", 0.0
+SetVariable
+loc036b:Push "i"
+GetVariable
+Push 10
+Less2
+Not
+If loc03af
+Push "armcalc", "armcalc"
+GetVariable
+Push "playerdata"
+GetVariable
+Push 2
+GetMember
+Push "i"
+GetVariable
+GetMember
+Add2
+SetVariable
+Push "i", "i"
+GetVariable
+Increment
+SetVariable
+Jump loc036b
+loc03af:Push "i", 0.0
+SetVariable
+loc03be:Push "i"
+GetVariable
+Push 5
+Less2
+Not
+If loc0402
+Push "achcalc", "achcalc"
+GetVariable
+Push "playerdata"
+GetVariable
+Push 3
+GetMember
+Push "i"
+GetVariable
+GetMember
+Add2
+SetVariable
+Push "i", "i"
+GetVariable
+Increment
+SetVariable
+Jump loc03be
+loc0402:Push "progresscalc", "wepcalc"
+GetVariable
+Push "armcalc"
+GetVariable
+Add2
+Push 3.5
+Multiply
+Push "achcalc"
+GetVariable
+Push 6
+Multiply
+Add2
+SetVariable
+Push "gameprogress_txt"
+GetVariable
+Push "text", "Game Progress - ", "progresscalc"
+GetVariable
+Add2
+Push "%"
+Add2
+SetMember
+Push "armcalc"
+GetVariable
+Push "WeaponUnlocked", 2, "_root"
+GetVariable
+Push "kongregateStats"
+GetMember
+Push "submit"
+CallMethod
+Pop
+Push "wepcalc"
+GetVariable
+Push "WeaponUnlocked", 2, "_root"
+GetVariable
+Push "kongregateStats"
+GetMember
+Push "submit"
+CallMethod
+Pop
+Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 0.0
+GetMember
+Push "Level", 2, "_root"
+GetVariable
+Push "kongregateStats"
+GetMember
+Push "submit"
+CallMethod
+Pop
+Push "playerdata"
+GetVariable
+Push 3
+GetMember
+Push 0.0
+GetMember
+Push "HasKilledDragon", 2, "_root"
+GetVariable
+Push "kongregateStats"
+GetMember
+Push "submit"
+CallMethod
+Pop
+Push "progresscalc"
+GetVariable
+Push "GameProgress", 2, "_root"
+GetVariable
+Push "kongregateStats"
+GetMember
+Push "submit"
+CallMethod
+Pop

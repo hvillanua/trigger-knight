@@ -1,0 +1,7 @@
+Ah! Soulshrine ahead!
+--- RECORDSEPARATOR ---
+If you find a soulshrine along the way, you can spend some of 
+--- RECORDSEPARATOR ---
+your gold for fully restore your Lifespan. Just click when the 
+--- RECORDSEPARATOR ---
+cursor shape changes to trigger the event!

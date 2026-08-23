@@ -1,0 +1,5 @@
+- Game Paused -
+--- RECORDSEPARATOR ---
+Press 'P' or click 'Resume Game' to resume
+--- RECORDSEPARATOR ---
+'M' and 'S' also can be used to mute Music and SFX. 

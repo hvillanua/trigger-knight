@@ -1,0 +1,10087 @@
+ConstantPool "Game Saved!", "savedata", "/", "tksave", "SharedObject", "getLocal", "data", "playersave", "playerdata", "flush", "Game loaded!", "loaddata", "CHALLENGE COMPLETED - ", "achname", "announce2", "Weapon Discovery : ", "wepname", "Armor Discovery : ", "armname", "initiating game", "retry", "bgmvol", "bgmgeneral", "setVolume", "bgmgame", "start", "tutstate", "showmenu", "isbegin", "ispaused", "gameover", "istuto", "soulspawned", "armorspawned", "weaponspawned", "dragonspawned", "pregamedelay", "postgamedelay", "lose", "gamestate", "running", "disnow", "evarray", "pricearray", "encountercount", "runscore", "isbattle", "achcheck", "lastchancerate", "hasgivenchance", "shakespeed", "shakedelay", "shakedir", "shaker", "blurred", "distance", "nextevent", "movespeed", "maxspeed", "isevent", "canact", "hasact", "eventx", "eventnow", "obarray", "obqty", "gold", "pricenow", "disscore", "score", "elvl", "elvlnow", "weplvl", "armlvl", "xextension", "eqty", "fxqty", "damnumqty", "inthppos", "intinvpos", "intgoldpos", "intextpos", "intactpos", "intnextpos", "intscorepos", "intfriction", "expgain", "inventory", "existence", "existencedec", "randomizeEvent", "game", "ob", "createEmptyMovieClip", "_x", "hud", "bg", "bdg", "bgfx", "spr", "fx", "bgf1", "BGFront", "attachMovie", "bgf2", "_y", "bgm1", "BGMid", "bgm2", "bgb1", "BGBack", "bgb2", "initInterface", "chara", "spawnSprite", "paneltut", "PanelTutorial", "_alpha", "gotoAndStop", "pauseGame", "sfxnotice", "bgmmuted", "Key", "isDown", "inputarray", "sfxmuted", "sfxgeneral", "screenstate", "intendedpause", "cur", "", "end", "event_txt", "text", "Battle", "action_txt", "Use Elixir", "price_txt", "Restore HP", "Use Divine Edge", "10000% Damage", "Use Gold Voucher", "1000% Gold", "No Action", "Bladesmith", "Upgrade Weapon", "G", "Armorsmith", "Upgrade Armor", "Soulshrine", "Restores Lifespan", "Pharmacy", "Replaces ", "itemname", " w/ Elixir", "Buy Elixir", "Grim\'s Shop", " w/ Divine Edge", "Buy Divine Edge", "Voucher Store", " w/ Gold Ticket", "Buy Gold Ticket", " (Insufficient)", " (LV MAX)", "No Action!", "intbot", "InterfaceBottom", "intboty", "intava", "InterfaceAvatar", "intavax", "intlif", "InterfaceLifespan2", "intlify", "intgold", "InterfaceGold", "intgoldx", "intnext", "InterfaceNext", "intnextx", "intehp", "InterfaceEnemyHP", "_visible", "hero", "item", "emitFX", "hp", "maxhp", "atkfactor", "enemy", "sfxitemuse", "showTutorial", "sfxbattlestart", "attackdelay", "battling", "state", "idle", "You can use Elixir to heal HP!", "announce", "You can use Divine Edge to multiply the damage!", "You can use Gold Ticket to multiply gold reward!", "enemy0", "enemy1", "enemy2", "enemy3", "Hero", "fact", "mspd", "armorrate", "armorbase", "atk", "weaponrate", "weaponbase", "numattack", "xtar", "ytar", "xtarchange", "tarchangedelay", "ytarchange", "attackfinished", "attacktarget", "knockback", "push", "EnemyGoblin", "etype", "_xscale", "exp", "EnemyGolem", "EnemyWolf", "EnemyDragon", "intann", "InterfaceAnnounce2", "msg", "avanow", "intann2", "InterfaceAnnounce", "annmes", "enow", "randnum", "extbaseprice", "extpricerate", "weaponbaseprice", "weaponpricerate", "armorbaseprice", "armorpricerate", "pharmacybaseprice", "heraldrybaseprice", "voucherbaseprice", "eventdelay", "Event!", "sfxevent", "evtbdg", "Building", "i", "length", "swapDepths", "extrate", "sfxcharadie", "intdead", "InterfaceDead", "msg1", "Your lifespan reaches 0%", "randomizeTip", "dead", "Math", "round", "tippool", "msg2", "Protip ", "floor", "Day", "kongregateStats", "submit", "unlockAchievement", "intbotpos", "intavapos", "intlifpos", "hpbar", "hpbarshade", "hpbarmask", "hp_txt", "wep_txt", " [", " ATK]", "arm_txt", "score_txt", "day_txt", "item_txt", "-", "Elixir", "Divine Edge", "Gold Voucher", "lifespanbarmask", "life_txt", "lifedec_txt", "gold_txt", "iconnow", "icon0", "icon1", "icon2", "availrange", "unavailrange", "removeMovieClip", "startBattle", "elvl:", "animestate", "idling", "gotoAndPlay", "move", "moving", "attack", "attacking", "flinch", "flinching", "filters", "blurfilter", "stop", "intpau", "InterfacePause", "resume_btn", "onRollOver", "sfxbuttonselect", "quit_btn", "onRelease", "sfxbuttonpress", "_parent", "nofilter", "play", "spawnEvent", "updateEnemyLevel", "updateEvent", "checkBattle", "behaveAI", "tutorial", "zSort", "bgScroll", "checkExistence", "You are killed by the enemy.", "animeChara", "screenShake", "updateInterface", "enemyinrange", "j", "abs", "ishit", "fak yea!", "attackChara", "HasKilledDragon", "DragonKilled", ":: Got ", "G!", "showInfo", "dispose", "splice", "sfxeventtriggered", "hit", "upgrade", "buy", "FXHit", "FXItem", "FXUpgrade", "FXBuy", "_yscale", "intinf", "InterfaceInfo", "report_mc", "report_txt", "damage", "iscrit", "sfxhit01", "sfxhit02", "sfxhit03", "d", "DamageNum", "damnum_mc", "damage_txt", "!!", "sfxenemydie", "Upgrade : ", " > ", ":: Lost ", "me", "MouseEffect", "unlockWeapon", "WeaponUnlocked", "unlockall", "unlockArmor", "ArmorUnlocked", "ef", "Effect-Flash", "Bought : Potion", "Bought : Divine Edge", "Bought : Gold Voucher", "sfxerror", "db included!", "inthpx", "intinvx", "intexty", "intacty", "intscorex", "expbase", "expfactor", "Array", "Barehand", "Dagger", "Sword", "Rapier", "Falchion", "Katana", "Flamberge", "Zweihander", "Broad Kris", "Excalibur", "Astral Sword", "Barebody", "Clothing", "Protector", "Breastplate", "Chainmail", "Fullplate", "Samurai Mail", "Valkyrie Garb", "Odin Garb", "Avalon", "Astral Armor", "Slay a Dragon!", "Stashed 3000 Gold!", "Reach Day #10!", "Got All Collection!", "70000+ Damage!", "Empty", "#22 There are 22 Protips in total.", "#21 Upgrade weapon to increase damage.", "#20 Play STING\'s games. They\'re good.", "#19 Keep running!", "#18 Perhaps you CAN win the game. Perhaps not.", "#17 Keep losing? Try again.", "#16 This game doesn\'t suck!", "#15 Support the developers!", "#14 Believe in protips!", "#13 Need more damage? Purchase Divine Edge!", "#12 Higher level, higher score.", "#11 Dragon appears starting from Day 8.", "#10 Use elixir to replenish your HP!", "#09 Press P to pause the game.", "#08 Purchase Gold Voucher for quick wealth.", "#07 Enemies level up each day.", "#06 Press S to mute sound.", "#05 Press M to mute music.", "#04 If only you can Insta-kill those Dragons...", "#03 Your HP recovers when upgrading armor.", "#02 Replenish lifespan at the Soulshrine!", "#01 People die if they are killed.", "source included!", "HIGH", "blurX", "blurY", "quality", "blur", "flash", "BlurFilter", "bgm", "this", "sfx", "voiceg", "voiceb", "Sound", "BGMGame", "attachSound", "bgmscore", "BGMScore", "sfxapplause", "SFXApplause", "SFXBattleStart", "SFXButtonPress", "SFXButtonSelect", "SFXCharaDie", "SFXEnemyDie", "SFXError", "SFXEvent", "SFXEventTriggered", "sfxexploop", "SFXEXPLoop", "SFXHit01", "SFXHit02", "SFXHit03", "SFXItemUse", "SFXNotice", "Mouse", "hide", "Cursor", "onMouseDown", "achievement", "sfxstartbutton", "screenbefore", "title", "credits", "useItem", "actEvent", "onEnterFrame", "sil", "silmask", "logo", "buttonstate", "start_btn", "achievement_btn", "credits_btn", "moregames_btn", "levelelement", "level_txt", "Level ", " (x", " Score)", "nextlvl", "exp_txt", " EXP", "expbar", "wpn", "sensor", "hitTest", "True!", "equip_txt", "Lv", " - ", "arm", "mainLoop", "silhouette", "newhigh", "fuckyeah!", "highscoreanim", "donecounting", "retry_btn", "enabled", "end_btn", "issaved", "Level", "saveFile", "highscore_txt", "Highscore : ", "buttonInput", "bgmFade", "updateCursor"
+DefineFunction "saveFile", 0 {
+Push "Game Saved!"
+Trace
+Push "savedata", "/", "tksave", 2, "SharedObject"
+GetVariable
+Push "getLocal"
+CallMethod
+SetVariable
+Push "savedata"
+GetVariable
+Push "data"
+GetMember
+Push "playersave", "playerdata"
+GetVariable
+SetMember
+Push 0.0, "savedata"
+GetVariable
+Push "flush"
+CallMethod
+Pop
+}
+DefineFunction "loadFile", 0 {
+Push "Game loaded!"
+Trace
+Push "loaddata", "/", "tksave", 2, "SharedObject"
+GetVariable
+Push "getLocal"
+CallMethod
+SetVariable
+Push "playerdata", "loaddata"
+GetVariable
+Push "data"
+GetMember
+Push "playersave"
+GetMember
+SetVariable
+Push "loaddata"
+GetVariable
+Push "data"
+GetMember
+Push "playersave"
+GetMember
+Trace
+Push "playerdata"
+GetVariable
+Trace
+}
+DefineFunction "newGame", 0 {
+Push "playerdata", 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 6
+InitArray
+Push 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1, 10
+InitArray
+Push 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1, 10
+InitArray
+Push 0.0, 0.0, 0.0, 0.0, 1, 0.0, 1, 7
+InitArray
+Push 4
+InitArray
+SetVariable
+}
+DefineFunction2 "unlockAchievement", 1, 2, false, false, true, false, true, false, true, false, false, 1, "what" {
+Push "playerdata"
+GetVariable
+Push 3
+GetMember
+Push register1
+GetMember
+Push 0.0
+Equals2
+Not
+If loc197a
+Push "playerdata"
+GetVariable
+Push 3
+GetMember
+Push register1, 1
+SetMember
+Push "CHALLENGE COMPLETED - ", "achname"
+GetVariable
+Push register1
+GetMember
+Add2
+Push 1, "announce2"
+CallFunction
+Pop
+}
+loc197a:DefineFunction2 "unlockWeapon", 1, 2, false, false, true, false, true, false, true, false, false, 1, "what" {
+Push "playerdata"
+GetVariable
+Push 1
+GetMember
+Push register1
+GetMember
+Push 0.0
+Equals2
+Not
+If loc19fa
+Push "playerdata"
+GetVariable
+Push 1
+GetMember
+Push register1, 1
+SetMember
+Push "Weapon Discovery : ", "wepname"
+GetVariable
+Push register1, 1
+Add2
+GetMember
+Add2
+Push 1, "announce2"
+CallFunction
+Pop
+}
+loc19fa:DefineFunction2 "unlockArmor", 1, 2, false, false, true, false, true, false, true, false, false, 1, "what" {
+Push "playerdata"
+GetVariable
+Push 2
+GetMember
+Push register1
+GetMember
+Push 0.0
+Equals2
+Not
+If loc1a79
+Push "playerdata"
+GetVariable
+Push 2
+GetMember
+Push register1, 1
+SetMember
+Push "Armor Discovery : ", "armname"
+GetVariable
+Push register1, 1
+Add2
+GetMember
+Add2
+Push 1, "announce2"
+CallFunction
+Pop
+}
+loc1a79:DefineFunction2 "initGame", 0, 2, false, false, true, false, true, false, false, true, false {
+Push "initiating game"
+Trace
+Push "retry"
+GetVariable
+Push false
+Equals2
+Not
+If loc1aee
+Push "bgmvol", 0.0
+SetVariable
+Push 0.0, 1, "bgmgeneral"
+GetVariable
+Push "setVolume"
+CallMethod
+Pop
+Push 9999, 0.0, 2, "bgmgame"
+GetVariable
+Push "start"
+CallMethod
+Pop
+loc1aee:Push "tutstate", false, false, false, false, false, false, 6
+InitArray
+SetVariable
+Push "showmenu", false
+SetVariable
+Push "isbegin", false
+SetVariable
+Push "ispaused", false
+SetVariable
+Push "gameover", false
+SetVariable
+Push "istuto", false
+SetVariable
+Push "soulspawned", false
+SetVariable
+Push "armorspawned", false
+SetVariable
+Push "weaponspawned", false
+SetVariable
+Push "dragonspawned", false
+SetVariable
+Push "pregamedelay", 60
+SetVariable
+Push "postgamedelay", 60
+SetVariable
+Push "lose", false
+SetVariable
+Push "gamestate", "running"
+SetVariable
+Push "disnow", 0.0
+SetVariable
+Push "evarray", 0.0, 0.0, 0.0, 3
+InitArray
+SetVariable
+Push "pricearray", 0.0, 0.0, 0.0, 3
+InitArray
+SetVariable
+Push "encountercount", 3
+RandomNumber
+SetVariable
+Push "runscore", 0.0
+SetVariable
+Push "isbattle", false
+SetVariable
+Push "achcheck", false
+SetVariable
+Push "lastchancerate", 40, 10
+RandomNumber
+Add2
+SetVariable
+Push "hasgivenchance", false
+SetVariable
+Push "shakespeed", 0.0
+SetVariable
+Push "shakedelay", 0.0
+SetVariable
+Push "shakedir", 0.0
+SetVariable
+Push "shaker", false
+SetVariable
+Push "blurred", false
+SetVariable
+Push "distance", 0.0
+SetVariable
+Push "nextevent", 1000, 1000
+RandomNumber
+Add2
+SetVariable
+Push "movespeed", 0.0
+SetVariable
+Push "maxspeed", 15
+SetVariable
+Push "isevent", false
+SetVariable
+Push "canact", false
+SetVariable
+Push "hasact", false
+SetVariable
+Push "eventx", 0.0
+SetVariable
+Push "eventnow", 8
+SetVariable
+Push "obarray", 0.0
+InitArray
+SetVariable
+Push "obqty", 0.0
+SetVariable
+Push "gold", 300
+SetVariable
+Push "pricenow", 0.0
+SetVariable
+Push "disscore", 0.0
+SetVariable
+Push "score", 0.0
+SetVariable
+Push "elvl", 1
+SetVariable
+Push "elvlnow", 1
+SetVariable
+Push "weplvl", 1
+SetVariable
+Push "armlvl", 1
+SetVariable
+Push "xextension", 0.0
+SetVariable
+Push "eqty", 0.0
+SetVariable
+Push "fxqty", 0.0
+SetVariable
+Push "damnumqty", 0.0
+SetVariable
+Push "inthppos", 1
+SetVariable
+Push "intinvpos", 1
+SetVariable
+Push "intgoldpos", 1
+SetVariable
+Push "intextpos", 1
+SetVariable
+Push "intactpos", 1
+SetVariable
+Push "intnextpos", 1
+SetVariable
+Push "intscorepos", 1
+SetVariable
+Push "intfriction", 4
+SetVariable
+Push "expgain", 0.0
+SetVariable
+Push "inventory", 1
+SetVariable
+Push "existence", 99
+SetVariable
+Push "existencedec", 99
+SetVariable
+Push 0.0, 1, "randomizeEvent"
+CallFunction
+Pop
+Push 1, 1, "randomizeEvent"
+CallFunction
+Pop
+Push 2, 1, "randomizeEvent"
+CallFunction
+Pop
+Push 1, "game", 2, register1, "ob"
+GetMember
+Push "createEmptyMovieClip"
+CallMethod
+Pop
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "_x", -100
+SetMember
+Push 2, "hud", 2, register1, "createEmptyMovieClip"
+CallMethod
+Pop
+Push 1, "bg", 2, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "createEmptyMovieClip"
+CallMethod
+Pop
+Push 2, "bdg", 2, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "createEmptyMovieClip"
+CallMethod
+Pop
+Push 3, "bgfx", 2, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "createEmptyMovieClip"
+CallMethod
+Pop
+Push 5, "spr", 2, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "createEmptyMovieClip"
+CallMethod
+Pop
+Push 6, "fx", 2, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "createEmptyMovieClip"
+CallMethod
+Pop
+Push 6, "bgf1", "BGFront", 3, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push 7, "bgf2", "BGFront", 3, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgf1"
+GetMember
+Push "_x", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgf1"
+GetMember
+Push "_y", 170
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgf2"
+GetMember
+Push "_x", 960
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgf2"
+GetMember
+Push "_y", 170
+SetMember
+Push 3, "bgm1", "BGMid", 3, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push 4, "bgm2", "BGMid", 3, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgm1"
+GetMember
+Push "_x", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgm1"
+GetMember
+Push "_y", 60
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgm2"
+GetMember
+Push "_x", 960
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgm2"
+GetMember
+Push "_y", 60
+SetMember
+Push 1, "bgb1", "BGBack", 3, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push 2, "bgb2", "BGBack", 3, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgb1"
+GetMember
+Push "_x", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgb1"
+GetMember
+Push "_y", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgb2"
+GetMember
+Push "_x", 960
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgb2"
+GetMember
+Push "_y", 0.0
+SetMember
+Push 0.0, "initInterface"
+CallFunction
+Pop
+Push "chara", 1, "spawnSprite"
+CallFunction
+Pop
+}
+DefineFunction2 "showTutorial", 1, 3, false, false, true, false, true, false, false, true, false, 2, "what" {
+Push register2, 0.0
+Equals2
+Not
+Not
+If loc2364
+Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 5
+GetMember
+Push 0.0
+Equals2
+Not
+If loc235f
+Push "tutstate"
+GetVariable
+Push register2
+GetMember
+Push false
+Equals2
+Not
+If loc235f
+Push "tutstate"
+GetVariable
+Push register2, true
+SetMember
+Push 15, "paneltut", "PanelTutorial", 3, register1, "hud"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push register1, "hud"
+GetMember
+Push "paneltut"
+GetMember
+Push "_x", 10
+SetMember
+Push register1, "hud"
+GetMember
+Push "paneltut"
+GetMember
+Push "_y", 10
+SetMember
+Push register1, "hud"
+GetMember
+Push "paneltut"
+GetMember
+Push "_alpha", 0.0
+SetMember
+Push register2, 1
+Add2
+Push 1, register1, "hud"
+GetMember
+Push "paneltut"
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop
+Push true, 1, "pauseGame"
+CallFunction
+Pop
+Push "istuto", true
+SetVariable
+Push 1, 0.0, 2, "sfxnotice"
+GetVariable
+Push "start"
+CallMethod
+Pop
+loc235f:Jump loc2439
+loc2364:Push "tutstate"
+GetVariable
+Push register2, true
+SetMember
+Push 15, "paneltut", "PanelTutorial", 3, register1, "hud"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push register1, "hud"
+GetMember
+Push "paneltut"
+GetMember
+Push "_x", 10
+SetMember
+Push register1, "hud"
+GetMember
+Push "paneltut"
+GetMember
+Push "_y", 10
+SetMember
+Push register1, "hud"
+GetMember
+Push "paneltut"
+GetMember
+Push "_alpha", 0.0
+SetMember
+Push register2, 1
+Add2
+Push 1, register1, "hud"
+GetMember
+Push "paneltut"
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop
+Push true, 1, "pauseGame"
+CallFunction
+Pop
+Push "istuto", true
+SetVariable
+Push 1, 0.0, 2, "sfxnotice"
+GetVariable
+Push "start"
+CallMethod
+Pop
+}
+loc2439:DefineFunction "bgmFade", 0 {
+Push "bgmmuted"
+GetVariable
+Push false
+Equals2
+Not
+If loc2496
+Push "bgmvol"
+GetVariable
+Push 90
+Less2
+Not
+If loc2491
+Push "bgmvol", "bgmvol"
+GetVariable
+Increment
+SetVariable
+Push "bgmvol"
+GetVariable
+Push 1, "bgmgeneral"
+GetVariable
+Push "setVolume"
+CallMethod
+Pop
+loc2491:Jump loc24d1
+loc2496:Push "bgmvol"
+GetVariable
+Push 0.0
+Greater
+Not
+If loc24d1
+Push "bgmvol", "bgmvol"
+GetVariable
+Decrement
+SetVariable
+Push "bgmvol"
+GetVariable
+Push 1, "bgmgeneral"
+GetVariable
+Push "setVolume"
+CallMethod
+Pop
+}
+loc24d1:DefineFunction "buttonInput", 0 {
+Push 77, 1, "Key"
+GetVariable
+Push "isDown"
+CallMethod
+PushDuplicate
+Not
+If loc251b
+Pop
+Push "inputarray"
+GetVariable
+Push 0.0
+GetMember
+Push false
+Equals2
+loc251b:Not
+If loc2562
+Push "inputarray"
+GetVariable
+Push 0.0, true
+SetMember
+Push "bgmmuted"
+GetVariable
+Push true
+Equals2
+Not
+If loc2555
+Push "bgmmuted", false
+SetVariable
+Jump loc255d
+loc2555:Push "bgmmuted", true
+SetVariable
+loc255d:Jump loc25b5
+loc2562:Push 77, 1, "Key"
+GetVariable
+Push "isDown"
+CallMethod
+Not
+PushDuplicate
+Not
+If loc259a
+Pop
+Push "inputarray"
+GetVariable
+Push 0.0
+GetMember
+Push true
+Equals2
+loc259a:Not
+If loc25b5
+Push "inputarray"
+GetVariable
+Push 0.0, false
+SetMember
+loc25b5:Push 83, 1, "Key"
+GetVariable
+Push "isDown"
+CallMethod
+PushDuplicate
+Not
+If loc25e8
+Pop
+Push "inputarray"
+GetVariable
+Push 1
+GetMember
+Push false
+Equals2
+loc25e8:Not
+If loc266f
+Push "inputarray"
+GetVariable
+Push 1, true
+SetMember
+Push "sfxmuted"
+GetVariable
+Push true
+Equals2
+Not
+If loc2635
+Push "sfxmuted", false
+SetVariable
+Push 100, 1, "sfxgeneral"
+GetVariable
+Push "setVolume"
+CallMethod
+Pop
+Jump loc266a
+loc2635:Push "sfxmuted"
+GetVariable
+Push false
+Equals2
+Not
+If loc266a
+Push "sfxmuted", true
+SetVariable
+Push 0.0, 1, "sfxgeneral"
+GetVariable
+Push "setVolume"
+CallMethod
+Pop
+loc266a:Jump loc26ba
+loc266f:Push 83, 1, "Key"
+GetVariable
+Push "isDown"
+CallMethod
+Not
+PushDuplicate
+Not
+If loc26a3
+Pop
+Push "inputarray"
+GetVariable
+Push 1
+GetMember
+Push true
+Equals2
+loc26a3:Not
+If loc26ba
+Push "inputarray"
+GetVariable
+Push 1, false
+SetMember
+loc26ba:Push 80, 1, "Key"
+GetVariable
+Push "isDown"
+CallMethod
+PushDuplicate
+Not
+If loc26ed
+Pop
+Push "inputarray"
+GetVariable
+Push 2
+GetMember
+Push false
+Equals2
+loc26ed:Not
+If loc2784
+Push "inputarray"
+GetVariable
+Push 2, true
+SetMember
+Push "screenstate"
+GetVariable
+Push "game"
+Equals2
+PushDuplicate
+Not
+If loc2724
+Pop
+Push "isbegin"
+GetVariable
+Push true
+Equals2
+loc2724:Not
+If loc277f
+Push "ispaused"
+GetVariable
+Push false
+Equals2
+Not
+If loc2757
+Push "intendedpause", true
+SetVariable
+Push true, 1, "pauseGame"
+CallFunction
+Pop
+Jump loc277f
+loc2757:Push "intendedpause"
+GetVariable
+Push true
+Equals2
+Not
+If loc277f
+Push false, 1, "pauseGame"
+CallFunction
+Pop
+Push "intendedpause", false
+SetVariable
+loc277f:Jump loc27cf
+loc2784:Push 80, 1, "Key"
+GetVariable
+Push "isDown"
+CallMethod
+Not
+PushDuplicate
+Not
+If loc27b8
+Pop
+Push "inputarray"
+GetVariable
+Push 2
+GetMember
+Push true
+Equals2
+loc27b8:Not
+If loc27cf
+Push "inputarray"
+GetVariable
+Push 2, false
+SetMember
+}
+loc27cf:DefineFunction2 "updateCursor", 0, 2, false, false, true, false, true, false, false, true, false {
+Push register1, "cur"
+GetMember
+Push "_x", "", 20
+GetProperty
+SetMember
+Push register1, "cur"
+GetMember
+Push "_y", "", 21
+GetProperty
+SetMember
+Push "screenstate"
+GetVariable
+Push "game"
+Equals2
+Not
+If loc2f4c
+Push "gamestate"
+GetVariable
+Push "end"
+Equals2
+Not
+Not
+If loc2f2e
+Push "ispaused"
+GetVariable
+Push false
+Equals2
+Not
+If loc2f10
+Push "isbattle"
+GetVariable
+Push true
+Equals2
+Not
+If loc29d9
+Push "inventory"
+GetVariable
+Push 0.0
+Equals2
+Not
+Not
+If loc2979
+Push 3, 1, register1, "cur"
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop
+Push register1, "cur"
+GetMember
+Push "event_txt"
+GetMember
+Push "text", "Battle"
+SetMember
+Push "inventory"
+GetVariable
+StoreRegister 0
+Push 1
+StrictEquals
+If loc28e1
+Push register0, 2
+StrictEquals
+If loc2912
+Push register0, 3
+StrictEquals
+If loc2943
+Jump loc2974
+loc28e1:Push register1, "cur"
+GetMember
+Push "action_txt"
+GetMember
+Push "text", "Use Elixir"
+SetMember
+Push register1, "cur"
+GetMember
+Push "price_txt"
+GetMember
+Push "text", "Restore HP"
+SetMember
+Jump loc2974
+loc2912:Push register1, "cur"
+GetMember
+Push "action_txt"
+GetMember
+Push "text", "Use Divine Edge"
+SetMember
+Push register1, "cur"
+GetMember
+Push "price_txt"
+GetMember
+Push "text", "10000% Damage"
+SetMember
+Jump loc2974
+loc2943:Push register1, "cur"
+GetMember
+Push "action_txt"
+GetMember
+Push "text", "Use Gold Voucher"
+SetMember
+Push register1, "cur"
+GetMember
+Push "price_txt"
+GetMember
+Push "text", "1000% Gold"
+SetMember
+Jump loc2974
+loc2974:Jump loc29d4
+loc2979:Push 2, 1, register1, "cur"
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop
+Push register1, "cur"
+GetMember
+Push "event_txt"
+GetMember
+Push "text", ""
+SetMember
+Push register1, "cur"
+GetMember
+Push "action_txt"
+GetMember
+Push "text", "No Action"
+SetMember
+Push register1, "cur"
+GetMember
+Push "price_txt"
+GetMember
+Push "text", ""
+SetMember
+loc29d4:Jump loc2f0b
+loc29d9:Push "canact"
+GetVariable
+Push true
+Equals2
+PushDuplicate
+Not
+If loc29f9
+Pop
+Push "hasact"
+GetVariable
+Push false
+Equals2
+loc29f9:Not
+If loc2eb0
+Push "eventnow"
+GetVariable
+StoreRegister 0
+Push 1
+StrictEquals
+If loc2a6c
+Push register0, 2
+StrictEquals
+If loc2aba
+Push register0, 3
+StrictEquals
+If loc2b08
+Push register0, 4
+StrictEquals
+If loc2b56
+Push register0, 5
+StrictEquals
+If loc2bea
+Push register0, 6
+StrictEquals
+If loc2c7e
+Jump loc2d12
+loc2a6c:Push register1, "cur"
+GetMember
+Push "event_txt"
+GetMember
+Push "text", "Bladesmith"
+SetMember
+Push register1, "cur"
+GetMember
+Push "action_txt"
+GetMember
+Push "text", "Upgrade Weapon"
+SetMember
+Push register1, "cur"
+GetMember
+Push "price_txt"
+GetMember
+Push "text", "pricenow"
+GetVariable
+Push "G"
+Add2
+SetMember
+Jump loc2d12
+loc2aba:Push register1, "cur"
+GetMember
+Push "event_txt"
+GetMember
+Push "text", "Armorsmith"
+SetMember
+Push register1, "cur"
+GetMember
+Push "action_txt"
+GetMember
+Push "text", "Upgrade Armor"
+SetMember
+Push register1, "cur"
+GetMember
+Push "price_txt"
+GetMember
+Push "text", "pricenow"
+GetVariable
+Push "G"
+Add2
+SetMember
+Jump loc2d12
+loc2b08:Push register1, "cur"
+GetMember
+Push "event_txt"
+GetMember
+Push "text", "Soulshrine"
+SetMember
+Push register1, "cur"
+GetMember
+Push "action_txt"
+GetMember
+Push "text", "Restores Lifespan"
+SetMember
+Push register1, "cur"
+GetMember
+Push "price_txt"
+GetMember
+Push "text", "pricenow"
+GetVariable
+Push "G"
+Add2
+SetMember
+Jump loc2d12
+loc2b56:Push register1, "cur"
+GetMember
+Push "event_txt"
+GetMember
+Push "text", "Pharmacy"
+SetMember
+Push "inventory"
+GetVariable
+Push 0.0
+Equals2
+Not
+Not
+If loc2bb2
+Push register1, "cur"
+GetMember
+Push "action_txt"
+GetMember
+Push "text", "Replaces ", "itemname"
+GetVariable
+Push "inventory"
+GetVariable
+GetMember
+Add2
+Push " w/ Elixir"
+Add2
+SetMember
+Jump loc2bc8
+loc2bb2:Push register1, "cur"
+GetMember
+Push "action_txt"
+GetMember
+Push "text", "Buy Elixir"
+SetMember
+loc2bc8:Push register1, "cur"
+GetMember
+Push "price_txt"
+GetMember
+Push "text", "pricenow"
+GetVariable
+Push "G"
+Add2
+SetMember
+Jump loc2d12
+loc2bea:Push register1, "cur"
+GetMember
+Push "event_txt"
+GetMember
+Push "text", "Grim\'s Shop"
+SetMember
+Push "inventory"
+GetVariable
+Push 0.0
+Equals2
+Not
+Not
+If loc2c46
+Push register1, "cur"
+GetMember
+Push "action_txt"
+GetMember
+Push "text", "Replaces ", "itemname"
+GetVariable
+Push "inventory"
+GetVariable
+GetMember
+Add2
+Push " w/ Divine Edge"
+Add2
+SetMember
+Jump loc2c5c
+loc2c46:Push register1, "cur"
+GetMember
+Push "action_txt"
+GetMember
+Push "text", "Buy Divine Edge"
+SetMember
+loc2c5c:Push register1, "cur"
+GetMember
+Push "price_txt"
+GetMember
+Push "text", "pricenow"
+GetVariable
+Push "G"
+Add2
+SetMember
+Jump loc2d12
+loc2c7e:Push register1, "cur"
+GetMember
+Push "event_txt"
+GetMember
+Push "text", "Voucher Store"
+SetMember
+Push "inventory"
+GetVariable
+Push 0.0
+Equals2
+Not
+Not
+If loc2cda
+Push register1, "cur"
+GetMember
+Push "action_txt"
+GetMember
+Push "text", "Replaces ", "itemname"
+GetVariable
+Push "inventory"
+GetVariable
+GetMember
+Add2
+Push " w/ Gold Ticket"
+Add2
+SetMember
+Jump loc2cf0
+loc2cda:Push register1, "cur"
+GetMember
+Push "action_txt"
+GetMember
+Push "text", "Buy Gold Ticket"
+SetMember
+loc2cf0:Push register1, "cur"
+GetMember
+Push "price_txt"
+GetMember
+Push "text", "pricenow"
+GetVariable
+Push "G"
+Add2
+SetMember
+Jump loc2d12
+loc2d12:Push "gold"
+GetVariable
+Push "pricenow"
+GetVariable
+Less2
+Not
+If loc2d6e
+Push 2, 1, register1, "cur"
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop
+Push register1, "cur"
+GetMember
+Push "price_txt"
+GetMember
+Push "text", register1, "cur"
+GetMember
+Push "price_txt"
+GetMember
+Push "text"
+GetMember
+Push " (Insufficient)"
+Add2
+SetMember
+Jump loc2eab
+loc2d6e:Push "eventnow"
+GetVariable
+Push 1
+Equals2
+Not
+If loc2e00
+Push "weplvl"
+GetVariable
+Push 10
+Less2
+Not
+Not
+If loc2de2
+Push 2, 1, register1, "cur"
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop
+Push register1, "cur"
+GetMember
+Push "price_txt"
+GetMember
+Push "text", register1, "cur"
+GetMember
+Push "price_txt"
+GetMember
+Push "text"
+GetMember
+Push " (LV MAX)"
+Add2
+SetMember
+Jump loc2dfb
+loc2de2:Push 3, 1, register1, "cur"
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop
+loc2dfb:Jump loc2eab
+loc2e00:Push "eventnow"
+GetVariable
+Push 2
+Equals2
+Not
+If loc2e92
+Push "armlvl"
+GetVariable
+Push 10
+Less2
+Not
+Not
+If loc2e74
+Push 2, 1, register1, "cur"
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop
+Push register1, "cur"
+GetMember
+Push "price_txt"
+GetMember
+Push "text", register1, "cur"
+GetMember
+Push "price_txt"
+GetMember
+Push "text"
+GetMember
+Push " (LV MAX)"
+Add2
+SetMember
+Jump loc2e8d
+loc2e74:Push 3, 1, register1, "cur"
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop
+loc2e8d:Jump loc2eab
+loc2e92:Push 3, 1, register1, "cur"
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop
+loc2eab:Jump loc2f0b
+loc2eb0:Push 2, 1, register1, "cur"
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop
+Push register1, "cur"
+GetMember
+Push "event_txt"
+GetMember
+Push "text", ""
+SetMember
+Push register1, "cur"
+GetMember
+Push "action_txt"
+GetMember
+Push "text", "No Action!"
+SetMember
+Push register1, "cur"
+GetMember
+Push "price_txt"
+GetMember
+Push "text", ""
+SetMember
+loc2f0b:Jump loc2f29
+loc2f10:Push 1, 1, register1, "cur"
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop
+loc2f29:Jump loc2f47
+loc2f2e:Push 1, 1, register1, "cur"
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop
+loc2f47:Jump loc2f65
+loc2f4c:Push 1, 1, register1, "cur"
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop
+}
+loc2f65:DefineFunction2 "initInterface", 0, 2, false, false, true, false, true, false, false, true, false {
+Push 1, "intbot", "InterfaceBottom", 3, register1, "hud"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push register1, "hud"
+GetMember
+Push "intbot"
+GetMember
+Push "_x", 0.0
+SetMember
+Push register1, "hud"
+GetMember
+Push "intbot"
+GetMember
+Push "_y", "intboty"
+GetVariable
+Push 1
+GetMember
+SetMember
+Push 3, "intava", "InterfaceAvatar", 3, register1, "hud"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push register1, "hud"
+GetMember
+Push "intava"
+GetMember
+Push "_x", "intavax"
+GetVariable
+Push 1
+GetMember
+SetMember
+Push register1, "hud"
+GetMember
+Push "intava"
+GetMember
+Push "_y", 325
+SetMember
+Push 4, "intlif", "InterfaceLifespan2", 3, register1, "hud"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push register1, "hud"
+GetMember
+Push "intlif"
+GetMember
+Push "_x", 160
+SetMember
+Push register1, "hud"
+GetMember
+Push "intlif"
+GetMember
+Push "_y", "intlify"
+GetVariable
+Push 1
+GetMember
+SetMember
+Push 5, "intgold", "InterfaceGold", 3, register1, "hud"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push register1, "hud"
+GetMember
+Push "intgold"
+GetMember
+Push "_x", "intgoldx"
+GetVariable
+Push 1
+GetMember
+SetMember
+Push register1, "hud"
+GetMember
+Push "intgold"
+GetMember
+Push "_y", 2
+SetMember
+Push 6, "intnext", "InterfaceNext", 3, register1, "hud"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push register1, "hud"
+GetMember
+Push "intnext"
+GetMember
+Push "_x", "intnextx"
+GetVariable
+Push 1
+GetMember
+SetMember
+Push register1, "hud"
+GetMember
+Push "intnext"
+GetMember
+Push "_y", 35
+SetMember
+Push 7, "intehp", "InterfaceEnemyHP", 3, register1, "hud"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push register1, "hud"
+GetMember
+Push "intehp"
+GetMember
+Push "_x", 100
+SetMember
+Push register1, "hud"
+GetMember
+Push "intehp"
+GetMember
+Push "_y", 100
+SetMember
+Push register1, "hud"
+GetMember
+Push "intehp"
+GetMember
+Push "_visible", false
+SetMember
+}
+DefineFunction2 "useItem", 0, 2, false, false, true, false, true, false, false, true, false {
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "_y"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "_x"
+GetMember
+Push "item", 3, "emitFX"
+CallFunction
+Pop
+Push "inventory"
+GetVariable
+StoreRegister 0
+Push 1
+StrictEquals
+If loc3231
+Push register0, 2
+StrictEquals
+If loc3273
+Push register0, 3
+StrictEquals
+If loc329d
+Jump loc32e8
+loc3231:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "hp", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "maxhp"
+GetMember
+SetMember
+Jump loc32e8
+loc3273:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "atkfactor", 100
+SetMember
+Jump loc32e8
+loc329d:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "gold", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "gold"
+GetMember
+Push 10
+Multiply
+SetMember
+Jump loc32e8
+loc32e8:Push 1, 0.0, 2, "sfxitemuse"
+GetVariable
+Push "start"
+CallMethod
+Pop
+Push "inventory", 0.0
+SetVariable
+}
+DefineFunction2 "startBattle", 0, 2, false, false, true, false, true, false, false, true, false {
+Push 3, 1, "showTutorial"
+CallFunction
+Pop
+Push 1, 0.0, 2, "sfxbattlestart"
+GetVariable
+Push "start"
+CallMethod
+Pop
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "attackdelay", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "atkfactor", 1
+SetMember
+Push "isbattle", true
+SetVariable
+Push "gamestate", "battling"
+SetVariable
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "state", "idle"
+SetMember
+Push "inventory"
+GetVariable
+StoreRegister 0
+Push 1
+StrictEquals
+If loc342b
+Push register0, 2
+StrictEquals
+If loc3443
+Push register0, 3
+StrictEquals
+If loc345b
+Push register0, 4
+StrictEquals
+If loc3473
+Jump loc3478
+loc342b:Push 3, "You can use Elixir to heal HP!", 2, "announce"
+CallFunction
+Pop
+Jump loc3478
+loc3443:Push 4, "You can use Divine Edge to multiply the damage!", 2, "announce"
+CallFunction
+Pop
+Jump loc3478
+loc345b:Push 5, "You can use Gold Ticket to multiply gold reward!", 2, "announce"
+CallFunction
+Pop
+Jump loc3478
+loc3473:Jump loc3478
+}
+loc3478:DefineFunction2 "spawnSprite", 1, 3, false, false, true, false, true, false, false, true, false, 2, "what" {
+Push register2
+StoreRegister 0
+Push "chara"
+StrictEquals
+If loc34e1
+Push register0, "enemy0"
+StrictEquals
+If loc381f
+Push register0, "enemy1"
+StrictEquals
+If loc3b65
+Push register0, "enemy2"
+StrictEquals
+If loc3ea7
+Push register0, "enemy3"
+StrictEquals
+If loc41e9
+Jump loc452b
+loc34e1:Push 1, "hero", "Hero", 3, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "_x", 50
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "_y", 200
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "fact", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "mspd", 10
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "maxhp", "armlvl"
+GetVariable
+Push "armorrate"
+GetVariable
+Multiply
+Push "armorbase"
+GetVariable
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "hp", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "maxhp"
+GetMember
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "atk", "weplvl"
+GetVariable
+Push "weaponrate"
+GetVariable
+Multiply
+Push "weaponbase"
+GetVariable
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "atkfactor", 1
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "numattack", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "xtar", 100
+RandomNumber
+Push 50
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "ytar", 15
+RandomNumber
+Push 200
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "xtarchange", "tarchangedelay"
+GetVariable
+Push 30
+RandomNumber
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "ytarchange", "tarchangedelay"
+GetVariable
+Push 30
+RandomNumber
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "state", "idle"
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "attackdelay", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "attackfinished", false
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "attacktarget", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "knockback", 0.0
+SetMember
+Push "hero", 1, "obarray"
+GetVariable
+Push "push"
+CallMethod
+Pop
+Jump loc452b
+loc381f:Push 100, "enemy", "EnemyGoblin", 3, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "etype", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "_x", 600
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "_xscale", -100
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "_y", 200, 15
+RandomNumber
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "fact", 1
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "mspd", 10
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "maxhp", "elvl"
+GetVariable
+Push 60
+Multiply
+Push 600
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "hp", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "maxhp"
+GetMember
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "atk", "elvl"
+GetVariable
+Push 40
+Multiply
+Push 82
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "atkfactor", 1
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "numattack", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "gold", "elvl"
+GetVariable
+Push 12
+Multiply
+Push 70
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "exp", 10, "elvl"
+GetVariable
+Push 3
+Multiply
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "state", "idle"
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "attackdelay", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "attackfinished", false
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "attacktarget", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "knockback", 0.0
+SetMember
+Push "enemy", 1, "obarray"
+GetVariable
+Push "push"
+CallMethod
+Pop
+Jump loc452b
+loc3b65:Push 100, "enemy", "EnemyGolem", 3, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "etype", 1
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "_x", 600
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "_xscale", -100
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "_y", 200, 15
+RandomNumber
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "fact", 1
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "mspd", 10
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "maxhp", "elvl"
+GetVariable
+Push 120
+Multiply
+Push 860
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "hp", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "maxhp"
+GetMember
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "atk", "elvl"
+GetVariable
+Push 28
+Multiply
+Push 40
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "atkfactor", 1
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "numattack", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "gold", "elvl"
+GetVariable
+Push 14
+Multiply
+Push 78
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "exp", 9, "elvl"
+GetVariable
+Push 4
+Multiply
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "state", "idle"
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "attackdelay", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "attackfinished", false
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "attacktarget", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "knockback", 0.0
+SetMember
+Push "enemy", 1, "obarray"
+GetVariable
+Push "push"
+CallMethod
+Pop
+Jump loc452b
+loc3ea7:Push 100, "enemy", "EnemyWolf", 3, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "etype", 2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "_x", 600
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "_xscale", -100
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "_y", 200, 15
+RandomNumber
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "fact", 1
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "mspd", 10
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "maxhp", "elvl"
+GetVariable
+Push 44
+Multiply
+Push 450
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "hp", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "maxhp"
+GetMember
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "atk", "elvl"
+GetVariable
+Push 56
+Multiply
+Push 94
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "atkfactor", 1
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "numattack", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "gold", "elvl"
+GetVariable
+Push 14
+Multiply
+Push 78
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "exp", 8, "elvl"
+GetVariable
+Push 5
+Multiply
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "state", "idle"
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "attackdelay", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "attackfinished", false
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "attacktarget", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "knockback", 0.0
+SetMember
+Push "enemy", 1, "obarray"
+GetVariable
+Push "push"
+CallMethod
+Pop
+Jump loc452b
+loc41e9:Push 100, "enemy", "EnemyDragon", 3, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "etype", 3
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "_x", 600
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "_xscale", -100
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "_y", 200, 15
+RandomNumber
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "fact", 1
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "mspd", 10
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "maxhp", "elvl"
+GetVariable
+Push 300
+Multiply
+Push 2400
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "hp", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "maxhp"
+GetMember
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "atk", "elvl"
+GetVariable
+Push 80
+Multiply
+Push 160
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "atkfactor", 1
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "numattack", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "gold", "elvl"
+GetVariable
+Push 60
+Multiply
+Push 350
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "exp", 40, "elvl"
+GetVariable
+Push 25
+Multiply
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "state", "idle"
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "attackdelay", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "attackfinished", false
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "attacktarget", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "knockback", 0.0
+SetMember
+Push "enemy", 1, "obarray"
+GetVariable
+Push "push"
+CallMethod
+Pop
+Jump loc452b
+}
+loc452b:DefineFunction2 "announce", 2, 4, false, false, true, false, true, false, false, true, false, 3, "what", 2, "avatar" {
+Push 2, "intann", "InterfaceAnnounce2", 3, register1, "hud"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push register1, "hud"
+GetMember
+Push "intann"
+GetMember
+Push "_x", 0.0
+SetMember
+Push register1, "hud"
+GetMember
+Push "intann"
+GetMember
+Push "_y", 235
+SetMember
+Push register1, "hud"
+GetMember
+Push "intann"
+GetMember
+Push "msg", register3
+SetMember
+Push register1, "hud"
+GetMember
+Push "intann"
+GetMember
+Push "avanow", register2
+SetMember
+}
+DefineFunction2 "announce2", 1, 3, false, false, true, false, true, false, false, true, false, 2, "what" {
+Push 8, "intann2", "InterfaceAnnounce", 3, register1, "hud"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push register1, "hud"
+GetMember
+Push "intann2"
+GetMember
+Push "_x", 0.0
+SetMember
+Push register1, "hud"
+GetMember
+Push "intann2"
+GetMember
+Push "_y", 150
+SetMember
+Push register1, "hud"
+GetMember
+Push "intann2"
+GetMember
+Push "annmes", register2
+SetMember
+}
+DefineFunction2 "randomizeEvent", 1, 2, false, false, true, false, true, false, true, false, false, 1, "what" {
+Push "encountercount"
+GetVariable
+Push 0.0
+Greater
+Not
+Not
+If loc477e
+Push "encountercount", 3
+RandomNumber
+Push 1
+Add2
+SetVariable
+Push "evarray"
+GetVariable
+Push register1, 7
+SetMember
+Push "pricearray"
+GetVariable
+Push register1, 0.0
+SetMember
+Push "weaponspawned", false
+SetVariable
+Push "armorspawned", false
+SetVariable
+Push "soulspawned", false
+SetVariable
+Push "elvl"
+GetVariable
+Push 7
+Less2
+PushDuplicate
+If loc46fc
+Pop
+Push "dragonspawned"
+GetVariable
+Push true
+Equals2
+loc46fc:Not
+If loc4713
+Push "enow", 3
+RandomNumber
+SetVariable
+Jump loc4779
+loc4713:Push "randnum", 100
+RandomNumber
+SetVariable
+Push "randnum"
+GetVariable
+Push 3, "elvl"
+GetVariable
+Push 7
+Subtract
+Multiply
+Less2
+PushDuplicate
+Not
+If loc474f
+Pop
+Push "dragonspawned"
+GetVariable
+Push false
+Equals2
+loc474f:Not
+If loc476d
+Push "enow", 3
+SetVariable
+Push "dragonspawned", true
+SetVariable
+Jump loc4779
+loc476d:Push "enow", 3
+RandomNumber
+SetVariable
+loc4779:Jump loc4a73
+loc477e:Push "existence"
+GetVariable
+Push "lastchancerate"
+GetVariable
+Less2
+PushDuplicate
+Not
+If loc479f
+Pop
+Push "hasgivenchance"
+GetVariable
+Push false
+Equals2
+loc479f:PushDuplicate
+Not
+If loc47b3
+Pop
+Push "soulspawned"
+GetVariable
+Push false
+Equals2
+loc47b3:Not
+If loc4810
+Push "evarray"
+GetVariable
+Push register1, 3
+SetMember
+Push "pricearray"
+GetVariable
+Push register1, "extbaseprice"
+GetVariable
+Push "xextension"
+GetVariable
+Push "extpricerate"
+GetVariable
+Multiply
+Add2
+SetMember
+Push "lastchancerate", 40, 10
+RandomNumber
+Add2
+SetVariable
+Push "hasgivenchance", true
+SetVariable
+Push "encountercount", "encountercount"
+GetVariable
+Decrement
+SetVariable
+Jump loc4a73
+loc4810:Push "randnum", 100
+RandomNumber
+SetVariable
+Push "randnum"
+GetVariable
+Push 65
+Greater
+Not
+If loc489b
+Push "weaponspawned"
+GetVariable
+Push true
+Equals2
+Not
+If loc4856
+Push register1, 1, "randomizeEvent"
+CallFunction
+Pop
+Jump loc4896
+loc4856:Push "evarray"
+GetVariable
+Push register1, 1
+SetMember
+Push "pricearray"
+GetVariable
+Push register1, "weaponbaseprice"
+GetVariable
+Push "weplvl"
+GetVariable
+Push "weaponpricerate"
+GetVariable
+Multiply
+Add2
+SetMember
+Push "weaponspawned", true
+SetVariable
+Push "encountercount", "encountercount"
+GetVariable
+Decrement
+SetVariable
+loc4896:Jump loc4a73
+loc489b:Push "randnum"
+GetVariable
+Push 30
+Greater
+Not
+If loc491a
+Push "armorspawned"
+GetVariable
+Push true
+Equals2
+Not
+If loc48d5
+Push register1, 1, "randomizeEvent"
+CallFunction
+Pop
+Jump loc4915
+loc48d5:Push "evarray"
+GetVariable
+Push register1, 2
+SetMember
+Push "pricearray"
+GetVariable
+Push register1, "armorbaseprice"
+GetVariable
+Push "armlvl"
+GetVariable
+Push "armorpricerate"
+GetVariable
+Multiply
+Add2
+SetMember
+Push "armorspawned", true
+SetVariable
+Push "encountercount", "encountercount"
+GetVariable
+Decrement
+SetVariable
+loc4915:Jump loc4a73
+loc491a:Push "randnum"
+GetVariable
+Push 25
+Greater
+Not
+If loc4999
+Push "soulspawned"
+GetVariable
+Push true
+Equals2
+Not
+If loc4954
+Push register1, 1, "randomizeEvent"
+CallFunction
+Pop
+Jump loc4994
+loc4954:Push "evarray"
+GetVariable
+Push register1, 3
+SetMember
+Push "pricearray"
+GetVariable
+Push register1, "extbaseprice"
+GetVariable
+Push "xextension"
+GetVariable
+Push "extpricerate"
+GetVariable
+Multiply
+Add2
+SetMember
+Push "soulspawned", true
+SetVariable
+Push "encountercount", "encountercount"
+GetVariable
+Decrement
+SetVariable
+loc4994:Jump loc4a73
+loc4999:Push "randnum"
+GetVariable
+Push 10
+Greater
+Not
+If loc49dd
+Push "evarray"
+GetVariable
+Push register1, 4
+SetMember
+Push "pricearray"
+GetVariable
+Push register1, "pharmacybaseprice"
+GetVariable
+SetMember
+Push "encountercount", "encountercount"
+GetVariable
+Decrement
+SetVariable
+Jump loc4a73
+loc49dd:Push "randnum"
+GetVariable
+Push 5
+Greater
+Not
+If loc4a21
+Push "evarray"
+GetVariable
+Push register1, 5
+SetMember
+Push "pricearray"
+GetVariable
+Push register1, "heraldrybaseprice"
+GetVariable
+SetMember
+Push "encountercount", "encountercount"
+GetVariable
+Decrement
+SetVariable
+Jump loc4a73
+loc4a21:Push "elvl"
+GetVariable
+Push 4
+Less2
+Not
+If loc4a49
+Push register1, 1, "randomizeEvent"
+CallFunction
+Pop
+Jump loc4a73
+loc4a49:Push "evarray"
+GetVariable
+Push register1, 6
+SetMember
+Push "pricearray"
+GetVariable
+Push register1, "voucherbaseprice"
+GetVariable
+SetMember
+Push "encountercount", "encountercount"
+GetVariable
+Decrement
+SetVariable
+}
+loc4a73:DefineFunction2 "spawnEvent", 0, 2, false, false, true, false, true, false, false, true, false {
+Push "nextevent", "eventdelay"
+GetVariable
+Push 300
+RandomNumber
+Add2
+SetVariable
+Push "Event!"
+Trace
+Push "evarray"
+GetVariable
+Push 0.0
+GetMember
+Push 7
+Equals2
+Not
+If loc4b44
+Push "isevent", true
+SetVariable
+Push "eventnow", "evarray"
+GetVariable
+Push 0.0
+GetMember
+SetVariable
+Push "pricenow", 0.0
+SetVariable
+Push "enemy", "enow"
+GetVariable
+Add2
+Push 1, "spawnSprite"
+CallFunction
+Pop
+Push "enow"
+GetVariable
+Push 3
+Equals2
+Not
+Not
+If loc4b28
+Push "dragonspawned", false
+SetVariable
+Jump loc4b34
+loc4b28:Push "enow", 3
+RandomNumber
+SetVariable
+loc4b34:Push "eventx", 600
+SetVariable
+Jump loc4c88
+loc4b44:Push 1, 0.0, 2, "sfxevent"
+GetVariable
+Push "start"
+CallMethod
+Pop
+Push "isevent", true
+SetVariable
+Push "hasact", false
+SetVariable
+Push "eventnow", "evarray"
+GetVariable
+Push 0.0
+GetMember
+SetVariable
+Push "eventnow"
+GetVariable
+Push 7
+Equals2
+Not
+PushDuplicate
+Not
+If loc4bb2
+Pop
+Push "eventnow"
+GetVariable
+Push 3
+Equals2
+Not
+loc4bb2:Not
+If loc4bce
+Push 1, 1, "showTutorial"
+CallFunction
+Pop
+Jump loc4bf4
+loc4bce:Push "eventnow"
+GetVariable
+Push 3
+Equals2
+Not
+If loc4bf4
+Push 2, 1, "showTutorial"
+CallFunction
+Pop
+loc4bf4:Push "pricenow", "pricearray"
+GetVariable
+Push 0.0
+GetMember
+SetVariable
+Push 5, "evtbdg", "Building", 3, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "evtbdg"
+GetMember
+Push "_x", 600
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "evtbdg"
+GetMember
+Push "_y", 170
+SetMember
+Push "eventx", 600
+SetVariable
+loc4c88:Push "evarray"
+GetVariable
+Push 0.0, "evarray"
+GetVariable
+Push 1
+GetMember
+SetMember
+Push "evarray"
+GetVariable
+Push 1, "evarray"
+GetVariable
+Push 2
+GetMember
+SetMember
+Push "pricearray"
+GetVariable
+Push 0.0, "pricearray"
+GetVariable
+Push 1
+GetMember
+SetMember
+Push "pricearray"
+GetVariable
+Push 1, "pricearray"
+GetVariable
+Push 2
+GetMember
+SetMember
+Push 2, 1, "randomizeEvent"
+CallFunction
+Pop
+Push "evarray"
+GetVariable
+Trace
+Push "pricearray"
+GetVariable
+Trace
+}
+DefineFunction2 "zSort", 0, 2, false, false, true, false, true, false, false, true, false {
+Push "i", 0.0
+SetVariable
+loc4d3a:Push "i"
+GetVariable
+Push "obarray"
+GetVariable
+Push "length"
+GetMember
+Less2
+Not
+If loc4dea
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "_y"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "_x"
+GetMember
+Push 100
+Divide
+Add2
+Push 1, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "swapDepths"
+CallMethod
+Pop
+Push "i", "i"
+GetVariable
+Increment
+SetVariable
+Jump loc4d3a
+}
+loc4dea:DefineFunction2 "checkExistence", 0, 2, false, false, true, false, true, false, false, true, false {
+Push "existencedec", "existencedec"
+GetVariable
+Push "extrate"
+GetVariable
+Subtract
+SetVariable
+Push "existencedec"
+GetVariable
+Push 0.0
+Greater
+Not
+Not
+If loc4f1e
+Push "existencedec", 99
+SetVariable
+Push "existence", "existence"
+GetVariable
+Decrement
+SetVariable
+Push "existence"
+GetVariable
+Push 0.0
+Less2
+Not
+If loc4f1e
+Push "gamestate", "end"
+SetVariable
+Push "isbegin", false
+SetVariable
+Push "isbattle", false
+SetVariable
+Push "isevent", false
+SetVariable
+Push "gameover", true
+SetVariable
+Push "blurred"
+GetVariable
+Push false
+Equals2
+Not
+If loc4f1e
+Push 1, 0.0, 2, "sfxcharadie"
+GetVariable
+Push "start"
+CallMethod
+Pop
+Push "blurred", true
+SetVariable
+Push "lose", true
+SetVariable
+Push true, 1, "pauseGame"
+CallFunction
+Pop
+Push 11, "intdead", "InterfaceDead", 3, register1, "hud"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push register1, "hud"
+GetMember
+Push "intdead"
+GetMember
+Push "msg1", "Your lifespan reaches 0%"
+SetMember
+Push 0.0, "randomizeTip"
+CallFunction
+Pop
+loc4f1e:Push "existence"
+GetVariable
+Push 25
+Less2
+Not
+If loc4fe3
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "state"
+GetMember
+Push "dead"
+Equals2
+Not
+PushDuplicate
+Not
+If loc4f6f
+Pop
+Push "gamestate"
+GetVariable
+Push "running"
+Equals2
+loc4f6f:Not
+If loc4fde
+Push 4, 1, "showTutorial"
+CallFunction
+Pop
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "_alpha", "existence"
+GetVariable
+Push 100
+Multiply
+Push "existencedec"
+GetVariable
+Add2
+Push 2500
+Divide
+Push 100
+Multiply
+Push 1, "Math"
+GetVariable
+Push "round"
+CallMethod
+SetMember
+loc4fde:Jump loc504a
+loc4fe3:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "state"
+GetMember
+Push "dead"
+Equals2
+Not
+PushDuplicate
+Not
+If loc501f
+Pop
+Push "gamestate"
+GetVariable
+Push "running"
+Equals2
+loc501f:Not
+If loc504a
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "_alpha", 100
+SetMember
+}
+loc504a:DefineFunction2 "randomizeTip", 0, 2, false, false, true, false, true, false, false, true, false {
+Push "randnum", "tippool"
+GetVariable
+Push "length"
+GetMember
+RandomNumber
+SetVariable
+Push register1, "hud"
+GetMember
+Push "intdead"
+GetMember
+Push "msg2", "Protip ", "tippool"
+GetVariable
+Push "randnum"
+GetVariable
+GetMember
+Add2
+SetMember
+}
+DefineFunction2 "updateEnemyLevel", 0, 2, false, true, true, false, true, false, true, false, false {
+Push "elvl", "distance"
+GetVariable
+Push 7000
+Divide
+Push 1, "Math"
+GetVariable
+Push "floor"
+CallMethod
+Push 1
+Add2
+SetVariable
+Push "elvlnow"
+GetVariable
+Push "elvl"
+GetVariable
+Equals2
+Not
+Not
+If loc511c
+Push "elvl"
+GetVariable
+Push "Day", 2, register1, "kongregateStats"
+GetMember
+Push "submit"
+CallMethod
+Pop
+Push "elvlnow", "elvl"
+GetVariable
+SetVariable
+loc511c:Push "elvl"
+GetVariable
+Push 10
+Less2
+Not
+PushDuplicate
+Not
+If loc5140
+Pop
+Push "achcheck"
+GetVariable
+Push false
+Equals2
+loc5140:Not
+If loc5160
+Push "achcheck", true
+SetVariable
+Push 2, 1, "unlockAchievement"
+CallFunction
+Pop
+}
+loc5160:DefineFunction2 "updateInterface", 0, 2, false, false, true, false, true, false, false, true, false {
+Push "showmenu"
+GetVariable
+Push false
+Equals2
+Not
+If loc51e1
+Push "intbotpos", 1
+SetVariable
+Push "intavapos", 1
+SetVariable
+Push "intlifpos", 1
+SetVariable
+Push "intgoldpos", 1
+SetVariable
+Push "intnextpos", 1
+SetVariable
+Push register1, "hud"
+GetMember
+Push "intehp"
+GetMember
+Push "_visible", false
+SetMember
+Jump loc5403
+loc51e1:Push "intbotpos", 0.0
+SetVariable
+Push "intavapos", 0.0
+SetVariable
+Push "intlifpos", 0.0
+SetVariable
+Push "intgoldpos", 0.0
+SetVariable
+Push "intnextpos", 0.0
+SetVariable
+Push "isbattle"
+GetVariable
+Push true
+Equals2
+Not
+If loc53ed
+Push register1, "hud"
+GetMember
+Push "intehp"
+GetMember
+Push "_visible", true
+SetMember
+Push register1, "hud"
+GetMember
+Push "intehp"
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "_x"
+GetMember
+SetMember
+Push register1, "hud"
+GetMember
+Push "intehp"
+GetMember
+Push "_y", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "_y"
+GetMember
+Push 70
+Subtract
+SetMember
+Push register1, "hud"
+GetMember
+Push "intehp"
+GetMember
+Push "hpbar"
+GetMember
+Push "_xscale", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "hp"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "maxhp"
+GetMember
+Divide
+Push 100
+Multiply
+Push 1, "Math"
+GetVariable
+Push "round"
+CallMethod
+SetMember
+Push register1, "hud"
+GetMember
+Push "intehp"
+GetMember
+Push "hpbarshade"
+GetMember
+Push "_xscale"
+GetMember
+Push register1, "hud"
+GetMember
+Push "intehp"
+GetMember
+Push "hpbar"
+GetMember
+Push "_xscale"
+GetMember
+Greater
+Not
+If loc53b5
+Push register1, "hud"
+GetMember
+Push "intehp"
+GetMember
+Push "hpbarshade"
+GetMember
+Push "_xscale", register1, "hud"
+GetMember
+Push "intehp"
+GetMember
+Push "hpbarshade"
+GetMember
+Push "_xscale"
+GetMember
+Push 2
+Subtract
+SetMember
+Jump loc53e8
+loc53b5:Push register1, "hud"
+GetMember
+Push "intehp"
+GetMember
+Push "hpbarshade"
+GetMember
+Push "_xscale", register1, "hud"
+GetMember
+Push "intehp"
+GetMember
+Push "hpbar"
+GetMember
+Push "_xscale"
+GetMember
+SetMember
+loc53e8:Jump loc5403
+loc53ed:Push register1, "hud"
+GetMember
+Push "intehp"
+GetMember
+Push "_visible", false
+SetMember
+loc5403:Push register1, "hud"
+GetMember
+Push "intbot"
+GetMember
+Push "hpbarmask"
+GetMember
+Push "_xscale", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "hp"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "maxhp"
+GetMember
+Divide
+Push 100
+Multiply
+SetMember
+Push register1, "hud"
+GetMember
+Push "intbot"
+GetMember
+Push "hp_txt"
+GetMember
+Push "text", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "hp"
+GetMember
+Push "/"
+Add2
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "maxhp"
+GetMember
+Add2
+SetMember
+Push register1, "hud"
+GetMember
+Push "intbot"
+GetMember
+Push "wep_txt"
+GetMember
+Push "text", "wepname"
+GetVariable
+Push "weplvl"
+GetVariable
+GetMember
+Push " ["
+Add2
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "atk"
+GetMember
+Add2
+Push " ATK]"
+Add2
+SetMember
+Push register1, "hud"
+GetMember
+Push "intbot"
+GetMember
+Push "arm_txt"
+GetMember
+Push "text", "armname"
+GetVariable
+Push "armlvl"
+GetVariable
+GetMember
+SetMember
+Push register1, "hud"
+GetMember
+Push "intbot"
+GetMember
+Push "score_txt"
+GetMember
+Push "text", "score"
+GetVariable
+SetMember
+Push register1, "hud"
+GetMember
+Push "intbot"
+GetMember
+Push "day_txt"
+GetMember
+Push "text", "elvl"
+GetVariable
+SetMember
+Push "inventory"
+GetVariable
+StoreRegister 0
+Push 0.0
+StrictEquals
+If loc55ca
+Push register0, 1
+StrictEquals
+If loc55ed
+Push register0, 2
+StrictEquals
+If loc5610
+Push register0, 3
+StrictEquals
+If loc5633
+Jump loc5656
+loc55ca:Push register1, "hud"
+GetMember
+Push "intbot"
+GetMember
+Push "item_txt"
+GetMember
+Push "text", "-"
+SetMember
+Jump loc5656
+loc55ed:Push register1, "hud"
+GetMember
+Push "intbot"
+GetMember
+Push "item_txt"
+GetMember
+Push "text", "Elixir"
+SetMember
+Jump loc5656
+loc5610:Push register1, "hud"
+GetMember
+Push "intbot"
+GetMember
+Push "item_txt"
+GetMember
+Push "text", "Divine Edge"
+SetMember
+Jump loc5656
+loc5633:Push register1, "hud"
+GetMember
+Push "intbot"
+GetMember
+Push "item_txt"
+GetMember
+Push "text", "Gold Voucher"
+SetMember
+Jump loc5656
+loc5656:Push register1, "hud"
+GetMember
+Push "intlif"
+GetMember
+Push "lifespanbarmask"
+GetMember
+Push "_xscale", "existence"
+GetVariable
+Push 100
+Multiply
+Push "existencedec"
+GetVariable
+Add2
+Push 9999
+Divide
+Push 100
+Multiply
+SetMember
+Push register1, "hud"
+GetMember
+Push "intlif"
+GetMember
+Push "life_txt"
+GetMember
+Push "text", "existence"
+GetVariable
+SetMember
+Push register1, "hud"
+GetMember
+Push "intlif"
+GetMember
+Push "lifedec_txt"
+GetMember
+Push "text", "existencedec"
+GetVariable
+SetMember
+Push register1, "hud"
+GetMember
+Push "intgold"
+GetMember
+Push "gold_txt"
+GetMember
+Push "text", "gold"
+GetVariable
+Push "G"
+Add2
+SetMember
+Push "isevent"
+GetVariable
+Push true
+Equals2
+Not
+If loc5734
+Push "eventnow"
+GetVariable
+Push 1, register1, "hud"
+GetMember
+Push "intnext"
+GetMember
+Push "iconnow"
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop
+Jump loc575a
+loc5734:Push 8, 1, register1, "hud"
+GetMember
+Push "intnext"
+GetMember
+Push "iconnow"
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop
+loc575a:Push "pricenow"
+GetVariable
+Push 0.0
+Equals2
+Not
+If loc579b
+Push register1, "hud"
+GetMember
+Push "intnext"
+GetMember
+Push "iconnow"
+GetMember
+Push "price_txt"
+GetMember
+Push "text", ""
+SetMember
+Jump loc57ff
+loc579b:Push "isevent"
+GetVariable
+Push true
+Equals2
+Not
+If loc57dc
+Push register1, "hud"
+GetMember
+Push "intnext"
+GetMember
+Push "iconnow"
+GetMember
+Push "price_txt"
+GetMember
+Push "text", "pricenow"
+GetVariable
+Push "G"
+Add2
+SetMember
+Jump loc57ff
+loc57dc:Push register1, "hud"
+GetMember
+Push "intnext"
+GetMember
+Push "iconnow"
+GetMember
+Push "price_txt"
+GetMember
+Push "text", ""
+SetMember
+loc57ff:Push "evarray"
+GetVariable
+Push 0.0
+GetMember
+Push 1, register1, "hud"
+GetMember
+Push "intnext"
+GetMember
+Push "icon0"
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop
+Push "pricearray"
+GetVariable
+Push 0.0
+GetMember
+Push 0.0
+Equals2
+Not
+If loc5881
+Push register1, "hud"
+GetMember
+Push "intnext"
+GetMember
+Push "icon0"
+GetMember
+Push "price_txt"
+GetMember
+Push "text", ""
+SetMember
+Jump loc58b8
+loc5881:Push register1, "hud"
+GetMember
+Push "intnext"
+GetMember
+Push "icon0"
+GetMember
+Push "price_txt"
+GetMember
+Push "text", "pricearray"
+GetVariable
+Push 0.0
+GetMember
+Push "G"
+Add2
+SetMember
+loc58b8:Push "evarray"
+GetVariable
+Push 1
+GetMember
+Push 1, register1, "hud"
+GetMember
+Push "intnext"
+GetMember
+Push "icon1"
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop
+Push "pricearray"
+GetVariable
+Push 1
+GetMember
+Push 0.0
+Equals2
+Not
+If loc5932
+Push register1, "hud"
+GetMember
+Push "intnext"
+GetMember
+Push "icon1"
+GetMember
+Push "price_txt"
+GetMember
+Push "text", ""
+SetMember
+Jump loc5965
+loc5932:Push register1, "hud"
+GetMember
+Push "intnext"
+GetMember
+Push "icon1"
+GetMember
+Push "price_txt"
+GetMember
+Push "text", "pricearray"
+GetVariable
+Push 1
+GetMember
+Push "G"
+Add2
+SetMember
+loc5965:Push "evarray"
+GetVariable
+Push 2
+GetMember
+Push 1, register1, "hud"
+GetMember
+Push "intnext"
+GetMember
+Push "icon2"
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop
+Push "pricearray"
+GetVariable
+Push 2
+GetMember
+Push 0.0
+Equals2
+Not
+If loc59df
+Push register1, "hud"
+GetMember
+Push "intnext"
+GetMember
+Push "icon2"
+GetMember
+Push "price_txt"
+GetMember
+Push "text", ""
+SetMember
+Jump loc5a12
+loc59df:Push register1, "hud"
+GetMember
+Push "intnext"
+GetMember
+Push "icon2"
+GetMember
+Push "price_txt"
+GetMember
+Push "text", "pricearray"
+GetVariable
+Push 2
+GetMember
+Push "G"
+Add2
+SetMember
+loc5a12:Push register1, "hud"
+GetMember
+Push "intbot"
+GetMember
+Push "_y", register1, "hud"
+GetMember
+Push "intbot"
+GetMember
+Push "_y"
+GetMember
+Push "intboty"
+GetVariable
+Push "intbotpos"
+GetVariable
+GetMember
+Push register1, "hud"
+GetMember
+Push "intbot"
+GetMember
+Push "_y"
+GetMember
+Subtract
+Push "intfriction"
+GetVariable
+Divide
+Add2
+SetMember
+Push register1, "hud"
+GetMember
+Push "intava"
+GetMember
+Push "_x", register1, "hud"
+GetMember
+Push "intava"
+GetMember
+Push "_x"
+GetMember
+Push "intavax"
+GetVariable
+Push "intavapos"
+GetVariable
+GetMember
+Push register1, "hud"
+GetMember
+Push "intava"
+GetMember
+Push "_x"
+GetMember
+Subtract
+Push "intfriction"
+GetVariable
+Divide
+Add2
+SetMember
+Push register1, "hud"
+GetMember
+Push "intlif"
+GetMember
+Push "_y", register1, "hud"
+GetMember
+Push "intlif"
+GetMember
+Push "_y"
+GetMember
+Push "intlify"
+GetVariable
+Push "intlifpos"
+GetVariable
+GetMember
+Push register1, "hud"
+GetMember
+Push "intlif"
+GetMember
+Push "_y"
+GetMember
+Subtract
+Push "intfriction"
+GetVariable
+Divide
+Add2
+SetMember
+Push register1, "hud"
+GetMember
+Push "intgold"
+GetMember
+Push "_x", register1, "hud"
+GetMember
+Push "intgold"
+GetMember
+Push "_x"
+GetMember
+Push "intgoldx"
+GetVariable
+Push "intgoldpos"
+GetVariable
+GetMember
+Push register1, "hud"
+GetMember
+Push "intgold"
+GetMember
+Push "_x"
+GetMember
+Subtract
+Push "intfriction"
+GetVariable
+Divide
+Add2
+SetMember
+Push register1, "hud"
+GetMember
+Push "intnext"
+GetMember
+Push "_x", register1, "hud"
+GetMember
+Push "intnext"
+GetMember
+Push "_x"
+GetMember
+Push "intnextx"
+GetVariable
+Push "intnextpos"
+GetVariable
+GetMember
+Push register1, "hud"
+GetMember
+Push "intnext"
+GetMember
+Push "_x"
+GetMember
+Subtract
+Push "intfriction"
+GetVariable
+Divide
+Add2
+SetMember
+}
+DefineFunction2 "updateEvent", 0, 2, false, false, true, false, true, false, false, true, false {
+Push "isevent"
+GetVariable
+Push true
+Equals2
+Not
+If loc5d09
+Push "eventnow"
+GetVariable
+Push 7
+Equals2
+Not
+Not
+If loc5ca6
+Push "eventx", "eventx"
+GetVariable
+Push "movespeed"
+GetVariable
+Push 2
+Divide
+Subtract
+SetVariable
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "evtbdg"
+GetMember
+Push "_x", "eventx"
+GetVariable
+SetMember
+Push "eventx"
+GetVariable
+Push "availrange"
+GetVariable
+Less2
+PushDuplicate
+Not
+If loc5c3e
+Pop
+Push "eventx"
+GetVariable
+Push "unavailrange"
+GetVariable
+Greater
+loc5c3e:Not
+If loc5c51
+Push "canact", true
+SetVariable
+Jump loc5c59
+loc5c51:Push "canact", false
+SetVariable
+loc5c59:Push "eventx"
+GetVariable
+Push -100
+Less2
+Not
+If loc5ca1
+Push 0.0, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "evtbdg"
+GetMember
+Push "removeMovieClip"
+CallMethod
+Pop
+Push "isevent", false
+SetVariable
+loc5ca1:Jump loc5d09
+loc5ca6:Push "eventx", "eventx"
+GetVariable
+Push "movespeed"
+GetVariable
+Subtract
+SetVariable
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "enemy"
+GetMember
+Push "_x", "eventx"
+GetVariable
+SetMember
+Push "eventx"
+GetVariable
+Push "availrange"
+GetVariable
+Less2
+Not
+If loc5d09
+Push 0.0, "startBattle"
+CallFunction
+Pop
+Push "elvl:", "elvl"
+GetVariable
+Add2
+Trace
+}
+loc5d09:DefineFunction2 "animeChara", 0, 2, false, false, true, false, true, false, false, true, false {
+Push "i", 0.0
+SetVariable
+loc5d2d:Push "i"
+GetVariable
+Push "obarray"
+GetVariable
+Push "length"
+GetMember
+Less2
+Not
+If loc6014
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "state"
+GetMember
+Push "idle"
+Equals2
+Not
+If loc5de7
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "animestate"
+GetMember
+Push "idling"
+Equals2
+Not
+Not
+If loc5de2
+Push "idle", 1, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "gotoAndPlay"
+CallMethod
+Pop
+loc5de2:Jump loc6005
+loc5de7:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "state"
+GetMember
+Push "move"
+Equals2
+Not
+If loc5e8a
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "animestate"
+GetMember
+Push "moving"
+Equals2
+Not
+Not
+If loc5e85
+Push "move", 1, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "gotoAndPlay"
+CallMethod
+Pop
+loc5e85:Jump loc6005
+loc5e8a:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "state"
+GetMember
+Push "attack"
+Equals2
+Not
+If loc5f2d
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "animestate"
+GetMember
+Push "attacking"
+Equals2
+Not
+Not
+If loc5f28
+Push "attack", 1, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "gotoAndPlay"
+CallMethod
+Pop
+loc5f28:Jump loc6005
+loc5f2d:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "state"
+GetMember
+Push "flinch"
+Equals2
+Not
+If loc5fd0
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "animestate"
+GetMember
+Push "flinching"
+Equals2
+Not
+Not
+If loc5fcb
+Push "flinch", 1, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "gotoAndPlay"
+CallMethod
+Pop
+loc5fcb:Jump loc6005
+loc5fd0:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "state"
+GetMember
+Push "dead"
+Equals2
+Not
+If loc6005
+loc6005:Push "i", "i"
+GetVariable
+Increment
+SetVariable
+Jump loc5d2d
+}
+loc6014:DefineFunction2 "pauseGame", 1, 3, false, false, true, false, true, false, false, true, false, 2, "what" {
+Push register2, true
+Equals2
+Not
+If loc62b2
+Push "ispaused", true
+SetVariable
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "filters", "blurfilter"
+GetVariable
+SetMember
+Push "i", 0.0
+SetVariable
+loc606c:Push "i"
+GetVariable
+Push "obarray"
+GetVariable
+Push "length"
+GetMember
+Less2
+Not
+If loc60c7
+Push 0.0, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "stop"
+CallMethod
+Pop
+Push "i", "i"
+GetVariable
+Increment
+SetVariable
+Jump loc606c
+loc60c7:Push "intendedpause"
+GetVariable
+Push true
+Equals2
+Not
+If loc62ad
+Push 11, "intpau", "InterfacePause", 3, register1, "hud"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push 0.0, register1, "hud"
+GetMember
+Push "intann"
+GetMember
+Push "removeMovieClip"
+CallMethod
+Pop
+Push 0.0, register1, "hud"
+GetMember
+Push "intann2"
+GetMember
+Push "removeMovieClip"
+CallMethod
+Pop
+Push register1, "hud"
+GetMember
+Push "intpau"
+GetMember
+Push "resume_btn"
+GetMember
+Push "onRollOver"
+DefineFunction "", 0 {
+Push 1, 0.0, 2, "sfxbuttonselect"
+GetVariable
+Push "start"
+CallMethod
+Pop
+}
+SetMember
+Push register1, "hud"
+GetMember
+Push "intpau"
+GetMember
+Push "quit_btn"
+GetMember
+Push "onRollOver"
+DefineFunction "", 0 {
+Push 1, 0.0, 2, "sfxbuttonselect"
+GetVariable
+Push "start"
+CallMethod
+Pop
+}
+SetMember
+Push register1, "hud"
+GetMember
+Push "intpau"
+GetMember
+Push "resume_btn"
+GetMember
+Push "onRelease"
+DefineFunction "", 0 {
+Push false, 1, "pauseGame"
+CallFunction
+Pop
+Push "intendedpause", false
+SetVariable
+Push 1, 0.0, 2, "sfxbuttonpress"
+GetVariable
+Push "start"
+CallMethod
+Pop
+}
+SetMember
+Push register1, "hud"
+GetMember
+Push "intpau"
+GetMember
+Push "quit_btn"
+GetMember
+Push "onRelease"
+DefineFunction2 "", 0, 2, false, false, true, false, true, false, false, true, false {
+Push "score", 1, register1, "_parent"
+GetMember
+Push "_parent"
+GetMember
+Push "_parent"
+GetMember
+Push "gotoAndStop"
+CallMethod
+Pop
+Push 0.0, register1, "_parent"
+GetMember
+Push "_parent"
+GetMember
+Push "removeMovieClip"
+CallMethod
+Pop
+Push 1, 0.0, 2, "sfxbuttonpress"
+GetVariable
+Push "start"
+CallMethod
+Pop
+}
+SetMember
+loc62ad:Jump loc637d
+loc62b2:Push register2, false
+Equals2
+Not
+If loc637d
+Push "ispaused", false
+SetVariable
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "filters", "nofilter"
+GetVariable
+SetMember
+Push "i", 0.0
+SetVariable
+loc62f0:Push "i"
+GetVariable
+Push "obarray"
+GetVariable
+Push "length"
+GetMember
+Less2
+Not
+If loc634b
+Push 0.0, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "play"
+CallMethod
+Pop
+Push "i", "i"
+GetVariable
+Increment
+SetVariable
+Jump loc62f0
+loc634b:Push "intendedpause"
+GetVariable
+Push true
+Equals2
+Not
+If loc637d
+Push 0.0, register1, "hud"
+GetMember
+Push "intpau"
+GetMember
+Push "removeMovieClip"
+CallMethod
+Pop
+}
+loc637d:DefineFunction2 "mainLoop", 0, 2, false, false, true, false, true, false, false, true, false {
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "_x"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "_x"
+GetMember
+Push 30
+Divide
+Subtract
+SetMember
+Push "isbegin"
+GetVariable
+Push true
+Equals2
+Not
+If loc68eb
+Push "ispaused"
+GetVariable
+Push false
+Equals2
+Not
+If loc687b
+Push "showmenu", true
+SetVariable
+Push "gamestate"
+GetVariable
+Push "running"
+Equals2
+Not
+If loc67a5
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "state", "move"
+SetMember
+Push "movespeed"
+GetVariable
+Push "maxspeed"
+GetVariable
+Less2
+Not
+If loc6451
+Push "movespeed", "movespeed"
+GetVariable
+Increment
+SetVariable
+loc6451:Push "distance", "distance"
+GetVariable
+Push "movespeed"
+GetVariable
+Add2
+SetVariable
+Push "score", "score"
+GetVariable
+Push "movespeed"
+GetVariable
+Push 10
+Multiply
+Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 2
+GetMember
+Multiply
+Add2
+SetVariable
+Push "nextevent", "nextevent"
+GetVariable
+Push "movespeed"
+GetVariable
+Subtract
+SetVariable
+Push "nextevent"
+GetVariable
+Push 0.0
+Greater
+Not
+Not
+If loc64d2
+Push 0.0, "spawnEvent"
+CallFunction
+Pop
+loc64d2:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "_x"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "xtar"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "_x"
+GetMember
+Subtract
+Push 20
+Divide
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "_y", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "_y"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "ytar"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "_y"
+GetMember
+Subtract
+Push 20
+Divide
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "xtarchange", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "xtarchange"
+GetMember
+Decrement
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "xtarchange"
+GetMember
+Push 0.0
+Greater
+Not
+Not
+If loc66b0
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "xtarchange", "tarchangedelay"
+GetVariable
+Push 30
+RandomNumber
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "xtar", 100
+RandomNumber
+Push 50
+Add2
+SetMember
+loc66b0:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "ytarchange", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "ytarchange"
+GetMember
+Decrement
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "ytarchange"
+GetMember
+Push 0.0
+Greater
+Not
+Not
+If loc677e
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "ytarchange", "tarchangedelay"
+GetVariable
+Push 30
+RandomNumber
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "ytar", 15
+RandomNumber
+Push 200
+Add2
+SetMember
+loc677e:Push 0.0, "updateEnemyLevel"
+CallFunction
+Pop
+Push 0.0, "updateEvent"
+CallFunction
+Pop
+Jump loc6843
+loc67a5:Push "gamestate"
+GetVariable
+Push "battling"
+Equals2
+Not
+If loc6801
+Push "movespeed"
+GetVariable
+Push 0.0
+Greater
+Not
+If loc67da
+Push "movespeed", "movespeed"
+GetVariable
+Decrement
+SetVariable
+loc67da:Push 0.0, "checkBattle"
+CallFunction
+Pop
+Push 0.0, "behaveAI"
+CallFunction
+Pop
+Jump loc6843
+loc6801:Push "gamestate"
+GetVariable
+Push "tutorial"
+Equals2
+Not
+If loc6819
+Jump loc6843
+loc6819:Push "gamestate"
+GetVariable
+Push "end"
+Equals2
+Not
+If loc6843
+Push "isbegin", false
+SetVariable
+Push "isbattle", false
+SetVariable
+Push "ispaused", false
+SetVariable
+loc6843:Push 0.0, "zSort"
+CallFunction
+Pop
+Push 0.0, "bgScroll"
+CallFunction
+Pop
+Push 0.0, "checkExistence"
+CallFunction
+Pop
+Jump loc68e6
+loc687b:Push "showmenu", false
+SetVariable
+Push "istuto"
+GetVariable
+Push true
+Equals2
+Not
+If loc68e6
+Push register1, "hud"
+GetMember
+Push "paneltut"
+GetMember
+Push "_alpha"
+GetMember
+Push 100
+Less2
+Not
+If loc68e6
+Push register1, "hud"
+GetMember
+Push "paneltut"
+GetMember
+Push "_alpha", register1, "hud"
+GetMember
+Push "paneltut"
+GetMember
+Push "_alpha"
+GetMember
+Push 10
+Add2
+SetMember
+loc68e6:Jump loc6a27
+loc68eb:Push "showmenu", false
+SetVariable
+Push "gameover"
+GetVariable
+Push false
+Equals2
+Not
+If loc6969
+Push "pregamedelay", "pregamedelay"
+GetVariable
+Decrement
+SetVariable
+Push "pregamedelay"
+GetVariable
+Push 0.0
+Greater
+Not
+PushDuplicate
+Not
+If loc6937
+Pop
+Push "isbegin"
+GetVariable
+Push false
+Equals2
+loc6937:Not
+If loc6964
+Push 0.0, 1, "showTutorial"
+CallFunction
+Pop
+Push "pregamedelay", "pregamedelay"
+GetVariable
+Decrement
+SetVariable
+Push "isbegin", true
+SetVariable
+loc6964:Jump loc6a27
+loc6969:Push "postgamedelay", "postgamedelay"
+GetVariable
+Decrement
+SetVariable
+Push "postgamedelay"
+GetVariable
+Push 0.0
+Greater
+Not
+Not
+If loc6a27
+Push "blurred"
+GetVariable
+Push false
+Equals2
+Not
+If loc6a27
+Push 1, 0.0, 2, "sfxcharadie"
+GetVariable
+Push "start"
+CallMethod
+Pop
+Push "blurred", true
+SetVariable
+Push "lose", true
+SetVariable
+Push true, 1, "pauseGame"
+CallFunction
+Pop
+Push 11, "intdead", "InterfaceDead", 3, register1, "hud"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push register1, "hud"
+GetMember
+Push "intdead"
+GetMember
+Push "msg1", "You are killed by the enemy."
+SetMember
+Push 0.0, "randomizeTip"
+CallFunction
+Pop
+loc6a27:Push 0.0, "animeChara"
+CallFunction
+Pop
+Push 0.0, "screenShake"
+CallFunction
+Pop
+Push 0.0, "updateInterface"
+CallFunction
+Pop
+}
+DefineFunction2 "behaveAI", 0, 3, false, true, true, false, true, false, false, true, false {
+Push "i", 0.0
+SetVariable
+loc6a7c:Push "i"
+GetVariable
+Push "obarray"
+GetVariable
+Push "length"
+GetMember
+Less2
+Not
+If loc7ace
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "state"
+GetMember
+Push "idle"
+Equals2
+Not
+If loc6bad
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "attackfinished", false
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "attackdelay", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "attackdelay"
+GetMember
+Decrement
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "attackdelay"
+GetMember
+Push 0.0
+Greater
+Not
+Not
+If loc6ba8
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "state", "move"
+SetMember
+loc6ba8:Jump loc7abf
+loc6bad:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "state"
+GetMember
+Push "move"
+Equals2
+Not
+If loc6ece
+Push "enemyinrange", false
+SetVariable
+Push "j", 0.0
+SetVariable
+loc6bfb:Push "j"
+GetVariable
+Push "obarray"
+GetVariable
+Push "length"
+GetMember
+Less2
+Not
+If loc6d53
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "j"
+GetVariable
+GetMember
+GetMember
+Push "fact"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "fact"
+GetMember
+Equals2
+Not
+Not
+If loc6d42
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "_x"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "j"
+GetVariable
+GetMember
+GetMember
+Push "_x"
+GetMember
+Subtract
+Push 1, "Math"
+GetVariable
+Push "abs"
+CallMethod
+Push 30
+Less2
+Not
+If loc6d42
+Push "enemyinrange", true
+SetVariable
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "attacktarget", "j"
+GetVariable
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "state", "attack"
+SetMember
+loc6d42:Push "j", "j"
+GetVariable
+Increment
+SetVariable
+Jump loc6bfb
+loc6d53:Push "enemyinrange"
+GetVariable
+Push false
+Equals2
+Not
+If loc6ec9
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "fact"
+GetMember
+Push 0.0
+Equals2
+Not
+If loc6e1c
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "_x"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "mspd"
+GetMember
+Add2
+SetMember
+Jump loc6ec9
+loc6e1c:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "fact"
+GetMember
+Push 1
+Equals2
+Not
+If loc6ec9
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "_x"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "mspd"
+GetMember
+Subtract
+SetMember
+loc6ec9:Jump loc7abf
+loc6ece:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "state"
+GetMember
+Push "attack"
+Equals2
+Not
+If loc7190
+Push "enemyinrange", true
+SetVariable
+Push "enemyinrange"
+GetVariable
+Push true
+Equals2
+Not
+If loc7160
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "ishit"
+GetMember
+Push true
+Equals2
+Not
+If loc6fc1
+Push "fak yea!"
+Trace
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "attacktarget"
+GetMember
+Push "i"
+GetVariable
+Push 2, "attackChara"
+CallFunction
+Pop
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "ishit", false
+SetMember
+loc6fc1:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "attackfinished"
+GetMember
+Push true
+Equals2
+Not
+If loc715b
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "attackdelay"
+GetMember
+Push 0.0
+Greater
+Not
+Not
+If loc715b
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "fact"
+GetMember
+Push 0.0
+Equals2
+Not
+If loc70d1
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "attackdelay", 24
+RandomNumber
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "numattack"
+GetMember
+Push 4
+Multiply
+Add2
+SetMember
+Jump loc7131
+loc70d1:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "attackdelay", 24
+RandomNumber
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "numattack"
+GetMember
+Push 12
+Multiply
+Add2
+SetMember
+loc7131:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "state", "idle"
+SetMember
+loc715b:Jump loc718b
+loc7160:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "state", "move"
+SetMember
+loc718b:Jump loc7abf
+loc7190:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "state"
+GetMember
+Push "flinch"
+Equals2
+Not
+If loc74e5
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "ishit", false
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "fact"
+GetMember
+Push 0.0
+Equals2
+Not
+If loc730f
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "_x"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "knockback"
+GetMember
+Subtract
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "_x"
+GetMember
+Push 10
+Greater
+Not
+Not
+If loc730a
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "knockback", 0.0
+SetMember
+loc730a:Jump loc7425
+loc730f:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "fact"
+GetMember
+Push 1
+Equals2
+Not
+If loc7425
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "_x"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "knockback"
+GetMember
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "_x"
+GetMember
+Push 470
+Less2
+Not
+Not
+If loc7425
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "knockback", 0.0
+SetMember
+loc7425:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "knockback", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "knockback"
+GetMember
+Push 0.8
+Multiply
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "knockback"
+GetMember
+Push 1
+Less2
+Not
+If loc74e0
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "state", "idle"
+SetMember
+loc74e0:Jump loc7abf
+loc74e5:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "state"
+GetMember
+Push "dead"
+Equals2
+Not
+If loc7abf
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "fact"
+GetMember
+Push 0.0
+Equals2
+Not
+If loc75d0
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "_x"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "knockback"
+GetMember
+Subtract
+SetMember
+Jump loc767d
+loc75d0:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "fact"
+GetMember
+Push 1
+Equals2
+Not
+If loc767d
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "_x"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "knockback"
+GetMember
+Add2
+SetMember
+loc767d:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "knockback"
+GetMember
+Push 0.0
+Greater
+Not
+If loc7706
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "knockback", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "knockback"
+GetMember
+Decrement
+SetMember
+loc7706:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "_alpha"
+GetMember
+Push 0.0
+Greater
+Not
+If loc779c
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "_alpha", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "_alpha"
+GetMember
+Push 10
+Subtract
+SetMember
+Jump loc7abf
+loc779c:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "_alpha"
+GetMember
+Push 0.0
+Greater
+Not
+Not
+If loc7abf
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "fact"
+GetMember
+Push 1
+Equals2
+Not
+If loc7a97
+Push "isbattle", false
+SetVariable
+Push "isevent", false
+SetVariable
+Push "gamestate", "running"
+SetVariable
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "etype"
+GetMember
+Push 3
+Equals2
+Not
+If loc78c7
+Push 0.0, 1, "unlockAchievement"
+CallFunction
+Pop
+Push "playerdata"
+GetVariable
+Push 3
+GetMember
+Push 0.0
+GetMember
+Push "HasKilledDragon", 2, register2, "kongregateStats"
+GetMember
+Push "submit"
+CallMethod
+Pop
+Push 1, "DragonKilled", 2, register2, "kongregateStats"
+GetMember
+Push "submit"
+CallMethod
+Pop
+loc78c7:Push "gold", "gold"
+GetVariable
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "gold"
+GetMember
+Add2
+SetVariable
+Push "gold"
+GetVariable
+Push 3000
+Less2
+Not
+Not
+If loc7921
+Push 1, 1, "unlockAchievement"
+CallFunction
+Pop
+loc7921:Push "expgain", "expgain"
+GetVariable
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "exp"
+GetMember
+Add2
+SetVariable
+Push ":: Got ", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "gold"
+GetMember
+Add2
+Push "G!"
+Add2
+Push 1, "showInfo"
+CallFunction
+Pop
+Push "score", "score"
+GetVariable
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "maxhp"
+GetMember
+Push 10
+Multiply
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "atk"
+GetMember
+Push 60
+Multiply
+Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 2
+GetMember
+Multiply
+Add2
+Add2
+SetVariable
+Push 0.0, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+GetMember
+Push "removeMovieClip"
+CallMethod
+Pop
+Push "dispose", 1, "i"
+GetVariable
+Push 2, "obarray"
+GetVariable
+Push "splice"
+CallMethod
+SetVariable
+Push 1, 0.0, 2, "sfxeventtriggered"
+GetVariable
+Push "start"
+CallMethod
+Pop
+Jump loc7abf
+loc7a97:Push "gamestate", "end"
+SetVariable
+Push "isbegin", false
+SetVariable
+Push "isbattle", false
+SetVariable
+Push "isevent", false
+SetVariable
+Push "gameover", true
+SetVariable
+loc7abf:Push "i", "i"
+GetVariable
+Increment
+SetVariable
+Jump loc6a7c
+}
+loc7ace:DefineFunction2 "emitFX", 3, 5, false, false, true, false, true, false, false, true, false, 4, "what", 3, "whatx", 2, "whaty" {
+Push register4
+StoreRegister 0
+Push "hit"
+StrictEquals
+If loc7b36
+Push register0, "item"
+StrictEquals
+If loc7b6d
+Push register0, "upgrade"
+StrictEquals
+If loc7ba4
+Push register0, "buy"
+StrictEquals
+If loc7bdb
+Jump loc7c12
+loc7b36:Push "fxqty"
+GetVariable
+Push "fx", "fxqty"
+GetVariable
+Add2
+Push "FXHit", 3, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "fx"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Jump loc7c12
+loc7b6d:Push "fxqty"
+GetVariable
+Push "fx", "fxqty"
+GetVariable
+Add2
+Push "FXItem", 3, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "fx"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Jump loc7c12
+loc7ba4:Push "fxqty"
+GetVariable
+Push "fx", "fxqty"
+GetVariable
+Add2
+Push "FXUpgrade", 3, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "fx"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Jump loc7c12
+loc7bdb:Push "fxqty"
+GetVariable
+Push "fx", "fxqty"
+GetVariable
+Add2
+Push "FXBuy", 3, register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "fx"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Jump loc7c12
+loc7c12:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "fx"
+GetMember
+Push "fx", "fxqty"
+GetVariable
+Add2
+GetMember
+Push "_x", register3
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "fx"
+GetMember
+Push "fx", "fxqty"
+GetVariable
+Add2
+GetMember
+Push "_xscale", 150
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "fx"
+GetMember
+Push "fx", "fxqty"
+GetVariable
+Add2
+GetMember
+Push "_yscale", 150
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "fx"
+GetMember
+Push "fx", "fxqty"
+GetVariable
+Add2
+GetMember
+Push "_y", register2, 30
+Subtract
+SetMember
+Push "fxqty", "fxqty"
+GetVariable
+Increment
+SetVariable
+Push "fxqty"
+GetVariable
+Push 100
+Greater
+Not
+If loc7ce5
+Push "fxqty", 0.0
+SetVariable
+}
+loc7ce5:DefineFunction2 "showInfo", 1, 3, false, false, true, false, true, false, false, true, false, 2, "what" {
+Push register2
+Trace
+Push 9, "intinf", "InterfaceInfo", 3, register1, "hud"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push register1, "hud"
+GetMember
+Push "intinf"
+GetMember
+Push "_x", 0.0
+SetMember
+Push register1, "hud"
+GetMember
+Push "intinf"
+GetMember
+Push "_y", 50
+SetMember
+Push register1, "hud"
+GetMember
+Push "intinf"
+GetMember
+Push "report_mc"
+GetMember
+Push "report_txt"
+GetMember
+Push "text", register2
+SetMember
+}
+DefineFunction "getGold", 0 {
+}
+DefineFunction2 "attackChara", 2, 4, false, false, true, false, true, false, false, true, false, 3, "attacker", 2, "attacked" {
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push register2
+GetMember
+GetMember
+Push "state", "flinch"
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push register2
+GetMember
+GetMember
+Push "knockback", 10, 7
+RandomNumber
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push register3
+GetMember
+GetMember
+Push "numattack", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push register3
+GetMember
+GetMember
+Push "numattack"
+GetMember
+Increment
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push register2
+GetMember
+GetMember
+Push "numattack", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push register2
+GetMember
+GetMember
+Push "_y"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push register2
+GetMember
+GetMember
+Push "_x"
+GetMember
+Push "hit", 3, "emitFX"
+CallFunction
+Pop
+Push "damage", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push register3
+GetMember
+GetMember
+Push "atk"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push register3
+GetMember
+GetMember
+Push "atkfactor"
+GetMember
+Multiply
+SetVariable
+Push "damage", "damage"
+GetVariable
+Push 20
+RandomNumber
+Push 100
+Divide
+Push "damage"
+GetVariable
+Multiply
+Push 1, "Math"
+GetVariable
+Push "round"
+CallMethod
+Add2
+SetVariable
+Push "iscrit", false
+SetVariable
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push register3
+GetMember
+GetMember
+Push "fact"
+GetMember
+Push 0.0
+Equals2
+Not
+If loc8005
+Push "randnum", 100
+RandomNumber
+Push 1
+Add2
+SetVariable
+Push "randnum"
+GetVariable
+Push 90
+Greater
+Not
+If loc8005
+Push "damage", "damage"
+GetVariable
+Push 2
+Multiply
+SetVariable
+Push "iscrit", true
+SetVariable
+loc8005:Push "damage"
+GetVariable
+Push 70000
+Less2
+Not
+Not
+If loc802e
+Push 4, 1, "unlockAchievement"
+CallFunction
+Pop
+loc802e:Push "shakespeed", 6
+SetVariable
+Push "shakedelay", 0.0
+SetVariable
+Push "shaker", true
+SetVariable
+Push "randnum", 3
+RandomNumber
+SetVariable
+Push "randnum"
+GetVariable
+Push 0.0
+Equals2
+Not
+If loc809b
+Push 1, 0.0, 2, "sfxhit01"
+GetVariable
+Push "start"
+CallMethod
+Pop
+Jump loc810c
+loc809b:Push "randnum"
+GetVariable
+Push 1
+Equals2
+Not
+If loc80d6
+Push 1, 0.0, 2, "sfxhit02"
+GetVariable
+Push "start"
+CallMethod
+Pop
+Jump loc810c
+loc80d6:Push "randnum"
+GetVariable
+Push 2
+Equals2
+Not
+If loc810c
+Push 1, 0.0, 2, "sfxhit03"
+GetVariable
+Push "start"
+CallMethod
+Pop
+loc810c:Push "damnumqty"
+GetVariable
+Push 100
+Add2
+Push "d", "damnumqty"
+GetVariable
+Add2
+Push "DamageNum", 3, register1, "hud"
+GetMember
+Push "attachMovie"
+CallMethod
+Pop
+Push register1, "hud"
+GetMember
+Push "d", "damnumqty"
+GetVariable
+Add2
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push register2
+GetMember
+GetMember
+Push "_x"
+GetMember
+SetMember
+Push register1, "hud"
+GetMember
+Push "d", "damnumqty"
+GetVariable
+Add2
+GetMember
+Push "_y", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push register2
+GetMember
+GetMember
+Push "_y"
+GetMember
+Push 30
+Subtract
+SetMember
+Push register1, "hud"
+GetMember
+Push "d", "damnumqty"
+GetVariable
+Add2
+GetMember
+Push "damnum_mc"
+GetMember
+Push "damage_txt"
+GetMember
+Push "text", "damage"
+GetVariable
+SetMember
+Push "iscrit"
+GetVariable
+Push true
+Equals2
+Not
+If loc824f
+Push register1, "hud"
+GetMember
+Push "d", "damnumqty"
+GetVariable
+Add2
+GetMember
+Push "damnum_mc"
+GetMember
+Push "damage_txt"
+GetMember
+Push "text", register1, "hud"
+GetMember
+Push "d", "damnumqty"
+GetVariable
+Add2
+GetMember
+Push "damnum_mc"
+GetMember
+Push "damage_txt"
+GetMember
+Push "text"
+GetMember
+Push "!!"
+Add2
+SetMember
+loc824f:Push "damnumqty"
+GetVariable
+Push 50
+Greater
+Not
+If loc8273
+Push "damnumqty", 0.0
+SetVariable
+loc8273:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push register2
+GetMember
+GetMember
+Push "hp", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push register2
+GetMember
+GetMember
+Push "hp"
+GetMember
+Push "damage"
+GetVariable
+Subtract
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push register2
+GetMember
+GetMember
+Push "hp"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push register2
+GetMember
+GetMember
+Push "maxhp"
+GetMember
+Divide
+Push 100
+Multiply
+Push 25
+Less2
+Not
+If loc8378
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push register2
+GetMember
+GetMember
+Push "fact"
+GetMember
+Push 0.0
+Equals2
+Not
+If loc8378
+Push 5, 1, "showTutorial"
+CallFunction
+Pop
+loc8378:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push register2
+GetMember
+GetMember
+Push "hp"
+GetMember
+Push 0.0
+Greater
+Not
+Not
+If loc8481
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push register2
+GetMember
+GetMember
+Push "hp", 0.0
+SetMember
+Push "shakespeed", 14
+SetVariable
+Push "shakedelay", 0.0
+SetVariable
+Push "shaker", true
+SetVariable
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push register2
+GetMember
+GetMember
+Push "state", "dead"
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "obarray"
+GetVariable
+Push register3
+GetMember
+GetMember
+Push "attackdelay", 600
+SetMember
+Push 1, 0.0, 2, "sfxenemydie"
+GetVariable
+Push "start"
+CallMethod
+Pop
+Jump loc84a3
+loc8481:Push "shakespeed", 6
+SetVariable
+Push "shakedelay", 0.0
+SetVariable
+Push "shaker", true
+SetVariable
+}
+loc84a3:DefineFunction2 "screenShake", 0, 2, false, false, true, false, true, false, false, true, false {
+Push "shaker"
+GetVariable
+Push true
+Equals2
+Not
+If loc8625
+Push "shakedelay", "shakedelay"
+GetVariable
+Increment
+SetVariable
+Push "shakedelay"
+GetVariable
+Push 1
+Less2
+Not
+Not
+If loc8625
+Push "shakedelay", 0.0
+SetVariable
+Push "shakespeed"
+GetVariable
+Push 0.0
+Greater
+Not
+If loc85ef
+Push "shakedir"
+GetVariable
+Push 0.0
+Equals2
+Not
+If loc857c
+Push register1, "ob"
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "_x"
+GetMember
+Push "shakespeed"
+GetVariable
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "_y", register1, "ob"
+GetMember
+Push "_y"
+GetMember
+Push "shakespeed"
+GetVariable
+Add2
+SetMember
+Push "shakedir", 1
+SetVariable
+Jump loc85ea
+loc857c:Push "shakedir"
+GetVariable
+Push 1
+Equals2
+Not
+If loc85ea
+Push register1, "ob"
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "_x"
+GetMember
+Push "shakespeed"
+GetVariable
+Subtract
+SetMember
+Push register1, "ob"
+GetMember
+Push "_y", register1, "ob"
+GetMember
+Push "_y"
+GetMember
+Push "shakespeed"
+GetVariable
+Subtract
+SetMember
+Push "shakespeed", "shakespeed"
+GetVariable
+Decrement
+SetVariable
+Push "shakedir", 0.0
+SetVariable
+loc85ea:Jump loc8625
+loc85ef:Push register1, "ob"
+GetMember
+Push "_x", 0.0
+SetMember
+Push register1, "ob"
+GetMember
+Push "_y", 0.0
+SetMember
+Push "shaker", false
+SetVariable
+}
+loc8625:DefineFunction2 "bgScroll", 0, 2, false, false, true, false, true, false, false, true, false {
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgb1"
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgb1"
+GetMember
+Push "_x"
+GetMember
+Push "movespeed"
+GetVariable
+Push 10
+Divide
+Subtract
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgb2"
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgb2"
+GetMember
+Push "_x"
+GetMember
+Push "movespeed"
+GetVariable
+Push 10
+Divide
+Subtract
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgb1"
+GetMember
+Push "_x"
+GetMember
+Push -960
+Less2
+Not
+If loc874e
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgb1"
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgb2"
+GetMember
+Push "_x"
+GetMember
+Push 960
+Add2
+Push "movespeed"
+GetVariable
+Subtract
+SetMember
+loc874e:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgb2"
+GetMember
+Push "_x"
+GetMember
+Push -960
+Less2
+Not
+If loc87ca
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgb2"
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgb1"
+GetMember
+Push "_x"
+GetMember
+Push 960
+Add2
+Push "movespeed"
+GetVariable
+Subtract
+SetMember
+loc87ca:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgm1"
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgm1"
+GetMember
+Push "_x"
+GetMember
+Push "movespeed"
+GetVariable
+Push 5
+Divide
+Subtract
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgm2"
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgm2"
+GetMember
+Push "_x"
+GetMember
+Push "movespeed"
+GetVariable
+Push 5
+Divide
+Subtract
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgm1"
+GetMember
+Push "_x"
+GetMember
+Push -960
+Less2
+Not
+If loc88e0
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgm1"
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgm2"
+GetMember
+Push "_x"
+GetMember
+Push 960
+Add2
+Push "movespeed"
+GetVariable
+Subtract
+SetMember
+loc88e0:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgm2"
+GetMember
+Push "_x"
+GetMember
+Push -960
+Less2
+Not
+If loc895c
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgm2"
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgm1"
+GetMember
+Push "_x"
+GetMember
+Push 960
+Add2
+Push "movespeed"
+GetVariable
+Subtract
+SetMember
+loc895c:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgf1"
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgf1"
+GetMember
+Push "_x"
+GetMember
+Push "movespeed"
+GetVariable
+Subtract
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgf2"
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgf2"
+GetMember
+Push "_x"
+GetMember
+Push "movespeed"
+GetVariable
+Subtract
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgf1"
+GetMember
+Push "_x"
+GetMember
+Push -960
+Less2
+Not
+If loc8a60
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgf1"
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgf2"
+GetMember
+Push "_x"
+GetMember
+Push 960
+Add2
+Push "movespeed"
+GetVariable
+Subtract
+SetMember
+loc8a60:Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgf2"
+GetMember
+Push "_x"
+GetMember
+Push -960
+Less2
+Not
+If loc8adc
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgf2"
+GetMember
+Push "_x", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "bg"
+GetMember
+Push "bgf1"
+GetMember
+Push "_x"
+GetMember
+Push 960
+Add2
+Push "movespeed"
+GetVariable
+Subtract
+SetMember
+}
+loc8adc:DefineFunction2 "actEvent", 1, 4, false, true, true, false, true, false, false, true, false, 3, "what" {
+Push "gold"
+GetVariable
+Push "pricenow"
+GetVariable
+Less2
+Not
+Not
+If loc9538
+Push register3
+StoreRegister 0
+Push 1
+StrictEquals
+If loc8b75
+Push register0, 2
+StrictEquals
+If loc8e2a
+Push register0, 3
+StrictEquals
+If loc911c
+Push register0, 4
+StrictEquals
+If loc9200
+Push register0, 5
+StrictEquals
+If loc9311
+Push register0, 6
+StrictEquals
+If loc9422
+Jump loc9533
+loc8b75:Push "weplvl"
+GetVariable
+Push 10
+Less2
+Not
+If loc8e25
+Push "weplvl", "weplvl"
+GetVariable
+Increment
+SetVariable
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "atk", "weplvl"
+GetVariable
+Push "weaponrate"
+GetVariable
+Multiply
+Push "weaponbase"
+GetVariable
+Add2
+SetMember
+Push 1, "Upgrade : ", "wepname"
+GetVariable
+Push "weplvl"
+GetVariable
+Push 1
+Subtract
+GetMember
+Add2
+Push " > "
+Add2
+Push "wepname"
+GetVariable
+Push "weplvl"
+GetVariable
+GetMember
+Add2
+Push 2, "announce"
+CallFunction
+Pop
+Push "gold", "gold"
+GetVariable
+Push "pricenow"
+GetVariable
+Subtract
+SetVariable
+Push "hasact", true
+SetVariable
+Push ":: Lost ", "pricenow"
+GetVariable
+Add2
+Push "G!"
+Add2
+Push 1, "showInfo"
+CallFunction
+Pop
+Push 99, "me", "MouseEffect", 3, register1, "attachMovie"
+CallMethod
+Pop
+Push register1, "me"
+GetMember
+Push "_x", "", 20
+GetProperty
+SetMember
+Push register1, "me"
+GetMember
+Push "_y", "", 21
+GetProperty
+SetMember
+Push 1, 0.0, 2, "sfxeventtriggered"
+GetVariable
+Push "start"
+CallMethod
+Pop
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "_y"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "_x"
+GetMember
+Push "upgrade", 3, "emitFX"
+CallFunction
+Pop
+Push "weplvl"
+GetVariable
+Push 1
+Subtract
+Push 1, "unlockWeapon"
+CallFunction
+Pop
+Push "weplvl"
+GetVariable
+Push "WeaponUnlocked", 2, register2, "kongregateStats"
+GetMember
+Push "submit"
+CallMethod
+Pop
+Push "unlockall", true
+SetVariable
+Push "i", 0.0
+SetVariable
+loc8d45:Push "i"
+GetVariable
+Push 10
+Less2
+Not
+If loc8d9b
+Push "playerdata"
+GetVariable
+Push 1
+GetMember
+Push "i"
+GetVariable
+GetMember
+Push 0.0
+Equals2
+Not
+If loc8d8c
+Push "unlockall", false
+SetVariable
+loc8d8c:Push "i", "i"
+GetVariable
+Increment
+SetVariable
+Jump loc8d45
+loc8d9b:Push "i", 0.0
+SetVariable
+loc8daa:Push "i"
+GetVariable
+Push 10
+Less2
+Not
+If loc8e00
+Push "playerdata"
+GetVariable
+Push 2
+GetMember
+Push "i"
+GetVariable
+GetMember
+Push 0.0
+Equals2
+Not
+If loc8df1
+Push "unlockall", false
+SetVariable
+loc8df1:Push "i", "i"
+GetVariable
+Increment
+SetVariable
+Jump loc8daa
+loc8e00:Push "unlockall"
+GetVariable
+Push true
+Equals2
+Not
+If loc8e25
+Push 3, 1, "unlockAchievement"
+CallFunction
+Pop
+loc8e25:Jump loc9533
+loc8e2a:Push "armlvl"
+GetVariable
+Push 10
+Less2
+Not
+If loc9117
+Push "armlvl", "armlvl"
+GetVariable
+Increment
+SetVariable
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "maxhp", "armlvl"
+GetVariable
+Push "armorrate"
+GetVariable
+Multiply
+Push "armorbase"
+GetVariable
+Add2
+SetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "hp", register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "maxhp"
+GetMember
+SetMember
+Push 2, "Upgrade : ", "armname"
+GetVariable
+Push "armlvl"
+GetVariable
+Push 1
+Subtract
+GetMember
+Add2
+Push " > "
+Add2
+Push "armname"
+GetVariable
+Push "armlvl"
+GetVariable
+GetMember
+Add2
+Push 2, "announce"
+CallFunction
+Pop
+Push "gold", "gold"
+GetVariable
+Push "pricenow"
+GetVariable
+Subtract
+SetVariable
+Push "hasact", true
+SetVariable
+Push ":: Lost ", "pricenow"
+GetVariable
+Add2
+Push "G!"
+Add2
+Push 1, "showInfo"
+CallFunction
+Pop
+Push 99, "me", "MouseEffect", 3, register1, "attachMovie"
+CallMethod
+Pop
+Push register1, "me"
+GetMember
+Push "_x", "", 20
+GetProperty
+SetMember
+Push register1, "me"
+GetMember
+Push "_y", "", 21
+GetProperty
+SetMember
+Push 1, 0.0, 2, "sfxeventtriggered"
+GetVariable
+Push "start"
+CallMethod
+Pop
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "_y"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "_x"
+GetMember
+Push "upgrade", 3, "emitFX"
+CallFunction
+Pop
+Push "armlvl"
+GetVariable
+Push 1
+Subtract
+Push 1, "unlockArmor"
+CallFunction
+Pop
+Push "armlvl"
+GetVariable
+Push "ArmorUnlocked", 2, register2, "kongregateStats"
+GetMember
+Push "submit"
+CallMethod
+Pop
+Push "unlockall", true
+SetVariable
+Push "i", 0.0
+SetVariable
+loc9037:Push "i"
+GetVariable
+Push 10
+Less2
+Not
+If loc908d
+Push "playerdata"
+GetVariable
+Push 1
+GetMember
+Push "i"
+GetVariable
+GetMember
+Push 0.0
+Equals2
+Not
+If loc907e
+Push "unlockall", false
+SetVariable
+loc907e:Push "i", "i"
+GetVariable
+Increment
+SetVariable
+Jump loc9037
+loc908d:Push "i", 0.0
+SetVariable
+loc909c:Push "i"
+GetVariable
+Push 10
+Less2
+Not
+If loc90f2
+Push "playerdata"
+GetVariable
+Push 2
+GetMember
+Push "i"
+GetVariable
+GetMember
+Push 0.0
+Equals2
+Not
+If loc90e3
+Push "unlockall", false
+SetVariable
+loc90e3:Push "i", "i"
+GetVariable
+Increment
+SetVariable
+Jump loc909c
+loc90f2:Push "unlockall"
+GetVariable
+Push true
+Equals2
+Not
+If loc9117
+Push 3, 1, "unlockAchievement"
+CallFunction
+Pop
+loc9117:Jump loc9533
+loc911c:Push "xextension", "xextension"
+GetVariable
+Increment
+SetVariable
+Push "existence", 99
+SetVariable
+Push "existencedec", 99
+SetVariable
+Push "hasgivenchance", false
+SetVariable
+Push 3, "ef", "Effect-Flash", 3, register1, "attachMovie"
+CallMethod
+Pop
+Push "gold", "gold"
+GetVariable
+Push "pricenow"
+GetVariable
+Subtract
+SetVariable
+Push "hasact", true
+SetVariable
+Push ":: Lost ", "pricenow"
+GetVariable
+Add2
+Push "G!"
+Add2
+Push 1, "showInfo"
+CallFunction
+Pop
+Push 99, "me", "MouseEffect", 3, register1, "attachMovie"
+CallMethod
+Pop
+Push register1, "me"
+GetMember
+Push "_x", "", 20
+GetProperty
+SetMember
+Push register1, "me"
+GetMember
+Push "_y", "", 21
+GetProperty
+SetMember
+Push 1, 0.0, 2, "sfxeventtriggered"
+GetVariable
+Push "start"
+CallMethod
+Pop
+Jump loc9533
+loc9200:Push "inventory", 1
+SetVariable
+Push 3, "Bought : Potion", 2, "announce"
+CallFunction
+Pop
+Push "gold", "gold"
+GetVariable
+Push "pricenow"
+GetVariable
+Subtract
+SetVariable
+Push "hasact", true
+SetVariable
+Push ":: Lost ", "pricenow"
+GetVariable
+Add2
+Push "G!"
+Add2
+Push 1, "showInfo"
+CallFunction
+Pop
+Push 99, "me", "MouseEffect", 3, register1, "attachMovie"
+CallMethod
+Pop
+Push register1, "me"
+GetMember
+Push "_x", "", 20
+GetProperty
+SetMember
+Push register1, "me"
+GetMember
+Push "_y", "", 21
+GetProperty
+SetMember
+Push 1, 0.0, 2, "sfxeventtriggered"
+GetVariable
+Push "start"
+CallMethod
+Pop
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "_y"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "_x"
+GetMember
+Push "buy", 3, "emitFX"
+CallFunction
+Pop
+Jump loc9533
+loc9311:Push "inventory", 2
+SetVariable
+Push 4, "Bought : Divine Edge", 2, "announce"
+CallFunction
+Pop
+Push "gold", "gold"
+GetVariable
+Push "pricenow"
+GetVariable
+Subtract
+SetVariable
+Push "hasact", true
+SetVariable
+Push ":: Lost ", "pricenow"
+GetVariable
+Add2
+Push "G!"
+Add2
+Push 1, "showInfo"
+CallFunction
+Pop
+Push 99, "me", "MouseEffect", 3, register1, "attachMovie"
+CallMethod
+Pop
+Push register1, "me"
+GetMember
+Push "_x", "", 20
+GetProperty
+SetMember
+Push register1, "me"
+GetMember
+Push "_y", "", 21
+GetProperty
+SetMember
+Push 1, 0.0, 2, "sfxeventtriggered"
+GetVariable
+Push "start"
+CallMethod
+Pop
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "_y"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "_x"
+GetMember
+Push "buy", 3, "emitFX"
+CallFunction
+Pop
+Jump loc9533
+loc9422:Push "inventory", 3
+SetVariable
+Push 5, "Bought : Gold Voucher", 2, "announce"
+CallFunction
+Pop
+Push "gold", "gold"
+GetVariable
+Push "pricenow"
+GetVariable
+Subtract
+SetVariable
+Push "hasact", true
+SetVariable
+Push ":: Lost ", "pricenow"
+GetVariable
+Add2
+Push "G!"
+Add2
+Push 1, "showInfo"
+CallFunction
+Pop
+Push 99, "me", "MouseEffect", 3, register1, "attachMovie"
+CallMethod
+Pop
+Push register1, "me"
+GetMember
+Push "_x", "", 20
+GetProperty
+SetMember
+Push register1, "me"
+GetMember
+Push "_y", "", 21
+GetProperty
+SetMember
+Push 1, 0.0, 2, "sfxeventtriggered"
+GetVariable
+Push "start"
+CallMethod
+Pop
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "_y"
+GetMember
+Push register1, "ob"
+GetMember
+Push "game"
+GetMember
+Push "spr"
+GetMember
+Push "hero"
+GetMember
+Push "_x"
+GetMember
+Push "buy", 3, "emitFX"
+CallFunction
+Pop
+Jump loc9533
+loc9533:Jump loc9559
+loc9538:Push 1, 0.0, 2, "sfxerror"
+GetVariable
+Push "start"
+CallMethod
+Pop
+}
+loc9559:DefineFunction "randomize", 1, "whatentry"  {
+}
+Push "db included!"
+Trace
+Push "inthpx", -300, 8, 2
+InitArray
+DefineLocal
+Push "intinvx", -300, 15, 2
+InitArray
+DefineLocal
+Push "intgoldx", -150, 10, 2
+InitArray
+DefineLocal
+Push "intexty", 500, 280, 2
+InitArray
+DefineLocal
+Push "intacty", 350, 250, 2
+InitArray
+DefineLocal
+Push "intnextx", 500, 290, 2
+InitArray
+DefineLocal
+Push "intscorex", 500, 340, 2
+InitArray
+DefineLocal
+Push "intboty", 350, 250, 2
+InitArray
+DefineLocal
+Push "intavax", -100, 20, 2
+InitArray
+DefineLocal
+Push "intlify", -50, 10, 2
+InitArray
+DefineLocal
+Push "tarchangedelay", 60
+DefineLocal
+Push "eventdelay", 1500
+DefineLocal
+Push "availrange", 420
+DefineLocal
+Push "unavailrange", 0.0
+DefineLocal
+Push "weaponbase", 129
+DefineLocal
+Push "weaponrate", 87
+DefineLocal
+Push "armorbase", 1009
+DefineLocal
+Push "armorrate", 899
+DefineLocal
+Push "weaponbaseprice", 200
+DefineLocal
+Push "weaponpricerate", 36
+DefineLocal
+Push "armorbaseprice", 150
+DefineLocal
+Push "armorpricerate", 54
+DefineLocal
+Push "extbaseprice", 50
+DefineLocal
+Push "extpricerate", 70
+DefineLocal
+Push "pharmacybaseprice", 150
+DefineLocal
+Push "heraldrybaseprice", 200
+DefineLocal
+Push "voucherbaseprice", 500
+DefineLocal
+Push "extrate", 4
+DefineLocal
+Push "expbase", 100
+DefineLocal
+Push "expfactor", 30
+DefineLocal
+Push "wepname", 0.0, "Array"
+NewObject
+SetVariable
+Push "armname", 0.0, "Array"
+NewObject
+SetVariable
+Push "itemname", 0.0, "Array"
+NewObject
+SetVariable
+Push "achname", 0.0, "Array"
+NewObject
+SetVariable
+Push "wepname"
+GetVariable
+Push 0.0, "Barehand"
+SetMember
+Push "wepname"
+GetVariable
+Push 1, "Dagger"
+SetMember
+Push "wepname"
+GetVariable
+Push 2, "Sword"
+SetMember
+Push "wepname"
+GetVariable
+Push 3, "Rapier"
+SetMember
+Push "wepname"
+GetVariable
+Push 4, "Falchion"
+SetMember
+Push "wepname"
+GetVariable
+Push 5, "Katana"
+SetMember
+Push "wepname"
+GetVariable
+Push 6, "Flamberge"
+SetMember
+Push "wepname"
+GetVariable
+Push 7, "Zweihander"
+SetMember
+Push "wepname"
+GetVariable
+Push 8, "Broad Kris"
+SetMember
+Push "wepname"
+GetVariable
+Push 9, "Excalibur"
+SetMember
+Push "wepname"
+GetVariable
+Push 10, "Astral Sword"
+SetMember
+Push "armname"
+GetVariable
+Push 0.0, "Barebody"
+SetMember
+Push "armname"
+GetVariable
+Push 1, "Clothing"
+SetMember
+Push "armname"
+GetVariable
+Push 2, "Protector"
+SetMember
+Push "armname"
+GetVariable
+Push 3, "Breastplate"
+SetMember
+Push "armname"
+GetVariable
+Push 4, "Chainmail"
+SetMember
+Push "armname"
+GetVariable
+Push 5, "Fullplate"
+SetMember
+Push "armname"
+GetVariable
+Push 6, "Samurai Mail"
+SetMember
+Push "armname"
+GetVariable
+Push 7, "Valkyrie Garb"
+SetMember
+Push "armname"
+GetVariable
+Push 8, "Odin Garb"
+SetMember
+Push "armname"
+GetVariable
+Push 9, "Avalon"
+SetMember
+Push "armname"
+GetVariable
+Push 10, "Astral Armor"
+SetMember
+Push "achname"
+GetVariable
+Push 0.0, "Slay a Dragon!"
+SetMember
+Push "achname"
+GetVariable
+Push 1, "Stashed 3000 Gold!"
+SetMember
+Push "achname"
+GetVariable
+Push 2, "Reach Day #10!"
+SetMember
+Push "achname"
+GetVariable
+Push 3, "Got All Collection!"
+SetMember
+Push "achname"
+GetVariable
+Push 4, "70000+ Damage!"
+SetMember
+Push "itemname"
+GetVariable
+Push 0.0, "Empty"
+SetMember
+Push "itemname"
+GetVariable
+Push 1, "Elixir"
+SetMember
+Push "itemname"
+GetVariable
+Push 2, "Divine Edge"
+SetMember
+Push "itemname"
+GetVariable
+Push 3, "Gold Voucher"
+SetMember
+Push "tippool", "#22 There are 22 Protips in total.", "#21 Upgrade weapon to increase damage.", "#20 Play STING\'s games. They\'re good.", "#19 Keep running!", "#18 Perhaps you CAN win the game. Perhaps not.", "#17 Keep losing? Try again.", "#16 This game doesn\'t suck!", "#15 Support the developers!", "#14 Believe in protips!", "#13 Need more damage? Purchase Divine Edge!", "#12 Higher level, higher score.", "#11 Dragon appears starting from Day 8.", "#10 Use elixir to replenish your HP!", "#09 Press P to pause the game.", "#08 Purchase Gold Voucher for quick wealth.", "#07 Enemies level up each day.", "#06 Press S to mute sound.", "#05 Press M to mute music.", "#04 If only you can Insta-kill those Dragons...", "#03 Your HP recovers when upgrading armor.", "#02 Replenish lifespan at the Soulshrine!", "#01 People die if they are killed.", 22
+InitArray
+SetVariable
+Push "source included!"
+Trace
+Push "", 19, "HIGH"
+SetProperty
+Push "blurX", 10
+DefineLocal
+Push "blurY", 10
+DefineLocal
+Push "quality", 3
+DefineLocal
+Push "blur", "quality"
+GetVariable
+Push "blurY"
+GetVariable
+Push "blurX"
+GetVariable
+Push 3, "flash"
+GetVariable
+Push "filters"
+GetMember
+Push "BlurFilter"
+NewMethod
+DefineLocal
+Push "blurfilter", 0.0, "Array"
+NewObject
+DefineLocal
+Push "nofilter", 0.0, "Array"
+NewObject
+DefineLocal
+Push "blur"
+GetVariable
+Push 1, "blurfilter"
+GetVariable
+Push "push"
+CallMethod
+Pop
+Push 1000, "bgm", 2, "this"
+GetVariable
+Push "createEmptyMovieClip"
+CallMethod
+Pop
+Push 999, "sfx", 2, "this"
+GetVariable
+Push "createEmptyMovieClip"
+CallMethod
+Pop
+Push 998, "voiceg", 2, "this"
+GetVariable
+Push "createEmptyMovieClip"
+CallMethod
+Pop
+Push 997, "voiceb", 2, "this"
+GetVariable
+Push "createEmptyMovieClip"
+CallMethod
+Pop
+Push "bgmvol", 0.0
+SetVariable
+Push "bgmgeneral", "this"
+GetVariable
+Push "bgm"
+GetMember
+Push 1, "Sound"
+NewObject
+SetVariable
+Push "bgmgame", "this"
+GetVariable
+Push "bgm"
+GetMember
+Push 1, "Sound"
+NewObject
+SetVariable
+Push "BGMGame", 1, "bgmgame"
+GetVariable
+Push "attachSound"
+CallMethod
+Pop
+Push "bgmscore", "this"
+GetVariable
+Push "bgm"
+GetMember
+Push 1, "Sound"
+NewObject
+SetVariable
+Push "BGMScore", 1, "bgmscore"
+GetVariable
+Push "attachSound"
+CallMethod
+Pop
+Push "sfxgeneral", "this"
+GetVariable
+Push "sfx"
+GetMember
+Push 1, "Sound"
+NewObject
+SetVariable
+Push "sfxapplause", "this"
+GetVariable
+Push "sfx"
+GetMember
+Push 1, "Sound"
+NewObject
+SetVariable
+Push "SFXApplause", 1, "sfxapplause"
+GetVariable
+Push "attachSound"
+CallMethod
+Pop
+Push "sfxbattlestart", "this"
+GetVariable
+Push "sfx"
+GetMember
+Push 1, "Sound"
+NewObject
+SetVariable
+Push "SFXBattleStart", 1, "sfxbattlestart"
+GetVariable
+Push "attachSound"
+CallMethod
+Pop
+Push "sfxbuttonpress", "this"
+GetVariable
+Push "sfx"
+GetMember
+Push 1, "Sound"
+NewObject
+SetVariable
+Push "SFXButtonPress", 1, "sfxbuttonpress"
+GetVariable
+Push "attachSound"
+CallMethod
+Pop
+Push "sfxbuttonselect", "this"
+GetVariable
+Push "sfx"
+GetMember
+Push 1, "Sound"
+NewObject
+SetVariable
+Push "SFXButtonSelect", 1, "sfxbuttonselect"
+GetVariable
+Push "attachSound"
+CallMethod
+Pop
+Push "sfxcharadie", "this"
+GetVariable
+Push "sfx"
+GetMember
+Push 1, "Sound"
+NewObject
+SetVariable
+Push "SFXCharaDie", 1, "sfxcharadie"
+GetVariable
+Push "attachSound"
+CallMethod
+Pop
+Push "sfxenemydie", "this"
+GetVariable
+Push "sfx"
+GetMember
+Push 1, "Sound"
+NewObject
+SetVariable
+Push "SFXEnemyDie", 1, "sfxenemydie"
+GetVariable
+Push "attachSound"
+CallMethod
+Pop
+Push "sfxerror", "this"
+GetVariable
+Push "sfx"
+GetMember
+Push 1, "Sound"
+NewObject
+SetVariable
+Push "SFXError", 1, "sfxerror"
+GetVariable
+Push "attachSound"
+CallMethod
+Pop
+Push "sfxevent", "this"
+GetVariable
+Push "sfx"
+GetMember
+Push 1, "Sound"
+NewObject
+SetVariable
+Push "SFXEvent", 1, "sfxevent"
+GetVariable
+Push "attachSound"
+CallMethod
+Pop
+Push "sfxeventtriggered", "this"
+GetVariable
+Push "sfx"
+GetMember
+Push 1, "Sound"
+NewObject
+SetVariable
+Push "SFXEventTriggered", 1, "sfxeventtriggered"
+GetVariable
+Push "attachSound"
+CallMethod
+Pop
+Push "sfxexploop", "this"
+GetVariable
+Push "sfx"
+GetMember
+Push 1, "Sound"
+NewObject
+SetVariable
+Push "SFXEXPLoop", 1, "sfxexploop"
+GetVariable
+Push "attachSound"
+CallMethod
+Pop
+Push "sfxhit01", "this"
+GetVariable
+Push "sfx"
+GetMember
+Push 1, "Sound"
+NewObject
+SetVariable
+Push "SFXHit01", 1, "sfxhit01"
+GetVariable
+Push "attachSound"
+CallMethod
+Pop
+Push "sfxhit02", "this"
+GetVariable
+Push "sfx"
+GetMember
+Push 1, "Sound"
+NewObject
+SetVariable
+Push "SFXHit02", 1, "sfxhit02"
+GetVariable
+Push "attachSound"
+CallMethod
+Pop
+Push "sfxhit03", "this"
+GetVariable
+Push "sfx"
+GetMember
+Push 1, "Sound"
+NewObject
+SetVariable
+Push "SFXHit03", 1, "sfxhit03"
+GetVariable
+Push "attachSound"
+CallMethod
+Pop
+Push "sfxitemuse", "this"
+GetVariable
+Push "sfx"
+GetMember
+Push 1, "Sound"
+NewObject
+SetVariable
+Push "SFXItemUse", 1, "sfxitemuse"
+GetVariable
+Push "attachSound"
+CallMethod
+Pop
+Push "sfxnotice", "this"
+GetVariable
+Push "sfx"
+GetMember
+Push 1, "Sound"
+NewObject
+SetVariable
+Push "SFXNotice", 1, "sfxnotice"
+GetVariable
+Push "attachSound"
+CallMethod
+Pop
+Push 0.0, "Mouse"
+GetVariable
+Push "hide"
+CallMethod
+Pop
+Push 100, "cur", "Cursor", 3, "this"
+GetVariable
+Push "attachMovie"
+CallMethod
+Pop
+Push "inputarray", false, false, false, 3
+InitArray
+SetVariable
+Push "bgmmuted", false
+SetVariable
+Push "sfxmuted", false
+SetVariable
+Push "intendedpause", false
+SetVariable
+Push "this"
+GetVariable
+Push "onMouseDown"
+DefineFunction2 "", 0, 2, false, false, true, false, true, false, false, true, false {
+Push 0.0, "Mouse"
+GetVariable
+Push "hide"
+CallMethod
+Pop
+Push "screenstate"
+GetVariable
+Push "achievement"
+Equals2
+Not
+If loca00d
+Push 1, 0.0, 2, "sfxstartbutton"
+GetVariable
+Push "start"
+CallMethod
+Pop
+Push "screenbefore"
+GetVariable
+Push "title"
+Equals2
+Not
+If loc9fe5
+Push "title", 1, register1, "gotoAndStop"
+CallMethod
+Pop
+Jump loca008
+loc9fe5:Push "screenbefore"
+GetVariable
+Push "score"
+Equals2
+Not
+If loca008
+Push "score", 1, register1, "gotoAndStop"
+CallMethod
+Pop
+loca008:Jump loca243
+loca00d:Push "screenstate"
+GetVariable
+Push "credits"
+Equals2
+Not
+If loca036
+Push "title", 1, register1, "gotoAndStop"
+CallMethod
+Pop
+Jump loca243
+loca036:Push "screenstate"
+GetVariable
+Push "game"
+Equals2
+Not
+If loca243
+Push "ispaused"
+GetVariable
+Push false
+Equals2
+Not
+If loca1a0
+Push "isevent"
+GetVariable
+Push true
+Equals2
+Not
+If loca17f
+Push "isbattle"
+GetVariable
+Push true
+Equals2
+Not
+If loca11b
+Push "inventory"
+GetVariable
+Push 0.0
+Equals2
+Not
+Not
+If loca0f5
+Push 0.0, "useItem"
+CallFunction
+Pop
+Push 99, "me", "MouseEffect", 3, register1, "attachMovie"
+CallMethod
+Pop
+Push register1, "me"
+GetMember
+Push "_x", "", 20
+GetProperty
+SetMember
+Push register1, "me"
+GetMember
+Push "_y", "", 21
+GetProperty
+SetMember
+Jump loca116
+loca0f5:Push 1, 0.0, 2, "sfxerror"
+GetVariable
+Push "start"
+CallMethod
+Pop
+loca116:Jump loca17a
+loca11b:Push "canact"
+GetVariable
+Push true
+Equals2
+PushDuplicate
+Not
+If loca13b
+Pop
+Push "hasact"
+GetVariable
+Push false
+Equals2
+loca13b:Not
+If loca159
+Push "eventnow"
+GetVariable
+Push 1, "actEvent"
+CallFunction
+Pop
+Jump loca17a
+loca159:Push 1, 0.0, 2, "sfxerror"
+GetVariable
+Push "start"
+CallMethod
+Pop
+loca17a:Jump loca1a0
+loca17f:Push 1, 0.0, 2, "sfxerror"
+GetVariable
+Push "start"
+CallMethod
+Pop
+loca1a0:Push "lose"
+GetVariable
+Push true
+Equals2
+Not
+If loca1db
+Push "score", 1, register1, "gotoAndStop"
+CallMethod
+Pop
+Push 0.0, register1, "hud"
+GetMember
+Push "removeMovieClip"
+CallMethod
+Pop
+loca1db:Push "istuto"
+GetVariable
+Push true
+Equals2
+Not
+If loca243
+Push 1, 0.0, 2, "sfxbuttonpress"
+GetVariable
+Push "start"
+CallMethod
+Pop
+Push "istuto", false
+SetVariable
+Push 0.0, register1, "hud"
+GetMember
+Push "paneltut"
+GetMember
+Push "removeMovieClip"
+CallMethod
+Pop
+Push false, 1, "pauseGame"
+CallFunction
+Pop
+loca243:Push "screenstate"
+GetVariable
+Push "score"
+Equals2
+Not
+If loca255
+}
+loca255:SetMember
+Push "this"
+GetVariable
+Push "onEnterFrame"
+DefineFunction2 "", 0, 3, false, true, true, false, true, false, false, true, false {
+Push "screenstate"
+GetVariable
+Push "title"
+Equals2
+Not
+If loca457
+Push "sil"
+GetVariable
+Push "_y", "sil"
+GetVariable
+Push "_y"
+GetMember
+Push "sil"
+GetVariable
+Push "_y"
+GetMember
+Push 4
+Divide
+Subtract
+SetMember
+Push "silmask"
+GetVariable
+Push "_x", "silmask"
+GetVariable
+Push "_x"
+GetMember
+Push 10, "silmask"
+GetVariable
+Push "_x"
+GetMember
+Subtract
+Push 4
+Divide
+Add2
+SetMember
+Push "logo"
+GetVariable
+Push "_x", "logo"
+GetVariable
+Push "_x"
+GetMember
+Push 480, "logo"
+GetVariable
+Push "_x"
+GetMember
+Subtract
+Push 4
+Divide
+Add2
+SetMember
+Push "buttonstate"
+GetVariable
+Push 0.0
+Equals2
+Not
+If loca406
+Push "start_btn"
+GetVariable
+Push "_x", "start_btn"
+GetVariable
+Push "_x"
+GetMember
+Push 460, "start_btn"
+GetVariable
+Push "_x"
+GetMember
+Subtract
+Push 3
+Divide
+Add2
+SetMember
+Push "achievement_btn"
+GetVariable
+Push "_x", "achievement_btn"
+GetVariable
+Push "_x"
+GetMember
+Push 460, "achievement_btn"
+GetVariable
+Push "_x"
+GetMember
+Subtract
+Push 4
+Divide
+Add2
+SetMember
+Push "credits_btn"
+GetVariable
+Push "_x", "credits_btn"
+GetVariable
+Push "_x"
+GetMember
+Push 460, "credits_btn"
+GetVariable
+Push "_x"
+GetMember
+Subtract
+Push 5
+Divide
+Add2
+SetMember
+Push "moregames_btn"
+GetVariable
+Push "_x", "moregames_btn"
+GetVariable
+Push "_x"
+GetMember
+Push 460, "moregames_btn"
+GetVariable
+Push "_x"
+GetMember
+Subtract
+Push 6
+Divide
+Add2
+SetMember
+Jump loca452
+loca406:Push "buttonstate"
+GetVariable
+Push 1
+Equals2
+Not
+If loca421
+Jump loca452
+loca421:Push "buttonstate"
+GetVariable
+Push 2
+Equals2
+Not
+If loca43c
+Jump loca452
+loca43c:Push "buttonstate"
+GetVariable
+Push 3
+Equals2
+Not
+If loca452
+loca452:Jump locae0c
+loca457:Push "screenstate"
+GetVariable
+Push "achievement"
+Equals2
+Not
+If loca746
+Push "levelelement"
+GetVariable
+Push "level_txt"
+GetMember
+Push "text", "Level ", "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 0.0
+GetMember
+Add2
+Push " (x"
+Add2
+Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 2
+GetMember
+Add2
+Push " Score)"
+Add2
+SetMember
+Push "nextlvl", "expbase"
+GetVariable
+Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 0.0
+GetMember
+Push "expfactor"
+GetVariable
+Multiply
+Add2
+SetVariable
+Push "levelelement"
+GetVariable
+Push "exp_txt"
+GetMember
+Push "text", "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 1
+GetMember
+Push "/"
+Add2
+Push "nextlvl"
+GetVariable
+Add2
+Push " EXP"
+Add2
+SetMember
+Push "levelelement"
+GetVariable
+Push "expbar"
+GetMember
+Push "_xscale", "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 1
+GetMember
+Push "nextlvl"
+GetVariable
+Divide
+Push 100
+Multiply
+Push 1, "Math"
+GetVariable
+Push "round"
+CallMethod
+SetMember
+Push "levelelement"
+GetVariable
+Push "expbar"
+GetMember
+Push "_xscale"
+GetMember
+Push 1
+Less2
+Not
+If loca5cd
+Push "levelelement"
+GetVariable
+Push "expbar"
+GetMember
+Push "_xscale", 1
+SetMember
+loca5cd:Push "i", 1
+SetVariable
+loca5d8:Push "i"
+GetVariable
+Push 10
+Greater
+Not
+Not
+If loca687
+Push register1, "wpn", "i"
+GetVariable
+Add2
+GetMember
+Push 1, "cur"
+GetVariable
+Push "sensor"
+GetMember
+Push "hitTest"
+CallMethod
+Not
+If loca678
+Push "playerdata"
+GetVariable
+Push 1
+GetMember
+Push "i"
+GetVariable
+Push 1
+Subtract
+GetMember
+Push 1
+Equals2
+Not
+If loca678
+Push "True!"
+Trace
+Push "equip_txt"
+GetVariable
+Push "text", "Lv", "i"
+GetVariable
+Add2
+Push " - "
+Add2
+Push "wepname"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+Add2
+SetMember
+loca678:Push "i", "i"
+GetVariable
+Increment
+SetVariable
+Jump loca5d8
+loca687:Push "i", 1
+SetVariable
+loca692:Push "i"
+GetVariable
+Push 10
+Greater
+Not
+Not
+If loca741
+Push register1, "arm", "i"
+GetVariable
+Add2
+GetMember
+Push 1, "cur"
+GetVariable
+Push "sensor"
+GetMember
+Push "hitTest"
+CallMethod
+Not
+If loca732
+Push "playerdata"
+GetVariable
+Push 2
+GetMember
+Push "i"
+GetVariable
+Push 1
+Subtract
+GetMember
+Push 1
+Equals2
+Not
+If loca732
+Push "True!"
+Trace
+Push "equip_txt"
+GetVariable
+Push "text", "Lv", "i"
+GetVariable
+Add2
+Push " - "
+Add2
+Push "armname"
+GetVariable
+Push "i"
+GetVariable
+GetMember
+Add2
+SetMember
+loca732:Push "i", "i"
+GetVariable
+Increment
+SetVariable
+Jump loca692
+loca741:Jump locae0c
+loca746:Push "screenstate"
+GetVariable
+Push "game"
+Equals2
+Not
+If loca76e
+Push 0.0, "mainLoop"
+CallFunction
+Pop
+Jump locae0c
+loca76e:Push "screenstate"
+GetVariable
+Push "score"
+Equals2
+Not
+If locae0c
+Push "silhouette"
+GetVariable
+Push "_x", "silhouette"
+GetVariable
+Push "_x"
+GetMember
+Push 0.0, "silhouette"
+GetVariable
+Push "_x"
+GetMember
+Subtract
+Push 4
+Divide
+Add2
+SetMember
+Push "disscore"
+GetVariable
+Push "score"
+GetVariable
+Less2
+Not
+If loca7f7
+Push "disscore", "disscore"
+GetVariable
+Push "score"
+GetVariable
+Push 90
+Divide
+Push 1, "Math"
+GetVariable
+Push "round"
+CallMethod
+Add2
+SetVariable
+loca7f7:Push "disscore"
+GetVariable
+Push "score"
+GetVariable
+Greater
+Not
+If loca813
+Push "disscore", "score"
+GetVariable
+SetVariable
+loca813:Push "score_txt"
+GetVariable
+Push "text", "disscore"
+GetVariable
+SetMember
+Push "disscore"
+GetVariable
+Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 6
+GetMember
+Greater
+Not
+If loca887
+Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 6, "disscore"
+GetVariable
+SetMember
+Push "newhigh"
+GetVariable
+Push false
+Equals2
+Not
+If loca887
+Push "newhigh", true
+SetVariable
+loca887:Push "newhigh"
+GetVariable
+Push true
+Equals2
+Not
+If loca8b5
+Push "fuckyeah!"
+Trace
+Push "highscoreanim"
+GetVariable
+Push "_visible", true
+SetMember
+Jump loca8c4
+loca8b5:Push "highscoreanim"
+GetVariable
+Push "_visible", false
+SetMember
+loca8c4:Push "expgain"
+GetVariable
+Push 3
+Greater
+Not
+If loca92e
+Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 1, "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 1
+GetMember
+Push 3
+Add2
+SetMember
+Push "expgain", "expgain"
+GetVariable
+Push 3
+Subtract
+SetVariable
+Jump loca992
+loca92e:Push "expgain"
+GetVariable
+Push 0.0
+Greater
+Not
+If loca992
+Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 1, "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 1
+GetMember
+Push "expgain"
+GetVariable
+Add2
+SetMember
+Push "expgain", 0.0
+SetVariable
+loca992:Push "nextlvl", "expbase"
+GetVariable
+Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 0.0
+GetMember
+Push "expfactor"
+GetVariable
+Multiply
+Add2
+SetVariable
+Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 1
+GetMember
+Push "nextlvl"
+GetVariable
+Greater
+Not
+If locaaa3
+Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 0.0, "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 0.0
+GetMember
+Push 1
+Add2
+SetMember
+Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 1, 0.0
+SetMember
+Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 2, 1, "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 0.0
+GetMember
+Push 10
+Divide
+Add2
+SetMember
+locaaa3:Push "levelelement"
+GetVariable
+Push "_y", "levelelement"
+GetVariable
+Push "_y"
+GetMember
+Push 10, "levelelement"
+GetVariable
+Push "_y"
+GetMember
+Subtract
+Push 4
+Divide
+Add2
+SetMember
+Push "levelelement"
+GetVariable
+Push "level_txt"
+GetMember
+Push "text", "Level ", "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 0.0
+GetMember
+Add2
+Push " (x"
+Add2
+Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 2
+GetMember
+Add2
+Push " Score)"
+Add2
+SetMember
+Push "levelelement"
+GetVariable
+Push "exp_txt"
+GetMember
+Push "text", "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 1
+GetMember
+Push "/"
+Add2
+Push "nextlvl"
+GetVariable
+Add2
+Push " EXP"
+Add2
+SetMember
+Push "levelelement"
+GetVariable
+Push "expbar"
+GetMember
+Push "_xscale", "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 1
+GetMember
+Push "nextlvl"
+GetVariable
+Divide
+Push 100
+Multiply
+Push 1, "Math"
+GetVariable
+Push "round"
+CallMethod
+SetMember
+Push "levelelement"
+GetVariable
+Push "expbar"
+GetMember
+Push "_xscale"
+GetMember
+Push 1
+Less2
+Not
+If locac06
+Push "levelelement"
+GetVariable
+Push "expbar"
+GetMember
+Push "_xscale", 1
+SetMember
+locac06:Push "expgain"
+GetVariable
+Push 0.0
+Equals2
+PushDuplicate
+Not
+If locac2e
+Pop
+Push "disscore"
+GetVariable
+Push "score"
+GetVariable
+Equals2
+locac2e:Not
+If locacbe
+Push "donecounting", true
+SetVariable
+Push "retry_btn"
+GetVariable
+Push "enabled", true
+SetMember
+Push "retry_btn"
+GetVariable
+Push "_visible", true
+SetMember
+Push "end_btn"
+GetVariable
+Push "enabled", true
+SetMember
+Push "end_btn"
+GetVariable
+Push "_visible", true
+SetMember
+Push "achievement_btn"
+GetVariable
+Push "enabled", true
+SetMember
+Push "achievement_btn"
+GetVariable
+Push "_visible", true
+SetMember
+Push "moregames_btn"
+GetVariable
+Push "enabled", true
+SetMember
+Push "moregames_btn"
+GetVariable
+Push "_visible", true
+SetMember
+Jump locad43
+locacbe:Push "donecounting", false
+SetVariable
+Push "retry_btn"
+GetVariable
+Push "enabled", false
+SetMember
+Push "retry_btn"
+GetVariable
+Push "_visible", false
+SetMember
+Push "end_btn"
+GetVariable
+Push "enabled", false
+SetMember
+Push "end_btn"
+GetVariable
+Push "_visible", false
+SetMember
+Push "achievement_btn"
+GetVariable
+Push "enabled", false
+SetMember
+Push "achievement_btn"
+GetVariable
+Push "_visible", false
+SetMember
+Push "moregames_btn"
+GetVariable
+Push "enabled", false
+SetMember
+Push "moregames_btn"
+GetVariable
+Push "_visible", false
+SetMember
+locad43:Push "donecounting"
+GetVariable
+Push false
+Equals2
+Not
+If locad7c
+Push 1, 0.0, 2, "sfxexploop"
+GetVariable
+Push "start"
+CallMethod
+Pop
+Jump locade2
+locad7c:Push "issaved"
+GetVariable
+Push false
+Equals2
+Not
+If locade2
+Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 0.0
+GetMember
+Push "Level", 2, register2, "kongregateStats"
+GetMember
+Push "submit"
+CallMethod
+Pop
+Push 0.0, "saveFile"
+CallFunction
+Pop
+Push "issaved", true
+SetVariable
+locade2:Push "highscore_txt"
+GetVariable
+Push "text", "Highscore : ", "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 6
+GetMember
+Add2
+SetMember
+locae0c:Push 0.0, "buttonInput"
+CallFunction
+Pop
+Push 0.0, "bgmFade"
+CallFunction
+Pop
+Push 0.0, "updateCursor"
+CallFunction
+Pop
+}
+SetMember
+Stop

@@ -1,0 +1,5 @@
+Click to trigger the event! Dont be late or you'll 
+--- RECORDSEPARATOR ---
+miss it. Triggering events requires some gold 
+--- RECORDSEPARATOR ---
+though, so be careful!

@@ -1,0 +1,3 @@
+Getting hit by the Enemy reduces your HP, 
+--- RECORDSEPARATOR ---
+while Lifespan reduced gradually over time

@@ -1,0 +1,3 @@
+Guide the Knight to survive as long as possible using
+--- RECORDSEPARATOR ---
+only a single click every time!

@@ -1,0 +1,16 @@
+# Reproducible extracted tools stay local.
+/tooling/ffdec-26.2.1/
+/tooling/temurin-jre21/
+/tooling/ffdec-runtime/
+
+# Large reproducible downloads stay local. Their URLs and hashes are documented.
+/tooling/ffdec_26.2.1.zip
+/tooling/temurin-jre21-linux-x64.tar.gz
+/decompiled/ffdec/swf.xml
+
+# Non-normative comparison SWFs stay local; keep only the primary Kongregate SWF.
+/original/comparison/*.swf
+
+# Local operating-system metadata.
+.DS_Store
+Thumbs.db

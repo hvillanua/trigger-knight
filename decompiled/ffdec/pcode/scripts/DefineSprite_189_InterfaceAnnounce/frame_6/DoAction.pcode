@@ -1,0 +1,5 @@
+Push "announce_txt"
+GetVariable
+Push "text", "annmes"
+GetVariable
+SetMember

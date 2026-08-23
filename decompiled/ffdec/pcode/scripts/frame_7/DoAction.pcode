@@ -1,0 +1,11 @@
+Push "screenstate", "game"
+SetVariable
+Push 3, "ts", "Transition", 3, "this"
+GetVariable
+Push "attachMovie"
+CallMethod
+Pop
+Stop
+Push 0.0, "initGame"
+CallFunction
+Pop

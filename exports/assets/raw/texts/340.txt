@@ -1,0 +1,5 @@
+Uh-oh, Blademaster's Lifespan is nearly depleted. She starts 
+--- RECORDSEPARATOR ---
+to fade!
+--- RECORDSEPARATOR ---
+Solution : Restore it by triggering a Soulshrine event.

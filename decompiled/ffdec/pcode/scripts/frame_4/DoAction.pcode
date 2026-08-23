@@ -1,0 +1,230 @@
+ConstantPool "screenstate", "title", "ts", "TransWhite", "this", "attachMovie", "buttonstate", "start_btn", "enabled", "achievement_btn", "playerdata", "tuto_rb", "gotoAndStop", "screenbefore", "loadFile", "Player data not found; initiating data!", "newGame", "saveFile", "onRollOver", "sfxbuttonselect", "start", "credits_btn", "moregames_btn", "tutorial_btn", "onRelease", "retry", "bgmgeneral", "setVolume", "sfxbuttonpress", "tb", "TransitionBattle", "appstore_btn"
+Push "screenstate", "title"
+SetVariable
+Push 3, "ts", "TransWhite", 3, "this"
+GetVariable
+Push "attachMovie"
+CallMethod
+Pop
+Push "buttonstate", 0.0
+SetVariable
+Push "start_btn"
+GetVariable
+Push "enabled", true
+SetMember
+Push "achievement_btn"
+GetVariable
+Push "enabled", true
+SetMember
+Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 5
+GetMember
+Push 1
+Add2
+Push 1, "tuto_rb"
+GetVariable
+Push "gotoAndStop"
+CallMethod
+Pop
+Push "screenbefore", "title"
+SetVariable
+Stop
+Push 0.0, "loadFile"
+CallFunction
+Pop
+Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 0.0
+GetMember
+Push undefined
+Equals2
+Not
+If loc025e
+Push "Player data not found; initiating data!"
+Trace
+Push 0.0, "newGame"
+CallFunction
+Pop
+Push 0.0, "saveFile"
+CallFunction
+Pop
+loc025e:Push "start_btn"
+GetVariable
+Push "onRollOver"
+DefineFunction "", 0 {
+Push 1, 0.0, 2, "sfxbuttonselect"
+GetVariable
+Push "start"
+CallMethod
+Pop
+}
+SetMember
+Push "achievement_btn"
+GetVariable
+Push "onRollOver"
+DefineFunction "", 0 {
+Push 1, 0.0, 2, "sfxbuttonselect"
+GetVariable
+Push "start"
+CallMethod
+Pop
+}
+SetMember
+Push "credits_btn"
+GetVariable
+Push "onRollOver"
+DefineFunction "", 0 {
+Push 1, 0.0, 2, "sfxbuttonselect"
+GetVariable
+Push "start"
+CallMethod
+Pop
+}
+SetMember
+Push "moregames_btn"
+GetVariable
+Push "onRollOver"
+DefineFunction "", 0 {
+Push 1, 0.0, 2, "sfxbuttonselect"
+GetVariable
+Push "start"
+CallMethod
+Pop
+}
+SetMember
+Push "tutorial_btn"
+GetVariable
+Push "onRollOver"
+DefineFunction "", 0 {
+Push 1, 0.0, 2, "sfxbuttonselect"
+GetVariable
+Push "start"
+CallMethod
+Pop
+}
+SetMember
+Push "start_btn"
+GetVariable
+Push "onRelease"
+DefineFunction "", 0 {
+Push "retry", false
+SetVariable
+Push 0.0, 1, "bgmgeneral"
+GetVariable
+Push "setVolume"
+CallMethod
+Pop
+Push 1, 0.0, 2, "sfxbuttonpress"
+GetVariable
+Push "start"
+CallMethod
+Pop
+Push "start_btn"
+GetVariable
+Push "enabled", false
+SetMember
+Push 3, "tb", "TransitionBattle", 3, "attachMovie"
+CallFunction
+Pop
+}
+SetMember
+Push "achievement_btn"
+GetVariable
+Push "onRelease"
+DefineFunction "", 0 {
+Push 1, 0.0, 2, "sfxbuttonpress"
+GetVariable
+Push "start"
+CallMethod
+Pop
+GoToLabel "achievement"
+}
+SetMember
+Push "credits_btn"
+GetVariable
+Push "onRelease"
+DefineFunction "", 0 {
+Push 1, 0.0, 2, "sfxbuttonpress"
+GetVariable
+Push "start"
+CallMethod
+Pop
+GoToLabel "credits"
+}
+SetMember
+Push "moregames_btn"
+GetVariable
+Push "onRelease"
+DefineFunction "", 0 {
+Push 1, 0.0, 2, "sfxbuttonpress"
+GetVariable
+Push "start"
+CallMethod
+Pop
+GetURL "http://www.kongregate.com/?haref=triggerknight&src=spon-rpg-triggerknight-site-x", "_blank"
+}
+SetMember
+Push "appstore_btn"
+GetVariable
+Push "onRelease"
+DefineFunction "", 0 {
+Push 1, 0.0, 2, "sfxbuttonpress"
+GetVariable
+Push "start"
+CallMethod
+Pop
+GetURL "http://itunes.apple.com/us/app/trigger-knight/id500620156?mt=8", "_blank"
+}
+SetMember
+Push "tutorial_btn"
+GetVariable
+Push "onRelease"
+DefineFunction "", 0 {
+Push 1, 0.0, 2, "sfxbuttonpress"
+GetVariable
+Push "start"
+CallMethod
+Pop
+Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 5
+GetMember
+Push 0.0
+Equals2
+Not
+If loc05f2
+Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 5, 1
+SetMember
+Jump loc0617
+loc05f2:Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 5, 0.0
+SetMember
+loc0617:Push "playerdata"
+GetVariable
+Push 0.0
+GetMember
+Push 5
+GetMember
+Push 1
+Add2
+Push 1, "tuto_rb"
+GetVariable
+Push "gotoAndStop"
+CallMethod
+Pop
+}
+SetMember
