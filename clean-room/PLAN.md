@@ -18,7 +18,7 @@ milestone's tests and interfaces have been reviewed.
 2. **The simulation core never depends on the UI.** It must not import Canvas,
    DOM, audio, `window`, browser timers, or wall-clock time.
 3. **Every run is reproducible.** A run is identified by rule-set version,
-   seed, policy, initial profile, and maximum tick count.
+   seed, policy, initial profile, and finite runner step limit.
 4. **The browser and batch runner use the same public core API.** There is no
    separate simplified simulation model.
 5. **Original quirks remain explicit.** Compatibility behavior belongs in a
@@ -112,7 +112,10 @@ interface RunConfig {
   rules: RuleSetId;
   seed: string;
   initialProfile: ProfileState;
-  maxTicks: Tick;
+}
+
+interface RunOptions {
+  maxSteps: number;
 }
 
 interface RunState {
@@ -132,6 +135,12 @@ function step(
   state: Readonly<RunState>,
   commands: readonly GameCommand[],
 ): StepResult;
+
+function run(
+  config: RunConfig,
+  policy: PlayerPolicy,
+  options: RunOptions,
+): RunResult;
 ```
 
 The exact shape may change during the first tests, but these constraints do
@@ -149,6 +158,9 @@ not:
 - The core does no I/O and does not mutate module-global state.
 - Presentation-only animation state stays in the browser layer unless a frame
   directly controls mechanics, such as the confirmed combat hit frame.
+- The headless `run()` wrapper requires a positive finite `maxSteps` and counts
+  every `step()` invocation, including paused or tutorial-gated steps. Exhausting
+  that budget returns `step-limit` rather than leaving a worker blocked.
 
 ## Deterministic randomness
 
@@ -314,10 +326,14 @@ Use two tiers:
 
 Playwright verifies only integration responsibilities:
 
-- A new run renders at 480x320 and advances through the same core API.
+- A new run retains the original coordinate scale as abstract world units, uses
+  an initial 480x320-world-unit camera, renders sharply at responsive/HiDPI
+  output sizes, and advances through the same core API.
 - Pointer/keyboard actions produce expected commands.
 - Pause, menus, persistence adapter, audio toggles, and screen transitions work.
 - A known seed reaches the same checkpoint in browser and Node.
+- The same command schedule produces the same domain result at representative
+  30, 60, and 120 Hz render cadences.
 - Representative desktop/mobile screenshots contain no clipping or overlap.
 
 Do not duplicate formula tests through browser clicks.
@@ -332,8 +348,9 @@ interface RunResult {
   rules: RuleSetId;
   seed: string;
   policy: string;
-  ticks: number;
-  terminalReason: "lifespan" | "combat" | "tick-limit";
+  steps: number;
+  activeTicks: number;
+  terminalReason: "lifespan" | "combat" | "step-limit";
   score: number;
   day: number;
   distance: number;
@@ -356,10 +373,10 @@ are opt-in for selected seeds or failures.
 
 Given baseline `A` and candidate `B`:
 
-1. Use the same seed manifest, initial profile, policy, and tick limit.
+1. Use the same seed manifest, initial profile, policy, and runner step limit.
 2. Run each `(seed, policy)` pair under both rule sets.
-3. Compare per-seed deltas for score, survival ticks, day, gold, kills, purchase
-   mix, dragon outcomes, and terminal reason.
+3. Compare per-seed deltas for score, active gameplay ticks, day, gold, kills,
+   purchase mix, dragon outcomes, and terminal reason.
 4. Report mean, median, standard deviation, percentiles, min/max, and paired
    win/tie/loss counts.
 5. Show distribution histograms and the largest divergent seeds.

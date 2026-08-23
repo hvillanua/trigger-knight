@@ -21,13 +21,15 @@ The game must reproduce the confirmed Trigger Knight v1.3 loop:
 - run termination from lifespan or combat death;
 - post-run score/progression handling and replay.
 
-Confirmed formulas, timing-sensitive mechanics, probabilities, encounter behavior, combat behavior, and known quirks documented in `research/` must be treated as compatibility requirements for the original-v1.3 ruleset.
+Confirmed formulas, timing-sensitive mechanics, probabilities, encounter behavior, combat behavior, and known quirks documented in `research/` must be treated as compatibility requirements for the original-v1.3 ruleset unless this document explicitly classifies them as presentation or platform behavior to modernize.
 
 ### 2. Reproduce the browser play experience
 
 The browser version must provide the main game screens, HUD information, interactions, transitions, feedback, audio controls, pause behavior, tutorials, and local progression needed to play the game without Flash.
 
-The game should preserve the original 480x320 logical presentation and remain usable in modern browsers through appropriate scaling.
+The original coordinate scale is retained as abstract world units for the `original-v1.3` ruleset: one original stage coordinate unit equals one world unit, and the initial camera shows a 480x320-world-unit viewport. This preserves researched positions, distances, speeds, and thresholds without treating them as physical pixels. The renderer must project that camera into responsive, high-density, and fullscreen output while preserving the intended composition and mapping input back to world coordinates.
+
+The original 30 fps timing remains a 30 Hz gameplay simulation requirement because mechanics are frame-based. Rendering may run at the display refresh rate and interpolate between logical ticks; changing render cadence must not change gameplay outcomes.
 
 ### 3. Separate gameplay behavior from presentation
 
@@ -49,6 +51,23 @@ The codebase must allow gameplay subsystems, presentation, and future rulesets t
 
 New gameplay content or balance changes must be able to coexist with the original-v1.3 behavior rather than replacing it.
 
+### 6. Modernize non-gameplay behavior
+
+Flash-container and presentation details that do not determine gameplay outcomes are not compatibility requirements. The initial browser version should modernize them directly rather than reproduce obsolete constraints.
+
+This includes:
+
+- responsive and high-density rendering instead of a fixed 480x320 physical surface;
+- display-refresh-rate animation instead of tying drawing to the 30 Hz simulation;
+- pointer, touch, keyboard, and remappable controls translated into the same gameplay commands;
+- modern browser audio decoding, mixing, mute, and volume controls rather than Flash-specific loop counts or mixer behavior;
+- durable, versioned browser storage with atomic progression updates rather than AVM1 `SharedObject` timing and its possible close-before-save data loss;
+- accessible, responsive HUD and menus, while preserving all gameplay-relevant information and action availability;
+- modern loading, navigation, and sharing behavior without SWF preload frames, portal site locks, Kongregate APIs, or obsolete promotional links;
+- freely timed or redesigned visual-only transitions, parallax, particles, damage numbers, and menu animations.
+
+Mechanic-bearing timing and coordinates are excluded from this freedom. Examples include active-tick lifespan drain, encounter movement and purchase windows, combat hit/finish ticks, and pause/tutorial gates. These remain domain rules even when their visuals are interpolated or redesigned.
+
 ## Acceptance criteria
 
 The first complete implementation is acceptable when:
@@ -59,6 +78,8 @@ The first complete implementation is acceptable when:
 - identical complete inputs reproduce identical game outcomes;
 - original-v1.3 behavior remains selectable independently from later rulesets;
 - presentation code can be changed without changing gameplay outcomes;
+- physical resolution, device pixel ratio, render refresh rate, and supported input device do not change gameplay outcomes;
+- profile and collection updates are committed durably without depending on score-count animation completion;
 - unresolved research questions and implementation decisions remain explicitly documented.
 
 ## Out of scope for the initial compatibility release
@@ -66,4 +87,6 @@ The first complete implementation is acceptable when:
 - new enemies, items, shops, progression systems, or other original content;
 - intentional balance changes to the original-v1.3 ruleset;
 - exact reproduction of Flash Player's unrecovered PRNG sequence;
+- pixel-identical reproduction of the 480x320 SWF output, Flash audio latency/mixing, or timeline-only visual timing;
+- Kongregate/Newgrounds integration, site locks, legacy promotional links, and obsolete social-sharing actions;
 - multiplayer, accounts, or server-side progression.
