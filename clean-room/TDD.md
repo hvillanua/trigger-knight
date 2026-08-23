@@ -9,7 +9,7 @@ The architecture must provide:
 - one authoritative, deterministic gameplay engine shared by browser play and headless simulation;
 - versioned rules that preserve the researched Trigger Knight behavior;
 - stable boundaries between gameplay, presentation, persistence, input, sound, and simulation;
-- replayable state and programmatic single-run and batch execution;
+- reproducible complete runs and programmatic single-run and batch execution;
 - replaceable adapters without turning the project into a generalized game engine.
 
 ## 2. Architecture
@@ -74,7 +74,7 @@ interface GameplayEngine {
 
 `step()` is a deterministic state transition for one 30 Hz logical opportunity. Commands express gameplay intent, such as buying, using an item, pausing, or dismissing a tutorial; they never contain device-specific input. Gates may prevent active gameplay systems from advancing while still allowing commands to be processed.
 
-`GameEvent` reports authoritative outcomes such as encounter changes, damage, purchases, rewards, achievements, and death. `GameObservation` exposes the gameplay information available to an automated player, while `GameView` is the read-only world and HUD model exposed to presentation. Neither exposes mutable domain state. `RunState`, including its randomness state, must be serializable for checkpoints and exact replay.
+`GameEvent` reports authoritative outcomes such as encounter changes, damage, purchases, rewards, achievements, and death. `GameObservation` exposes the gameplay information available to an automated player, while `GameView` is the read-only world and HUD model exposed to presentation. Neither exposes mutable domain state. `RunState` includes the explicit randomness state needed for deterministic transitions. Complete runs are reproduced from their initial inputs and policy; mid-run checkpoint restoration is not required.
 
 ### Presentation boundary
 
@@ -100,34 +100,19 @@ Persistence is also an application boundary. It loads the initial profile and at
 ### Simulation boundary
 
 ```ts
-type SerializableValue =
-  | null
-  | boolean
-  | number
-  | string
-  | readonly SerializableValue[]
-  | Readonly<Record<string, SerializableValue>>;
-
-type PolicyState = SerializableValue;
-
 interface PolicyDescriptor {
   id: string;
   version: string;
-  config: SerializableValue;
+  config: PolicyConfig;
 }
 
-interface PolicyDecision {
-  commands: readonly GameCommand[];
-  state: PolicyState;
+interface PlayerAgent {
+  decide(observation: GameObservation): readonly GameCommand[];
 }
 
 interface PlayerPolicy {
   readonly descriptor: PolicyDescriptor;
-  createInitialState(): PolicyState;
-  decide(
-    observation: GameObservation,
-    state: Readonly<PolicyState>,
-  ): PolicyDecision;
+  createAgent(): PlayerAgent;
 }
 
 interface SimulationRequest {
@@ -136,23 +121,19 @@ interface SimulationRequest {
   maxSteps: number;
 }
 
-interface SimulationInputs {
-  config: RunConfig;
+interface SimulationExperiment {
+  schemaVersion: number;
+  ruleset: RuleSetId;
+  initialProfile: ProfileState;
   policy: PolicyDescriptor;
-  initialPolicyState: PolicyState;
   maxSteps: number;
-}
-
-interface SimulationCheckpoint {
-  inputs: SimulationInputs;
-  runState: RunState;
-  policyState: PolicyState;
-  steps: number;
+  seeds: readonly string[];
 }
 
 interface RunResult {
   schemaVersion: number;
-  inputs: SimulationInputs;
+  experimentId: string;
+  seed: string;
   steps: number;
   activeTicks: number;
   terminalReason: "lifespan" | "combat" | "step-limit";
@@ -164,23 +145,7 @@ interface RunResult {
   metrics: Readonly<Record<string, number>>;
 }
 
-type SimulationProgress =
-  | {
-      status: "running";
-      checkpoint: SimulationCheckpoint;
-    }
-  | {
-      status: "completed";
-      result: RunResult;
-    };
-
 interface SimulationRunner {
-  start(request: SimulationRequest): SimulationCheckpoint;
-  advance(
-    request: SimulationRequest,
-    checkpoint: SimulationCheckpoint,
-    maxAdditionalSteps: number,
-  ): SimulationProgress;
   run(request: SimulationRequest): RunResult;
   runBatch(
     requests: readonly SimulationRequest[],
@@ -188,17 +153,17 @@ interface SimulationRunner {
 }
 ```
 
-`PolicyState` and every value in `PolicyDescriptor` must be serializable. The descriptor contains a stable policy identity, an implementation version, and all normalized configuration that can affect decisions. `createInitialState()` must derive the same state from the same descriptor. `decide()` is a deterministic transition: given the same observation and policy state, it returns the same commands and next state without mutating either input. This permits policies with memory while preventing hidden object state from making results depend on policy reuse, worker scheduling, or batch order.
+The policy descriptor contains a stable identity, an implementation version, and all normalized configuration that can affect decisions. Changing policy behavior or configuration creates a different experiment. `PolicyConfig` is the policy-specific normalized configuration; its concrete representation is selected with the policy implementation.
 
-`start()` creates a checkpoint before the first step. Each `advance()` call executes at most a positive finite `maxAdditionalSteps` and returns either a new checkpoint or the completed result. A caller can therefore persist the returned checkpoint between bounded slices and resume it through the same public boundary. `run()` is the convenience operation equivalent to starting and advancing until completion.
-
-Simulation checkpoints contain the normalized experiment inputs, gameplay state, policy state, and consumed step count together. Before advancing a checkpoint, the runner must reject a request whose normalized configuration, policy descriptor, or total `maxSteps` differs from the checkpoint inputs. Restoring a valid checkpoint must produce the same remaining command stream and result as uninterrupted execution. The total step budget remains `SimulationRequest.maxSteps`; `maxAdditionalSteps` only bounds one invocation and cannot reset or extend it.
+`createAgent()` returns a fresh agent for every run. An agent may keep private memory during that run, but no mutable state is shared between runs. Starting from a fresh agent, the same observation sequence must produce the same command sequence without ambient randomness, wall-clock input, worker identity, or batch-order dependence. If a future policy intentionally uses randomness, its explicit policy seed becomes part of the experiment inputs and remains separate from gameplay randomness.
 
 Every simulation requires a positive finite `maxSteps`. The budget counts every engine step, including paused or tutorial-gated steps, so a non-progressing policy cannot block a batch indefinitely. Reaching the budget returns `step-limit`; it is a runner termination, not a gameplay death.
 
-Each result records the complete normalized inputs that identify its experiment: ruleset, seed, initial profile, policy descriptor and initial state, and step limit. Storage formats may replace a complete profile or policy-state snapshot with a versioned canonical fingerprint when the referenced input manifest is retained alongside the results; a standalone result must retain the snapshots themselves. A live policy object is never part of a serialized result.
+Every run starts from its initial configuration and executes continuously to gameplay termination or `step-limit`. Mid-run simulation persistence and resumption are not part of this boundary. Interrupted batches resume at run granularity by retaining completed results and rerunning only missing seeds.
 
-Batch execution must be reproducible from the recorded inputs and must return normalized results independent of concurrency or completion order. Baseline and candidate rulesets can therefore be compared using the same seeds, profiles, policies, and step limits without records from different experiments sharing an apparent identity. Reporting formats and execution strategy are ticket-level decisions built on this contract.
+`SimulationExperiment` is the manifest stored once for a single run or batch. A versioned canonical fingerprint of its shared definition—ruleset, initial profile, policy descriptor, and step limit—becomes `experimentId`; each compact result records the fingerprint and its seed rather than repeating those shared inputs. The manifest and results together contain the complete normalized inputs needed to reproduce the runs. A live policy or agent object is never serialized.
+
+Batch execution must be reproducible from the manifest and must return normalized results independent of concurrency or completion order. Its purpose is Monte Carlo analysis: vary gameplay seeds, complete every run, and aggregate metrics such as run length, score, progression, encounters, and terminal reasons to characterize the distribution produced by encounter randomness. Baseline and candidate rulesets or policies can use the same seeds, profiles, and step limits for paired per-seed comparisons that distinguish systematic changes from random variation. Reporting formats and execution strategy are ticket-level decisions built on this contract.
 
 ## 4. Compatibility and modernization boundary
 
@@ -260,8 +225,8 @@ Implementation work must provide evidence that:
 
 - confirmed gameplay behavior and known gameplay-affecting quirks match the research specification;
 - identical complete inputs reproduce identical state, results, and trace hashes;
-- checkpoint replay, including policy state and the consumed step budget, matches uninterrupted execution;
-- run results retain the normalized inputs needed to identify and reproduce their experiment;
+- fresh agents given the same observation sequence produce the same command sequence;
+- experiment manifests and run results retain the normalized inputs needed to identify and reproduce complete runs;
 - browser play and headless simulation use the same gameplay engine;
 - presentation changes, output resolution, render rate, and input adapter do not change domain outcomes;
 - a non-progressing policy terminates at its configured step limit;
