@@ -14,3 +14,11 @@
 # Local operating-system metadata.
 .DS_Store
 Thumbs.db
+
+# Node.js dependencies and generated application output.
+/node_modules/
+/dist/
+/coverage/
+/playwright-report/
+/test-results/
+/.vite/
