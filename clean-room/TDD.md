@@ -100,9 +100,34 @@ Persistence is also an application boundary. It loads the initial profile and at
 ### Simulation boundary
 
 ```ts
+type SerializableValue =
+  | null
+  | boolean
+  | number
+  | string
+  | readonly SerializableValue[]
+  | Readonly<Record<string, SerializableValue>>;
+
+type PolicyState = SerializableValue;
+
+interface PolicyDescriptor {
+  id: string;
+  version: string;
+  config: SerializableValue;
+}
+
+interface PolicyDecision {
+  commands: readonly GameCommand[];
+  state: PolicyState;
+}
+
 interface PlayerPolicy {
-  readonly id: string;
-  decide(observation: GameObservation): readonly GameCommand[];
+  readonly descriptor: PolicyDescriptor;
+  createInitialState(): PolicyState;
+  decide(
+    observation: GameObservation,
+    state: Readonly<PolicyState>,
+  ): PolicyDecision;
 }
 
 interface SimulationRequest {
@@ -111,11 +136,22 @@ interface SimulationRequest {
   maxSteps: number;
 }
 
+interface SimulationInputs {
+  config: RunConfig;
+  policy: PolicyDescriptor;
+  initialPolicyState: PolicyState;
+  maxSteps: number;
+}
+
+interface SimulationCheckpoint {
+  runState: RunState;
+  policyState: PolicyState;
+  steps: number;
+}
+
 interface RunResult {
   schemaVersion: number;
-  ruleset: RuleSetId;
-  seed: string;
-  policy: string;
+  inputs: SimulationInputs;
   steps: number;
   activeTicks: number;
   terminalReason: "lifespan" | "combat" | "step-limit";
@@ -135,9 +171,15 @@ interface SimulationRunner {
 }
 ```
 
+`PolicyState` and every value in `PolicyDescriptor` must be serializable. The descriptor contains a stable policy identity, an implementation version, and all normalized configuration that can affect decisions. `createInitialState()` must derive the same state from the same descriptor. `decide()` is a deterministic transition: given the same observation and policy state, it returns the same commands and next state without mutating either input. This permits policies with memory while preventing hidden object state from making results depend on policy reuse, worker scheduling, or batch order.
+
+Simulation checkpoints contain the gameplay state, policy state, and consumed step count together. Restoring all three must produce the same remaining command stream and result as uninterrupted execution.
+
 Every simulation requires a positive finite `maxSteps`. The budget counts every engine step, including paused or tutorial-gated steps, so a non-progressing policy cannot block a batch indefinitely. Reaching the budget returns `step-limit`; it is a runner termination, not a gameplay death.
 
-Batch execution must be reproducible from the requests and must return normalized results independent of concurrency or completion order. Baseline and candidate rulesets can therefore be compared using the same seeds, profiles, policies, and step limits. Reporting formats and execution strategy are ticket-level decisions built on this contract.
+Each result records the complete normalized inputs that identify its experiment: ruleset, seed, initial profile, policy descriptor and initial state, and step limit. Storage formats may replace a complete profile or policy-state snapshot with a versioned canonical fingerprint when the referenced input manifest is retained alongside the results; a standalone result must retain the snapshots themselves. A live policy object is never part of a serialized result.
+
+Batch execution must be reproducible from the recorded inputs and must return normalized results independent of concurrency or completion order. Baseline and candidate rulesets can therefore be compared using the same seeds, profiles, policies, and step limits without records from different experiments sharing an apparent identity. Reporting formats and execution strategy are ticket-level decisions built on this contract.
 
 ## 4. Compatibility and modernization boundary
 
@@ -199,7 +241,8 @@ Implementation work must provide evidence that:
 
 - confirmed gameplay behavior and known gameplay-affecting quirks match the research specification;
 - identical complete inputs reproduce identical state, results, and trace hashes;
-- checkpoint replay matches uninterrupted execution;
+- checkpoint replay, including policy state and the consumed step budget, matches uninterrupted execution;
+- run results retain the normalized inputs needed to identify and reproduce their experiment;
 - browser play and headless simulation use the same gameplay engine;
 - presentation changes, output resolution, render rate, and input adapter do not change domain outcomes;
 - a non-progressing policy terminates at its configured step limit;
