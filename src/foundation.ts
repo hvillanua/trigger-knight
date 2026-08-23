@@ -32,10 +32,13 @@ export function calculateBackingStoreSize(
 
 export function drawFoundation(
   canvas: HTMLCanvasElement,
+  cssDimensions: CssDimensions,
   devicePixelRatio: number,
 ): void {
-  const bounds = canvas.getBoundingClientRect();
-  const backingStore = calculateBackingStoreSize(bounds, devicePixelRatio);
+  const backingStore = calculateBackingStoreSize(
+    cssDimensions,
+    devicePixelRatio,
+  );
 
   canvas.width = backingStore.width;
   canvas.height = backingStore.height;

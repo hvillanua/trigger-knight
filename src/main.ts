@@ -1,4 +1,4 @@
-import { drawFoundation } from "./foundation.js";
+import { drawFoundation, type CssDimensions } from "./foundation.js";
 import { observeDevicePixelRatioChanges } from "./device-pixel-ratio.js";
 import "./style.css";
 
@@ -8,13 +8,28 @@ if (canvas === null) {
   throw new Error("Missing #game-canvas");
 }
 
+let contentBox: CssDimensions | undefined;
+
 const render = (): void => {
-  drawFoundation(canvas, window.devicePixelRatio);
+  if (contentBox === undefined) {
+    return;
+  }
+
+  drawFoundation(canvas, contentBox, window.devicePixelRatio);
 };
 
-render();
 observeDevicePixelRatioChanges(window, render);
 window.addEventListener("resize", render);
 
-const resizeObserver = new ResizeObserver(render);
+const resizeObserver = new ResizeObserver(([entry]) => {
+  if (entry === undefined) {
+    return;
+  }
+
+  contentBox = {
+    width: entry.contentRect.width,
+    height: entry.contentRect.height,
+  };
+  render();
+});
 resizeObserver.observe(canvas);

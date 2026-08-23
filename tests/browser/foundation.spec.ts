@@ -29,7 +29,7 @@ test("loads the browser and Canvas foundation", async ({ page }) => {
   ).toBe(true);
 });
 
-test("updates the Canvas backing store when device pixel ratio changes", async ({
+test("sizes the Canvas backing store from its content box after a DPR change", async ({
   context,
   page,
 }) => {
@@ -38,15 +38,35 @@ test("updates the Canvas backing store when device pixel ratio changes", async (
   const canvas = page.getByRole("img", { name: "Trigger Knight game view" });
   await expect(canvas).toHaveAttribute("data-renderer", "canvas-2d");
 
-  const initial = await canvas.evaluate((element) => {
-    const bounds = element.getBoundingClientRect();
+  const initial = await canvas.evaluate(async (element) => {
+    if (!(element instanceof HTMLCanvasElement)) {
+      throw new Error("Expected a Canvas element");
+    }
+
+    const contentBox = await new Promise<DOMRectReadOnly>((resolve) => {
+      const observer = new ResizeObserver(([entry]) => {
+        if (entry === undefined) {
+          return;
+        }
+
+        observer.disconnect();
+        resolve(entry.contentRect);
+      });
+      observer.observe(element);
+    });
+    const borderBox = element.getBoundingClientRect();
 
     return {
-      cssWidth: bounds.width,
-      cssHeight: bounds.height,
+      contentWidth: contentBox.width,
+      contentHeight: contentBox.height,
+      borderWidth: borderBox.width,
+      borderHeight: borderBox.height,
       devicePixelRatio: window.devicePixelRatio,
     };
   });
+  expect(initial.borderWidth).toBeGreaterThan(initial.contentWidth);
+  expect(initial.borderHeight).toBeGreaterThan(initial.contentHeight);
+
   const viewport = page.viewportSize();
   if (viewport === null) {
     throw new Error("The browser test requires a fixed viewport");
@@ -71,8 +91,6 @@ test("updates the Canvas backing store when device pixel ratio changes", async (
         }
 
         return {
-          cssWidth: element.getBoundingClientRect().width,
-          cssHeight: element.getBoundingClientRect().height,
           backingWidth: element.width,
           backingHeight: element.height,
           devicePixelRatio: window.devicePixelRatio,
@@ -80,10 +98,12 @@ test("updates the Canvas backing store when device pixel ratio changes", async (
       }),
     )
     .toEqual({
-      cssWidth: initial.cssWidth,
-      cssHeight: initial.cssHeight,
-      backingWidth: Math.round(initial.cssWidth * changedDevicePixelRatio),
-      backingHeight: Math.round(initial.cssHeight * changedDevicePixelRatio),
+      backingWidth: Math.round(
+        initial.contentWidth * changedDevicePixelRatio,
+      ),
+      backingHeight: Math.round(
+        initial.contentHeight * changedDevicePixelRatio,
+      ),
       devicePixelRatio: changedDevicePixelRatio,
     });
 });
