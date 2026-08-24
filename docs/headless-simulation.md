@@ -52,9 +52,20 @@ SHA-256 makes accidental collisions between experiment inputs impractical. The
 versioned prefix allows a later digest or canonicalization change to remain
 distinguishable from existing results.
 
+This result trace identifies the complete simulation experiment. The optional
+host-parity trace omits policy identity and the finite budget from its digest so
+the browser can produce the same authoritative checkpoint hashes from an equal
+run configuration and command schedule. See
+[`gameplay-diagnostics.md`](gameplay-diagnostics.md).
+
 ## Minimal batches
 
 `runBatch()` executes requests without shared state and returns results in
 request order. The current implementation runs them sequentially. This fixes
 observable ordering without selecting a worker or concurrency strategy for
 later Monte Carlo work.
+
+Supplying `onTrace` when creating a runner retains and reports structured
+checkpoints for diagnosis. Ordinary runs without that callback retain only the
+current checkpoint and continue to stream their experiment trace into the
+result hash.

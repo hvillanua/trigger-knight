@@ -5,6 +5,9 @@ import type {
   GameEvent,
   GameObservation,
   GameplayEngine,
+  GameplayExecution,
+  GameplayTrace,
+  GameplayTraceComparison,
   PlayerAgent,
   PlayerPolicy,
   PolicyConfig,
@@ -64,6 +67,36 @@ describe("public application contracts", () => {
     }>();
     expectTypeOf<PresentationPort["present"]>().toEqualTypeOf<
       (frame: PresentationFrame) => void
+    >();
+  });
+
+  it("exposes structured authoritative execution diagnostics", () => {
+    expectTypeOf<keyof GameplayExecution>().toEqualTypeOf<
+      "dispatch" | "readCurrentCheckpoint" | "readDiagnostics"
+    >();
+    expectTypeOf<GameplayTrace>().toMatchTypeOf<{
+      readonly schemaVersion: 1;
+      readonly config: Readonly<RunConfig>;
+      readonly checkpoints: readonly {
+        readonly index: number;
+        readonly commands: readonly GameCommand[];
+        readonly state: Readonly<RunState>;
+        readonly observation: Readonly<GameObservation>;
+        readonly events: readonly GameEvent[];
+        readonly checkpointHash: string;
+      }[];
+      readonly traceHash: string;
+    }>();
+    expectTypeOf<GameplayTraceComparison>().toMatchTypeOf<
+      | Readonly<{ equal: true }>
+      | Readonly<{
+          equal: false;
+          difference: Readonly<{
+            path: string;
+            expected: unknown;
+            actual: unknown;
+          }>;
+        }>
     >();
   });
 

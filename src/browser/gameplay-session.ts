@@ -3,10 +3,12 @@ import type {
   GameEvent,
   GameObservation,
   GameplayEngine,
+  GameplayTrace,
   PresentationFrame,
   PresentationPort,
   RunConfig,
 } from "../application/contracts.js";
+import { createGameplayExecution } from "../application/gameplay-execution.js";
 
 export interface BrowserDispatchResult {
   readonly observation: Readonly<GameObservation>;
@@ -15,6 +17,11 @@ export interface BrowserDispatchResult {
 
 export interface BrowserGameplaySession {
   dispatch(commands: readonly GameCommand[]): BrowserDispatchResult;
+  readDiagnostics(): GameplayTrace;
+}
+
+export interface BrowserGameplaySessionOptions {
+  readonly retainDiagnostics?: boolean;
 }
 
 function createFrame(
@@ -30,9 +37,10 @@ export function createBrowserGameplaySession(
   engine: GameplayEngine,
   config: RunConfig,
   presentation?: PresentationPort,
+  options: BrowserGameplaySessionOptions = {},
 ): BrowserGameplaySession {
-  let state = engine.createRun(config);
-  let observation = engine.observe(state);
+  const execution = createGameplayExecution(engine, config, options);
+  let observation = execution.readCurrentCheckpoint().observation;
 
   presentation?.present(
     createFrame(observation, observation, Object.freeze([])),
@@ -41,15 +49,17 @@ export function createBrowserGameplaySession(
   return Object.freeze({
     dispatch(commands: readonly GameCommand[]): BrowserDispatchResult {
       const previous = observation;
-      const result = engine.step(state, commands);
-      state = result.state;
-      observation = engine.observe(state);
-      presentation?.present(createFrame(previous, observation, result.events));
+      const checkpoint = execution.dispatch(commands);
+      observation = checkpoint.observation;
+      presentation?.present(
+        createFrame(previous, observation, checkpoint.events),
+      );
 
       return Object.freeze({
         observation,
-        events: result.events,
+        events: checkpoint.events,
       });
     },
+    readDiagnostics: () => execution.readDiagnostics(),
   });
 }

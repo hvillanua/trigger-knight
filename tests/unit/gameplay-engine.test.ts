@@ -95,4 +95,21 @@ describe("gameplay engine", () => {
     expect(Object.isFrozen(first.events)).toBe(true);
     expect(Object.isFrozen(first.events[0])).toBe(true);
   });
+
+  it("continues identically after an authoritative checkpoint round trip", () => {
+    const initial = gameplayEngine.createRun(config);
+    const checkpoint = gameplayEngine.step(initial, [
+      { type: "advance" },
+    ]).state;
+    const restored = JSON.parse(JSON.stringify(checkpoint)) as RunState;
+    const commands = Object.freeze([Object.freeze({ type: "advance" })]);
+
+    const uninterrupted = gameplayEngine.step(checkpoint, commands);
+    const resumed = gameplayEngine.step(restored, commands);
+
+    expect(resumed).toEqual(uninterrupted);
+    expect(gameplayEngine.observe(resumed.state)).toEqual(
+      gameplayEngine.observe(uninterrupted.state),
+    );
+  });
 });

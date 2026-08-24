@@ -33,6 +33,7 @@ describe("browser gameplay session", () => {
     const unpresentedResult = unpresented.dispatch(commands);
 
     expect(presentedResult).toEqual(unpresentedResult);
+    expect(presented.readDiagnostics()).toEqual(unpresented.readDiagnostics());
     expect(presentedResult).toEqual({
       observation: { ruleset: WALKING_SKELETON_RULESET_ID, steps: 1 },
       events: [{ type: "step-advanced", step: 1 }],

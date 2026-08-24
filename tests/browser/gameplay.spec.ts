@@ -1,5 +1,13 @@
 import { expect, test } from "@playwright/test";
 
+import type { PlayerPolicy } from "../../src/application/contracts.js";
+import {
+  gameplayEngine,
+  WALKING_SKELETON_RULESET_ID,
+} from "../../src/application/gameplay-engine.js";
+import type { GameplayTrace } from "../../src/application/gameplay-execution.js";
+import { createSimulationRunner } from "../../src/simulation/simulation-runner.js";
+
 test("drives the shared engine through a semantic browser command", async ({
   page,
 }) => {
@@ -63,4 +71,37 @@ test("physical Canvas size does not change the engine result", async ({
     { observationStep: "1", events: "step-advanced:1" },
     { observationStep: "1", events: "step-advanced:1" },
   ]);
+});
+
+test("matches browser and headless diagnostic traces", async ({ page }) => {
+  const headlessTraces: GameplayTrace[] = [];
+  const policy: PlayerPolicy = {
+    descriptor: { id: "advance-every-step", version: "1", config: {} },
+    createAgent: () => ({ decide: () => [{ type: "advance" }] }),
+  };
+  const runner = createSimulationRunner(gameplayEngine, {
+    onTrace: (trace) => headlessTraces.push(trace),
+  });
+  runner.run({
+    config: {
+      ruleset: WALKING_SKELETON_RULESET_ID,
+      seed: "browser-run",
+      initialProfile: { schemaVersion: 1 },
+    },
+    policy,
+    maxSteps: 3,
+  });
+
+  await page.goto("/");
+  const advance = page.getByRole("button", { name: "Advance run" });
+  await advance.click();
+  await advance.click();
+  await advance.click();
+
+  const browserTrace = await page.evaluate(() =>
+    window.triggerKnightDiagnostics?.read(),
+  );
+
+  expect(browserTrace).toBeDefined();
+  expect(browserTrace).toEqual(headlessTraces[0]);
 });
