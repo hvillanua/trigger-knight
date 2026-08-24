@@ -63,10 +63,7 @@ interface StepResult {
 
 interface GameplayEngine {
   createRun(config: RunConfig): RunState;
-  step(
-    state: Readonly<RunState>,
-    commands: readonly GameCommand[],
-  ): StepResult;
+  step(state: Readonly<RunState>, commands: readonly GameCommand[]): StepResult;
   observe(state: Readonly<RunState>): GameObservation;
   view(state: Readonly<RunState>): GameView;
 }
@@ -163,17 +160,17 @@ Batch execution must be reproducible from its requests and must return normalize
 
 The compatibility target is gameplay behavior, not the limitations of the Flash container. Presentation adapters may modernize freely when the same initial state, seed, and command sequence still produce the same domain result.
 
-| Concern | Preserve as gameplay behavior | Free to adapt outside the domain |
-|---|---|---|
-| Time | Fixed 30 Hz logical steps; active-tick lifespan, movement, score, delays, combat hit/finish points, pause and tutorial gates | Display refresh rate, interpolation, visibility handling, and visual-only timing |
-| Space | Abstract world units using the original coordinate scale; mechanic-bearing positions, distances, speeds, and action thresholds | Camera projection, output resolution, pixel density, fullscreen, letterboxing, and responsive layout |
-| Animation | Mechanic-bearing events occur at domain ticks | Menu motion, transitions, parallax treatment, particles, damage numbers, and fades |
-| Input | Semantic commands and domain action eligibility | Input devices, bindings, accessible targets, and coordinate projection |
-| HUD and screens | Gameplay-relevant information, available actions, pause/tutorial behavior, and final progression | Arrangement, typography, accessibility, navigation, and styling |
-| Sound | Domain events expose outcomes without playback details | Sound-effect assets, decoding, mixing, levels, and focus behavior; music remains deferred |
-| Persistence | Versioned profile meaning and progression results | Browser storage technology, migrations, and when presentation animations occur |
-| Host integration | Nothing | Loading presentation, links, sharing, and optional future platform adapters |
-| Cosmetic randomness | Must not perturb domain randomness or trace hashes | Separate presentation randomness and nondeterministic effects |
+| Concern             | Preserve as gameplay behavior                                                                                                  | Free to adapt outside the domain                                                                     |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| Time                | Fixed 30 Hz logical steps; active-tick lifespan, movement, score, delays, combat hit/finish points, pause and tutorial gates   | Display refresh rate, interpolation, visibility handling, and visual-only timing                     |
+| Space               | Abstract world units using the original coordinate scale; mechanic-bearing positions, distances, speeds, and action thresholds | Camera projection, output resolution, pixel density, fullscreen, letterboxing, and responsive layout |
+| Animation           | Mechanic-bearing events occur at domain ticks                                                                                  | Menu motion, transitions, parallax treatment, particles, damage numbers, and fades                   |
+| Input               | Semantic commands and domain action eligibility                                                                                | Input devices, bindings, accessible targets, and coordinate projection                               |
+| HUD and screens     | Gameplay-relevant information, available actions, pause/tutorial behavior, and final progression                               | Arrangement, typography, accessibility, navigation, and styling                                      |
+| Sound               | Domain events expose outcomes without playback details                                                                         | Sound-effect assets, decoding, mixing, levels, and focus behavior; music remains deferred            |
+| Persistence         | Versioned profile meaning and progression results                                                                              | Browser storage technology, migrations, and when presentation animations occur                       |
+| Host integration    | Nothing                                                                                                                        | Loading presentation, links, sharing, and optional future platform adapters                          |
+| Cosmetic randomness | Must not perturb domain randomness or trace hashes                                                                             | Separate presentation randomness and nondeterministic effects                                        |
 
 For `original-v1.3`, one original coordinate unit becomes one abstract world unit without conversion. The initial camera shows a 480x320-world-unit viewport, while world positions may exist outside it—for example, an encounter can enter at `x=600`. Those values belong to the ruleset, not to the physical canvas or CSS layout.
 
@@ -198,11 +195,11 @@ The original Flash random sequence is unknown, so compatibility targets the conf
 
 ### Rendering choice
 
-| Option | Assessment | Decision |
-|---|---|---|
-| **Canvas 2D** | Directly supports the required 2D drawing, camera transforms, scaling, and drawing of interpolated views with a small runtime and dependency surface | **Selected for the initial renderer** |
-| PixiJS | Adds a capable WebGL renderer, sprite batching, and richer display-object tooling, but that machinery is not yet required by the small fixed scene | Keep as a renderer replacement if measured visual or performance needs justify it |
-| Phaser | Adds scenes, input, animation, physics, and a game loop, much of which overlaps the application and deterministic-engine boundaries already defined here | Do not adopt initially; reconsider only if future presentation requirements outweigh the additional framework surface |
+| Option        | Assessment                                                                                                                                               | Decision                                                                                                              |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **Canvas 2D** | Directly supports the required 2D drawing, camera transforms, scaling, and drawing of interpolated views with a small runtime and dependency surface     | **Selected for the initial renderer**                                                                                 |
+| PixiJS        | Adds a capable WebGL renderer, sprite batching, and richer display-object tooling, but that machinery is not yet required by the small fixed scene       | Keep as a renderer replacement if measured visual or performance needs justify it                                     |
+| Phaser        | Adds scenes, input, animation, physics, and a game loop, much of which overlaps the application and deterministic-engine boundaries already defined here | Do not adopt initially; reconsider only if future presentation requirements outweigh the additional framework surface |
 
 Canvas 2D is selected because the initial rendering problem is modest and the main technical risk is gameplay correctness rather than rendering throughput. It also makes the separation between the authoritative engine and presentation explicit. Canvas remains behind `PresentationPort`, so choosing it now does not prevent a later PixiJS, Phaser, or other presentation adapter from consuming the same views and events.
 

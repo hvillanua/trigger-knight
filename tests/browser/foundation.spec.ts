@@ -72,8 +72,7 @@ test("sizes the Canvas backing store from its content box after a DPR change", a
     throw new Error("The browser test requires a fixed viewport");
   }
 
-  const changedDevicePixelRatio =
-    initial.devicePixelRatio === 2 ? 1 : 2;
+  const changedDevicePixelRatio = initial.devicePixelRatio === 2 ? 1 : 2;
   const browserSession = await context.newCDPSession(page);
   await browserSession.send("Emulation.setDeviceMetricsOverride", {
     width: viewport.width,
@@ -98,9 +97,7 @@ test("sizes the Canvas backing store from its content box after a DPR change", a
       }),
     )
     .toEqual({
-      backingWidth: Math.round(
-        initial.contentWidth * changedDevicePixelRatio,
-      ),
+      backingWidth: Math.round(initial.contentWidth * changedDevicePixelRatio),
       backingHeight: Math.round(
         initial.contentHeight * changedDevicePixelRatio,
       ),

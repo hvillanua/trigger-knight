@@ -9,16 +9,28 @@
   "packageManager": "npm@12.0.2",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
+    "build": "vite build",
+    "format": "prettier --write . --ignore-unknown",
+    "format:check": "prettier --check . --ignore-unknown",
+    "lint": "eslint . --max-warnings 0",
     "setup:browser": "playwright install chromium",
     "test": "npm run test:unit && npm run test:browser",
     "test:unit": "vitest run",
-    "test:browser": "playwright test"
+    "test:browser": "playwright test",
+    "typecheck": "tsc --noEmit",
+    "validate:fast": "npm run format:check && npm run lint && npm run typecheck && npm run test:unit",
+    "validate": "npm run validate:fast && npm run test:browser && npm run build"
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
     "@playwright/test": "1.62.1",
     "@types/node": "24.13.3",
-    "typescript": "7.0.2",
+    "@typescript/native": "npm:typescript@7.0.2",
+    "eslint": "10.9.0",
+    "globals": "17.11.0",
+    "prettier": "3.9.6",
+    "typescript": "npm:@typescript/typescript6@6.0.2",
+    "typescript-eslint": "8.67.0",
     "vite": "8.2.2",
     "vitest": "4.1.11"
   }

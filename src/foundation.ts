@@ -22,7 +22,10 @@ export function calculateBackingStoreSize(
       : 1;
 
   return {
-    width: Math.max(1, Math.round(usableDimension(cssDimensions.width) * scale)),
+    width: Math.max(
+      1,
+      Math.round(usableDimension(cssDimensions.width) * scale),
+    ),
     height: Math.max(
       1,
       Math.round(usableDimension(cssDimensions.height) * scale),
