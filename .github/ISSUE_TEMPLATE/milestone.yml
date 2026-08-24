@@ -1,0 +1,81 @@
+name: Milestone
+description: Propose an ordered, evidence-backed capability milestone
+title: "[Milestone ?] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A milestone establishes a coherent capability and may depend only on capabilities completed by earlier milestones.
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: Explain why this capability is needed and why it belongs at this point in the roadmap.
+    validations:
+      required: true
+
+  - type: textarea
+    id: builds
+    attributes:
+      label: Builds
+      description: Describe the coherent capability this milestone establishes.
+    validations:
+      required: true
+
+  - type: textarea
+    id: complete_when
+    attributes:
+      label: Complete when
+      description: List reproducible exit conditions for the whole milestone.
+      placeholder: "- [ ] Reproducible completion condition"
+    validations:
+      required: true
+
+  - type: textarea
+    id: non_goals
+    attributes:
+      label: Non-goals
+      description: Identify work intentionally deferred beyond this milestone.
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: Link preceding milestones, tickets, or decisions that must be complete first, or write "None".
+    validations:
+      required: true
+
+  - type: textarea
+    id: required_context
+    attributes:
+      label: Required context
+      description: Link exact product, architecture, roadmap, and research sections governing the milestone.
+      value: |
+        - [Product requirements](https://github.com/hvillanua/trigger-knight/blob/main/clean-room/PRD.md)
+        - [Technical design](https://github.com/hvillanua/trigger-knight/blob/main/clean-room/TDD.md)
+        - [Milestone roadmap](https://github.com/hvillanua/trigger-knight/blob/main/clean-room/TODO.md)
+        - Relevant behavioral research: <!-- replace with exact links, or explain why none applies -->
+    validations:
+      required: true
+
+  - type: textarea
+    id: ticket_plan
+    attributes:
+      label: Ticket plan
+      description: Link the outcome-focused tickets and make their dependency order explicit.
+      placeholder: "- [ ] #123 — outcome (blocked by #122)"
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: completion_rule
+    attributes:
+      label: Milestone completion rule
+      options:
+        - label: All eventual tickets and blockers must be complete, exit conditions must have reproducible evidence, full local and CI gates must pass, and delivered behavior must be documented.
+          required: true
+        - label: Any intentional deferral must be visible and assigned to a later milestone before completion.
+          required: true
