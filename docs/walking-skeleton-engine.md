@@ -44,3 +44,16 @@ Canvas 2D. It retains the latest presentation frame so physical Canvas or
 device-pixel-ratio changes can redraw that frame without stepping or inspecting
 the engine. The browser session also accepts no presentation or a replacement
 port; both cases produce the same public engine result for the same commands.
+
+## Minimal headless path
+
+The finite simulation runner consumes this same `gameplayEngine`. A fresh
+policy agent receives the current public observation before each step and only
+the events emitted by the preceding step. The initial decision receives no
+events. Every request has a positive finite step budget, so the included
+non-progressing policy terminates with `step-limit` instead of hanging.
+
+The runner returns a frozen normalized result with versioned profile and trace
+hashes. Batch execution keeps request order and isolates state between runs.
+The exact run sequence, placeholder metrics, and hash inputs are documented in
+[`headless-simulation.md`](headless-simulation.md).

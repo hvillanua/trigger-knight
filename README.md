@@ -64,6 +64,9 @@ are recorded in
 The current non-original deterministic engine transition and public observation
 are recorded in
 [`docs/walking-skeleton-engine.md`](docs/walking-skeleton-engine.md).
+The finite programmatic runner, policy sequence, result identity, and minimal
+batch behavior are recorded in
+[`docs/headless-simulation.md`](docs/headless-simulation.md).
 
 ## Directory boundaries
 
