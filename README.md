@@ -48,6 +48,10 @@ Before pushing, run the complete validation gate, which includes every check:
 npm run validate
 ```
 
+`npm ci` also activates repository-owned Git hooks. The pre-commit hook runs
+`npm run validate:fast`, and the pre-push hook runs `npm run validate`. Re-run
+`npm run setup:hooks` if local Git configuration is replaced after installation.
+
 TypeScript 7.0 and ESLint temporarily use side-by-side compiler packages. The
 removal condition and TODO are recorded in
 [`docs/dependency-baseline.md`](docs/dependency-baseline.md#temporary-typescript-6-compatibility).
