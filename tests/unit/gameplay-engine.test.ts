@@ -1,0 +1,66 @@
+import { describe, expect, it } from "vitest";
+
+import { gameplayEngine } from "../../src/application/gameplay-engine.js";
+import type {
+  GameCommand,
+  RunConfig,
+} from "../../src/application/contracts.js";
+
+const config: RunConfig = Object.freeze({
+  ruleset: "walking-skeleton-v1",
+  seed: "engine-seed",
+  initialProfile: Object.freeze({ schemaVersion: 1 }),
+});
+
+describe("gameplay engine", () => {
+  it("creates and observes a minimal run without exposing hidden state", () => {
+    const state = gameplayEngine.createRun(config);
+    const repeated = gameplayEngine.createRun(config);
+    const observation = gameplayEngine.observe(state);
+
+    expect(repeated).toEqual(state);
+    expect(repeated).not.toBe(state);
+    expect(state).toMatchObject({
+      schemaVersion: 1,
+      ruleset: "walking-skeleton-v1",
+      steps: 0,
+    });
+    expect(observation).toEqual({
+      ruleset: "walking-skeleton-v1",
+      steps: 0,
+    });
+    expect(observation).not.toHaveProperty("random");
+    expect(Object.isFrozen(state)).toBe(true);
+    expect(Object.isFrozen(state.random)).toBe(true);
+    expect(Object.isFrozen(observation)).toBe(true);
+  });
+
+  it("repeats one authoritative transition without mutating its inputs", () => {
+    const state = gameplayEngine.createRun(config);
+    const commands: readonly GameCommand[] = Object.freeze([
+      Object.freeze({ type: "wait" }),
+    ]);
+    const stateBefore = JSON.stringify(state);
+    const commandsBefore = JSON.stringify(commands);
+
+    const first = gameplayEngine.step(state, commands);
+    const repeated = gameplayEngine.step(state, commands);
+
+    expect(repeated).toEqual(first);
+    expect(JSON.stringify(state)).toBe(stateBefore);
+    expect(JSON.stringify(commands)).toBe(commandsBefore);
+    expect(first.state).not.toBe(state);
+    expect(first.state.random).not.toBe(state.random);
+    expect(first.state.random).toEqual(state.random);
+    expect(first.state).toMatchObject({ steps: 1 });
+    expect(first.events).toEqual([{ type: "step-advanced", step: 1 }]);
+    expect(gameplayEngine.observe(first.state)).toEqual({
+      ruleset: "walking-skeleton-v1",
+      steps: 1,
+    });
+    expect(Object.isFrozen(first)).toBe(true);
+    expect(Object.isFrozen(first.state)).toBe(true);
+    expect(Object.isFrozen(first.events)).toBe(true);
+    expect(Object.isFrozen(first.events[0])).toBe(true);
+  });
+});

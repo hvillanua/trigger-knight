@@ -128,6 +128,15 @@ describe("public application contracts", () => {
       readonly schemaVersion: 1;
       readonly ruleset: RuleSetId;
       readonly random: RandomState;
+      readonly steps: number;
+    }>();
+    expectTypeOf<GameObservation>().toMatchTypeOf<{
+      readonly ruleset: RuleSetId;
+      readonly steps: number;
+    }>();
+    expectTypeOf<GameEvent>().toMatchTypeOf<{
+      readonly type: "step-advanced";
+      readonly step: number;
     }>();
   });
 });

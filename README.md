@@ -61,6 +61,9 @@ rules, and approved production-input locations are documented in
 The versioned seed expansion, random sequence, and serializable state contract
 are recorded in
 [`docs/deterministic-randomness.md`](docs/deterministic-randomness.md).
+The current non-original deterministic engine transition and public observation
+are recorded in
+[`docs/walking-skeleton-engine.md`](docs/walking-skeleton-engine.md).
 
 ## Directory boundaries
 
