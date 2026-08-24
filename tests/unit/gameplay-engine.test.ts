@@ -1,18 +1,30 @@
 import { describe, expect, it } from "vitest";
 
-import { gameplayEngine } from "../../src/application/gameplay-engine.js";
+import {
+  gameplayEngine,
+  WALKING_SKELETON_RULESET_ID,
+} from "../../src/application/gameplay-engine.js";
 import type {
   GameCommand,
   RunConfig,
 } from "../../src/application/contracts.js";
 
 const config: RunConfig = Object.freeze({
-  ruleset: "walking-skeleton-v1",
+  ruleset: WALKING_SKELETON_RULESET_ID,
   seed: "engine-seed",
   initialProfile: Object.freeze({ schemaVersion: 1 }),
 });
 
 describe("gameplay engine", () => {
+  it("rejects a ruleset identity with no matching implementation", () => {
+    expect(() =>
+      gameplayEngine.createRun({
+        ...config,
+        ruleset: "original-v1.3",
+      }),
+    ).toThrowError('Unsupported ruleset "original-v1.3"');
+  });
+
   it("creates and observes a minimal run without exposing hidden state", () => {
     const state = gameplayEngine.createRun(config);
     const repeated = gameplayEngine.createRun(config);

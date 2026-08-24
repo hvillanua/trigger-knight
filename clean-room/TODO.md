@@ -76,6 +76,7 @@ The deterministic foundation of an `original-v1.3` run, including the frame-base
 This milestone establishes:
 
 - versioned ruleset ownership of original gameplay constants and compatibility decisions;
+- an explicit ruleset registry, valid with one entry, that maps every accepted identity to its implementation and rejects unsupported identities;
 - deterministic seeded randomness suitable for browser and headless replay;
 - fixed 30 Hz logical opportunities and the distinction between elapsed steps and active gameplay ticks;
 - running, paused, tutorial-gated, and ended lifecycle behavior;

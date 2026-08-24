@@ -8,8 +8,11 @@ tutorials, encounters, and combat remain deferred to their roadmap milestones.
 ## Deterministic transition
 
 `gameplayEngine.createRun(config)` creates a serializable run with `steps` set
-to zero. Each `gameplayEngine.step(state, commands)` call returns a new state
-whose `steps` value is one greater and one authoritative event:
+to zero. `walking-skeleton-v1` is the only supported ruleset identity at this
+stage. `createRun` rejects any other identity instead of labeling the temporary
+transition as another ruleset. Each `gameplayEngine.step(state, commands)` call
+returns a new state whose `steps` value is one greater and one authoritative
+event:
 
 ```json
 {

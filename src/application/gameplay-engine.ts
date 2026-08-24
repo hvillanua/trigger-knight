@@ -8,6 +8,8 @@ import type {
 } from "../domain/contracts.js";
 import { advanceRunState, createRunState } from "../domain/run-state.js";
 
+export const WALKING_SKELETON_RULESET_ID = "walking-skeleton-v1" as const;
+
 export interface RunConfig {
   readonly ruleset: RuleSetId;
   readonly seed: string;
@@ -29,6 +31,10 @@ export interface GameplayEngine {
 /** Stateless gameplay implementation shared by every future host adapter. */
 export const gameplayEngine: GameplayEngine = Object.freeze({
   createRun(config: RunConfig): RunState {
+    if (config.ruleset !== WALKING_SKELETON_RULESET_ID) {
+      throw new RangeError(`Unsupported ruleset "${config.ruleset}"`);
+    }
+
     return createRunState(config.ruleset, config.seed);
   },
 
