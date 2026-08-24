@@ -13,6 +13,14 @@ export type {
   RunConfig,
   StepResult,
 } from "./gameplay-engine.js";
+export type {
+  GameplayCheckpoint,
+  GameplayExecution,
+  GameplayExecutionOptions,
+  GameplayTrace,
+  GameplayTraceComparison,
+  GameplayTraceDifference,
+} from "./gameplay-execution.js";
 export type { PresentationFrame, PresentationPort } from "./presentation.js";
 export type {
   PlayerAgent,

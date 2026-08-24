@@ -1,5 +1,6 @@
 import type {
   GameEvent,
+  GameplayTrace,
   GameplayEngine,
   PlayerPolicy,
   PolicyConfig,
@@ -10,6 +11,7 @@ import type {
   SimulationRequest,
   SimulationRunner,
 } from "../application/contracts.js";
+import { createGameplayExecution } from "../application/gameplay-execution.js";
 import {
   createCanonicalTraceHasher,
   fingerprintCanonicalJson,
@@ -19,6 +21,10 @@ import {
 const RUN_RESULT_SCHEMA_VERSION = 1;
 const NO_EVENTS: readonly GameEvent[] = Object.freeze([]);
 const NO_METRICS = Object.freeze({});
+
+export interface SimulationRunnerOptions {
+  readonly onTrace?: (trace: GameplayTrace) => void;
+}
 
 function assertStepLimit(maxSteps: number): void {
   if (!Number.isSafeInteger(maxSteps) || maxSteps <= 0) {
@@ -57,6 +63,7 @@ function normalizeProfile(profile: ProfileState): ProfileState {
 function runSimulation(
   engine: GameplayEngine,
   request: SimulationRequest,
+  options: SimulationRunnerOptions,
 ): RunResult {
   const maxSteps = request.maxSteps;
   assertStepLimit(maxSteps);
@@ -71,8 +78,12 @@ function runSimulation(
   const initialProfileFingerprint = fingerprintCanonicalJson(initialProfile);
   const trace = createCanonicalTraceHasher();
   const agent = request.policy.createAgent();
-  let state = engine.createRun(config);
-  let observation = engine.observe(state);
+  const execution = createGameplayExecution(engine, config, {
+    retainDiagnostics: options.onTrace !== undefined,
+  });
+  let checkpoint = execution.readCurrentCheckpoint();
+  let state = checkpoint.state;
+  let observation = checkpoint.observation;
   let precedingEvents = NO_EVENTS;
 
   trace.add({
@@ -87,19 +98,21 @@ function runSimulation(
 
   for (let step = 0; step < maxSteps; step += 1) {
     const commands = agent.decide(observation, precedingEvents);
-    const normalizedCommands = normalizeCanonicalJson(commands);
-    const result = engine.step(state, commands);
-    state = result.state;
-    observation = engine.observe(state);
-    precedingEvents = result.events;
+    checkpoint = execution.dispatch(commands);
+    const normalizedCommands = checkpoint.commands;
+    state = checkpoint.state;
+    observation = checkpoint.observation;
+    precedingEvents = checkpoint.events;
 
     trace.add({
       commands: normalizedCommands,
-      events: result.events,
+      events: checkpoint.events,
       observation,
       state,
     });
   }
+
+  options.onTrace?.(execution.readDiagnostics());
 
   return Object.freeze({
     schemaVersion: RUN_RESULT_SCHEMA_VERSION,
@@ -123,9 +136,10 @@ function runSimulation(
 /** Creates a finite headless consumer around the shared gameplay engine. */
 export function createSimulationRunner(
   engine: GameplayEngine,
+  options: SimulationRunnerOptions = {},
 ): SimulationRunner {
   const run = (request: SimulationRequest): RunResult =>
-    runSimulation(engine, request);
+    runSimulation(engine, request, options);
 
   return Object.freeze({
     run,

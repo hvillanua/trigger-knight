@@ -43,7 +43,8 @@ the shared engine, and presents the resulting observation and event.
 Canvas 2D. It retains the latest presentation frame so physical Canvas or
 device-pixel-ratio changes can redraw that frame without stepping or inspecting
 the engine. The browser session also accepts no presentation or a replacement
-port; both cases produce the same public engine result for the same commands.
+port; both cases produce the same public engine result, authoritative
+checkpoints, and hashes for the same commands.
 
 ## Minimal headless path
 
@@ -57,3 +58,19 @@ The runner returns a frozen normalized result with versioned profile and trace
 hashes. Batch execution keeps request order and isolates state between runs.
 The exact run sequence, placeholder metrics, and hash inputs are documented in
 [`headless-simulation.md`](headless-simulation.md).
+
+## Browser and headless parity
+
+Both hosts use the application execution owner to record the normalized run
+configuration, every semantic command list, complete authoritative states,
+public observations, and emitted events. Browser development tools and tests can
+read this trace without adding hidden state to `GameObservation` or
+`PresentationFrame`. The headless runner reports the same structure through an
+optional diagnostic callback.
+
+Canonical SHA-256 checkpoint and trace hashes match across Chromium and Node.
+The parity comparer checks the structured values before their hashes and reports
+the first differing field. State restored from a JSON checkpoint also produces
+the same next state, observation, and events as uninterrupted execution. The
+diagnostic schema and access points are documented in
+[`gameplay-diagnostics.md`](gameplay-diagnostics.md).

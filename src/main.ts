@@ -30,7 +30,14 @@ const session = createBrowserGameplaySession(
     initialProfile: Object.freeze({ schemaVersion: 1 }),
   }),
   presentation,
+  { retainDiagnostics: import.meta.env.DEV },
 );
+
+if (import.meta.env.DEV) {
+  window.triggerKnightDiagnostics = Object.freeze({
+    read: () => session.readDiagnostics(),
+  });
+}
 
 let contentBox: CssDimensions | undefined;
 

@@ -67,6 +67,9 @@ are recorded in
 The finite programmatic runner, policy sequence, result identity, and minimal
 batch behavior are recorded in
 [`docs/headless-simulation.md`](docs/headless-simulation.md).
+Cross-host checkpoints, parity hashes, and structured first-difference output
+are recorded in
+[`docs/gameplay-diagnostics.md`](docs/gameplay-diagnostics.md).
 
 ## Directory boundaries
 
