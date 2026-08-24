@@ -40,9 +40,16 @@ function normalizeValue(
   nestedAncestors.add(value);
 
   if (Array.isArray(value)) {
-    return Object.freeze(
-      value.map((item) => normalizeValue(item, nestedAncestors)),
-    );
+    const normalized = new Array<CanonicalJsonValue>(value.length);
+    for (let index = 0; index < value.length; index += 1) {
+      if (!Object.hasOwn(value, index)) {
+        throw new TypeError("Canonical JSON arrays cannot contain holes");
+      }
+
+      normalized[index] = normalizeValue(value[index], nestedAncestors);
+    }
+
+    return Object.freeze(normalized);
   }
 
   const prototype = Object.getPrototypeOf(value) as unknown;
@@ -52,10 +59,15 @@ function normalizeValue(
 
   const normalized: Record<string, CanonicalJsonValue> = {};
   for (const key of Object.keys(value).sort()) {
-    normalized[key] = normalizeValue(
-      (value as Record<string, unknown>)[key],
-      nestedAncestors,
-    );
+    Object.defineProperty(normalized, key, {
+      configurable: true,
+      enumerable: true,
+      value: normalizeValue(
+        (value as Record<string, unknown>)[key],
+        nestedAncestors,
+      ),
+      writable: true,
+    });
   }
 
   return Object.freeze(normalized);

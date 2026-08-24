@@ -36,8 +36,9 @@ Milestone 2 will add gameplay lifecycle and active-tick meaning. The runner's
 Each result copies its ruleset, seed, normalized policy descriptor, and step
 limit. It also contains a fingerprint of the initial profile. Canonical JSON
 sorts object keys recursively, retains array order, normalizes negative zero,
-and rejects non-finite numbers, cycles, and non-JSON values. Result-owned policy
-configuration and metrics are frozen copies, not live policy objects.
+preserves own object keys such as `__proto__`, and rejects non-finite numbers,
+cycles, sparse arrays, and other non-JSON values. Result-owned policy configuration
+and metrics are frozen copies, not live policy objects.
 
 Fingerprints use SHA-256 over the UTF-8 bytes of canonical JSON and carry the
 `sha256-v1` prefix. The trace uses the same digest and covers:
