@@ -61,6 +61,7 @@ This milestone establishes:
 ### Complete when
 
 - the browser and simulator demonstrably call the same gameplay implementation;
+- browser presentation and ordinary player policies receive the same public observation and event sequence;
 - identical inputs reproduce identical state and result hashes;
 - a non-progressing policy terminates at its configured step limit;
 - the minimal state can be serialized, restored, and advanced without changing its outcome;
