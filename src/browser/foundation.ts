@@ -1,3 +1,4 @@
+/** Canvas presentation primitives for the repository foundation. */
 export interface CssDimensions {
   readonly width: number;
   readonly height: number;

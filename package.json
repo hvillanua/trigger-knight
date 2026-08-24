@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "check:architecture": "depcruise --config dependency-cruiser.config.cjs src",
     "format": "prettier --write . --ignore-unknown",
     "format:check": "prettier --check . --ignore-unknown",
     "lint": "eslint . --max-warnings 0",
@@ -18,7 +19,7 @@
     "test:unit": "vitest run",
     "test:browser": "playwright test",
     "typecheck": "tsc --noEmit",
-    "validate:fast": "npm run format:check && npm run lint && npm run typecheck && npm run test:unit",
+    "validate:fast": "npm run format:check && npm run lint && npm run check:architecture && npm run typecheck && npm run test:unit",
     "validate": "npm run validate:fast && npm run test:browser && npm run build"
   },
   "devDependencies": {
@@ -26,6 +27,7 @@
     "@playwright/test": "1.62.1",
     "@types/node": "24.13.3",
     "@typescript/native": "npm:typescript@7.0.2",
+    "dependency-cruiser": "18.2.0",
     "eslint": "10.9.0",
     "globals": "17.11.0",
     "prettier": "3.9.6",

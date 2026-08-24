@@ -1,3 +1,4 @@
+/** Browser adapter for observing display-density changes. */
 interface ResolutionQuery {
   addEventListener(
     type: "change",

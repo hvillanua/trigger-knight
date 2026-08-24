@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { calculateBackingStoreSize } from "../../src/foundation.js";
+import { calculateBackingStoreSize } from "../../src/browser/foundation.js";
 
 describe("calculateBackingStoreSize", () => {
   it("scales CSS dimensions for a high-density display", () => {
