@@ -9,5 +9,16 @@ export function createRunState(ruleset: RuleSetId, seed: string): RunState {
     schemaVersion: RUN_STATE_SCHEMA_VERSION,
     ruleset,
     random: createRandomState(seed),
+    steps: 0,
+  });
+}
+
+/** Advances the walking-skeleton run by one logical engine step. */
+export function advanceRunState(state: Readonly<RunState>): RunState {
+  return Object.freeze({
+    schemaVersion: RUN_STATE_SCHEMA_VERSION,
+    ruleset: state.ruleset,
+    random: Object.freeze({ ...state.random }),
+    steps: state.steps + 1,
   });
 }

@@ -6,6 +6,7 @@ export type {
   RandomState,
   RuleSetId,
   RunState,
+  StepAdvancedEvent,
 } from "../domain/contracts.js";
 export type {
   GameplayEngine,

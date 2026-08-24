@@ -17,6 +17,7 @@ export interface RunState {
   readonly schemaVersion: 1;
   readonly ruleset: RuleSetId;
   readonly random: RandomState;
+  readonly steps: number;
 }
 
 /** Device-independent gameplay intent. */
@@ -24,12 +25,17 @@ export interface GameCommand {
   readonly type: string;
 }
 
-/** Authoritative outcome emitted by a gameplay transition. */
-export interface GameEvent {
-  readonly type: string;
+/** Authoritative outcome emitted by the walking-skeleton transition. */
+export interface StepAdvancedEvent {
+  readonly type: "step-advanced";
+  readonly step: number;
 }
+
+/** Authoritative outcome emitted by a gameplay transition. */
+export type GameEvent = StepAdvancedEvent;
 
 /** Public gameplay information shared by browser and automated players. */
 export interface GameObservation {
   readonly ruleset: RuleSetId;
+  readonly steps: number;
 }

@@ -1,0 +1,98 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  gameplayEngine,
+  WALKING_SKELETON_RULESET_ID,
+} from "../../src/application/gameplay-engine.js";
+import type {
+  GameCommand,
+  RunConfig,
+  RunState,
+} from "../../src/application/contracts.js";
+
+const config: RunConfig = Object.freeze({
+  ruleset: WALKING_SKELETON_RULESET_ID,
+  seed: "engine-seed",
+  initialProfile: Object.freeze({ schemaVersion: 1 }),
+});
+
+function createUnsupportedState(): RunState {
+  return Object.freeze({
+    ...gameplayEngine.createRun(config),
+    ruleset: "original-v1.3",
+  });
+}
+
+describe("gameplay engine", () => {
+  it("rejects a ruleset identity with no matching implementation", () => {
+    expect(() =>
+      gameplayEngine.createRun({
+        ...config,
+        ruleset: "original-v1.3",
+      }),
+    ).toThrowError('Unsupported ruleset "original-v1.3"');
+  });
+
+  it("rejects an unsupported ruleset before stepping restored state", () => {
+    expect(() =>
+      gameplayEngine.step(createUnsupportedState(), []),
+    ).toThrowError('Unsupported ruleset "original-v1.3"');
+  });
+
+  it("rejects an unsupported ruleset before observing restored state", () => {
+    expect(() => gameplayEngine.observe(createUnsupportedState())).toThrowError(
+      'Unsupported ruleset "original-v1.3"',
+    );
+  });
+
+  it("creates and observes a minimal run without exposing hidden state", () => {
+    const state = gameplayEngine.createRun(config);
+    const repeated = gameplayEngine.createRun(config);
+    const observation = gameplayEngine.observe(state);
+
+    expect(repeated).toEqual(state);
+    expect(repeated).not.toBe(state);
+    expect(state).toMatchObject({
+      schemaVersion: 1,
+      ruleset: "walking-skeleton-v1",
+      steps: 0,
+    });
+    expect(observation).toEqual({
+      ruleset: "walking-skeleton-v1",
+      steps: 0,
+    });
+    expect(observation).not.toHaveProperty("random");
+    expect(Object.isFrozen(state)).toBe(true);
+    expect(Object.isFrozen(state.random)).toBe(true);
+    expect(Object.isFrozen(observation)).toBe(true);
+  });
+
+  it("repeats one authoritative transition without mutating its inputs", () => {
+    const state = gameplayEngine.createRun(config);
+    const commands: readonly GameCommand[] = Object.freeze([
+      Object.freeze({ type: "wait" }),
+    ]);
+    const stateBefore = JSON.stringify(state);
+    const commandsBefore = JSON.stringify(commands);
+
+    const first = gameplayEngine.step(state, commands);
+    const repeated = gameplayEngine.step(state, commands);
+
+    expect(repeated).toEqual(first);
+    expect(JSON.stringify(state)).toBe(stateBefore);
+    expect(JSON.stringify(commands)).toBe(commandsBefore);
+    expect(first.state).not.toBe(state);
+    expect(first.state.random).not.toBe(state.random);
+    expect(first.state.random).toEqual(state.random);
+    expect(first.state).toMatchObject({ steps: 1 });
+    expect(first.events).toEqual([{ type: "step-advanced", step: 1 }]);
+    expect(gameplayEngine.observe(first.state)).toEqual({
+      ruleset: "walking-skeleton-v1",
+      steps: 1,
+    });
+    expect(Object.isFrozen(first)).toBe(true);
+    expect(Object.isFrozen(first.state)).toBe(true);
+    expect(Object.isFrozen(first.events)).toBe(true);
+    expect(Object.isFrozen(first.events[0])).toBe(true);
+  });
+});

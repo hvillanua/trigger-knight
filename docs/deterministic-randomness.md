@@ -35,6 +35,7 @@ and complete random state:
 {
   "schemaVersion": 1,
   "ruleset": "walking-skeleton-v1",
+  "steps": 0,
   "random": {
     "algorithm": "mulberry32-fnv1a32-v1",
     "state": 1234567890
