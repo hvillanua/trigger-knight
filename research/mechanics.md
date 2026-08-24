@@ -2,17 +2,17 @@
 
 ## State and core loop
 
-| Rule/value | Status |
-|---|---|
-| Screen states are title, achievement, credits, game, and score. | CONFIRMED |
-| Gameplay states are running, battling, and end; pause and tutorial are additional gates. | CONFIRMED |
-| A run starts with 300 gold, score 0, distance 0, day/enemy level 1, weapon tier 1, armor tier 1, one Elixir, and lifespan `99.99%`. | CONFIRMED |
-| The first three queue slots are filled by three calls to `randomizeEvent()`. | CONFIRMED |
-| Movement speed starts at 0 and gains 1 per active running frame to a maximum of 15. | CONFIRMED |
-| During running, each active frame adds movement speed to distance and subtracts it from the next-event counter. | CONFIRMED |
+| Rule/value                                                                                                                                                     | Status    |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- |
+| Screen states are title, achievement, credits, game, and score.                                                                                                | CONFIRMED |
+| Gameplay states are running, battling, and end; pause and tutorial are additional gates.                                                                       | CONFIRMED |
+| A run starts with 300 gold, score 0, distance 0, day/enemy level 1, weapon tier 1, armor tier 1, one Elixir, and lifespan `99.99%`.                            | CONFIRMED |
+| The first three queue slots are filled by three calls to `randomizeEvent()`.                                                                                   | CONFIRMED |
+| Movement speed starts at 0 and gains 1 per active running frame to a maximum of 15.                                                                            | CONFIRMED |
+| During running, each active frame adds movement speed to distance and subtracts it from the next-event counter.                                                | CONFIRMED |
 | During battle, distance, day advancement, encounter movement, and event countdown stop; lifespan and combat continue. Parallax briefly coasts as speed decays. | CONFIRMED |
-| Pausing or showing a tutorial stops the active gameplay update, including lifespan drain and combat animation progression. | CONFIRMED |
-| The game is endless; there is no final day, dragon ending, or win state in the game logic. | CONFIRMED |
+| Pausing or showing a tutorial stops the active gameplay update, including lifespan drain and combat animation progression.                                     | CONFIRMED |
+| The game is endless; there is no final day, dragon ending, or win state in the game logic.                                                                     | CONFIRMED |
 
 **CONFIRMED** Running parallax moves the rear layer at `speed/10`, middle at
 `speed/5`, and front at full movement speed. The hero runs near `(50, 200)`,
@@ -25,15 +25,15 @@ entry therefore coasts for 15 frames (0.5 seconds) before scenery fully stops.
 
 ## Distance, days, and encounter spacing
 
-| Rule/value | Status |
-|---|---|
-| Day `D = floor(distance / 7000) + 1`. | CONFIRMED |
-| The initial event counter is `1000 + random(1000)`, hence 1000-1999 distance units. | CONFIRMED |
-| Each later event counter is `1500 + random(300)`, hence 1500-1799 distance units. | CONFIRMED |
-| At maximum speed, later events begin every 100-120 running frames, about 3.33-4.00 seconds. | DERIVED from distance range, speed 15, and 30 fps |
-| Buildings enter at x=600, move left at half running speed, accept clicks only while `0 < x < 420`, and are removed below x=-100. | CONFIRMED |
-| At speed 15, the strict building click interval lasts approximately 56 frames or 1.87 seconds. | DERIVED from 420 units / 7.5 units per frame |
-| Enemies enter at x=600, move left at full running speed, and start battle below x=420. | CONFIRMED |
+| Rule/value                                                                                                                       | Status                                            |
+| -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| Day `D = floor(distance / 7000) + 1`.                                                                                            | CONFIRMED                                         |
+| The initial event counter is `1000 + random(1000)`, hence 1000-1999 distance units.                                              | CONFIRMED                                         |
+| Each later event counter is `1500 + random(300)`, hence 1500-1799 distance units.                                                | CONFIRMED                                         |
+| At maximum speed, later events begin every 100-120 running frames, about 3.33-4.00 seconds.                                      | DERIVED from distance range, speed 15, and 30 fps |
+| Buildings enter at x=600, move left at half running speed, accept clicks only while `0 < x < 420`, and are removed below x=-100. | CONFIRMED                                         |
+| At speed 15, the strict building click interval lasts approximately 56 frames or 1.87 seconds.                                   | DERIVED from 420 units / 7.5 units per frame      |
+| Enemies enter at x=600, move left at full running speed, and start battle below x=420.                                           | CONFIRMED                                         |
 
 ## Encounter queue and RNG
 
@@ -43,16 +43,16 @@ properties and are **UNKNOWN** from the SWF alone.
 
 Event IDs are:
 
-| ID | Encounter | Status |
-|---:|---|---|
-| 1 | Bladesmith (weapon upgrade) | CONFIRMED |
-| 2 | Armorsmith (armor upgrade) | CONFIRMED |
-| 3 | Soul Shrine | CONFIRMED |
-| 4 | Pharmacy (Elixir) | CONFIRMED |
-| 5 | Grim's Shop (Divine Edge) | CONFIRMED |
-| 6 | Voucher Store (Gold Voucher) | CONFIRMED |
-| 7 | Battle | CONFIRMED |
-| 8 | Empty/no event sentinel | CONFIRMED |
+|  ID | Encounter                    | Status    |
+| --: | ---------------------------- | --------- |
+|   1 | Bladesmith (weapon upgrade)  | CONFIRMED |
+|   2 | Armorsmith (armor upgrade)   | CONFIRMED |
+|   3 | Soul Shrine                  | CONFIRMED |
+|   4 | Pharmacy (Elixir)            | CONFIRMED |
+|   5 | Grim's Shop (Divine Edge)    | CONFIRMED |
+|   6 | Voucher Store (Gold Voucher) | CONFIRMED |
+|   7 | Battle                       | CONFIRMED |
+|   8 | Empty/no event sentinel      | CONFIRMED |
 
 **CONFIRMED** `encountercount` starts as `random(3)` (0-2). Whenever it is at
 or below zero, generation resets it to `random(3)+1` (1-3), queues a battle,
@@ -62,14 +62,14 @@ three shops between battles, subject to the initial counter and forced shrine.
 
 Normal shop roll (`rand = random(100)`):
 
-| Integer range | Probability | Result | Status |
-|---|---:|---|---|
-| 66-99 | 34% | Bladesmith | CONFIRMED |
-| 31-65 | 35% | Armorsmith | CONFIRMED |
-| 26-30 | 5% | Soul Shrine | CONFIRMED |
-| 11-25 | 15% | Pharmacy | CONFIRMED |
-| 6-10 | 5% | Grim's Shop | CONFIRMED |
-| 0-5 | 6% | Voucher Store from day 4; reroll on days 1-3 | CONFIRMED |
+| Integer range | Probability | Result                                       | Status    |
+| ------------- | ----------: | -------------------------------------------- | --------- |
+| 66-99         |         34% | Bladesmith                                   | CONFIRMED |
+| 31-65         |         35% | Armorsmith                                   | CONFIRMED |
+| 26-30         |          5% | Soul Shrine                                  | CONFIRMED |
+| 11-25         |         15% | Pharmacy                                     | CONFIRMED |
+| 6-10          |          5% | Grim's Shop                                  | CONFIRMED |
+| 0-5           |          6% | Voucher Store from day 4; reroll on days 1-3 | CONFIRMED |
 
 **CONFIRMED** A weapon shop, armor shop, and normal Soul Shrine can each occur
 at most once between generated battles. A duplicate candidate recursively
@@ -92,12 +92,12 @@ emergency shrine in that restoration cycle.
 All formulas use current day `D`. All enemies have movement speed 10 and use
 the same combat state machine; there is no defense stat.
 
-| Enemy | Type | Max HP | ATK | Gold | Profile EXP | Status |
-|---|---:|---:|---:|---:|---:|---|
-| Goblin | 0 | `600 + 60D` | `82 + 40D` | `70 + 12D` | `10 + 3D` | CONFIRMED |
-| Golem | 1 | `860 + 120D` | `40 + 28D` | `78 + 14D` | `9 + 4D` | CONFIRMED |
-| Wolf | 2 | `450 + 44D` | `94 + 56D` | `78 + 14D` | `8 + 5D` | CONFIRMED |
-| Dragon | 3 | `2400 + 300D` | `160 + 80D` | `350 + 60D` | `40 + 25D` | CONFIRMED |
+| Enemy  | Type |        Max HP |         ATK |        Gold | Profile EXP | Status    |
+| ------ | ---: | ------------: | ----------: | ----------: | ----------: | --------- |
+| Goblin |    0 |   `600 + 60D` |  `82 + 40D` |  `70 + 12D` |   `10 + 3D` | CONFIRMED |
+| Golem  |    1 |  `860 + 120D` |  `40 + 28D` |  `78 + 14D` |    `9 + 4D` | CONFIRMED |
+| Wolf   |    2 |   `450 + 44D` |  `94 + 56D` |  `78 + 14D` |    `8 + 5D` | CONFIRMED |
+| Dragon |    3 | `2400 + 300D` | `160 + 80D` | `350 + 60D` |  `40 + 25D` | CONFIRMED |
 
 **CONFIRMED** Goblin, Golem, and Wolf are selected uniformly with
 `random(3)` whenever an ordinary battle is generated.
@@ -108,15 +108,15 @@ the same combat state machine; there is no defense stat.
 next battle is an ordinary enemy. Otherwise generation rolls `random(100)` and
 selects Dragon when `rand < 3 * (D - 7)`; a failed roll is ordinary.
 
-| Day | Dragon chance when eligible | Status |
-|---:|---:|---|
-| 7 | 0% | CONFIRMED |
-| 8 | 3% | CONFIRMED |
-| 9 | 6% | CONFIRMED |
-| 10 | 9% | CONFIRMED |
-| 20 | 39% | CONFIRMED |
-| 40 | 99% | CONFIRMED |
-| 41+ | 100% | DERIVED because the threshold exceeds every `random(100)` result |
+| Day | Dragon chance when eligible | Status                                                           |
+| --: | --------------------------: | ---------------------------------------------------------------- |
+|   7 |                          0% | CONFIRMED                                                        |
+|   8 |                          3% | CONFIRMED                                                        |
+|   9 |                          6% | CONFIRMED                                                        |
+|  10 |                          9% | CONFIRMED                                                        |
+|  20 |                         39% | CONFIRMED                                                        |
+|  40 |                         99% | CONFIRMED                                                        |
+| 41+ |                        100% | DERIVED because the threshold exceeds every `random(100)` result |
 
 **CONFIRMED** This chance is evaluated when a battle entry is generated, not
 on every frame or shop. The dragon flag prevents consecutive queued dragons;
@@ -134,26 +134,26 @@ does not end the run.
 delay to zero, resets the hero attack multiplier to 1, and exposes the carried
 item. Actor AI proceeds through idle, move, attack, flinch, and dead states.
 
-| State rule | Status |
-|---|---|
-| Idle decrements `attackdelay`; at zero or below, the actor changes to move. | CONFIRMED |
+| State rule                                                                                                             | Status    |
+| ---------------------------------------------------------------------------------------------------------------------- | --------- |
+| Idle decrements `attackdelay`; at zero or below, the actor changes to move.                                            | CONFIRMED |
 | Move advances hero +10 x or enemy -10 x each active frame until horizontal separation is below 30, then starts attack. | CONFIRMED |
-| An animation frame sets `ishit`; AI then calls the damage routine. | CONFIRMED |
-| An animation frame sets `attackfinished`; AI returns the actor to idle after applying its post-attack delay. | CONFIRMED |
-| Each hit increments attacker `numattack` and resets defender `numattack` to zero. | CONFIRMED |
-| Hero delay is `random(24) + 4*numattack`; enemy delay is `random(24) + 12*numattack`. | CONFIRMED |
-| Flinch knockback starts at `10 + random(7)` (10-16) and is multiplied by 0.8 each frame until below 1. | CONFIRMED |
-| Hero is knocked left; enemy is knocked right. Flinch temporarily prevents that actor from attacking. | CONFIRMED |
+| An animation frame sets `ishit`; AI then calls the damage routine.                                                     | CONFIRMED |
+| An animation frame sets `attackfinished`; AI returns the actor to idle after applying its post-attack delay.           | CONFIRMED |
+| Each hit increments attacker `numattack` and resets defender `numattack` to zero.                                      | CONFIRMED |
+| Hero delay is `random(24) + 4*numattack`; enemy delay is `random(24) + 12*numattack`.                                  | CONFIRMED |
+| Flinch knockback starts at `10 + random(7)` (10-16) and is multiplied by 0.8 each frame until below 1.                 | CONFIRMED |
+| Hero is knocked left; enemy is knocked right. Flinch temporarily prevents that actor from attacking.                   | CONFIRMED |
 
 Animation-driven hit and completion points at 30 fps:
 
-| Actor | Attack label | Hit frame | Finish/stop frame | Hit latency | Status |
-|---|---:|---:|---:|---:|---|
-| Hero | 34 | 40 | 48 | 6 frames / 0.20 s | CONFIRMED |
-| Dragon | 27 | 33 | 39 | 6 frames / 0.20 s | CONFIRMED |
-| Goblin | 27 | 33 | 39 | 6 frames / 0.20 s | CONFIRMED |
-| Golem | 31 | 37 | 43 | 6 frames / 0.20 s | CONFIRMED |
-| Wolf | 31 | 37 | 41 | 6 frames / 0.20 s | CONFIRMED |
+| Actor  | Attack label | Hit frame | Finish/stop frame |       Hit latency | Status    |
+| ------ | -----------: | --------: | ----------------: | ----------------: | --------- |
+| Hero   |           34 |        40 |                48 | 6 frames / 0.20 s | CONFIRMED |
+| Dragon |           27 |        33 |                39 | 6 frames / 0.20 s | CONFIRMED |
+| Goblin |           27 |        33 |                39 | 6 frames / 0.20 s | CONFIRMED |
+| Golem  |           31 |        37 |                43 | 6 frames / 0.20 s | CONFIRMED |
+| Wolf   |           31 |        37 |                41 | 6 frames / 0.20 s | CONFIRMED |
 
 **CONFIRMED** The damage calculation is:
 
@@ -186,16 +186,16 @@ initial alpha of 100, the fade is about 10 active frames (0.33 seconds).
 fraction. At zero or below, the fraction resets to 99 and whole existence
 decrements. Death occurs when whole existence becomes negative.
 
-| Rule/value | Status |
-|---|---|
-| Display starts at `99.99%`, not 100%. | CONFIRMED |
-| One displayed whole percentage is lost every 25 active frames. | DERIVED from decrement 4 and reset behavior |
-| With no shrine or pauses, death occurs after 2,500 active gameplay frames, approximately 83.33 seconds at 30 fps. | DERIVED by tracing 100 groups of 25 frames |
-| Lifespan drains in both running and battle. | CONFIRMED |
-| Lifespan does not drain while paused or while a tutorial panel gates gameplay. | CONFIRMED |
-| Buying a Soul Shrine restores both fields to 99 and resets emergency-shrine eligibility. | CONFIRMED |
-| Under 25%, running-state hero alpha is calculated from remaining lifespan, producing a fade toward zero. | CONFIRMED |
-| The under-25% alpha update is made only in running state even though lifespan continues falling in combat. | CONFIRMED |
+| Rule/value                                                                                                        | Status                                      |
+| ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| Display starts at `99.99%`, not 100%.                                                                             | CONFIRMED                                   |
+| One displayed whole percentage is lost every 25 active frames.                                                    | DERIVED from decrement 4 and reset behavior |
+| With no shrine or pauses, death occurs after 2,500 active gameplay frames, approximately 83.33 seconds at 30 fps. | DERIVED by tracing 100 groups of 25 frames  |
+| Lifespan drains in both running and battle.                                                                       | CONFIRMED                                   |
+| Lifespan does not drain while paused or while a tutorial panel gates gameplay.                                    | CONFIRMED                                   |
+| Buying a Soul Shrine restores both fields to 99 and resets emergency-shrine eligibility.                          | CONFIRMED                                   |
+| Under 25%, running-state hero alpha is calculated from remaining lifespan, producing a fade toward zero.          | CONFIRMED                                   |
+| The under-25% alpha update is made only in running state even though lifespan continues falling in combat.        | CONFIRMED                                   |
 
 ## Weapons and armor
 
@@ -203,18 +203,18 @@ decrements. Death occurs when whole existence becomes negative.
 `1009 + 899L`, for tier `L`. The price shown is the price to advance from the
 prior tier when a fresh shop entry is queued.
 
-| Tier | Weapon | ATK | Fresh price to reach | Armor | Max HP | Fresh price to reach | Status |
-|---:|---|---:|---:|---|---:|---:|---|
-| 1 | Dagger | 216 | Start | Clothing | 1,908 | Start | CONFIRMED |
-| 2 | Sword | 303 | 236 | Protector | 2,807 | 204 | CONFIRMED |
-| 3 | Rapier | 390 | 272 | Breastplate | 3,706 | 258 | CONFIRMED |
-| 4 | Falchion | 477 | 308 | Chainmail | 4,605 | 312 | CONFIRMED |
-| 5 | Katana | 564 | 344 | Fullplate | 5,504 | 366 | CONFIRMED |
-| 6 | Flamberge | 651 | 380 | Samurai Mail | 6,403 | 420 | CONFIRMED |
-| 7 | Zweihander | 738 | 416 | Valkyrie Garb | 7,302 | 474 | CONFIRMED |
-| 8 | Broad Kris | 825 | 452 | Odin Garb | 8,201 | 528 | CONFIRMED |
-| 9 | Excalibur | 912 | 488 | Avalon | 9,100 | 582 | CONFIRMED |
-| 10 | Astral Sword | 999 | 524 | Astral Armor | 9,999 | 636 | CONFIRMED |
+| Tier | Weapon       | ATK | Fresh price to reach | Armor         | Max HP | Fresh price to reach | Status    |
+| ---: | ------------ | --: | -------------------: | ------------- | -----: | -------------------: | --------- |
+|    1 | Dagger       | 216 |                Start | Clothing      |  1,908 |                Start | CONFIRMED |
+|    2 | Sword        | 303 |                  236 | Protector     |  2,807 |                  204 | CONFIRMED |
+|    3 | Rapier       | 390 |                  272 | Breastplate   |  3,706 |                  258 | CONFIRMED |
+|    4 | Falchion     | 477 |                  308 | Chainmail     |  4,605 |                  312 | CONFIRMED |
+|    5 | Katana       | 564 |                  344 | Fullplate     |  5,504 |                  366 | CONFIRMED |
+|    6 | Flamberge    | 651 |                  380 | Samurai Mail  |  6,403 |                  420 | CONFIRMED |
+|    7 | Zweihander   | 738 |                  416 | Valkyrie Garb |  7,302 |                  474 | CONFIRMED |
+|    8 | Broad Kris   | 825 |                  452 | Odin Garb     |  8,201 |                  528 | CONFIRMED |
+|    9 | Excalibur    | 912 |                  488 | Avalon        |  9,100 |                  582 | CONFIRMED |
+|   10 | Astral Sword | 999 |                  524 | Astral Armor  |  9,999 |                  636 | CONFIRMED |
 
 **CONFIRMED** The constant name arrays also contain index-zero `Barehand` and
 `Barebody`, but normal initialization begins at tier 1. Tiers cap at 10.
@@ -225,7 +225,7 @@ queued, not recalculated when clicked. An armor upgrade recomputes maximum HP
 and fully heals; a weapon upgrade only recomputes attack.
 
 **CONFIRMED** The HUD has one current-event slot plus three queued-event slots.
-The same-type duplicate flags reset as soon as a battle is *queued*, so this
+The same-type duplicate flags reset as soon as a battle is _queued_, so this
 four-slot window can show two weapon shops or two armor shops when the entries
 are separated by that battle boundary. Both shops may have been priced before
 the first upgrade is purchased.
@@ -247,23 +247,23 @@ pricing bug rather than an intended discount.
 
 ## Shops and items
 
-| Shop | Price | Effect | Status |
-|---|---:|---|---|
-| Soul Shrine | `50 + 70*xextension` | Restore lifespan to 99.99%; increment `xextension` | CONFIRMED |
-| Pharmacy | 150 | Replace carried item with Elixir | CONFIRMED |
-| Grim's Shop | 200 | Replace carried item with Divine Edge | CONFIRMED |
-| Voucher Store | 500 | Replace carried item with Gold Voucher | CONFIRMED |
+| Shop          |                Price | Effect                                             | Status    |
+| ------------- | -------------------: | -------------------------------------------------- | --------- |
+| Soul Shrine   | `50 + 70*xextension` | Restore lifespan to 99.99%; increment `xextension` | CONFIRMED |
+| Pharmacy      |                  150 | Replace carried item with Elixir                   | CONFIRMED |
+| Grim's Shop   |                  200 | Replace carried item with Divine Edge              | CONFIRMED |
+| Voucher Store |                  500 | Replace carried item with Gold Voucher             | CONFIRMED |
 
 **CONFIRMED** Soul Shrine prices across successful purchases are 50, 120, 190,
 260, and so on. The game has one inventory slot. A purchase overwrites the
 current item, including buying the same item again. Weapon and armor shops have
 the formulas in the prior section.
 
-| Item | Exact effect | Use restriction | Status |
-|---|---|---|---|
-| Elixir | Set hero HP to current maximum HP | Battle only | CONFIRMED |
-| Divine Edge | Set hero attack factor to 100 for current battle | Battle only | CONFIRMED |
-| Gold Voucher | Multiply current enemy gold reward by 10 | Battle only | CONFIRMED |
+| Item         | Exact effect                                     | Use restriction | Status    |
+| ------------ | ------------------------------------------------ | --------------- | --------- |
+| Elixir       | Set hero HP to current maximum HP                | Battle only     | CONFIRMED |
+| Divine Edge  | Set hero attack factor to 100 for current battle | Battle only     | CONFIRMED |
+| Gold Voucher | Multiply current enemy gold reward by 10         | Battle only     | CONFIRMED |
 
 **CONFIRMED** Items are consumed immediately on valid use. They cannot be used
 outside battle. The cursor descriptions are “Full HP Recovery,” “10000%
@@ -290,14 +290,14 @@ the first reward that leaves the balance at or above 3,000.
 
 **CONFIRMED** Let `M` be the stored profile score multiplier.
 
-| Rule | Formula/value | Status |
-|---|---|---|
-| Running score per active frame | `movementSpeed * 10 * M` | CONFIRMED |
-| Kill score | `enemy.maxHP * 10 + enemy.ATK * 60 * M` | CONFIRMED, including operator precedence |
-| Profile EXP reward | Enemy-specific formula in enemy table | CONFIRMED |
-| Level threshold | `100 + profileLevel * 30` | CONFIRMED |
-| Level-up condition | Strictly `profileXP > threshold`, not `>=` | CONFIRMED |
-| New multiplier | `1 + newProfileLevel / 10` | CONFIRMED |
+| Rule                           | Formula/value                              | Status                                   |
+| ------------------------------ | ------------------------------------------ | ---------------------------------------- |
+| Running score per active frame | `movementSpeed * 10 * M`                   | CONFIRMED                                |
+| Kill score                     | `enemy.maxHP * 10 + enemy.ATK * 60 * M`    | CONFIRMED, including operator precedence |
+| Profile EXP reward             | Enemy-specific formula in enemy table      | CONFIRMED                                |
+| Level threshold                | `100 + profileLevel * 30`                  | CONFIRMED                                |
+| Level-up condition             | Strictly `profileXP > threshold`, not `>=` | CONFIRMED                                |
+| New multiplier                 | `1 + newProfileLevel / 10`                 | CONFIRMED                                |
 
 **CONFIRMED** The multiplier applies only to the enemy-ATK term of kill score,
 not the max-HP term. Initial profile data is level 1, XP 0, multiplier 1.0;
@@ -328,14 +328,14 @@ in the gameplay path.
 
 Internal achievements defined by name and unlock code:
 
-| Index | Name | Condition | Status |
-|---:|---|---|---|
-| 0 | Slay a Dragon | Kill any Dragon | CONFIRMED |
-| 1 | Stashed 3000 Gold | Reach at least 3,000 gold after a reward | CONFIRMED |
-| 2 | Reach Day #10 | Day becomes 10 or higher | CONFIRMED |
-| 3 | Get all Collection | Discover all 10 weapons and all 10 armors | CONFIRMED |
-| 4 | Perform 70000+ Damage | One computed hit is at least 70,000 | CONFIRMED |
-| 5 | No defined name/condition | Allocated but unused | UNKNOWN intended purpose; CONFIRMED absence in inspected code |
+| Index | Name                      | Condition                                 | Status                                                        |
+| ----: | ------------------------- | ----------------------------------------- | ------------------------------------------------------------- |
+|     0 | Slay a Dragon             | Kill any Dragon                           | CONFIRMED                                                     |
+|     1 | Stashed 3000 Gold         | Reach at least 3,000 gold after a reward  | CONFIRMED                                                     |
+|     2 | Reach Day #10             | Day becomes 10 or higher                  | CONFIRMED                                                     |
+|     3 | Get all Collection        | Discover all 10 weapons and all 10 armors | CONFIRMED                                                     |
+|     4 | Perform 70000+ Damage     | One computed hit is at least 70,000       | CONFIRMED                                                     |
+|     5 | No defined name/condition | Allocated but unused                      | UNKNOWN intended purpose; CONFIRMED absence in inspected code |
 
 **CONFIRMED** Tier 1 weapon and armor begin discovered. Purchasing a tier marks
 it discovered. Collection progress is `(weaponCount + armorCount) * 3.5`, for
@@ -344,12 +344,12 @@ for 30 more. Total game progress is therefore 100%; a new profile starts at 7%.
 
 Kongregate-facing badges/stats embedded in the wrapper:
 
-| Badge/stat | Condition/type | Status |
-|---|---|---|
-| Gearing Up (5 points) | `ArmorUnlocked >= 3` and `WeaponUnlocked >= 3` | CONFIRMED wrapper metadata |
-| Run Fast, Die Old (15 points) | `Day >= 10` | CONFIRMED wrapper metadata |
-| Dragon Age Endings (30 points) | `HasKilledDragon >= 1` | CONFIRMED wrapper metadata |
-| Other submitted stats | `DragonKilled` additive; `GameProgress`, `Level`, `Score`, weapon/armor counts | CONFIRMED code and wrapper metadata |
+| Badge/stat                     | Condition/type                                                                 | Status                              |
+| ------------------------------ | ------------------------------------------------------------------------------ | ----------------------------------- |
+| Gearing Up (5 points)          | `ArmorUnlocked >= 3` and `WeaponUnlocked >= 3`                                 | CONFIRMED wrapper metadata          |
+| Run Fast, Die Old (15 points)  | `Day >= 10`                                                                    | CONFIRMED wrapper metadata          |
+| Dragon Age Endings (30 points) | `HasKilledDragon >= 1`                                                         | CONFIRMED wrapper metadata          |
+| Other submitted stats          | `DragonKilled` additive; `GameProgress`, `Level`, `Score`, weapon/armor counts | CONFIRMED code and wrapper metadata |
 
 **CONFIRMED** The achievement screen contains a submission defect: both the
 armor count and weapon count are submitted to `WeaponUnlocked`; the first call

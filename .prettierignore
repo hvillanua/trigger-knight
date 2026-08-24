@@ -1,0 +1,12 @@
+# Preserve original and generated research inputs byte-for-byte.
+/decompiled/
+/exports/
+/original/
+/tooling/
+
+# Generated validation and build output.
+/coverage/
+/dist/
+/node_modules/
+/playwright-report/
+/test-results/

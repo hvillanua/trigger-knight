@@ -55,15 +55,15 @@ and did not alter the preserved SWF.
 
 ## Expected counts
 
-| Output | Expected | Status |
-|---|---:|---|
-| Decompiled primary script files | 87 | CONFIRMED current export |
-| Raw images | 138 | CONFIRMED current export |
-| Raw fonts | 8 | CONFIRMED current export |
-| Raw sound entries | 17 | CONFIRMED current export |
-| Raw text entries | 119 | CONFIRMED current export |
-| Main-timeline PNGs | 10 | CONFIRMED current export |
-| Character-frame PNGs | 280 | CONFIRMED current export |
+| Output                          | Expected | Status                   |
+| ------------------------------- | -------: | ------------------------ |
+| Decompiled primary script files |       87 | CONFIRMED current export |
+| Raw images                      |      138 | CONFIRMED current export |
+| Raw fonts                       |        8 | CONFIRMED current export |
+| Raw sound entries               |       17 | CONFIRMED current export |
+| Raw text entries                |      119 | CONFIRMED current export |
+| Main-timeline PNGs              |       10 | CONFIRMED current export |
+| Character-frame PNGs            |      280 | CONFIRMED current export |
 
 The curated files under `exports/assets/representative/` are copies of selected
 generated PNGs. Their exact source frame is recorded in that directory's

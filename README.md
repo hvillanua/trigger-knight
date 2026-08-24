@@ -20,18 +20,49 @@ The exact runtime and package selections are recorded in
 durable architecture live in [`clean-room/PRD.md`](clean-room/PRD.md) and
 [`clean-room/TDD.md`](clean-room/TDD.md).
 
+## Validation
+
+Run validation from the repository root. Each concern has a stable,
+non-interactive command:
+
+| Concern                                            | Command                |
+| -------------------------------------------------- | ---------------------- |
+| Apply repository formatting                        | `npm run format`       |
+| Check repository formatting without changing files | `npm run format:check` |
+| Lint TypeScript and JavaScript                     | `npm run lint`         |
+| Type-check with native TypeScript 7                | `npm run typecheck`    |
+| Run unit tests                                     | `npm run test:unit`    |
+| Run browser tests                                  | `npm run test:browser` |
+| Build the production application                   | `npm run build`        |
+
+Before committing, run the fast validation gate:
+
+```sh
+npm run validate:fast
+```
+
+Before pushing, run the complete validation gate, which includes every check:
+
+```sh
+npm run validate
+```
+
+TypeScript 7.0 and ESLint temporarily use side-by-side compiler packages. The
+removal condition and TODO are recorded in
+[`docs/dependency-baseline.md`](docs/dependency-baseline.md#temporary-typescript-6-compatibility).
+
 ## Directory boundaries
 
-| Directory | Purpose | Mutability |
-|---|---|---|
-| [`original/`](original/) | Original SWF artifacts and provenance | Preserve unchanged |
-| [`decompiled/`](decompiled/) | Reproducible FFDec output | Generated research input |
-| [`exports/`](exports/) | Extracted images, audio, text, and reference renders | Generated research input |
-| [`research/`](research/) | Human-authored findings and uncertainty ledger | Research notes |
-| [`tooling/`](tooling/) | Pinned FFDec and Java runtime | Tool dependencies |
-| [`clean-room/`](clean-room/) | Product, architecture, and implementation-roadmap documents | Clean-room source of truth |
-| [`src/`](src/) | Browser reimplementation source | Clean-room implementation |
-| [`tests/`](tests/) | Unit and browser verification | Clean-room implementation evidence |
+| Directory                    | Purpose                                                     | Mutability                         |
+| ---------------------------- | ----------------------------------------------------------- | ---------------------------------- |
+| [`original/`](original/)     | Original SWF artifacts and provenance                       | Preserve unchanged                 |
+| [`decompiled/`](decompiled/) | Reproducible FFDec output                                   | Generated research input           |
+| [`exports/`](exports/)       | Extracted images, audio, text, and reference renders        | Generated research input           |
+| [`research/`](research/)     | Human-authored findings and uncertainty ledger              | Research notes                     |
+| [`tooling/`](tooling/)       | Pinned FFDec and Java runtime                               | Tool dependencies                  |
+| [`clean-room/`](clean-room/) | Product, architecture, and implementation-roadmap documents | Clean-room source of truth         |
+| [`src/`](src/)               | Browser reimplementation source                             | Clean-room implementation          |
+| [`tests/`](tests/)           | Unit and browser verification                               | Clean-room implementation evidence |
 
 Start with [`research/README.md`](research/README.md). Artifact identity and
 download provenance are in [`original/README.md`](original/README.md), with
