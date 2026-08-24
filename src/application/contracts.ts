@@ -3,6 +3,7 @@ export type {
   GameEvent,
   GameObservation,
   ProfileState,
+  RandomState,
   RuleSetId,
   RunState,
 } from "../domain/contracts.js";

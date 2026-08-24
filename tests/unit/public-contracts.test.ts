@@ -12,6 +12,7 @@ import type {
   PresentationFrame,
   PresentationPort,
   ProfileState,
+  RandomState,
   RuleSetId,
   RunConfig,
   RunResult,
@@ -122,6 +123,11 @@ describe("public application contracts", () => {
       readonly ruleset: RuleSetId;
       readonly seed: string;
       readonly initialProfile: ProfileState;
+    }>();
+    expectTypeOf<RunState>().toMatchTypeOf<{
+      readonly schemaVersion: 1;
+      readonly ruleset: RuleSetId;
+      readonly random: RandomState;
     }>();
   });
 });

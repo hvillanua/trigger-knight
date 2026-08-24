@@ -6,9 +6,17 @@ export interface ProfileState {
   readonly schemaVersion: number;
 }
 
+/** Versioned, serializable state for authoritative gameplay randomness. */
+export interface RandomState {
+  readonly algorithm: "mulberry32-fnv1a32-v1";
+  readonly state: number;
+}
+
 /** Authoritative state owned by the gameplay domain. */
 export interface RunState {
+  readonly schemaVersion: 1;
   readonly ruleset: RuleSetId;
+  readonly random: RandomState;
 }
 
 /** Device-independent gameplay intent. */
