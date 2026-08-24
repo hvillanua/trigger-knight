@@ -58,6 +58,9 @@ removal condition and TODO are recorded in
 The allowed source layers, dependency directions, deterministic-domain API
 rules, and approved production-input locations are documented in
 [`docs/architecture-boundaries.md`](docs/architecture-boundaries.md).
+The versioned seed expansion, random sequence, and serializable state contract
+are recorded in
+[`docs/deterministic-randomness.md`](docs/deterministic-randomness.md).
 
 ## Directory boundaries
 
