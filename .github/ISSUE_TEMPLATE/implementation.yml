@@ -1,0 +1,83 @@
+name: Implementation ticket
+description: Propose one dependency-aware implementation outcome
+title: "[M?-??] "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Keep one meaningful outcome per ticket. State what must exist and why without prescribing ticket-level implementation details.
+
+  - type: textarea
+    id: why
+    attributes:
+      label: Why
+      description: Explain the user, product, architectural, or delivery need.
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What
+      description: Describe the observable outcome, not a step-by-step implementation.
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: List observable conditions that demonstrate the outcome.
+      placeholder: "- [ ] Observable condition"
+    validations:
+      required: true
+
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints
+      description: State the product, architecture, compatibility, or delivery boundaries the outcome must preserve.
+    validations:
+      required: true
+
+  - type: textarea
+    id: non_goals
+    attributes:
+      label: Non-goals
+      description: Name adjacent work that this ticket intentionally excludes.
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: Link every actual blocker, or write "None" when the ticket is ready.
+      placeholder: "Blocked by #123"
+    validations:
+      required: true
+
+  - type: textarea
+    id: required_context
+    attributes:
+      label: Required context
+      description: Keep the core documents and add links to the exact roadmap and research sections needed for this outcome.
+      value: |
+        - [Product requirements](https://github.com/hvillanua/trigger-knight/blob/main/clean-room/PRD.md)
+        - [Technical design](https://github.com/hvillanua/trigger-knight/blob/main/clean-room/TDD.md)
+        - [Milestone roadmap](https://github.com/hvillanua/trigger-knight/blob/main/clean-room/TODO.md)
+        - Relevant behavioral research: <!-- replace with exact links, or explain why none applies -->
+    validations:
+      required: true
+
+  - type: textarea
+    id: delivery_evidence
+    attributes:
+      label: Delivery evidence
+      description: Leave these unchecked until the pull request supplies the evidence.
+      value: |
+        - [ ] Follow red-green-refactor for every behavior change.
+        - [ ] Record the failing test or check used to establish the change, when applicable.
+        - [ ] Run every repository validation command available at this stage and record the results in the pull request.
+    validations:
+      required: true
