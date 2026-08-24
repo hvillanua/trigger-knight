@@ -33,6 +33,14 @@ body:
       required: true
 
   - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints
+      description: State the product, architecture, compatibility, or delivery boundaries the outcome must preserve.
+    validations:
+      required: true
+
+  - type: textarea
     id: non_goals
     attributes:
       label: Non-goals
