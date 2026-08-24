@@ -30,3 +30,17 @@ the ruleset identity and current step count. It omits the run's seeded random
 state. State, results, events, event lists, and observations created by the
 engine are frozen so callers cannot mutate authoritative values through the
 returned object graph.
+
+## Minimal browser path
+
+The browser composition root creates the same `gameplayEngine` exported for
+other hosts. A browser gameplay session owns its current `RunState` and sends
+only `GameObservation` and `GameEvent` values through `PresentationPort`.
+Activating the "Advance run" control maps to an `advance` `GameCommand`, steps
+the shared engine, and presents the resulting observation and event.
+
+`CanvasPresentation` draws the current public step and emitted event with
+Canvas 2D. It retains the latest presentation frame so physical Canvas or
+device-pixel-ratio changes can redraw that frame without stepping or inspecting
+the engine. The browser session also accepts no presentation or a replacement
+port; both cases produce the same public engine result for the same commands.

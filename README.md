@@ -7,7 +7,7 @@ reimplementation.
 ## Browser project
 
 The implementation uses TypeScript, Vite, Canvas 2D, Vitest, and Playwright.
-Install the pinned toolchain and run the current foundation with:
+Install the pinned toolchain and run the minimal browser application with:
 
 ```sh
 npm ci

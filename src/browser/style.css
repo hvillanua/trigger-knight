@@ -53,3 +53,23 @@ canvas {
   border-radius: 0.5rem;
   box-shadow: 0 1rem 3rem rgb(0 0 0 / 45%);
 }
+
+#game-status {
+  margin: 1rem 0 0.75rem;
+}
+
+button {
+  padding: 0.65rem 1rem;
+  border: 1px solid #806d3f;
+  border-radius: 0.35rem;
+  color: #080b14;
+  background: #f4d58d;
+  font: inherit;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+button:focus-visible {
+  outline: 0.2rem solid #bac6df;
+  outline-offset: 0.2rem;
+}
