@@ -25,15 +25,16 @@ durable architecture live in [`clean-room/PRD.md`](clean-room/PRD.md) and
 Run validation from the repository root. Each concern has a stable,
 non-interactive command:
 
-| Concern                                            | Command                |
-| -------------------------------------------------- | ---------------------- |
-| Apply repository formatting                        | `npm run format`       |
-| Check repository formatting without changing files | `npm run format:check` |
-| Lint TypeScript and JavaScript                     | `npm run lint`         |
-| Type-check with native TypeScript 7                | `npm run typecheck`    |
-| Run unit tests                                     | `npm run test:unit`    |
-| Run browser tests                                  | `npm run test:browser` |
-| Build the production application                   | `npm run build`        |
+| Concern                                            | Command                      |
+| -------------------------------------------------- | ---------------------------- |
+| Apply repository formatting                        | `npm run format`             |
+| Check repository formatting without changing files | `npm run format:check`       |
+| Lint TypeScript and JavaScript                     | `npm run lint`               |
+| Check architecture and clean-room imports          | `npm run check:architecture` |
+| Type-check with native TypeScript 7                | `npm run typecheck`          |
+| Run unit tests                                     | `npm run test:unit`          |
+| Run browser tests                                  | `npm run test:browser`       |
+| Build the production application                   | `npm run build`              |
 
 Before committing, run the fast validation gate:
 
@@ -50,6 +51,9 @@ npm run validate
 TypeScript 7.0 and ESLint temporarily use side-by-side compiler packages. The
 removal condition and TODO are recorded in
 [`docs/dependency-baseline.md`](docs/dependency-baseline.md#temporary-typescript-6-compatibility).
+The allowed source layers, dependency directions, deterministic-domain API
+rules, and approved production-input locations are documented in
+[`docs/architecture-boundaries.md`](docs/architecture-boundaries.md).
 
 ## Directory boundaries
 

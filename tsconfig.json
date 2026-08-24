@@ -20,10 +20,12 @@
     "types": ["node"]
   },
   "include": [
+    "build",
     "src",
     "tests",
     "playwright.config.ts",
     "vite.config.ts",
     "vitest.config.ts"
-  ]
+  ],
+  "exclude": ["tests/architecture/fixtures"]
 }

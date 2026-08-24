@@ -26,6 +26,7 @@ Node 26.7.0 was the latest Current release at selection time. Node 24 was select
 | typescript-eslint                                      |  8.67.0 | Latest stable release; uses the supported TypeScript 6 compatibility API                               |
 | globals                                                | 17.11.0 | Latest stable release                                                                                  |
 | Prettier                                               |   3.9.6 | Latest stable release; prerelease version 4 was excluded                                               |
+| dependency-cruiser                                     |  18.2.0 | Latest stable release; enforces source-layer and clean-room dependency rules                           |
 
 Versions were checked against the Node.js release index, npm registry distribution tags, and package engine and peer-dependency metadata. Pre-release, beta, release-candidate, nightly, and `next` tags were excluded.
 
@@ -45,6 +46,7 @@ npm run dev
 npm run format
 npm run format:check
 npm run lint
+npm run check:architecture
 npm run typecheck
 npm run test:unit
 npm run test:browser
@@ -54,9 +56,9 @@ npm run validate
 ```
 
 `npm run validate:fast` is the pre-commit gate. It checks formatting, linting,
-types, and unit tests. `npm run validate` is the pre-push gate and adds browser
-tests and the production build. The aggregate commands invoke the same
-independent commands listed above.
+architecture, types, and unit tests. `npm run validate` is the pre-push gate and
+adds browser tests and the production build. The aggregate commands invoke the
+same independent commands listed above.
 
 ## Temporary TypeScript 6 compatibility
 

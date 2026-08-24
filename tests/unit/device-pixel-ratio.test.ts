@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { observeDevicePixelRatioChanges } from "../../src/device-pixel-ratio.js";
+import { observeDevicePixelRatioChanges } from "../../src/browser/device-pixel-ratio.js";
 
 describe("observeDevicePixelRatioChanges", () => {
   it("redraws and observes the new resolution after a DPR change", () => {

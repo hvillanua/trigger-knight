@@ -1,6 +1,6 @@
-import { drawFoundation, type CssDimensions } from "./foundation.js";
-import { observeDevicePixelRatioChanges } from "./device-pixel-ratio.js";
-import "./style.css";
+import { observeDevicePixelRatioChanges } from "./browser/device-pixel-ratio.js";
+import { drawFoundation, type CssDimensions } from "./browser/foundation.js";
+import "./browser/style.css";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
 
