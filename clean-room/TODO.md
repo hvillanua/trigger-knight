@@ -53,7 +53,7 @@ This milestone establishes:
 - the public run configuration, state-transition, command, event, observation, presentation, policy, and simulation boundaries;
 - a serializable minimal run state with ruleset identity and explicit seeded randomness state;
 - one deterministic state transition developed test-first;
-- a minimal Canvas presentation consuming `GameView` through the presentation boundary;
+- a minimal Canvas presentation consuming `GameObservation` through the presentation boundary;
 - a minimal headless policy and finite simulation run consuming the same engine;
 - structured development/test visibility into current state and emitted events;
 - browser/headless parity for the same initial state and command sequence.
@@ -61,6 +61,7 @@ This milestone establishes:
 ### Complete when
 
 - the browser and simulator demonstrably call the same gameplay implementation;
+- browser presentation and ordinary player policies receive the same public observation and event sequence;
 - identical inputs reproduce identical state and result hashes;
 - a non-progressing policy terminates at its configured step limit;
 - the minimal state can be serialized, restored, and advanced without changing its outcome;

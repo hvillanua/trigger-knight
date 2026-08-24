@@ -19,10 +19,10 @@ Use a TypeScript modular application with a pure gameplay domain and adapters ar
 ```text
                     +-----------------------+
                     | Browser presentation  |
-                    | view/input/sound/store|
+                    | observation/input/etc |
                     +-----------+-----------+
                                 |
-                         commands/views/events
+                     commands/observations/events
                                 |
 +-------------------+    +------v---------+
 | Simulation runner |--->| Application API|
@@ -65,20 +65,19 @@ interface GameplayEngine {
   createRun(config: RunConfig): RunState;
   step(state: Readonly<RunState>, commands: readonly GameCommand[]): StepResult;
   observe(state: Readonly<RunState>): GameObservation;
-  view(state: Readonly<RunState>): GameView;
 }
 ```
 
 `step()` is a deterministic state transition for one 30 Hz logical opportunity. Commands express gameplay intent, such as buying, using an item, pausing, or dismissing a tutorial; they never contain device-specific input. Gates may prevent active gameplay systems from advancing while still allowing commands to be processed.
 
-`GameEvent` reports authoritative outcomes such as encounter changes, damage, purchases, rewards, achievements, and death. `GameObservation` exposes the gameplay information available to an automated player, while `GameView` is the read-only world and HUD model exposed to presentation. Neither exposes mutable domain state. `RunState` includes the explicit randomness state needed for deterministic transitions. Complete runs are reproduced from their initial inputs and policy; mid-run checkpoint restoration is not required.
+`GameObservation` is the single read-only public gameplay model exposed to browser presentation, input adapters, and automated player policies. It contains all and only current public gameplay state and action eligibility. `GameEvent` reports authoritative public outcomes such as encounter changes, damage, purchases, rewards, achievements, and death. Each consumer may ignore observation fields or events it does not use. Engine hosts carry `RunState` for stepping and checkpoints, but player-facing consumers must not inspect its hidden mechanics or randomness state when presenting information or choosing commands. Complete runs are reproduced from their initial inputs and policy; mid-run checkpoint restoration is not required.
 
 ### Presentation boundary
 
 ```ts
 interface PresentationFrame {
-  previous: Readonly<GameView>;
-  current: Readonly<GameView>;
+  previous: Readonly<GameObservation>;
+  current: Readonly<GameObservation>;
   interpolation: number;
   events: readonly GameEvent[];
 }
@@ -88,7 +87,7 @@ interface PresentationPort {
 }
 ```
 
-The presentation may interpolate between views, but only `current` is authoritative for displayed values and action eligibility. Visual animation never calls gameplay rules or decides when damage, purchases, rewards, or other domain transitions occur.
+The presentation may interpolate between observations, but only `current` is authoritative for displayed values and action eligibility. Visual animation never calls gameplay rules or decides when damage, purchases, rewards, or other domain transitions occur.
 
 Input adapters translate pointer, touch, keyboard, or future devices into `GameCommand` values. A sound-effects adapter maps domain events and UI actions to semantic cues without putting file paths or playback operations in the domain. Background music is outside the initial scope; a future music controller can observe application or screen lifecycle without changing gameplay contracts or deterministic state.
 
@@ -104,7 +103,10 @@ interface PolicyDescriptor {
 }
 
 interface PlayerAgent {
-  decide(observation: GameObservation): readonly GameCommand[];
+  decide(
+    observation: Readonly<GameObservation>,
+    events: readonly GameEvent[],
+  ): readonly GameCommand[];
 }
 
 interface PlayerPolicy {
@@ -146,7 +148,9 @@ interface SimulationRunner {
 
 The policy descriptor contains a stable identity, an implementation version, and all normalized serializable configuration that can affect decisions. Changing policy behavior or configuration creates a different experiment. `PolicyConfig` is the policy-specific normalized configuration; its concrete representation is selected with the policy implementation.
 
-`createAgent()` returns a fresh agent for every run. An agent may keep private memory during that run, but no mutable state is shared between runs. Starting from a fresh agent, the same observation sequence must produce the same command sequence without ambient randomness, wall-clock input, worker identity, or batch-order dependence. If a future policy intentionally uses randomness, its explicit policy seed becomes part of the experiment inputs and remains separate from gameplay randomness.
+`createAgent()` returns a fresh agent for every run. An agent may keep private memory during that run, but no mutable state is shared between runs. For each decision, the agent receives the current public observation and the events emitted by the preceding step; the initial decision receives an empty event list. Browser presentation receives the same observation and event sequence. Starting from a fresh agent, the same observation and event sequence must produce the same command sequence without ambient randomness, wall-clock input, worker identity, or batch-order dependence. If a future policy intentionally uses randomness, its explicit policy seed becomes part of the experiment inputs and remains separate from gameplay randomness.
+
+A distinct observation model for privileged, diagnostic, or otherwise specialized automated agents is deferred. It may be introduced behind a separately named boundary only when a concrete requirement demonstrates that the shared public observation is insufficient. Ordinary `PlayerPolicy` implementations continue to receive the same public gameplay information as browser players.
 
 Every simulation requires a positive finite `maxSteps`. The budget counts every engine step, including paused or tutorial-gated steps, so a non-progressing policy cannot block a batch indefinitely. Reaching the budget returns `step-limit`; it is a runner termination, not a gameplay death.
 
@@ -197,11 +201,11 @@ The original Flash random sequence is unknown, so compatibility targets the conf
 
 | Option        | Assessment                                                                                                                                               | Decision                                                                                                              |
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| **Canvas 2D** | Directly supports the required 2D drawing, camera transforms, scaling, and drawing of interpolated views with a small runtime and dependency surface     | **Selected for the initial renderer**                                                                                 |
+| **Canvas 2D** | Directly supports the required 2D drawing, camera transforms, scaling, and drawing of interpolated frames with a small runtime and dependency surface    | **Selected for the initial renderer**                                                                                 |
 | PixiJS        | Adds a capable WebGL renderer, sprite batching, and richer display-object tooling, but that machinery is not yet required by the small fixed scene       | Keep as a renderer replacement if measured visual or performance needs justify it                                     |
 | Phaser        | Adds scenes, input, animation, physics, and a game loop, much of which overlaps the application and deterministic-engine boundaries already defined here | Do not adopt initially; reconsider only if future presentation requirements outweigh the additional framework surface |
 
-Canvas 2D is selected because the initial rendering problem is modest and the main technical risk is gameplay correctness rather than rendering throughput. It also makes the separation between the authoritative engine and presentation explicit. Canvas remains behind `PresentationPort`, so choosing it now does not prevent a later PixiJS, Phaser, or other presentation adapter from consuming the same views and events.
+Canvas 2D is selected because the initial rendering problem is modest and the main technical risk is gameplay correctness rather than rendering throughput. It also makes the separation between the authoritative engine and presentation explicit. Canvas remains behind `PresentationPort`, so choosing it now does not prevent a later PixiJS, Phaser, or other presentation adapter from consuming the same observations and events.
 
 ### Testing frameworks
 
@@ -216,7 +220,8 @@ Implementation work must provide evidence that:
 
 - confirmed gameplay behavior and known gameplay-affecting quirks match the research specification;
 - identical complete inputs reproduce identical state, results, and trace hashes;
-- fresh agents given the same observation sequence produce the same command sequence;
+- browser presentation and ordinary player policies receive the same public observation and event sequence;
+- fresh agents given the same observation and event sequence produce the same command sequence;
 - retained simulation requests and run-result identifiers preserve the complete inputs needed to distinguish and reproduce runs;
 - browser play and headless simulation use the same gameplay engine;
 - presentation changes, output resolution, render rate, and input adapter do not change domain outcomes;

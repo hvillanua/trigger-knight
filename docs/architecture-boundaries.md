@@ -18,6 +18,15 @@ Browser, persistence, sound, and simulation are peer adapters. They do not
 import one another. Cross-adapter behavior is expressed through application or
 domain contracts and wired in `src/main.ts`.
 
+## Public application contracts
+
+Browser and headless consumers share the type-only public surface exported by
+`src/application/contracts.ts`. Domain-owned run, command, event, and shared
+player-observation values live in `src/domain/contracts.ts`; gameplay engine,
+presentation, policy, and simulation ports live in the application layer. This
+keeps adapter and device concepts out of domain-facing values while ensuring
+browser and automated players receive the same public gameplay information.
+
 ## Authoritative domain restrictions
 
 Domain state transitions receive every varying input explicitly. ESLint rejects
