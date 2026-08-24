@@ -56,7 +56,16 @@ behavior, commands, boundaries, or an explicit compatibility decision changes.
 
 ## Validation commands
 
-Run commands from the repository root after `npm ci`:
+Run commands from the repository root. On a fresh checkout, install locked
+dependencies and Chromium first:
+
+```sh
+npm ci
+npm run setup:browser
+```
+
+On a fresh Linux or CI host that also needs Chromium system dependencies, use
+`npm run setup:browser -- --with-deps` instead of the second command.
 
 | Purpose                                   | Command                      |
 | ----------------------------------------- | ---------------------------- |
