@@ -12,12 +12,11 @@
   <body>
     <main class="foundation">
       <h1>Trigger Knight</h1>
-      <p class="status" data-testid="foundation-status">
-        Project foundation ready
-      </p>
       <canvas id="game-canvas" role="img" aria-label="Trigger Knight game view">
         Trigger Knight requires a browser with Canvas 2D support.
       </canvas>
+      <p class="status" id="game-status" data-testid="game-status">Step 0</p>
+      <button id="advance-run" type="button">Advance run</button>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>

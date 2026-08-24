@@ -6,10 +6,6 @@ test("loads the browser and Canvas foundation", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Trigger Knight" }),
   ).toBeVisible();
-  await expect(page.getByTestId("foundation-status")).toHaveText(
-    "Project foundation ready",
-  );
-
   const canvas = page.getByRole("img", { name: "Trigger Knight game view" });
   await expect(canvas).toBeVisible();
   await expect(canvas).toHaveAttribute("data-renderer", "canvas-2d");
