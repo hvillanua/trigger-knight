@@ -71,6 +71,11 @@ describe("architectural dependency rules", () => {
       "forbidden-composition-root",
       "layers-do-not-depend-on-composition-root",
     ],
+    [
+      "an outward type-only dependency",
+      "forbidden-type-only",
+      "domain-does-not-depend-outward",
+    ],
   ])("rejects %s", (_description, fixture, rule) => {
     const result = cruiseFixture(fixture);
 
@@ -85,6 +90,10 @@ describe("authoritative domain API rules", () => {
     ["wall-clock time", "export const now = Date.now();"],
     ["browser APIs", "export const title = document.title;"],
     ["browser storage", "export const saved = localStorage.length;"],
+    ["unlisted browser observers", "export const observer = ResizeObserver;"],
+    ["unlisted browser file APIs", "export const reader = FileReader;"],
+    ["unlisted Node paths", "export const directory = __dirname;"],
+    ["unlisted Node scheduling", "export const schedule = setImmediate;"],
   ])("rejects %s", (_description, source) => {
     const result = lintDomain(source);
 

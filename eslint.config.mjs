@@ -23,6 +23,22 @@ const productionImportRestrictions = [
   },
 ];
 
+const domainRestrictedGlobals = [
+  ...new Set([
+    ...Object.keys(globals.browser),
+    ...Object.keys(globals.node),
+    "Date",
+    "globalThis",
+  ]),
+]
+  .filter(
+    (name) =>
+      !Object.hasOwn(globals.builtin, name) ||
+      name === "Date" ||
+      name === "globalThis",
+  )
+  .sort();
+
 const unclassifiedSourcePlugin = {
   rules: {
     "reject-unclassified-module": {
@@ -102,35 +118,7 @@ export default defineConfig(
     rules: {
       "no-restricted-globals": [
         "error",
-        ...[
-          "Audio",
-          "AudioContext",
-          "BroadcastChannel",
-          "Date",
-          "SharedWorker",
-          "WebSocket",
-          "Worker",
-          "XMLHttpRequest",
-          "Buffer",
-          "caches",
-          "cancelAnimationFrame",
-          "crypto",
-          "document",
-          "fetch",
-          "global",
-          "globalThis",
-          "indexedDB",
-          "localStorage",
-          "location",
-          "navigator",
-          "performance",
-          "process",
-          "requestAnimationFrame",
-          "sessionStorage",
-          "setInterval",
-          "setTimeout",
-          "window",
-        ].map((name) => ({
+        ...domainRestrictedGlobals.map((name) => ({
           name,
           message:
             "Authoritative domain code must receive host state through an explicit input.",

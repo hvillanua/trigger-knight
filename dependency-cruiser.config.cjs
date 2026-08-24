@@ -13,7 +13,7 @@ module.exports = {
       severity: "error",
       comment: "Every production dependency must resolve during validation.",
       from: { path: "(^|/)src/" },
-      to: { couldNotResolve: true },
+      to: { couldNotResolve: true, pathNot: "^vite/client$" },
     },
     {
       name: "layers-do-not-depend-on-composition-root",
@@ -102,6 +102,7 @@ module.exports = {
   ],
   options: {
     doNotFollow: { path: "node_modules" },
+    tsPreCompilationDeps: true,
     enhancedResolveOptions: {
       extensions: [".js", ".mjs", ".cjs", ".ts", ".mts", ".cts", ".json"],
     },
