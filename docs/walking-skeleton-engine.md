@@ -9,10 +9,10 @@ tutorials, encounters, and combat remain deferred to their roadmap milestones.
 
 `gameplayEngine.createRun(config)` creates a serializable run with `steps` set
 to zero. `walking-skeleton-v1` is the only supported ruleset identity at this
-stage. `createRun` rejects any other identity instead of labeling the temporary
-transition as another ruleset. Each `gameplayEngine.step(state, commands)` call
-returns a new state whose `steps` value is one greater and one authoritative
-event:
+stage. `createRun`, `step`, and `observe` reject any other identity instead of
+labeling the temporary transition or its observation as another ruleset. Each
+`gameplayEngine.step(state, commands)` call returns a new state whose `steps`
+value is one greater and one authoritative event:
 
 ```json
 {

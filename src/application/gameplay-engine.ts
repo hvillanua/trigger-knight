@@ -10,6 +10,12 @@ import { advanceRunState, createRunState } from "../domain/run-state.js";
 
 export const WALKING_SKELETON_RULESET_ID = "walking-skeleton-v1" as const;
 
+function assertSupportedRuleset(ruleset: RuleSetId): void {
+  if (ruleset !== WALKING_SKELETON_RULESET_ID) {
+    throw new RangeError(`Unsupported ruleset "${ruleset}"`);
+  }
+}
+
 export interface RunConfig {
   readonly ruleset: RuleSetId;
   readonly seed: string;
@@ -31,14 +37,14 @@ export interface GameplayEngine {
 /** Stateless gameplay implementation shared by every future host adapter. */
 export const gameplayEngine: GameplayEngine = Object.freeze({
   createRun(config: RunConfig): RunState {
-    if (config.ruleset !== WALKING_SKELETON_RULESET_ID) {
-      throw new RangeError(`Unsupported ruleset "${config.ruleset}"`);
-    }
+    assertSupportedRuleset(config.ruleset);
 
     return createRunState(config.ruleset, config.seed);
   },
 
   step(state: Readonly<RunState>): StepResult {
+    assertSupportedRuleset(state.ruleset);
+
     const nextState = advanceRunState(state);
     const event: GameEvent = Object.freeze({
       type: "step-advanced",
@@ -52,6 +58,8 @@ export const gameplayEngine: GameplayEngine = Object.freeze({
   },
 
   observe(state: Readonly<RunState>): GameObservation {
+    assertSupportedRuleset(state.ruleset);
+
     return Object.freeze({
       ruleset: state.ruleset,
       steps: state.steps,

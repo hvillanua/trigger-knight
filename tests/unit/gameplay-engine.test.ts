@@ -7,6 +7,7 @@ import {
 import type {
   GameCommand,
   RunConfig,
+  RunState,
 } from "../../src/application/contracts.js";
 
 const config: RunConfig = Object.freeze({
@@ -14,6 +15,13 @@ const config: RunConfig = Object.freeze({
   seed: "engine-seed",
   initialProfile: Object.freeze({ schemaVersion: 1 }),
 });
+
+function createUnsupportedState(): RunState {
+  return Object.freeze({
+    ...gameplayEngine.createRun(config),
+    ruleset: "original-v1.3",
+  });
+}
 
 describe("gameplay engine", () => {
   it("rejects a ruleset identity with no matching implementation", () => {
@@ -23,6 +31,18 @@ describe("gameplay engine", () => {
         ruleset: "original-v1.3",
       }),
     ).toThrowError('Unsupported ruleset "original-v1.3"');
+  });
+
+  it("rejects an unsupported ruleset before stepping restored state", () => {
+    expect(() =>
+      gameplayEngine.step(createUnsupportedState(), []),
+    ).toThrowError('Unsupported ruleset "original-v1.3"');
+  });
+
+  it("rejects an unsupported ruleset before observing restored state", () => {
+    expect(() => gameplayEngine.observe(createUnsupportedState())).toThrowError(
+      'Unsupported ruleset "original-v1.3"',
+    );
   });
 
   it("creates and observes a minimal run without exposing hidden state", () => {
