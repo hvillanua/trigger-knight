@@ -57,7 +57,8 @@ describe("headless simulation runner", () => {
       schemaVersion: 1,
       ruleset: WALKING_SKELETON_RULESET_ID,
       seed: "simulation-seed",
-      initialProfileFingerprint: "fnv1a32-v1:72a0b763",
+      initialProfileFingerprint:
+        "sha256-v1:0e9561cfb83d50990a103b3896fe249a11fe27fa28985448187f93ec12116d72",
       policy: {
         id: "non-progressing",
         version: "1",
@@ -71,7 +72,8 @@ describe("headless simulation runner", () => {
       day: 0,
       distance: 0,
       gold: 0,
-      traceHash: "fnv1a32-v1:5e2a0205",
+      traceHash:
+        "sha256-v1:c5a05b121c77afd0f2a22be8a5eba8a4ed33f52bd64e2daa2dcf34a463df9399",
       metrics: {},
     });
     expect(Object.isFrozen(result)).toBe(true);
@@ -173,6 +175,32 @@ describe("headless simulation runner", () => {
       first.initialProfileFingerprint,
     );
     expect(second.traceHash).toBe(first.traceHash);
+  });
+
+  it("distinguishes profiles that collide under the former 32-bit fingerprint", () => {
+    const runner = createSimulationRunner(gameplayEngine);
+    const firstProfile = { schemaVersion: 1, nonce: 51_828 };
+    const secondProfile = { schemaVersion: 1, nonce: 301_880 };
+    const first = runner.run(
+      request(nonProgressingPolicy, {
+        config: {
+          ...config,
+          initialProfile: firstProfile,
+        },
+      }),
+    );
+    const second = runner.run(
+      request(nonProgressingPolicy, {
+        config: {
+          ...config,
+          initialProfile: secondProfile,
+        },
+      }),
+    );
+
+    expect(second.initialProfileFingerprint).not.toBe(
+      first.initialProfileFingerprint,
+    );
   });
 
   it("returns batch results in request order without sharing run state", async () => {

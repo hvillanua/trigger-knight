@@ -1,5 +1,4 @@
-const FNV_OFFSET_BASIS = 0x811c9dc5;
-const FNV_PRIME = 0x01000193;
+import { createHash } from "node:crypto";
 
 export type CanonicalJsonValue =
   | boolean
@@ -72,25 +71,17 @@ export function stringifyCanonicalJson(value: unknown): string {
   return JSON.stringify(normalizeCanonicalJson(value));
 }
 
-function updateHash(hash: number, text: string): number {
-  let updated = hash;
-
-  for (const byte of new TextEncoder().encode(text)) {
-    updated = Math.imul(updated ^ byte, FNV_PRIME) >>> 0;
-  }
-
-  return updated;
-}
-
-function formatHash(hash: number): string {
-  return `fnv1a32-v1:${hash.toString(16).padStart(8, "0")}`;
+function formatHash(hash: string): string {
+  return `sha256-v1:${hash}`;
 }
 
 /** Produces a versioned hash of one canonical JSON value. */
 export function fingerprintCanonicalJson(value: unknown): string {
-  return formatHash(
-    updateHash(FNV_OFFSET_BASIS, stringifyCanonicalJson(value)),
-  );
+  const hash = createHash("sha256")
+    .update(stringifyCanonicalJson(value), "utf8")
+    .digest("hex");
+
+  return formatHash(hash);
 }
 
 export interface CanonicalTraceHasher {
@@ -100,16 +91,22 @@ export interface CanonicalTraceHasher {
 
 /** Hashes a sequence of length-delimited canonical JSON records. */
 export function createCanonicalTraceHasher(): CanonicalTraceHasher {
-  let hash = FNV_OFFSET_BASIS;
+  const hash = createHash("sha256");
+  let digest: string | undefined;
 
   return Object.freeze({
     add(value: unknown): void {
+      if (digest !== undefined) {
+        throw new Error("Cannot add records after reading a trace digest");
+      }
+
       const record = stringifyCanonicalJson(value);
-      hash = updateHash(hash, `${record.length}:`);
-      hash = updateHash(hash, record);
+      hash.update(`${record.length}:`, "utf8");
+      hash.update(record, "utf8");
     },
     digest(): string {
-      return formatHash(hash);
+      digest ??= formatHash(hash.digest("hex"));
+      return digest;
     },
   });
 }

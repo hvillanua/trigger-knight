@@ -39,16 +39,17 @@ sorts object keys recursively, retains array order, normalizes negative zero,
 and rejects non-finite numbers, cycles, and non-JSON values. Result-owned policy
 configuration and metrics are frozen copies, not live policy objects.
 
-Fingerprints use FNV-1a over the UTF-8 bytes of canonical JSON and carry the
-`fnv1a32-v1` prefix. The trace uses the same hash and covers:
+Fingerprints use SHA-256 over the UTF-8 bytes of canonical JSON and carry the
+`sha256-v1` prefix. The trace uses the same digest and covers:
 
 - the full normalized run inputs;
 - the initial observation and authoritative state;
 - every command list, emitted event list, resulting observation, and resulting
   authoritative state.
 
-This hash is a compact deterministic identity, not a security or collision
-resistance guarantee.
+SHA-256 makes accidental collisions between experiment inputs impractical. The
+versioned prefix allows a later digest or canonicalization change to remain
+distinguishable from existing results.
 
 ## Minimal batches
 
