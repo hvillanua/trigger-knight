@@ -66,6 +66,11 @@ describe("architectural dependency rules", () => {
       "forbidden-runtime",
       "domain-does-not-use-runtime-builtins",
     ],
+    [
+      "an inward dependency on the composition root",
+      "forbidden-composition-root",
+      "layers-do-not-depend-on-composition-root",
+    ],
   ])("rejects %s", (_description, fixture, rule) => {
     const result = cruiseFixture(fixture);
 

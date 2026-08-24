@@ -16,6 +16,16 @@ module.exports = {
       to: { couldNotResolve: true },
     },
     {
+      name: "layers-do-not-depend-on-composition-root",
+      severity: "error",
+      comment:
+        "The composition root wires layers together; no production layer may import it.",
+      from: {
+        path: "(^|/)src/(domain|application|browser|persistence|sound|simulation|assets|generated)/",
+      },
+      to: { path: "(^|/)src/main\\.ts$" },
+    },
+    {
       name: "domain-does-not-depend-outward",
       severity: "error",
       comment: "Authoritative domain code is the innermost layer.",
