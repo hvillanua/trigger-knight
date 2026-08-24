@@ -1,8 +1,12 @@
 Closes #<!-- ticket number -->
 
-## Outcome
+## Why
 
-<!-- Describe the delivered outcome and why it is needed. Keep implementation detail proportional to review needs. -->
+<!-- Explain the problem or need this pull request addresses and why the change is necessary. Do not describe the implementation here. -->
+
+## What
+
+<!-- Describe the concrete changes delivered by this pull request, including important scope boundaries. Keep implementation detail proportional to review needs. -->
 
 ## Acceptance criteria
 

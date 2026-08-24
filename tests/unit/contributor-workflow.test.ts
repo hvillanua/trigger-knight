@@ -89,6 +89,9 @@ describe("contribution templates", () => {
     const template = readRepositoryFile(".github/pull_request_template.md");
 
     expect(template).toMatch(/(?:close[sd]?|fixe?[sd]?|resolve[sd]?)\s+#/iu);
+    expect(template).toContain("## Why");
+    expect(template).toContain("## What");
+    expect(template).not.toContain("## Outcome");
     expect(template).toContain("## Red-green-refactor evidence");
     expect(template).toContain("### Red");
     expect(template).toContain("### Green");
