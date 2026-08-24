@@ -21,11 +21,11 @@ domain contracts and wired in `src/main.ts`.
 ## Public application contracts
 
 Browser and headless consumers share the type-only public surface exported by
-`src/application/contracts.ts`. Domain-owned run, command, event, observation,
-and view values live in `src/domain/contracts.ts`; gameplay engine,
+`src/application/contracts.ts`. Domain-owned run, command, event, and shared
+player-observation values live in `src/domain/contracts.ts`; gameplay engine,
 presentation, policy, and simulation ports live in the application layer. This
-keeps adapter and device concepts out of domain-facing values while allowing
-each adapter to depend on the same API.
+keeps adapter and device concepts out of domain-facing values while ensuring
+browser and automated players receive the same public gameplay information.
 
 ## Authoritative domain restrictions
 

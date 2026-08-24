@@ -1,5 +1,6 @@
 import type {
   GameCommand,
+  GameEvent,
   GameObservation,
   RuleSetId,
 } from "../domain/contracts.js";
@@ -23,7 +24,10 @@ export interface PolicyDescriptor {
 }
 
 export interface PlayerAgent {
-  decide(observation: GameObservation): readonly GameCommand[];
+  decide(
+    observation: Readonly<GameObservation>,
+    events: readonly GameEvent[],
+  ): readonly GameCommand[];
 }
 
 export interface PlayerPolicy {

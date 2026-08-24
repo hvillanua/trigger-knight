@@ -1,8 +1,8 @@
-import type { GameEvent, GameView } from "../domain/contracts.js";
+import type { GameEvent, GameObservation } from "../domain/contracts.js";
 
 export interface PresentationFrame {
-  readonly previous: Readonly<GameView>;
-  readonly current: Readonly<GameView>;
+  readonly previous: Readonly<GameObservation>;
+  readonly current: Readonly<GameObservation>;
   readonly interpolation: number;
   readonly events: readonly GameEvent[];
 }

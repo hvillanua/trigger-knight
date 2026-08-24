@@ -21,12 +21,7 @@ export interface GameEvent {
   readonly type: string;
 }
 
-/** Read-only gameplay information available to an automated player. */
+/** Public gameplay information shared by browser and automated players. */
 export interface GameObservation {
-  readonly ruleset: RuleSetId;
-}
-
-/** Read-only world and HUD model available to presentation adapters. */
-export interface GameView {
   readonly ruleset: RuleSetId;
 }

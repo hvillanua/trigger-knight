@@ -2,7 +2,6 @@ export type {
   GameCommand,
   GameEvent,
   GameObservation,
-  GameView,
   ProfileState,
   RuleSetId,
   RunState,

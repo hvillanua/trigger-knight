@@ -4,7 +4,6 @@ import type {
   GameCommand,
   GameEvent,
   GameObservation,
-  GameView,
   GameplayEngine,
   PlayerAgent,
   PlayerPolicy,
@@ -37,6 +36,9 @@ describe("public application contracts", () => {
     expectTypeOf<BrowserConsumer["engine"]>().toEqualTypeOf<
       SimulationConsumer["engine"]
     >();
+    expectTypeOf<keyof GameplayEngine>().toEqualTypeOf<
+      "createRun" | "step" | "observe"
+    >();
     expectTypeOf<GameplayEngine["createRun"]>().toEqualTypeOf<
       (config: RunConfig) => RunState
     >();
@@ -49,16 +51,13 @@ describe("public application contracts", () => {
     expectTypeOf<GameplayEngine["observe"]>().toEqualTypeOf<
       (state: Readonly<RunState>) => GameObservation
     >();
-    expectTypeOf<GameplayEngine["view"]>().toEqualTypeOf<
-      (state: Readonly<RunState>) => GameView
-    >();
     expectTypeOf<StepResult["events"]>().toEqualTypeOf<readonly GameEvent[]>();
   });
 
-  it("keeps presentation read-only and downstream of gameplay", () => {
+  it("gives presentation the shared read-only game observation", () => {
     expectTypeOf<PresentationFrame>().toMatchTypeOf<{
-      readonly previous: Readonly<GameView>;
-      readonly current: Readonly<GameView>;
+      readonly previous: Readonly<GameObservation>;
+      readonly current: Readonly<GameObservation>;
       readonly interpolation: number;
       readonly events: readonly GameEvent[];
     }>();
@@ -74,7 +73,16 @@ describe("public application contracts", () => {
       readonly config: PolicyConfig;
     }>();
     expectTypeOf<PlayerAgent["decide"]>().toEqualTypeOf<
-      (observation: GameObservation) => readonly GameCommand[]
+      (
+        observation: Readonly<GameObservation>,
+        events: readonly GameEvent[],
+      ) => readonly GameCommand[]
+    >();
+    expectTypeOf<Parameters<PlayerAgent["decide"]>[0]>().toEqualTypeOf<
+      PresentationFrame["current"]
+    >();
+    expectTypeOf<Parameters<PlayerAgent["decide"]>[1]>().toEqualTypeOf<
+      PresentationFrame["events"]
     >();
     expectTypeOf<PlayerPolicy["createAgent"]>().toEqualTypeOf<
       () => PlayerAgent
