@@ -15,6 +15,7 @@ export type {
   StepAdvancedEvent,
   TogglePauseCommand,
   TutorialDismissedEvent,
+  WorldCamera,
 } from "../domain/contracts.js";
 export type {
   GameplayEngine,

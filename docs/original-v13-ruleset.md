@@ -62,13 +62,17 @@ confirmed level-1 starting profile supplies `1.0`; the run does not derive
 `1.1` from the profile level. The multiplier remains in authoritative run state
 for checkpoint replay but is not part of `GameObservation`. Public observation
 includes movement speed, distance, day, and score for presentation and ordinary
-policies. The headless result copies score, day, and distance from the same
-state.
+policies. It also includes the ruleset's initial 480x320-world-unit camera so
+presentation does not need access to ruleset internals or `RunState`. The
+headless result copies score, day, and distance from the same state.
 
 Tutorial, pregame, pause, and ended gates leave all four progression values
 unchanged. They also prevent `activeTicks` from advancing. These values use
 abstract world units and accept no Canvas size, CSS size, device-pixel-ratio,
 render interpolation, or wall-clock input.
+
+The browser projection and the distinction between world and physical values
+are documented in [`world-camera.md`](world-camera.md).
 
 ## Tutorial and pregame compatibility
 

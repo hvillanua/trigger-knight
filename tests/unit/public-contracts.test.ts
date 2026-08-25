@@ -177,6 +177,12 @@ describe("public application contracts", () => {
     }>();
     expectTypeOf<GameObservation>().toMatchTypeOf<{
       readonly ruleset: RuleSetId;
+      readonly camera: {
+        readonly x: number;
+        readonly y: number;
+        readonly width: number;
+        readonly height: number;
+      };
       readonly steps: number;
       readonly activeTicks: number;
       readonly movementSpeed: number;

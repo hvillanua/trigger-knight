@@ -71,6 +71,12 @@ describe("gameplay engine", () => {
     });
     expect(observation).toEqual({
       ruleset: "original-v1.3",
+      camera: {
+        x: 0,
+        y: 0,
+        width: 480,
+        height: 320,
+      },
       steps: 0,
       activeTicks: 0,
       movementSpeed: 0,
@@ -94,6 +100,7 @@ describe("gameplay engine", () => {
     expect(Object.isFrozen(state)).toBe(true);
     expect(Object.isFrozen(state.random)).toBe(true);
     expect(Object.isFrozen(observation)).toBe(true);
+    expect(Object.isFrozen(observation.camera)).toBe(true);
   });
 
   it("repeats one authoritative transition without mutating its inputs", () => {
@@ -127,6 +134,12 @@ describe("gameplay engine", () => {
     ]);
     expect(gameplayEngine.observe(first.state)).toEqual({
       ruleset: "original-v1.3",
+      camera: {
+        x: 0,
+        y: 0,
+        width: 480,
+        height: 320,
+      },
       steps: 1,
       activeTicks: 0,
       movementSpeed: 0,

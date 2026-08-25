@@ -64,6 +64,8 @@ are recorded in
 The `original-v1.3` registry, owned constants, current deterministic transition,
 and public observation are recorded in
 [`docs/original-v13-ruleset.md`](docs/original-v13-ruleset.md).
+The 480x320 world camera, letterboxed Canvas projection, and redraw boundary are
+recorded in [`docs/world-camera.md`](docs/world-camera.md).
 The finite programmatic runner, policy sequence, result identity, and minimal
 batch behavior are recorded in
 [`docs/headless-simulation.md`](docs/headless-simulation.md).

@@ -37,6 +37,12 @@ describe("browser gameplay session", () => {
     expect(presentedResult).toEqual({
       observation: {
         ruleset: ORIGINAL_V13_RULESET_ID,
+        camera: {
+          x: 0,
+          y: 0,
+          width: 480,
+          height: 320,
+        },
         steps: 1,
         activeTicks: 0,
         movementSpeed: 0,
@@ -61,6 +67,12 @@ describe("browser gameplay session", () => {
     expect(present).toHaveBeenLastCalledWith({
       previous: {
         ruleset: ORIGINAL_V13_RULESET_ID,
+        camera: {
+          x: 0,
+          y: 0,
+          width: 480,
+          height: 320,
+        },
         steps: 0,
         activeTicks: 0,
         movementSpeed: 0,
@@ -81,6 +93,12 @@ describe("browser gameplay session", () => {
       },
       current: {
         ruleset: ORIGINAL_V13_RULESET_ID,
+        camera: {
+          x: 0,
+          y: 0,
+          width: 480,
+          height: 320,
+        },
         steps: 1,
         activeTicks: 0,
         movementSpeed: 0,
@@ -102,5 +120,35 @@ describe("browser gameplay session", () => {
       interpolation: 1,
       events: [{ type: "step-advanced", step: 1 }],
     });
+  });
+
+  it("re-presents one transition at different interpolation values without stepping", () => {
+    const present = vi.fn<(frame: PresentationFrame) => void>();
+    const session = createBrowserGameplaySession(gameplayEngine, config, {
+      present,
+    });
+    session.dispatch([]);
+    const traceBeforePresentation = session.readDiagnostics();
+
+    session.render(0);
+    session.render(0.5);
+    session.render(1);
+
+    expect(session.readDiagnostics()).toEqual(traceBeforePresentation);
+    expect(
+      present.mock.calls.slice(-3).map(([frame]) => ({
+        interpolation: frame.interpolation,
+        previous: frame.previous,
+        current: frame.current,
+        events: frame.events,
+      })),
+    ).toEqual(
+      [0, 0.5, 1].map((interpolation) => ({
+        interpolation,
+        previous: traceBeforePresentation.checkpoints[0]?.observation,
+        current: traceBeforePresentation.checkpoints[1]?.observation,
+        events: traceBeforePresentation.checkpoints[1]?.events,
+      })),
+    );
   });
 });

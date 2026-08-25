@@ -5,6 +5,7 @@ import type {
   ProfileState,
   RuleSetId,
   RunState,
+  WorldCamera,
 } from "./contracts.js";
 import { RANDOM_ALGORITHM } from "./random.js";
 import { advanceRunningProgression } from "./running-progression.js";
@@ -36,8 +37,7 @@ export interface RuleSetConstants {
   };
   readonly world: {
     readonly originalStageUnitsPerWorldUnit: number;
-    readonly initialCameraWidth: number;
-    readonly initialCameraHeight: number;
+    readonly initialCamera: WorldCamera;
   };
 }
 
@@ -92,8 +92,12 @@ const originalV13Constants: RuleSetConstants = Object.freeze({
   }),
   world: Object.freeze({
     originalStageUnitsPerWorldUnit: 1,
-    initialCameraWidth: 480,
-    initialCameraHeight: 320,
+    initialCamera: Object.freeze({
+      x: 0,
+      y: 0,
+      width: 480,
+      height: 320,
+    }),
   }),
 });
 
@@ -155,6 +159,7 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
 
     return Object.freeze({
       ruleset: state.ruleset,
+      camera: originalV13Constants.world.initialCamera,
       steps: state.steps,
       activeTicks: state.activeTicks,
       movementSpeed: state.movementSpeed,

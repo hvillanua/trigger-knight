@@ -3,7 +3,11 @@ import type {
   PresentationFrame,
   PresentationPort,
 } from "../application/contracts.js";
-import { calculateBackingStoreSize, type CssDimensions } from "./foundation.js";
+import {
+  calculateBackingStoreSize,
+  calculateWorldProjection,
+  type CssDimensions,
+} from "./foundation.js";
 
 function describeEvent(event: GameEvent): string {
   switch (event.type) {
@@ -14,6 +18,18 @@ function describeEvent(event: GameEvent): string {
     case "tutorial-dismissed":
       return `${event.type}:${event.page}`;
   }
+}
+
+function formatProjectionValue(value: number): string {
+  return String(Math.round(value * 1_000_000) / 1_000_000);
+}
+
+function interpolate(
+  previous: number,
+  current: number,
+  amount: number,
+): number {
+  return previous + (current - previous) * amount;
 }
 
 /** Canvas 2D adapter for public gameplay observations and events. */
@@ -53,42 +69,101 @@ export class CanvasPresentation implements PresentationPort {
       throw new Error("Canvas 2D is unavailable");
     }
 
-    const gradient = context.createLinearGradient(0, 0, 0, this.#canvas.height);
-    gradient.addColorStop(0, "#18213b");
-    gradient.addColorStop(1, "#080b14");
-    context.fillStyle = gradient;
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    context.fillStyle = "#05070d";
     context.fillRect(0, 0, this.#canvas.width, this.#canvas.height);
-
-    const titleSize = Math.max(18, Math.round(this.#canvas.height / 13));
-    context.fillStyle = "#f4d58d";
-    context.font = `600 ${titleSize}px system-ui`;
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillText(
-      "Trigger Knight",
-      this.#canvas.width / 2,
-      this.#canvas.height / 2 - titleSize / 2,
-    );
 
     if (this.#frame === undefined) {
       return;
     }
 
+    const camera = this.#frame.current.camera;
+    const projection = calculateWorldProjection(camera, {
+      width: this.#canvas.width,
+      height: this.#canvas.height,
+    });
+    const { viewport } = projection;
+    this.#canvas.dataset.worldCamera = [
+      camera.x,
+      camera.y,
+      camera.width,
+      camera.height,
+    ]
+      .map(formatProjectionValue)
+      .join(",");
+    this.#canvas.dataset.projectionViewport = [
+      viewport.x,
+      viewport.y,
+      viewport.width,
+      viewport.height,
+    ]
+      .map(formatProjectionValue)
+      .join(",");
+    this.#canvas.dataset.interpolation = String(this.#frame.interpolation);
+
+    context.save();
+    context.beginPath();
+    context.rect(viewport.x, viewport.y, viewport.width, viewport.height);
+    context.clip();
+    context.translate(viewport.x, viewport.y);
+    context.scale(projection.scale, projection.scale);
+    context.translate(-camera.x, -camera.y);
+
+    const gradient = context.createLinearGradient(
+      camera.x,
+      camera.y,
+      camera.x,
+      camera.y + camera.height,
+    );
+    gradient.addColorStop(0, "#18213b");
+    gradient.addColorStop(1, "#080b14");
+    context.fillStyle = gradient;
+    context.fillRect(camera.x, camera.y, camera.width, camera.height);
+
+    const centerX = camera.x + camera.width / 2;
+    const centerY = camera.y + camera.height / 2;
+    const titleSize = 24;
+    context.fillStyle = "#f4d58d";
+    context.font = `600 ${titleSize}px system-ui`;
+    context.textAlign = "center";
+    context.textBaseline = "middle";
+    context.fillText("Trigger Knight", centerX, centerY - titleSize / 2);
+
     context.fillStyle = "#bac6df";
-    context.font = `500 ${Math.max(12, Math.round(titleSize / 2))}px system-ui`;
+    context.font = "500 12px system-ui";
     context.fillText(
       `Step ${this.#frame.current.steps}`,
-      this.#canvas.width / 2,
-      this.#canvas.height / 2 + titleSize,
+      centerX,
+      centerY + titleSize,
+    );
+
+    const interpolatedDistance = interpolate(
+      this.#frame.previous.distance,
+      this.#frame.current.distance,
+      this.#frame.interpolation,
+    );
+    this.#canvas.dataset.interpolatedDistance = String(interpolatedDistance);
+    context.fillText(
+      `Distance ${formatProjectionValue(this.#frame.current.distance)}`,
+      centerX,
+      centerY + titleSize * 1.5,
+    );
+
+    const markerOffset =
+      ((interpolatedDistance % camera.width) + camera.width) % camera.width;
+    context.fillStyle = "#f4d58d";
+    context.fillRect(
+      camera.x + markerOffset,
+      camera.y + camera.height - 8,
+      2,
+      8,
     );
 
     const eventDescription = this.#frame.events.map(describeEvent).join(", ");
     if (eventDescription !== "") {
-      context.fillText(
-        eventDescription,
-        this.#canvas.width / 2,
-        this.#canvas.height / 2 + titleSize * 1.75,
-      );
+      context.fillText(eventDescription, centerX, centerY + titleSize * 2);
     }
+
+    context.restore();
   }
 }

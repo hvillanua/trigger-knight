@@ -80,9 +80,18 @@ export interface ActionEligibility {
   readonly canDismissTutorial: boolean;
 }
 
+/** Ruleset-space view consumed by presentation without physical pixel values. */
+export interface WorldCamera {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+}
+
 /** Public gameplay information shared by browser and automated players. */
 export interface GameObservation {
   readonly ruleset: RuleSetId;
+  readonly camera: WorldCamera;
   readonly steps: number;
   readonly activeTicks: number;
   readonly movementSpeed: number;

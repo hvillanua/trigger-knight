@@ -53,6 +53,12 @@ describe("original-v1.3 lifecycle", () => {
     });
     expect(gameplayEngine.observe(state)).toEqual({
       ruleset: ORIGINAL_V13_RULESET_ID,
+      camera: {
+        x: 0,
+        y: 0,
+        width: 480,
+        height: 320,
+      },
       steps: 0,
       activeTicks: 0,
       movementSpeed: 0,
