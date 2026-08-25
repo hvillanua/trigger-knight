@@ -158,18 +158,38 @@ describe("public application contracts", () => {
       readonly initialProfile: ProfileState;
     }>();
     expectTypeOf<RunState>().toMatchTypeOf<{
-      readonly schemaVersion: 1;
+      readonly schemaVersion: 2;
       readonly ruleset: RuleSetId;
       readonly random: RandomState;
       readonly steps: number;
+      readonly activeTicks: number;
+      readonly lifecycle: {
+        readonly phase: "running" | "ended";
+        readonly paused: boolean;
+        readonly tutorialPage: 0 | null;
+        readonly pregameStepsRemaining: number;
+      };
     }>();
     expectTypeOf<GameObservation>().toMatchTypeOf<{
       readonly ruleset: RuleSetId;
       readonly steps: number;
+      readonly activeTicks: number;
+      readonly lifecycle: {
+        readonly phase: "running" | "ended";
+        readonly paused: boolean;
+        readonly tutorialPage: 0 | null;
+        readonly pregameStepsRemaining: number;
+        readonly activeGameplay: boolean;
+      };
+      readonly actions: {
+        readonly canTogglePause: boolean;
+        readonly canDismissTutorial: boolean;
+      };
     }>();
-    expectTypeOf<GameEvent>().toMatchTypeOf<{
-      readonly type: "step-advanced";
-      readonly step: number;
-    }>();
+    expectTypeOf<GameEvent>().toEqualTypeOf<
+      | Readonly<{ type: "pause-toggled"; paused: boolean }>
+      | Readonly<{ type: "step-advanced"; step: number }>
+      | Readonly<{ type: "tutorial-dismissed"; page: 0 }>
+    >();
   });
 });

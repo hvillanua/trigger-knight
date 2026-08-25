@@ -86,7 +86,11 @@ describe("deterministic randomness", () => {
   );
 
   it("continues identically after a run-state serialization round trip", () => {
-    const initial = createRunState(ORIGINAL_V13_RULESET_ID, "checkpoint-seed");
+    const initial = createRunState(
+      ORIGINAL_V13_RULESET_ID,
+      "checkpoint-seed",
+      60,
+    );
     const beforeCheckpoint = drawSequence(initial.random, 3);
     const checkpoint: RunState = {
       ...initial,
@@ -103,8 +107,8 @@ describe("deterministic randomness", () => {
   });
 
   it("keeps independent runs free of shared mutable random state", () => {
-    const first = createRunState(ORIGINAL_V13_RULESET_ID, "shared-seed");
-    const second = createRunState(ORIGINAL_V13_RULESET_ID, "shared-seed");
+    const first = createRunState(ORIGINAL_V13_RULESET_ID, "shared-seed", 60);
+    const second = createRunState(ORIGINAL_V13_RULESET_ID, "shared-seed", 60);
     const firstDraw = nextRandom(first.random);
 
     expect(first.random).not.toBe(second.random);

@@ -7,12 +7,17 @@ import type {
   RunState,
 } from "./contracts.js";
 import { RANDOM_ALGORITHM } from "./random.js";
-import { advanceRunState, createRunState } from "./run-state.js";
+import {
+  advanceRunState,
+  createRunState,
+  isActiveGameplay,
+} from "./run-state.js";
 
 export const ORIGINAL_V13_RULESET_ID = "original-v1.3" as const;
 
 export interface RuleSetConstants {
   readonly logicalTicksPerSecond: number;
+  readonly pregameDelaySteps: number;
   readonly movement: {
     readonly initialSpeed: number;
     readonly accelerationPerActiveTick: number;
@@ -39,6 +44,8 @@ export interface RuleSetCompatibilityDecisions {
   readonly randomSequence: typeof RANDOM_ALGORITHM;
   readonly randomCompatibilityTarget: "confirmed-ranges-probabilities-draw-order";
   readonly coordinateModel: "original-stage-units-as-world-units";
+  readonly pregameDelayProgression: "after-commands-while-other-gates-open";
+  readonly pregameDelayCountsAsActiveGameplay: false;
 }
 
 export interface RuleSetStepResult {
@@ -66,6 +73,7 @@ export interface RuleSetRegistry {
 
 const originalV13Constants: RuleSetConstants = Object.freeze({
   logicalTicksPerSecond: 30,
+  pregameDelaySteps: 60,
   movement: Object.freeze({
     initialSpeed: 0,
     accelerationPerActiveTick: 1,
@@ -93,6 +101,8 @@ const originalV13CompatibilityDecisions: RuleSetCompatibilityDecisions =
     randomSequence: RANDOM_ALGORITHM,
     randomCompatibilityTarget: "confirmed-ranges-probabilities-draw-order",
     coordinateModel: "original-stage-units-as-world-units",
+    pregameDelayProgression: "after-commands-while-other-gates-open",
+    pregameDelayCountsAsActiveGameplay: false,
   });
 
 export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
@@ -101,26 +111,37 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
   compatibilityDecisions: originalV13CompatibilityDecisions,
 
   createRun(seed: string): RunState {
-    return createRunState(ORIGINAL_V13_RULESET_ID, seed);
+    return createRunState(
+      ORIGINAL_V13_RULESET_ID,
+      seed,
+      originalV13Constants.pregameDelaySteps,
+    );
   },
 
-  step(state: Readonly<RunState>): RuleSetStepResult {
-    const nextState = advanceRunState(state);
-    const event: GameEvent = Object.freeze({
-      type: "step-advanced",
-      step: nextState.steps,
-    });
-
-    return Object.freeze({
-      state: nextState,
-      events: Object.freeze([event]),
-    });
+  step(
+    state: Readonly<RunState>,
+    commands: readonly GameCommand[],
+  ): RuleSetStepResult {
+    return advanceRunState(state, commands);
   },
 
   observe(state: Readonly<RunState>): GameObservation {
+    const lifecycle = Object.freeze({
+      ...state.lifecycle,
+      activeGameplay: isActiveGameplay(state.lifecycle),
+    });
+    const canAcceptLifecycleCommands = state.lifecycle.phase === "running";
+
     return Object.freeze({
       ruleset: state.ruleset,
       steps: state.steps,
+      activeTicks: state.activeTicks,
+      lifecycle,
+      actions: Object.freeze({
+        canTogglePause: canAcceptLifecycleCommands,
+        canDismissTutorial:
+          canAcceptLifecycleCommands && state.lifecycle.tutorialPage !== null,
+      }),
     });
   },
 });

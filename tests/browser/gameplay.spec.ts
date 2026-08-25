@@ -8,7 +8,7 @@ import { createTestGameplayEngine } from "../helpers/gameplay-engine.js";
 
 const gameplayEngine = createTestGameplayEngine();
 
-test("drives the shared engine through a semantic browser command", async ({
+test("drives one fixed shared-engine step from the browser", async ({
   page,
 }) => {
   await page.goto("/");
@@ -76,8 +76,8 @@ test("physical Canvas size does not change the engine result", async ({
 test("matches browser and headless diagnostic traces", async ({ page }) => {
   const headlessTraces: GameplayTrace[] = [];
   const policy: PlayerPolicy = {
-    descriptor: { id: "advance-every-step", version: "1", config: {} },
-    createAgent: () => ({ decide: () => [{ type: "advance" }] }),
+    descriptor: { id: "no-commands", version: "1", config: {} },
+    createAgent: () => ({ decide: () => [] }),
   };
   const runner = createSimulationRunner(gameplayEngine, {
     onTrace: (trace) => headlessTraces.push(trace),

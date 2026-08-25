@@ -1,10 +1,8 @@
 import type { GameCommand } from "../application/contracts.js";
 
-const ADVANCE_COMMANDS: readonly GameCommand[] = Object.freeze([
-  Object.freeze({ type: "advance" }),
-]);
+const NO_COMMANDS: readonly GameCommand[] = Object.freeze([]);
 
-/** Maps the browser's Advance control to device-independent gameplay intent. */
+/** Keeps the temporary manual clock control outside gameplay intent. */
 export function commandsForAdvanceActivation(): readonly GameCommand[] {
-  return ADVANCE_COMMANDS;
+  return NO_COMMANDS;
 }

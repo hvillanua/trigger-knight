@@ -34,14 +34,21 @@ sequence so retained seeds and checkpoints remain reproducible.
 
 ## Run state and isolation
 
-The minimal run-state schema is version `1` and carries the ruleset identity
-and complete random state:
+Run-state schema version `2` adds fixed-step lifecycle state to the ruleset
+identity and complete random state:
 
 ```json
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "ruleset": "original-v1.3",
   "steps": 0,
+  "activeTicks": 0,
+  "lifecycle": {
+    "phase": "running",
+    "paused": false,
+    "tutorialPage": 0,
+    "pregameStepsRemaining": 60
+  },
   "random": {
     "algorithm": "mulberry32-fnv1a32-v1",
     "state": 1234567890

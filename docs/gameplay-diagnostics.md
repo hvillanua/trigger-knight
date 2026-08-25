@@ -1,9 +1,8 @@
 # Gameplay parity diagnostics
 
 The browser and headless hosts record the same structured execution trace around
-`gameplayEngine`. The current step counter and event remain Milestone 1
-scaffolding. They do not claim to implement original Trigger Knight v1.3
-mechanics.
+`gameplayEngine`. Checkpoints now include elapsed steps, active ticks, lifecycle
+phase and gates, public action eligibility, and lifecycle command events.
 
 ## Checkpoints and hashes
 

@@ -53,13 +53,32 @@ describe("gameplay engine", () => {
     expect(repeated).toEqual(state);
     expect(repeated).not.toBe(state);
     expect(state).toMatchObject({
-      schemaVersion: 1,
+      schemaVersion: 2,
       ruleset: "original-v1.3",
       steps: 0,
+      activeTicks: 0,
+      lifecycle: {
+        phase: "running",
+        paused: false,
+        tutorialPage: 0,
+        pregameStepsRemaining: 60,
+      },
     });
     expect(observation).toEqual({
       ruleset: "original-v1.3",
       steps: 0,
+      activeTicks: 0,
+      lifecycle: {
+        phase: "running",
+        paused: false,
+        tutorialPage: 0,
+        pregameStepsRemaining: 60,
+        activeGameplay: false,
+      },
+      actions: {
+        canTogglePause: true,
+        canDismissTutorial: true,
+      },
     });
     expect(observation).not.toHaveProperty("random");
     expect(Object.isFrozen(state)).toBe(true);
@@ -70,7 +89,7 @@ describe("gameplay engine", () => {
   it("repeats one authoritative transition without mutating its inputs", () => {
     const state = gameplayEngine.createRun(config);
     const commands: readonly GameCommand[] = Object.freeze([
-      Object.freeze({ type: "wait" }),
+      Object.freeze({ type: "dismiss-tutorial" }),
     ]);
     const stateBefore = JSON.stringify(state);
     const commandsBefore = JSON.stringify(commands);
@@ -84,25 +103,46 @@ describe("gameplay engine", () => {
     expect(first.state).not.toBe(state);
     expect(first.state.random).not.toBe(state.random);
     expect(first.state.random).toEqual(state.random);
-    expect(first.state).toMatchObject({ steps: 1 });
-    expect(first.events).toEqual([{ type: "step-advanced", step: 1 }]);
+    expect(first.state).toMatchObject({
+      steps: 1,
+      activeTicks: 0,
+      lifecycle: {
+        tutorialPage: null,
+        pregameStepsRemaining: 59,
+      },
+    });
+    expect(first.events).toEqual([
+      { type: "tutorial-dismissed", page: 0 },
+      { type: "step-advanced", step: 1 },
+    ]);
     expect(gameplayEngine.observe(first.state)).toEqual({
       ruleset: "original-v1.3",
       steps: 1,
+      activeTicks: 0,
+      lifecycle: {
+        phase: "running",
+        paused: false,
+        tutorialPage: null,
+        pregameStepsRemaining: 59,
+        activeGameplay: false,
+      },
+      actions: {
+        canTogglePause: true,
+        canDismissTutorial: false,
+      },
     });
     expect(Object.isFrozen(first)).toBe(true);
     expect(Object.isFrozen(first.state)).toBe(true);
+    expect(Object.isFrozen(first.state.lifecycle)).toBe(true);
     expect(Object.isFrozen(first.events)).toBe(true);
     expect(Object.isFrozen(first.events[0])).toBe(true);
   });
 
   it("continues identically after an authoritative checkpoint round trip", () => {
     const initial = gameplayEngine.createRun(config);
-    const checkpoint = gameplayEngine.step(initial, [
-      { type: "advance" },
-    ]).state;
+    const checkpoint = gameplayEngine.step(initial, []).state;
     const restored = JSON.parse(JSON.stringify(checkpoint)) as RunState;
-    const commands = Object.freeze([Object.freeze({ type: "advance" })]);
+    const commands = Object.freeze([Object.freeze({ type: "toggle-pause" })]);
 
     const uninterrupted = gameplayEngine.step(checkpoint, commands);
     const resumed = gameplayEngine.step(restored, commands);
