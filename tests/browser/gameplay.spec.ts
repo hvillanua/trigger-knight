@@ -1,11 +1,9 @@
 import { expect, test } from "@playwright/test";
 
 import type { PlayerPolicy } from "../../src/application/contracts.js";
-import {
-  gameplayEngine,
-  WALKING_SKELETON_RULESET_ID,
-} from "../../src/application/gameplay-engine.js";
+import { gameplayEngine } from "../../src/application/gameplay-engine.js";
 import type { GameplayTrace } from "../../src/application/gameplay-execution.js";
+import { ORIGINAL_V13_RULESET_ID } from "../../src/domain/rulesets.js";
 import { createSimulationRunner } from "../../src/simulation/simulation-runner.js";
 
 test("drives the shared engine through a semantic browser command", async ({
@@ -84,7 +82,7 @@ test("matches browser and headless diagnostic traces", async ({ page }) => {
   });
   runner.run({
     config: {
-      ruleset: WALKING_SKELETON_RULESET_ID,
+      ruleset: ORIGINAL_V13_RULESET_ID,
       seed: "browser-run",
       initialProfile: { schemaVersion: 1 },
     },

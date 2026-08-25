@@ -1,8 +1,9 @@
 # Gameplay parity diagnostics
 
-Milestone 1 records the same structured execution trace around browser and
-headless uses of `gameplayEngine`. The trace is walking-skeleton evidence. Its
-step counter and event do not claim original Trigger Knight v1.3 behavior.
+The browser and headless hosts record the same structured execution trace around
+`gameplayEngine`. The current step counter and event remain Milestone 1
+scaffolding. They do not claim to implement original Trigger Knight v1.3
+mechanics.
 
 ## Checkpoints and hashes
 

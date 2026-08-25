@@ -1,9 +1,9 @@
 # Finite headless simulation
 
-The headless runner is the programmatic consumer of the walking-skeleton
-gameplay engine. It calls the same `GameplayEngine` operations as the browser
-session and gives ordinary policies the same `GameObservation` and `GameEvent`
-values used by presentation.
+The headless runner is the programmatic consumer of the shared gameplay engine.
+It creates `original-v1.3` runs through the same ruleset registry and
+`GameplayEngine` operations as the browser session. Ordinary policies receive
+the same `GameObservation` and `GameEvent` values used by presentation.
 
 This slice proves the application boundary. It does not implement original
 Trigger Knight behavior, gameplay termination, worker concurrency, reporting,
@@ -28,8 +28,9 @@ termination still cannot hang a run or batch.
 
 The current engine has no gameplay terminal state. `activeTicks`, `score`,
 `day`, `distance`, `gold`, and `metrics` therefore remain zero in its result.
-Milestone 2 will add gameplay lifecycle and active-tick meaning. The runner's
-`steps` field counts every engine step taken against the finite budget.
+Later Milestone 2 tickets will add gameplay lifecycle and active-tick meaning.
+The runner's `steps` field counts every engine step taken against the finite
+budget.
 
 ## Reproducible identity
 

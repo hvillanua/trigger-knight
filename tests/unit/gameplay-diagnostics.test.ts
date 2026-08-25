@@ -5,19 +5,17 @@ import type {
   PlayerPolicy,
   RunConfig,
 } from "../../src/application/contracts.js";
-import {
-  gameplayEngine,
-  WALKING_SKELETON_RULESET_ID,
-} from "../../src/application/gameplay-engine.js";
+import { gameplayEngine } from "../../src/application/gameplay-engine.js";
 import {
   compareGameplayTraces,
   type GameplayTrace,
 } from "../../src/application/gameplay-execution.js";
 import { createBrowserGameplaySession } from "../../src/browser/gameplay-session.js";
+import { ORIGINAL_V13_RULESET_ID } from "../../src/domain/rulesets.js";
 import { createSimulationRunner } from "../../src/simulation/simulation-runner.js";
 
 const config: RunConfig = Object.freeze({
-  ruleset: WALKING_SKELETON_RULESET_ID,
+  ruleset: ORIGINAL_V13_RULESET_ID,
   seed: "parity-seed",
   initialProfile: Object.freeze({ schemaVersion: 1 }),
 });
@@ -67,13 +65,13 @@ describe("gameplay diagnostics", () => {
     expect(
       browserTrace.checkpoints.map(({ checkpointHash }) => checkpointHash),
     ).toEqual([
-      "sha256-v1:cee0c8788c72d14baaac6abf2b24f24ab139b43c576b8a882f8f1704c0e66def",
-      "sha256-v1:5631aea00347a70cfe02daed09883c0be4e2379b47e46e9847b2982061d22ff7",
-      "sha256-v1:1158b4d0d78f2bcf811e8c10e1d90a0598c1d98c84dcb229650dad3179fb128c",
-      "sha256-v1:582cda6a52f1629c5c80ebbae27cc88d14bb8763a1be725389850939a5aa0a75",
+      "sha256-v1:1a9de32d68bc2edc0c2c96be260a172a6a9917146cd6421605fe1533e69d3802",
+      "sha256-v1:a027e229e23858f465cd4a2fc7e383345a0729d89236d4b50ceb83fd3a7908f4",
+      "sha256-v1:e2b6646f8851afd7d803fb85054210c5c466a2d18bb25b5cb1963b0739575e46",
+      "sha256-v1:730a0c4f78847c94a8a60980c11deedc7d279767b491677bd782e4f029cb1692",
     ]);
     expect(browserTrace.traceHash).toBe(
-      "sha256-v1:36d4126c8be153f6ce8b3a44fd7b465a7a032be566e25c526dd38d1b85b0d772",
+      "sha256-v1:cf3b380b23f5d9ba227ec975dacac9ce63620134835d2007c3df103bb5bace5d",
     );
     expect(compareGameplayTraces(browserTrace, headlessTrace)).toEqual({
       equal: true,

@@ -12,6 +12,11 @@ export interface RandomDraw {
   readonly state: RandomState;
 }
 
+export interface RandomIntegerDraw {
+  readonly value: number;
+  readonly state: RandomState;
+}
+
 /** Expands a string seed into the complete state needed by the random source. */
 export function createRandomState(seed: string): RandomState {
   let state = FNV_OFFSET_BASIS;
@@ -46,5 +51,24 @@ export function nextRandom(random: Readonly<RandomState>): RandomDraw {
       algorithm: RANDOM_ALGORITHM,
       state: nextState,
     }),
+  });
+}
+
+/** Returns one random(n) integer draw and advances the source exactly once. */
+export function nextRandomInteger(
+  random: Readonly<RandomState>,
+  exclusiveUpperBound: number,
+): RandomIntegerDraw {
+  if (!Number.isSafeInteger(exclusiveUpperBound) || exclusiveUpperBound <= 0) {
+    throw new RangeError(
+      "Random integer bound must be a positive safe integer",
+    );
+  }
+
+  const draw = nextRandom(random);
+
+  return Object.freeze({
+    value: Math.floor(draw.value * exclusiveUpperBound),
+    state: draw.state,
   });
 }

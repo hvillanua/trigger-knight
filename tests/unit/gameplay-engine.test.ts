@@ -1,17 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  gameplayEngine,
-  WALKING_SKELETON_RULESET_ID,
-} from "../../src/application/gameplay-engine.js";
+import { gameplayEngine } from "../../src/application/gameplay-engine.js";
 import type {
   GameCommand,
   RunConfig,
   RunState,
 } from "../../src/application/contracts.js";
+import { ORIGINAL_V13_RULESET_ID } from "../../src/domain/rulesets.js";
 
 const config: RunConfig = Object.freeze({
-  ruleset: WALKING_SKELETON_RULESET_ID,
+  ruleset: ORIGINAL_V13_RULESET_ID,
   seed: "engine-seed",
   initialProfile: Object.freeze({ schemaVersion: 1 }),
 });
@@ -19,7 +17,7 @@ const config: RunConfig = Object.freeze({
 function createUnsupportedState(): RunState {
   return Object.freeze({
     ...gameplayEngine.createRun(config),
-    ruleset: "original-v1.3",
+    ruleset: "walking-skeleton-v1",
   });
 }
 
@@ -28,20 +26,20 @@ describe("gameplay engine", () => {
     expect(() =>
       gameplayEngine.createRun({
         ...config,
-        ruleset: "original-v1.3",
+        ruleset: "walking-skeleton-v1",
       }),
-    ).toThrowError('Unsupported ruleset "original-v1.3"');
+    ).toThrowError('Unsupported ruleset "walking-skeleton-v1"');
   });
 
   it("rejects an unsupported ruleset before stepping restored state", () => {
     expect(() =>
       gameplayEngine.step(createUnsupportedState(), []),
-    ).toThrowError('Unsupported ruleset "original-v1.3"');
+    ).toThrowError('Unsupported ruleset "walking-skeleton-v1"');
   });
 
   it("rejects an unsupported ruleset before observing restored state", () => {
     expect(() => gameplayEngine.observe(createUnsupportedState())).toThrowError(
-      'Unsupported ruleset "original-v1.3"',
+      'Unsupported ruleset "walking-skeleton-v1"',
     );
   });
 
@@ -54,11 +52,11 @@ describe("gameplay engine", () => {
     expect(repeated).not.toBe(state);
     expect(state).toMatchObject({
       schemaVersion: 1,
-      ruleset: "walking-skeleton-v1",
+      ruleset: "original-v1.3",
       steps: 0,
     });
     expect(observation).toEqual({
-      ruleset: "walking-skeleton-v1",
+      ruleset: "original-v1.3",
       steps: 0,
     });
     expect(observation).not.toHaveProperty("random");
@@ -87,7 +85,7 @@ describe("gameplay engine", () => {
     expect(first.state).toMatchObject({ steps: 1 });
     expect(first.events).toEqual([{ type: "step-advanced", step: 1 }]);
     expect(gameplayEngine.observe(first.state)).toEqual({
-      ruleset: "walking-skeleton-v1",
+      ruleset: "original-v1.3",
       steps: 1,
     });
     expect(Object.isFrozen(first)).toBe(true);

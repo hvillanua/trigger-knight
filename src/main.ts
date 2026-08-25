@@ -1,12 +1,10 @@
-import {
-  gameplayEngine,
-  WALKING_SKELETON_RULESET_ID,
-} from "./application/gameplay-engine.js";
+import { gameplayEngine } from "./application/gameplay-engine.js";
 import { CanvasPresentation } from "./browser/canvas-presentation.js";
 import { observeDevicePixelRatioChanges } from "./browser/device-pixel-ratio.js";
 import type { CssDimensions } from "./browser/foundation.js";
 import { createBrowserGameplaySession } from "./browser/gameplay-session.js";
 import { commandsForAdvanceActivation } from "./browser/input.js";
+import { ORIGINAL_V13_RULESET_ID } from "./domain/rulesets.js";
 import "./browser/style.css";
 
 const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
@@ -25,7 +23,7 @@ const presentation = new CanvasPresentation(canvas);
 const session = createBrowserGameplaySession(
   gameplayEngine,
   Object.freeze({
-    ruleset: WALKING_SKELETON_RULESET_ID,
+    ruleset: ORIGINAL_V13_RULESET_ID,
     seed: "browser-run",
     initialProfile: Object.freeze({ schemaVersion: 1 }),
   }),

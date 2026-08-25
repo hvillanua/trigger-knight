@@ -13,7 +13,7 @@ export function createRunState(ruleset: RuleSetId, seed: string): RunState {
   });
 }
 
-/** Advances the walking-skeleton run by one logical engine step. */
+/** Advances the ruleset-foundation run by one logical engine step. */
 export function advanceRunState(state: Readonly<RunState>): RunState {
   return Object.freeze({
     schemaVersion: RUN_STATE_SCHEMA_VERSION,

@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import type { RandomState, RunState } from "../../src/domain/contracts.js";
-import { createRandomState, nextRandom } from "../../src/domain/random.js";
+import {
+  createRandomState,
+  nextRandom,
+  nextRandomInteger,
+} from "../../src/domain/random.js";
+import { ORIGINAL_V13_RULESET_ID } from "../../src/domain/rulesets.js";
 import { createRunState } from "../../src/domain/run-state.js";
 
 function drawSequence(
@@ -13,6 +18,22 @@ function drawSequence(
 
   for (let index = 0; index < length; index += 1) {
     const draw = nextRandom(state);
+    state = draw.state;
+    values.push(draw.value);
+  }
+
+  return { state, values };
+}
+
+function drawIntegerSequence(
+  initialState: Readonly<RandomState>,
+  bounds: readonly number[],
+): { readonly state: RandomState; readonly values: readonly number[] } {
+  let state = initialState;
+  const values: number[] = [];
+
+  for (const bound of bounds) {
+    const draw = nextRandomInteger(state, bound);
     state = draw.state;
     values.push(draw.value);
   }
@@ -34,8 +55,38 @@ describe("deterministic randomness", () => {
     expect(second).toEqual(first);
   });
 
+  it("maps each random(n) draw to an integer from zero through n - 1", () => {
+    let state = createRandomState("trigger-knight");
+    const bounds = [3, 100, 24, 7, 1_000] as const;
+    const values: number[] = [];
+
+    for (const bound of bounds) {
+      const draw = nextRandomInteger(state, bound);
+      state = draw.state;
+      values.push(draw.value);
+
+      expect(Number.isInteger(draw.value)).toBe(true);
+      expect(draw.value).toBeGreaterThanOrEqual(0);
+      expect(draw.value).toBeLessThan(bound);
+    }
+
+    expect(values).toEqual([0, 50, 21, 4, 428]);
+  });
+
+  it.each([0, -1, 1.5, Number.NaN, Number.POSITIVE_INFINITY])(
+    "rejects invalid random(n) bound %s without advancing state",
+    (bound) => {
+      const state = createRandomState("invalid-bound");
+
+      expect(() => nextRandomInteger(state, bound)).toThrowError(
+        "Random integer bound must be a positive safe integer",
+      );
+      expect(state).toEqual(createRandomState("invalid-bound"));
+    },
+  );
+
   it("continues identically after a run-state serialization round trip", () => {
-    const initial = createRunState("walking-skeleton-v1", "checkpoint-seed");
+    const initial = createRunState(ORIGINAL_V13_RULESET_ID, "checkpoint-seed");
     const beforeCheckpoint = drawSequence(initial.random, 3);
     const checkpoint: RunState = {
       ...initial,
@@ -44,14 +95,16 @@ describe("deterministic randomness", () => {
     const restored = JSON.parse(JSON.stringify(checkpoint)) as RunState;
 
     expect(restored).toEqual(checkpoint);
-    expect(drawSequence(restored.random, 8)).toEqual(
-      drawSequence(checkpoint.random, 8),
+    const bounds = [3, 100, 24, 7, 1_000, 3, 100, 24] as const;
+
+    expect(drawIntegerSequence(restored.random, bounds)).toEqual(
+      drawIntegerSequence(checkpoint.random, bounds),
     );
   });
 
   it("keeps independent runs free of shared mutable random state", () => {
-    const first = createRunState("walking-skeleton-v1", "shared-seed");
-    const second = createRunState("walking-skeleton-v1", "shared-seed");
+    const first = createRunState(ORIGINAL_V13_RULESET_ID, "shared-seed");
+    const second = createRunState(ORIGINAL_V13_RULESET_ID, "shared-seed");
     const firstDraw = nextRandom(first.random);
 
     expect(first.random).not.toBe(second.random);
