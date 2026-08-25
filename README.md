@@ -61,9 +61,9 @@ rules, and approved production-input locations are documented in
 The versioned seed expansion, random sequence, and serializable state contract
 are recorded in
 [`docs/deterministic-randomness.md`](docs/deterministic-randomness.md).
-The current non-original deterministic engine transition and public observation
-are recorded in
-[`docs/walking-skeleton-engine.md`](docs/walking-skeleton-engine.md).
+The `original-v1.3` registry, owned constants, current deterministic transition,
+and public observation are recorded in
+[`docs/original-v13-ruleset.md`](docs/original-v13-ruleset.md).
 The finite programmatic runner, policy sequence, result identity, and minimal
 batch behavior are recorded in
 [`docs/headless-simulation.md`](docs/headless-simulation.md).

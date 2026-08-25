@@ -44,6 +44,17 @@ module.exports = {
       },
     },
     {
+      name: "application-does-not-compose-ruleset-registry",
+      severity: "error",
+      comment:
+        "The application layer may use the registry contract, but main.ts selects the concrete rulesets.",
+      from: { path: "(^|/)src/application/" },
+      to: {
+        path: "(^|/)src/domain/rulesets\\.ts$",
+        dependencyTypesNot: ["type-only"],
+      },
+    },
+    {
       name: "browser-does-not-depend-on-peer-adapters",
       severity: "error",
       from: { path: "(^|/)src/browser/" },

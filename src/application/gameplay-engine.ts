@@ -6,15 +6,7 @@ import type {
   RuleSetId,
   RunState,
 } from "../domain/contracts.js";
-import { advanceRunState, createRunState } from "../domain/run-state.js";
-
-export const WALKING_SKELETON_RULESET_ID = "walking-skeleton-v1" as const;
-
-function assertSupportedRuleset(ruleset: RuleSetId): void {
-  if (ruleset !== WALKING_SKELETON_RULESET_ID) {
-    throw new RangeError(`Unsupported ruleset "${ruleset}"`);
-  }
-}
+import type { RuleSetRegistry } from "../domain/rulesets.js";
 
 export interface RunConfig {
   readonly ruleset: RuleSetId;
@@ -34,35 +26,26 @@ export interface GameplayEngine {
   observe(state: Readonly<RunState>): GameObservation;
 }
 
-/** Stateless gameplay implementation shared by every future host adapter. */
-export const gameplayEngine: GameplayEngine = Object.freeze({
-  createRun(config: RunConfig): RunState {
-    assertSupportedRuleset(config.ruleset);
+/** Creates the shared application API over a ruleset lookup boundary. */
+export function createGameplayEngine(
+  registry: RuleSetRegistry,
+): GameplayEngine {
+  return Object.freeze({
+    createRun(config: RunConfig): RunState {
+      return registry
+        .resolve(config.ruleset)
+        .createRun(config.seed, config.initialProfile);
+    },
 
-    return createRunState(config.ruleset, config.seed);
-  },
+    step(
+      state: Readonly<RunState>,
+      commands: readonly GameCommand[],
+    ): StepResult {
+      return registry.resolve(state.ruleset).step(state, commands);
+    },
 
-  step(state: Readonly<RunState>): StepResult {
-    assertSupportedRuleset(state.ruleset);
-
-    const nextState = advanceRunState(state);
-    const event: GameEvent = Object.freeze({
-      type: "step-advanced",
-      step: nextState.steps,
-    });
-
-    return Object.freeze({
-      state: nextState,
-      events: Object.freeze([event]),
-    });
-  },
-
-  observe(state: Readonly<RunState>): GameObservation {
-    assertSupportedRuleset(state.ruleset);
-
-    return Object.freeze({
-      ruleset: state.ruleset,
-      steps: state.steps,
-    });
-  },
-});
+    observe(state: Readonly<RunState>): GameObservation {
+      return registry.resolve(state.ruleset).observe(state);
+    },
+  });
+}

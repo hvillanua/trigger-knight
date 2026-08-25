@@ -1,18 +1,18 @@
 import { describe, expect, it, vi } from "vitest";
 
-import {
-  gameplayEngine,
-  WALKING_SKELETON_RULESET_ID,
-} from "../../src/application/gameplay-engine.js";
 import type {
   PresentationFrame,
   PresentationPort,
   RunConfig,
 } from "../../src/application/contracts.js";
 import { createBrowserGameplaySession } from "../../src/browser/gameplay-session.js";
+import { ORIGINAL_V13_RULESET_ID } from "../../src/domain/rulesets.js";
+import { createTestGameplayEngine } from "../helpers/gameplay-engine.js";
+
+const gameplayEngine = createTestGameplayEngine();
 
 const config: RunConfig = Object.freeze({
-  ruleset: WALKING_SKELETON_RULESET_ID,
+  ruleset: ORIGINAL_V13_RULESET_ID,
   seed: "browser-session-seed",
   initialProfile: Object.freeze({ schemaVersion: 1 }),
 });
@@ -35,13 +35,13 @@ describe("browser gameplay session", () => {
     expect(presentedResult).toEqual(unpresentedResult);
     expect(presented.readDiagnostics()).toEqual(unpresented.readDiagnostics());
     expect(presentedResult).toEqual({
-      observation: { ruleset: WALKING_SKELETON_RULESET_ID, steps: 1 },
+      observation: { ruleset: ORIGINAL_V13_RULESET_ID, steps: 1 },
       events: [{ type: "step-advanced", step: 1 }],
     });
     expect(present).toHaveBeenCalledTimes(2);
     expect(present).toHaveBeenLastCalledWith({
-      previous: { ruleset: WALKING_SKELETON_RULESET_ID, steps: 0 },
-      current: { ruleset: WALKING_SKELETON_RULESET_ID, steps: 1 },
+      previous: { ruleset: ORIGINAL_V13_RULESET_ID, steps: 0 },
+      current: { ruleset: ORIGINAL_V13_RULESET_ID, steps: 1 },
       interpolation: 1,
       events: [{ type: "step-advanced", step: 1 }],
     });

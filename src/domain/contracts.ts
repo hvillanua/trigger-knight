@@ -25,7 +25,7 @@ export interface GameCommand {
   readonly type: string;
 }
 
-/** Authoritative outcome emitted by the walking-skeleton transition. */
+/** Temporary authoritative outcome emitted by the ruleset foundation. */
 export interface StepAdvancedEvent {
   readonly type: "step-advanced";
   readonly step: number;

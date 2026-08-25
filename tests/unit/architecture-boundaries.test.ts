@@ -76,6 +76,11 @@ describe("architectural dependency rules", () => {
       "forbidden-type-only",
       "domain-does-not-depend-outward",
     ],
+    [
+      "application-layer ruleset composition",
+      "forbidden-ruleset-composition",
+      "application-does-not-compose-ruleset-registry",
+    ],
   ])("rejects %s", (_description, fixture, rule) => {
     const result = cruiseFixture(fixture);
 

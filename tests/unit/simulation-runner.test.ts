@@ -8,15 +8,15 @@ import type {
   RunConfig,
   SimulationRequest,
 } from "../../src/application/contracts.js";
-import {
-  gameplayEngine,
-  WALKING_SKELETON_RULESET_ID,
-} from "../../src/application/gameplay-engine.js";
+import { ORIGINAL_V13_RULESET_ID } from "../../src/domain/rulesets.js";
 import { nonProgressingPolicy } from "../../src/simulation/non-progressing-policy.js";
 import { createSimulationRunner } from "../../src/simulation/simulation-runner.js";
+import { createTestGameplayEngine } from "../helpers/gameplay-engine.js";
+
+const gameplayEngine = createTestGameplayEngine();
 
 const config: RunConfig = Object.freeze({
-  ruleset: WALKING_SKELETON_RULESET_ID,
+  ruleset: ORIGINAL_V13_RULESET_ID,
   seed: "simulation-seed",
   initialProfile: Object.freeze({ schemaVersion: 1 }),
 });
@@ -55,7 +55,7 @@ describe("headless simulation runner", () => {
     expect(secondAgent).not.toBe(firstAgent);
     expect(result).toEqual({
       schemaVersion: 1,
-      ruleset: WALKING_SKELETON_RULESET_ID,
+      ruleset: ORIGINAL_V13_RULESET_ID,
       seed: "simulation-seed",
       initialProfileFingerprint:
         "sha256-v1:0e9561cfb83d50990a103b3896fe249a11fe27fa28985448187f93ec12116d72",
@@ -73,7 +73,7 @@ describe("headless simulation runner", () => {
       distance: 0,
       gold: 0,
       traceHash:
-        "sha256-v1:c5a05b121c77afd0f2a22be8a5eba8a4ed33f52bd64e2daa2dcf34a463df9399",
+        "sha256-v1:cc49587e740d0f4b166c2d55d1b88c197a6b769cc95c77bf5b767e68437f746f",
       metrics: {},
     });
     expect(Object.isFrozen(result)).toBe(true);
@@ -102,15 +102,15 @@ describe("headless simulation runner", () => {
 
     expect(inputs).toEqual([
       {
-        observation: { ruleset: WALKING_SKELETON_RULESET_ID, steps: 0 },
+        observation: { ruleset: ORIGINAL_V13_RULESET_ID, steps: 0 },
         events: [],
       },
       {
-        observation: { ruleset: WALKING_SKELETON_RULESET_ID, steps: 1 },
+        observation: { ruleset: ORIGINAL_V13_RULESET_ID, steps: 1 },
         events: [{ type: "step-advanced", step: 1 }],
       },
       {
-        observation: { ruleset: WALKING_SKELETON_RULESET_ID, steps: 2 },
+        observation: { ruleset: ORIGINAL_V13_RULESET_ID, steps: 2 },
         events: [{ type: "step-advanced", step: 2 }],
       },
     ]);
