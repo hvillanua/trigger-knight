@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { gameplayEngine } from "../../src/application/gameplay-engine.js";
 import type {
   PresentationFrame,
   PresentationPort,
@@ -8,6 +7,9 @@ import type {
 } from "../../src/application/contracts.js";
 import { createBrowserGameplaySession } from "../../src/browser/gameplay-session.js";
 import { ORIGINAL_V13_RULESET_ID } from "../../src/domain/rulesets.js";
+import { createTestGameplayEngine } from "../helpers/gameplay-engine.js";
+
+const gameplayEngine = createTestGameplayEngine();
 
 const config: RunConfig = Object.freeze({
   ruleset: ORIGINAL_V13_RULESET_ID,

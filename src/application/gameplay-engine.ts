@@ -6,7 +6,7 @@ import type {
   RuleSetId,
   RunState,
 } from "../domain/contracts.js";
-import { ruleSetRegistry, type RuleSetRegistry } from "../domain/rulesets.js";
+import type { RuleSetRegistry } from "../domain/rulesets.js";
 
 export interface RunConfig {
   readonly ruleset: RuleSetId;
@@ -49,6 +49,3 @@ export function createGameplayEngine(
     },
   });
 }
-
-/** Stateless gameplay implementation shared by every host adapter. */
-export const gameplayEngine = createGameplayEngine(ruleSetRegistry);

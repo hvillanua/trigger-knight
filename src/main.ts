@@ -1,11 +1,13 @@
-import { gameplayEngine } from "./application/gameplay-engine.js";
+import { createGameplayEngine } from "./application/gameplay-engine.js";
 import { CanvasPresentation } from "./browser/canvas-presentation.js";
 import { observeDevicePixelRatioChanges } from "./browser/device-pixel-ratio.js";
 import type { CssDimensions } from "./browser/foundation.js";
 import { createBrowserGameplaySession } from "./browser/gameplay-session.js";
 import { commandsForAdvanceActivation } from "./browser/input.js";
-import { ORIGINAL_V13_RULESET_ID } from "./domain/rulesets.js";
+import { ORIGINAL_V13_RULESET_ID, ruleSetRegistry } from "./domain/rulesets.js";
 import "./browser/style.css";
+
+const gameplayEngine = createGameplayEngine(ruleSetRegistry);
 
 const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
 const advanceButton = document.querySelector<HTMLButtonElement>("#advance-run");

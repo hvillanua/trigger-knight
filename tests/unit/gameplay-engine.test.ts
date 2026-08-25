@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { gameplayEngine } from "../../src/application/gameplay-engine.js";
 import type {
   GameCommand,
   RunConfig,
   RunState,
 } from "../../src/application/contracts.js";
 import { ORIGINAL_V13_RULESET_ID } from "../../src/domain/rulesets.js";
+import { createTestGameplayEngine } from "../helpers/gameplay-engine.js";
+
+const gameplayEngine = createTestGameplayEngine();
 
 const config: RunConfig = Object.freeze({
   ruleset: ORIGINAL_V13_RULESET_ID,

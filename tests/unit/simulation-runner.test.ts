@@ -8,10 +8,12 @@ import type {
   RunConfig,
   SimulationRequest,
 } from "../../src/application/contracts.js";
-import { gameplayEngine } from "../../src/application/gameplay-engine.js";
 import { ORIGINAL_V13_RULESET_ID } from "../../src/domain/rulesets.js";
 import { nonProgressingPolicy } from "../../src/simulation/non-progressing-policy.js";
 import { createSimulationRunner } from "../../src/simulation/simulation-runner.js";
+import { createTestGameplayEngine } from "../helpers/gameplay-engine.js";
+
+const gameplayEngine = createTestGameplayEngine();
 
 const config: RunConfig = Object.freeze({
   ruleset: ORIGINAL_V13_RULESET_ID,

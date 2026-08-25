@@ -27,6 +27,10 @@ presentation, policy, and simulation ports live in the application layer. This
 keeps adapter and device concepts out of domain-facing values while ensuring
 browser and automated players receive the same public gameplay information.
 
+`src/application/gameplay-engine.ts` exports the engine contract and a factory
+that accepts a ruleset registry. It does not select the production registry.
+`src/main.ts` supplies the concrete registry when it composes the browser host.
+
 ## Authoritative domain restrictions
 
 Domain state transitions receive every varying input explicitly. ESLint rejects
