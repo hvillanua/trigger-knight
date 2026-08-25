@@ -19,7 +19,7 @@ const gameplayEngine = createTestGameplayEngine();
 const config: RunConfig = Object.freeze({
   ruleset: ORIGINAL_V13_RULESET_ID,
   seed: "parity-seed",
-  initialProfile: Object.freeze({ schemaVersion: 1 }),
+  initialProfile: Object.freeze({ schemaVersion: 1, scoreMultiplier: 1 }),
 });
 
 const noCommands: readonly GameCommand[] = Object.freeze([]);
@@ -65,16 +65,64 @@ describe("gameplay diagnostics", () => {
     expect(
       browserTrace.checkpoints.map(({ checkpointHash }) => checkpointHash),
     ).toEqual([
-      "sha256-v1:fd8cfd32eb23cf7fe94e9d9339f77795d5613e30fe18ac83b7cd7971a6ce8537",
-      "sha256-v1:71fc5aa9d0e9bba049ea4e01db4a180e5a552571c396ffbf91409acd9948d369",
-      "sha256-v1:11ac91a5f13d8ac4a5ee4992b8499ba43e974987b1711bf7adcc9f502117fd60",
-      "sha256-v1:12a808a055152ebe77c7ca168e83493028e0bc7857c8ae0c24ac5b5473f37f45",
+      "sha256-v1:5012beecf3257e205562fa3bab6ce52460089002a82729f9b4b52d489c7890b7",
+      "sha256-v1:58051381ad7fccb32111caeb5d9482bfc146c69d7e90fa51966c251694921904",
+      "sha256-v1:1d4231fe899d09bf11fdd30d0faa33f241f3897da2b15e138d3eda30224da6e8",
+      "sha256-v1:900dcd052b33f03eb1cde8cbf353f25d5d9eb32a130630c9538705c88a28b849",
     ]);
     expect(browserTrace.traceHash).toBe(
-      "sha256-v1:9cc51e46873a73669ee55e93df4a63903b69e4f7341b4acc3dedafc64c195a92",
+      "sha256-v1:f5d67abedb5c6210cc2d4c7a23959410b8686cae392299db7d22fef639f4e08d",
     );
     expect(compareGameplayTraces(browserTrace, headlessTrace)).toEqual({
       equal: true,
+    });
+  });
+
+  it("records equal browser and policy observations during active running", () => {
+    const browser = createBrowserGameplaySession(gameplayEngine, config);
+    browser.dispatch([{ type: "dismiss-tutorial" }]);
+    for (let step = 1; step < 62; step += 1) {
+      browser.dispatch(noCommands);
+    }
+
+    const traces: GameplayTrace[] = [];
+    const policy: PlayerPolicy = {
+      descriptor: { id: "dismiss-once", version: "1", config: {} },
+      createAgent: () => {
+        let firstDecision = true;
+
+        return {
+          decide: () => {
+            if (firstDecision) {
+              firstDecision = false;
+              return [{ type: "dismiss-tutorial" }];
+            }
+
+            return noCommands;
+          },
+        };
+      },
+    };
+    const runner = createSimulationRunner(gameplayEngine, {
+      onTrace: (trace) => traces.push(trace),
+    });
+    runner.run({ config, policy, maxSteps: 62 });
+
+    const browserTrace = browser.readDiagnostics();
+    const headlessTrace = traces[0];
+    if (headlessTrace === undefined) {
+      throw new Error("Expected one headless diagnostic trace");
+    }
+
+    expect(compareGameplayTraces(browserTrace, headlessTrace)).toEqual({
+      equal: true,
+    });
+    expect(browserTrace.checkpoints.at(-1)?.observation).toMatchObject({
+      activeTicks: 2,
+      movementSpeed: 2,
+      distance: 3,
+      day: 1,
+      score: 30,
     });
   });
 

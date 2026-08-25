@@ -51,6 +51,25 @@ followed by the step's `step-advanced` event. Commands do nothing after the run
 phase becomes `ended`, but the host can still account for an attempted engine
 step.
 
+## Running progression
+
+Every active running tick increases movement speed by 1 up to 15, then adds the
+resulting speed to distance. Day is always `floor(distance / 7000) + 1`.
+Running score adds `movementSpeed * 10 * scoreMultiplier` on the same tick.
+
+The initial profile supplies `scoreMultiplier` explicitly. In particular, the
+confirmed level-1 starting profile supplies `1.0`; the run does not derive
+`1.1` from the profile level. The multiplier remains in authoritative run state
+for checkpoint replay but is not part of `GameObservation`. Public observation
+includes movement speed, distance, day, and score for presentation and ordinary
+policies. The headless result copies score, day, and distance from the same
+state.
+
+Tutorial, pregame, pause, and ended gates leave all four progression values
+unchanged. They also prevent `activeTicks` from advancing. These values use
+abstract world units and accept no Canvas size, CSS size, device-pixel-ratio,
+render interpolation, or wall-clock input.
+
 ## Tutorial and pregame compatibility
 
 Tutorial page 0 gates every newly created run, even when the supplied profile
@@ -68,8 +87,8 @@ gates. `original-v1.3` uses this explicit clean-room decision:
 - Pregame opportunities do not increment `activeTicks`. The first active tick
   is the next eligible step after the counter reaches zero.
 
-Movement, lifespan drain, encounters, combat, tutorial presentation, and run
-termination remain assigned to later tickets.
+Lifespan drain, encounters, combat, tutorial presentation, and run termination
+remain assigned to later tickets.
 
 State, results, events, event lists, and observations are frozen. A
 JSON-restored checkpoint produces the same next state, observation, and events

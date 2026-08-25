@@ -27,7 +27,7 @@ const session = createBrowserGameplaySession(
   Object.freeze({
     ruleset: ORIGINAL_V13_RULESET_ID,
     seed: "browser-run",
-    initialProfile: Object.freeze({ schemaVersion: 1 }),
+    initialProfile: Object.freeze({ schemaVersion: 1, scoreMultiplier: 1 }),
   }),
   presentation,
   { retainDiagnostics: import.meta.env.DEV },

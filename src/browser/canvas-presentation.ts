@@ -30,6 +30,10 @@ export class CanvasPresentation implements PresentationPort {
     this.#frame = frame;
     this.#canvas.dataset.observationStep = String(frame.current.steps);
     this.#canvas.dataset.events = frame.events.map(describeEvent).join(",");
+    this.#canvas.dataset.movementSpeed = String(frame.current.movementSpeed);
+    this.#canvas.dataset.distance = String(frame.current.distance);
+    this.#canvas.dataset.day = String(frame.current.day);
+    this.#canvas.dataset.score = String(frame.current.score);
     this.#draw();
   }
 

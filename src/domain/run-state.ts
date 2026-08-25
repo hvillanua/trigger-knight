@@ -7,13 +7,15 @@ import type {
 } from "./contracts.js";
 import { createRandomState } from "./random.js";
 
-export const RUN_STATE_SCHEMA_VERSION = 2 as const;
+export const RUN_STATE_SCHEMA_VERSION = 3 as const;
 
 /** Creates a fresh minimal state value for one independent run. */
 export function createRunState(
   ruleset: RuleSetId,
   seed: string,
   pregameSteps: number,
+  scoreMultiplier: number,
+  initialMovementSpeed: number,
 ): RunState {
   return Object.freeze({
     schemaVersion: RUN_STATE_SCHEMA_VERSION,
@@ -21,6 +23,11 @@ export function createRunState(
     random: createRandomState(seed),
     steps: 0,
     activeTicks: 0,
+    scoreMultiplier,
+    movementSpeed: initialMovementSpeed,
+    distance: 0,
+    day: 1,
+    score: 0,
     lifecycle: Object.freeze({
       phase: "running",
       paused: false,
@@ -103,8 +110,8 @@ export function advanceRunState(
     ? state.activeTicks + 1
     : state.activeTicks;
   const nextState: RunState = Object.freeze({
+    ...state,
     schemaVersion: RUN_STATE_SCHEMA_VERSION,
-    ruleset: state.ruleset,
     random: Object.freeze({ ...state.random }),
     steps: state.steps + 1,
     activeTicks,

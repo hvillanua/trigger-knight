@@ -1,8 +1,10 @@
 # Gameplay parity diagnostics
 
 The browser and headless hosts record the same structured execution trace around
-`gameplayEngine`. Checkpoints now include elapsed steps, active ticks, lifecycle
-phase and gates, public action eligibility, and lifecycle command events.
+`gameplayEngine`. Checkpoints include elapsed steps, active ticks, lifecycle
+phase and gates, running speed, distance, day, score, public action eligibility,
+and lifecycle command events. The initial profile's score multiplier remains in
+authoritative state and does not enter the public observation.
 
 ## Checkpoints and hashes
 

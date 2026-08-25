@@ -15,6 +15,10 @@ test("drives one fixed shared-engine step from the browser", async ({
 
   const canvas = page.getByRole("img", { name: "Trigger Knight game view" });
   await expect(canvas).toHaveAttribute("data-observation-step", "0");
+  await expect(canvas).toHaveAttribute("data-movement-speed", "0");
+  await expect(canvas).toHaveAttribute("data-distance", "0");
+  await expect(canvas).toHaveAttribute("data-day", "1");
+  await expect(canvas).toHaveAttribute("data-score", "0");
 
   await page.getByRole("button", { name: "Advance run" }).click();
 
@@ -53,6 +57,10 @@ test("physical Canvas size does not change the engine result", async ({
             },
             observationStep: element.dataset.observationStep,
             events: element.dataset.events,
+            movementSpeed: element.dataset.movementSpeed,
+            distance: element.dataset.distance,
+            day: element.dataset.day,
+            score: element.dataset.score,
           };
         });
       } finally {
@@ -63,13 +71,33 @@ test("physical Canvas size does not change the engine result", async ({
 
   expect(results[0]?.backingSize).not.toEqual(results[1]?.backingSize);
   expect(
-    results.map(({ observationStep, events }) => ({
-      observationStep,
-      events,
-    })),
+    results.map(
+      ({ observationStep, events, movementSpeed, distance, day, score }) => ({
+        observationStep,
+        events,
+        movementSpeed,
+        distance,
+        day,
+        score,
+      }),
+    ),
   ).toEqual([
-    { observationStep: "1", events: "step-advanced:1" },
-    { observationStep: "1", events: "step-advanced:1" },
+    {
+      observationStep: "1",
+      events: "step-advanced:1",
+      movementSpeed: "0",
+      distance: "0",
+      day: "1",
+      score: "0",
+    },
+    {
+      observationStep: "1",
+      events: "step-advanced:1",
+      movementSpeed: "0",
+      distance: "0",
+      day: "1",
+      score: "0",
+    },
   ]);
 });
 
@@ -86,7 +114,7 @@ test("matches browser and headless diagnostic traces", async ({ page }) => {
     config: {
       ruleset: ORIGINAL_V13_RULESET_ID,
       seed: "browser-run",
-      initialProfile: { schemaVersion: 1 },
+      initialProfile: { schemaVersion: 1, scoreMultiplier: 1 },
     },
     policy,
     maxSteps: 3,

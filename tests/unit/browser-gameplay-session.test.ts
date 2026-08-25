@@ -14,7 +14,7 @@ const gameplayEngine = createTestGameplayEngine();
 const config: RunConfig = Object.freeze({
   ruleset: ORIGINAL_V13_RULESET_ID,
   seed: "browser-session-seed",
-  initialProfile: Object.freeze({ schemaVersion: 1 }),
+  initialProfile: Object.freeze({ schemaVersion: 1, scoreMultiplier: 1 }),
 });
 
 describe("browser gameplay session", () => {
@@ -39,6 +39,10 @@ describe("browser gameplay session", () => {
         ruleset: ORIGINAL_V13_RULESET_ID,
         steps: 1,
         activeTicks: 0,
+        movementSpeed: 0,
+        distance: 0,
+        day: 1,
+        score: 0,
         lifecycle: {
           phase: "running",
           paused: false,
@@ -59,6 +63,10 @@ describe("browser gameplay session", () => {
         ruleset: ORIGINAL_V13_RULESET_ID,
         steps: 0,
         activeTicks: 0,
+        movementSpeed: 0,
+        distance: 0,
+        day: 1,
+        score: 0,
         lifecycle: {
           phase: "running",
           paused: false,
@@ -75,6 +83,10 @@ describe("browser gameplay session", () => {
         ruleset: ORIGINAL_V13_RULESET_ID,
         steps: 1,
         activeTicks: 0,
+        movementSpeed: 0,
+        distance: 0,
+        day: 1,
+        score: 0,
         lifecycle: {
           phase: "running",
           paused: false,

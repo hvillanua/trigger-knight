@@ -13,7 +13,7 @@ const gameplayEngine = createTestGameplayEngine();
 const config: RunConfig = Object.freeze({
   ruleset: ORIGINAL_V13_RULESET_ID,
   seed: "engine-seed",
-  initialProfile: Object.freeze({ schemaVersion: 1 }),
+  initialProfile: Object.freeze({ schemaVersion: 1, scoreMultiplier: 1 }),
 });
 
 function createUnsupportedState(): RunState {
@@ -53,10 +53,15 @@ describe("gameplay engine", () => {
     expect(repeated).toEqual(state);
     expect(repeated).not.toBe(state);
     expect(state).toMatchObject({
-      schemaVersion: 2,
+      schemaVersion: 3,
       ruleset: "original-v1.3",
       steps: 0,
       activeTicks: 0,
+      scoreMultiplier: 1,
+      movementSpeed: 0,
+      distance: 0,
+      day: 1,
+      score: 0,
       lifecycle: {
         phase: "running",
         paused: false,
@@ -68,6 +73,10 @@ describe("gameplay engine", () => {
       ruleset: "original-v1.3",
       steps: 0,
       activeTicks: 0,
+      movementSpeed: 0,
+      distance: 0,
+      day: 1,
+      score: 0,
       lifecycle: {
         phase: "running",
         paused: false,
@@ -81,6 +90,7 @@ describe("gameplay engine", () => {
       },
     });
     expect(observation).not.toHaveProperty("random");
+    expect(observation).not.toHaveProperty("scoreMultiplier");
     expect(Object.isFrozen(state)).toBe(true);
     expect(Object.isFrozen(state.random)).toBe(true);
     expect(Object.isFrozen(observation)).toBe(true);
@@ -119,6 +129,10 @@ describe("gameplay engine", () => {
       ruleset: "original-v1.3",
       steps: 1,
       activeTicks: 0,
+      movementSpeed: 0,
+      distance: 0,
+      day: 1,
+      score: 0,
       lifecycle: {
         phase: "running",
         paused: false,

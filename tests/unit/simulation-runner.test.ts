@@ -18,7 +18,7 @@ const gameplayEngine = createTestGameplayEngine();
 const config: RunConfig = Object.freeze({
   ruleset: ORIGINAL_V13_RULESET_ID,
   seed: "simulation-seed",
-  initialProfile: Object.freeze({ schemaVersion: 1 }),
+  initialProfile: Object.freeze({ schemaVersion: 1, scoreMultiplier: 1 }),
 });
 
 function request(
@@ -38,6 +38,10 @@ function tutorialGatedObservation(steps: number): GameObservation {
     ruleset: ORIGINAL_V13_RULESET_ID,
     steps,
     activeTicks: 0,
+    movementSpeed: 0,
+    distance: 0,
+    day: 1,
+    score: 0,
     lifecycle: {
       phase: "running",
       paused: false,
@@ -77,7 +81,7 @@ describe("headless simulation runner", () => {
       ruleset: ORIGINAL_V13_RULESET_ID,
       seed: "simulation-seed",
       initialProfileFingerprint:
-        "sha256-v1:0e9561cfb83d50990a103b3896fe249a11fe27fa28985448187f93ec12116d72",
+        "sha256-v1:16560d87b48392edba4291a11362cae68bf8a4e7f8c60c226a6f62f37330f211",
       policy: {
         id: "non-progressing",
         version: "1",
@@ -88,11 +92,11 @@ describe("headless simulation runner", () => {
       activeTicks: 0,
       terminalReason: "step-limit",
       score: 0,
-      day: 0,
+      day: 1,
       distance: 0,
       gold: 0,
       traceHash:
-        "sha256-v1:ad73bb586d4ba98f28e977ab5bd7014c6400a03be1c75f67a1ad783309039423",
+        "sha256-v1:56e1154bfe5568b9dc8b21d62944a02bd952855dae565e1777fdf178dd938109",
       metrics: {},
     });
     expect(Object.isFrozen(result)).toBe(true);
@@ -146,7 +150,13 @@ describe("headless simulation runner", () => {
 
     const result = runner.run(request(dismissTutorialPolicy, { maxSteps: 62 }));
 
-    expect(result).toMatchObject({ steps: 62, activeTicks: 2 });
+    expect(result).toMatchObject({
+      steps: 62,
+      activeTicks: 2,
+      score: 30,
+      day: 1,
+      distance: 3,
+    });
   });
 
   it("repeats normalized results and isolates mutable agent memory by run", () => {
@@ -188,10 +198,12 @@ describe("headless simulation runner", () => {
     const runner = createSimulationRunner(gameplayEngine);
     const profileWithFirstOrder = {
       schemaVersion: 1,
+      scoreMultiplier: 1,
       progress: { level: 2, achievements: ["first-step"] },
     };
     const profileWithSecondOrder = {
       progress: { achievements: ["first-step"], level: 2 },
+      scoreMultiplier: 1,
       schemaVersion: 1,
     };
 
@@ -214,8 +226,16 @@ describe("headless simulation runner", () => {
 
   it("distinguishes profiles that collide under the former 32-bit fingerprint", () => {
     const runner = createSimulationRunner(gameplayEngine);
-    const firstProfile = { schemaVersion: 1, nonce: 51_828 };
-    const secondProfile = { schemaVersion: 1, nonce: 301_880 };
+    const firstProfile = {
+      schemaVersion: 1,
+      scoreMultiplier: 1,
+      nonce: 51_828,
+    };
+    const secondProfile = {
+      schemaVersion: 1,
+      scoreMultiplier: 1,
+      nonce: 301_880,
+    };
     const first = runner.run(
       request(nonProgressingPolicy, {
         config: {
