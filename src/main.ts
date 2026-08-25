@@ -51,6 +51,7 @@ const render = (): void => {
 
 advanceButton.addEventListener("click", () => {
   const result = session.dispatch(commandsForAdvanceActivation());
+  session.render(1);
   gameStatus.textContent = `Step ${result.observation.steps}`;
 });
 

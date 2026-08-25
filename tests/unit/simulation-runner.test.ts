@@ -36,6 +36,12 @@ function request(
 function tutorialGatedObservation(steps: number): GameObservation {
   return {
     ruleset: ORIGINAL_V13_RULESET_ID,
+    camera: {
+      x: 0,
+      y: 0,
+      width: 480,
+      height: 320,
+    },
     steps,
     activeTicks: 0,
     movementSpeed: 0,
@@ -96,7 +102,7 @@ describe("headless simulation runner", () => {
       distance: 0,
       gold: 0,
       traceHash:
-        "sha256-v1:56e1154bfe5568b9dc8b21d62944a02bd952855dae565e1777fdf178dd938109",
+        "sha256-v1:a1f53077d9e0e5be80cc67f78b21fb11840bfff77e54630baea8cf73b6139829",
       metrics: {},
     });
     expect(Object.isFrozen(result)).toBe(true);

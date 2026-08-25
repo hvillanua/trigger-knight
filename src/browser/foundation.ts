@@ -1,3 +1,5 @@
+import type { WorldCamera } from "../domain/contracts.js";
+
 /** Physical sizing values used by Canvas presentation adapters. */
 export interface CssDimensions {
   readonly width: number;
@@ -7,6 +9,17 @@ export interface CssDimensions {
 export interface BackingStoreSize {
   readonly width: number;
   readonly height: number;
+}
+
+/** Letterboxed backing-store rectangle for one ruleset-space camera. */
+export interface WorldProjection {
+  readonly scale: number;
+  readonly viewport: Readonly<{
+    readonly x: number;
+    readonly y: number;
+    readonly width: number;
+    readonly height: number;
+  }>;
 }
 
 function usableDimension(value: number): number {
@@ -32,4 +45,40 @@ export function calculateBackingStoreSize(
       Math.round(usableDimension(cssDimensions.height) * scale),
     ),
   };
+}
+
+/** Fits the complete world camera into physical output without cropping it. */
+export function calculateWorldProjection(
+  camera: Readonly<WorldCamera>,
+  output: Readonly<BackingStoreSize>,
+): WorldProjection {
+  if (
+    !Number.isFinite(camera.x) ||
+    !Number.isFinite(camera.y) ||
+    !Number.isFinite(camera.width) ||
+    camera.width <= 0 ||
+    !Number.isFinite(camera.height) ||
+    camera.height <= 0
+  ) {
+    throw new RangeError("World camera must have finite positive dimensions");
+  }
+
+  const outputWidth = Math.max(1, usableDimension(output.width));
+  const outputHeight = Math.max(1, usableDimension(output.height));
+  const scale = Math.min(
+    outputWidth / camera.width,
+    outputHeight / camera.height,
+  );
+  const width = camera.width * scale;
+  const height = camera.height * scale;
+
+  return Object.freeze({
+    scale,
+    viewport: Object.freeze({
+      x: (outputWidth - width) / 2,
+      y: (outputHeight - height) / 2,
+      width,
+      height,
+    }),
+  });
 }

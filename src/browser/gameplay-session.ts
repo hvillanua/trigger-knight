@@ -17,6 +17,7 @@ export interface BrowserDispatchResult {
 
 export interface BrowserGameplaySession {
   dispatch(commands: readonly GameCommand[]): BrowserDispatchResult;
+  render(interpolation: number): void;
   readDiagnostics(): GameplayTrace;
 }
 
@@ -28,8 +29,18 @@ function createFrame(
   previous: Readonly<GameObservation>,
   current: Readonly<GameObservation>,
   events: readonly GameEvent[],
+  interpolation: number,
 ): PresentationFrame {
-  return Object.freeze({ previous, current, interpolation: 1, events });
+  const normalizedInterpolation = Number.isFinite(interpolation)
+    ? Math.min(1, Math.max(0, interpolation))
+    : 1;
+
+  return Object.freeze({
+    previous,
+    current,
+    interpolation: normalizedInterpolation,
+    events,
+  });
 }
 
 /** Owns authoritative state while exposing only public values to the browser. */
@@ -41,25 +52,31 @@ export function createBrowserGameplaySession(
 ): BrowserGameplaySession {
   const execution = createGameplayExecution(engine, config, options);
   let observation = execution.readCurrentCheckpoint().observation;
+  let previousObservation = observation;
+  let events: readonly GameEvent[] = Object.freeze([]);
 
-  presentation?.present(
-    createFrame(observation, observation, Object.freeze([])),
-  );
+  const render = (interpolation: number): void => {
+    presentation?.present(
+      createFrame(previousObservation, observation, events, interpolation),
+    );
+  };
+
+  render(1);
 
   return Object.freeze({
     dispatch(commands: readonly GameCommand[]): BrowserDispatchResult {
-      const previous = observation;
+      previousObservation = observation;
       const checkpoint = execution.dispatch(commands);
       observation = checkpoint.observation;
-      presentation?.present(
-        createFrame(previous, observation, checkpoint.events),
-      );
+      events = checkpoint.events;
+      render(0);
 
       return Object.freeze({
         observation,
         events: checkpoint.events,
       });
     },
+    render,
     readDiagnostics: () => execution.readDiagnostics(),
   });
 }

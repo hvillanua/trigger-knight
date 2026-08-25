@@ -31,8 +31,12 @@ describe("ruleset registry", () => {
         },
         world: {
           originalStageUnitsPerWorldUnit: 1,
-          initialCameraWidth: 480,
-          initialCameraHeight: 320,
+          initialCamera: {
+            x: 0,
+            y: 0,
+            width: 480,
+            height: 320,
+          },
         },
       },
       compatibilityDecisions: {
@@ -45,6 +49,9 @@ describe("ruleset registry", () => {
     });
     expect(Object.isFrozen(originalV13RuleSet)).toBe(true);
     expect(Object.isFrozen(originalV13RuleSet.constants.movement)).toBe(true);
+    expect(
+      Object.isFrozen(originalV13RuleSet.constants.world.initialCamera),
+    ).toBe(true);
   });
 
   it("resolves every accepted identity to its implementation", () => {

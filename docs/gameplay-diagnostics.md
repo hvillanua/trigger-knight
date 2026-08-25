@@ -3,8 +3,9 @@
 The browser and headless hosts record the same structured execution trace around
 `gameplayEngine`. Checkpoints include elapsed steps, active ticks, lifecycle
 phase and gates, running speed, distance, day, score, public action eligibility,
-and lifecycle command events. The initial profile's score multiplier remains in
-authoritative state and does not enter the public observation.
+the ruleset-owned world camera, and lifecycle command events. The initial
+profile's score multiplier remains in authoritative state and does not enter
+the public observation.
 
 ## Checkpoints and hashes
 
