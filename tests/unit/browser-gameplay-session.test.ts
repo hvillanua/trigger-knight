@@ -27,7 +27,7 @@ describe("browser gameplay session", () => {
       presentation,
     );
     const unpresented = createBrowserGameplaySession(gameplayEngine, config);
-    const commands = Object.freeze([Object.freeze({ type: "advance" })]);
+    const commands = Object.freeze([]);
 
     const presentedResult = presented.dispatch(commands);
     const unpresentedResult = unpresented.dispatch(commands);
@@ -35,13 +35,58 @@ describe("browser gameplay session", () => {
     expect(presentedResult).toEqual(unpresentedResult);
     expect(presented.readDiagnostics()).toEqual(unpresented.readDiagnostics());
     expect(presentedResult).toEqual({
-      observation: { ruleset: ORIGINAL_V13_RULESET_ID, steps: 1 },
+      observation: {
+        ruleset: ORIGINAL_V13_RULESET_ID,
+        steps: 1,
+        activeTicks: 0,
+        lifecycle: {
+          phase: "running",
+          paused: false,
+          tutorialPage: 0,
+          pregameStepsRemaining: 60,
+          activeGameplay: false,
+        },
+        actions: {
+          canTogglePause: true,
+          canDismissTutorial: true,
+        },
+      },
       events: [{ type: "step-advanced", step: 1 }],
     });
     expect(present).toHaveBeenCalledTimes(2);
     expect(present).toHaveBeenLastCalledWith({
-      previous: { ruleset: ORIGINAL_V13_RULESET_ID, steps: 0 },
-      current: { ruleset: ORIGINAL_V13_RULESET_ID, steps: 1 },
+      previous: {
+        ruleset: ORIGINAL_V13_RULESET_ID,
+        steps: 0,
+        activeTicks: 0,
+        lifecycle: {
+          phase: "running",
+          paused: false,
+          tutorialPage: 0,
+          pregameStepsRemaining: 60,
+          activeGameplay: false,
+        },
+        actions: {
+          canTogglePause: true,
+          canDismissTutorial: true,
+        },
+      },
+      current: {
+        ruleset: ORIGINAL_V13_RULESET_ID,
+        steps: 1,
+        activeTicks: 0,
+        lifecycle: {
+          phase: "running",
+          paused: false,
+          tutorialPage: 0,
+          pregameStepsRemaining: 60,
+          activeGameplay: false,
+        },
+        actions: {
+          canTogglePause: true,
+          canDismissTutorial: true,
+        },
+      },
       interpolation: 1,
       events: [{ type: "step-advanced", step: 1 }],
     });

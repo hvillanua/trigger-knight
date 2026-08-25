@@ -33,6 +33,25 @@ function request(
   };
 }
 
+function tutorialGatedObservation(steps: number): GameObservation {
+  return {
+    ruleset: ORIGINAL_V13_RULESET_ID,
+    steps,
+    activeTicks: 0,
+    lifecycle: {
+      phase: "running",
+      paused: false,
+      tutorialPage: 0,
+      pregameStepsRemaining: 60,
+      activeGameplay: false,
+    },
+    actions: {
+      canTogglePause: true,
+      canDismissTutorial: true,
+    },
+  };
+}
+
 describe("headless simulation runner", () => {
   it.each([0, -1, Number.NaN, Number.POSITIVE_INFINITY, 1.5])(
     "rejects invalid step limit %s",
@@ -73,7 +92,7 @@ describe("headless simulation runner", () => {
       distance: 0,
       gold: 0,
       traceHash:
-        "sha256-v1:cc49587e740d0f4b166c2d55d1b88c197a6b769cc95c77bf5b767e68437f746f",
+        "sha256-v1:ad73bb586d4ba98f28e977ab5bd7014c6400a03be1c75f67a1ad783309039423",
       metrics: {},
     });
     expect(Object.isFrozen(result)).toBe(true);
@@ -92,7 +111,7 @@ describe("headless simulation runner", () => {
       createAgent: () => ({
         decide(observation, events) {
           inputs.push({ observation, events });
-          return Object.freeze([Object.freeze({ type: "advance" })]);
+          return Object.freeze([]);
         },
       }),
     };
@@ -102,18 +121,32 @@ describe("headless simulation runner", () => {
 
     expect(inputs).toEqual([
       {
-        observation: { ruleset: ORIGINAL_V13_RULESET_ID, steps: 0 },
+        observation: tutorialGatedObservation(0),
         events: [],
       },
       {
-        observation: { ruleset: ORIGINAL_V13_RULESET_ID, steps: 1 },
+        observation: tutorialGatedObservation(1),
         events: [{ type: "step-advanced", step: 1 }],
       },
       {
-        observation: { ruleset: ORIGINAL_V13_RULESET_ID, steps: 2 },
+        observation: tutorialGatedObservation(2),
         events: [{ type: "step-advanced", step: 2 }],
       },
     ]);
+  });
+
+  it("reports active ticks from authoritative lifecycle state", () => {
+    const dismissTutorialPolicy: PlayerPolicy = {
+      descriptor: { id: "dismiss-tutorial", version: "1", config: {} },
+      createAgent: () => ({
+        decide: () => [{ type: "dismiss-tutorial" }],
+      }),
+    };
+    const runner = createSimulationRunner(gameplayEngine);
+
+    const result = runner.run(request(dismissTutorialPolicy, { maxSteps: 62 }));
+
+    expect(result).toMatchObject({ steps: 62, activeTicks: 2 });
   });
 
   it("repeats normalized results and isolates mutable agent memory by run", () => {
@@ -124,7 +157,9 @@ describe("headless simulation runner", () => {
         decide(): readonly GameCommand[] {
           decisions += 1;
           return Object.freeze([
-            Object.freeze({ type: `decision-${decisions}` }),
+            Object.freeze({
+              type: decisions % 2 === 0 ? "dismiss-tutorial" : "toggle-pause",
+            }),
           ]);
         },
       };

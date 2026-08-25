@@ -1,12 +1,20 @@
 export type {
+  ActionEligibility,
+  DismissTutorialCommand,
   GameCommand,
   GameEvent,
   GameObservation,
+  LifecycleObservation,
+  PauseToggledEvent,
   ProfileState,
   RandomState,
+  RunLifecycleState,
+  RunPhase,
   RuleSetId,
   RunState,
   StepAdvancedEvent,
+  TogglePauseCommand,
+  TutorialDismissedEvent,
 } from "../domain/contracts.js";
 export type {
   GameplayEngine,

@@ -18,6 +18,7 @@ The ruleset owns the Milestone 2 values that later lifecycle tickets will use:
 | Group            | Values                                                                                                                     | Evidence                                                                       |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | Logical time     | 30 gameplay ticks per second                                                                                               | Confirmed original behavior                                                    |
+| Pregame delay    | 60 logical opportunities                                                                                                   | Confirmed value; gate interaction is a clean-room decision                     |
 | Running movement | Speed starts at 0, gains 1 per active tick, caps at 15, and contributes one distance unit per speed unit                   | Confirmed original behavior                                                    |
 | Day and score    | 7,000 distance units per day; running score uses 10 points per speed unit before the profile multiplier                    | Confirmed original behavior                                                    |
 | Lifespan         | Starts at 99.99, drains the fractional field by 4 per active tick, resets the fraction to 99, and dies below whole value 0 | Confirmed original behavior                                                    |
@@ -30,18 +31,45 @@ sequence remain unrecovered. The chosen algorithm does not claim to reproduce
 that sequence. The exact seed expansion and bounded integer mapping are in
 [`deterministic-randomness.md`](deterministic-randomness.md).
 
-## Current transition
+## Lifecycle and fixed steps
 
-The ruleset foundation retains the Milestone 1 deterministic transition while
-the remaining Milestone 2 mechanics are developed. `createRun(config)` returns
-a serializable state with `steps` set to zero. Each `step(state, commands)` call
-returns a new state with an incremented step count and one `step-advanced`
-event. `observe(state)` returns only the ruleset identity and step count, not the
-hidden random state.
+Each `step(state, commands)` call is one 30 Hz logical opportunity. It accepts
+no elapsed time or render information. `steps` increments for every call,
+including calls made when pause, tutorial, pregame, or ended state prevents
+active gameplay. `activeTicks` increments only when the run phase is `running`,
+pause is off, no tutorial is open, and the pregame counter has reached zero.
 
-This step counter and event are still scaffolding. Movement, active ticks,
-lifespan, pause, tutorial gates, and termination belong to later Milestone 2
-tickets and are not claimed as recovered original behavior here.
+Run state stores the base `running` or `ended` phase separately from the pause,
+tutorial, and pregame gates. This allows pause to be toggled while tutorial page
+0 remains open. The public observation reports those fields, whether active
+gameplay can advance on the next step, and whether pause or tutorial dismissal
+commands are currently eligible. It does not expose random state.
+
+Commands are processed in list order before the same logical opportunity is
+evaluated. A successful command emits `pause-toggled` or `tutorial-dismissed`,
+followed by the step's `step-advanced` event. Commands do nothing after the run
+phase becomes `ended`, but the host can still account for an attempted engine
+step.
+
+## Tutorial and pregame compatibility
+
+Tutorial page 0 gates every newly created run, even when the supplied profile
+stores a disabled tutorial preference. The unconditional page is confirmed
+original behavior. Its intent remains unknown, so the implementation does not
+describe it as a deliberate original design choice.
+
+The original artifact confirms a 60-frame pregame value, but the research does
+not establish how that counter interacts with overlapping pause and tutorial
+gates. `original-v1.3` uses this explicit clean-room decision:
+
+- The tutorial and pause gates freeze the pregame counter.
+- The step that dismisses the tutorial or removes pause can consume a pregame
+  opportunity because commands take effect first.
+- Pregame opportunities do not increment `activeTicks`. The first active tick
+  is the next eligible step after the counter reaches zero.
+
+Movement, lifespan drain, encounters, combat, tutorial presentation, and run
+termination remain assigned to later tickets.
 
 State, results, events, event lists, and observations are frozen. A
 JSON-restored checkpoint produces the same next state, observation, and events

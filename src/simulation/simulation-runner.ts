@@ -122,7 +122,7 @@ function runSimulation(
     policy,
     maxSteps,
     steps: maxSteps,
-    activeTicks: 0,
+    activeTicks: state.activeTicks,
     terminalReason: "step-limit",
     score: 0,
     day: 0,

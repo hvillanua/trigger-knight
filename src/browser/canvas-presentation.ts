@@ -7,8 +7,12 @@ import { calculateBackingStoreSize, type CssDimensions } from "./foundation.js";
 
 function describeEvent(event: GameEvent): string {
   switch (event.type) {
+    case "pause-toggled":
+      return `${event.type}:${String(event.paused)}`;
     case "step-advanced":
       return `${event.type}:${event.step}`;
+    case "tutorial-dismissed":
+      return `${event.type}:${event.page}`;
   }
 }
 

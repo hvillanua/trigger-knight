@@ -22,19 +22,17 @@ const config: RunConfig = Object.freeze({
   initialProfile: Object.freeze({ schemaVersion: 1 }),
 });
 
-const advanceCommands: readonly GameCommand[] = Object.freeze([
-  Object.freeze({ type: "advance" }),
-]);
+const noCommands: readonly GameCommand[] = Object.freeze([]);
 
-const advancePolicy: PlayerPolicy = Object.freeze({
+const noCommandPolicy: PlayerPolicy = Object.freeze({
   descriptor: Object.freeze({
-    id: "advance-every-step",
+    id: "no-commands",
     version: "1",
     config: Object.freeze({}),
   }),
   createAgent: () =>
     Object.freeze({
-      decide: () => advanceCommands,
+      decide: () => noCommands,
     }),
 });
 
@@ -42,14 +40,14 @@ describe("gameplay diagnostics", () => {
   it("records equal browser and headless checkpoints for one command schedule", () => {
     const browser = createBrowserGameplaySession(gameplayEngine, config);
     const browserResults = Array.from({ length: 3 }, () =>
-      browser.dispatch(advanceCommands),
+      browser.dispatch(noCommands),
     );
     const headlessTraces: GameplayTrace[] = [];
     const runner = createSimulationRunner(gameplayEngine, {
       onTrace: (trace) => headlessTraces.push(trace),
     });
 
-    runner.run({ config, policy: advancePolicy, maxSteps: 3 });
+    runner.run({ config, policy: noCommandPolicy, maxSteps: 3 });
 
     const browserTrace = browser.readDiagnostics();
     const headlessTrace = headlessTraces[0];
@@ -67,13 +65,13 @@ describe("gameplay diagnostics", () => {
     expect(
       browserTrace.checkpoints.map(({ checkpointHash }) => checkpointHash),
     ).toEqual([
-      "sha256-v1:1a9de32d68bc2edc0c2c96be260a172a6a9917146cd6421605fe1533e69d3802",
-      "sha256-v1:a027e229e23858f465cd4a2fc7e383345a0729d89236d4b50ceb83fd3a7908f4",
-      "sha256-v1:e2b6646f8851afd7d803fb85054210c5c466a2d18bb25b5cb1963b0739575e46",
-      "sha256-v1:730a0c4f78847c94a8a60980c11deedc7d279767b491677bd782e4f029cb1692",
+      "sha256-v1:fd8cfd32eb23cf7fe94e9d9339f77795d5613e30fe18ac83b7cd7971a6ce8537",
+      "sha256-v1:71fc5aa9d0e9bba049ea4e01db4a180e5a552571c396ffbf91409acd9948d369",
+      "sha256-v1:11ac91a5f13d8ac4a5ee4992b8499ba43e974987b1711bf7adcc9f502117fd60",
+      "sha256-v1:12a808a055152ebe77c7ca168e83493028e0bc7857c8ae0c24ac5b5473f37f45",
     ]);
     expect(browserTrace.traceHash).toBe(
-      "sha256-v1:cf3b380b23f5d9ba227ec975dacac9ce63620134835d2007c3df103bb5bace5d",
+      "sha256-v1:9cc51e46873a73669ee55e93df4a63903b69e4f7341b4acc3dedafc64c195a92",
     );
     expect(compareGameplayTraces(browserTrace, headlessTrace)).toEqual({
       equal: true,
@@ -82,8 +80,8 @@ describe("gameplay diagnostics", () => {
 
   it("identifies the first structured field that differs", () => {
     const session = createBrowserGameplaySession(gameplayEngine, config);
-    session.dispatch(advanceCommands);
-    session.dispatch(advanceCommands);
+    session.dispatch(noCommands);
+    session.dispatch(noCommands);
     const expected = session.readDiagnostics();
     const changedCheckpoint = expected.checkpoints[1];
 

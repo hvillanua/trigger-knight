@@ -13,6 +13,7 @@ describe("ruleset registry", () => {
       id: "original-v1.3",
       constants: {
         logicalTicksPerSecond: 30,
+        pregameDelaySteps: 60,
         movement: {
           initialSpeed: 0,
           accelerationPerActiveTick: 1,
@@ -38,6 +39,8 @@ describe("ruleset registry", () => {
         randomSequence: "mulberry32-fnv1a32-v1",
         randomCompatibilityTarget: "confirmed-ranges-probabilities-draw-order",
         coordinateModel: "original-stage-units-as-world-units",
+        pregameDelayProgression: "after-commands-while-other-gates-open",
+        pregameDelayCountsAsActiveGameplay: false,
       },
     });
     expect(Object.isFrozen(originalV13RuleSet)).toBe(true);
