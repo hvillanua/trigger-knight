@@ -26,13 +26,14 @@ The included `nonProgressingPolicy` returns no commands and creates a new agent
 for every run. It exists to prove that a policy which never reaches gameplay
 termination still cannot hang a run or batch.
 
-The engine now reports authoritative lifecycle `activeTicks`. A policy that
-does not dismiss initial tutorial page 0 remains gated, so its active-tick count
-stays zero while `steps` still reaches the finite budget. The runner copies the
-final state's active-tick count into the result. Gameplay termination, score,
-day, distance, gold, and metrics remain assigned to later tickets, so the
-runner still returns `step-limit` and zero for those fields. The runner's
-`steps` field counts every engine step taken against the finite budget.
+The engine reports authoritative lifecycle and running progression. A policy
+that does not dismiss initial tutorial page 0 remains gated, so its active-tick
+count, speed, distance, and score stay zero while `steps` still reaches the
+finite budget. Day starts at 1. The runner copies `activeTicks`, `score`, `day`,
+and `distance` from the final state into the result. Gameplay termination and
+gold remain assigned to later tickets, so the runner still returns
+`step-limit` and zero gold. The runner's `steps` field counts every engine step
+taken against the finite budget.
 
 ## Reproducible identity
 

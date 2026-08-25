@@ -34,15 +34,21 @@ sequence so retained seeds and checkpoints remain reproducible.
 
 ## Run state and isolation
 
-Run-state schema version `2` adds fixed-step lifecycle state to the ruleset
-identity and complete random state:
+Run-state schema version `3` includes fixed-step lifecycle state, running
+progression, the consumed profile multiplier, the ruleset identity, and the
+complete random state:
 
 ```json
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "ruleset": "original-v1.3",
   "steps": 0,
   "activeTicks": 0,
+  "scoreMultiplier": 1,
+  "movementSpeed": 0,
+  "distance": 0,
+  "day": 1,
+  "score": 0,
   "lifecycle": {
     "phase": "running",
     "paused": false,

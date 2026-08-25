@@ -7,6 +7,7 @@ import type {
   RunState,
 } from "./contracts.js";
 import { RANDOM_ALGORITHM } from "./random.js";
+import { advanceRunningProgression } from "./running-progression.js";
 import {
   advanceRunState,
   createRunState,
@@ -105,16 +106,27 @@ const originalV13CompatibilityDecisions: RuleSetCompatibilityDecisions =
     pregameDelayCountsAsActiveGameplay: false,
   });
 
+const originalV13RunningProgressionRules = Object.freeze({
+  accelerationPerActiveTick:
+    originalV13Constants.movement.accelerationPerActiveTick,
+  maximumSpeed: originalV13Constants.movement.maximumSpeed,
+  distancePerSpeedUnit: originalV13Constants.movement.distancePerSpeedUnit,
+  distancePerDay: originalV13Constants.movement.distancePerDay,
+  scorePerSpeedUnit: originalV13Constants.runningScorePerSpeedUnit,
+});
+
 export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
   id: ORIGINAL_V13_RULESET_ID,
   constants: originalV13Constants,
   compatibilityDecisions: originalV13CompatibilityDecisions,
 
-  createRun(seed: string): RunState {
+  createRun(seed: string, initialProfile: Readonly<ProfileState>): RunState {
     return createRunState(
       ORIGINAL_V13_RULESET_ID,
       seed,
       originalV13Constants.pregameDelaySteps,
+      initialProfile.scoreMultiplier,
+      originalV13Constants.movement.initialSpeed,
     );
   },
 
@@ -122,7 +134,16 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
     state: Readonly<RunState>,
     commands: readonly GameCommand[],
   ): RuleSetStepResult {
-    return advanceRunState(state, commands);
+    const result = advanceRunState(state, commands);
+
+    return Object.freeze({
+      state: advanceRunningProgression(
+        state,
+        result.state,
+        originalV13RunningProgressionRules,
+      ),
+      events: result.events,
+    });
   },
 
   observe(state: Readonly<RunState>): GameObservation {
@@ -136,6 +157,10 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
       ruleset: state.ruleset,
       steps: state.steps,
       activeTicks: state.activeTicks,
+      movementSpeed: state.movementSpeed,
+      distance: state.distance,
+      day: state.day,
+      score: state.score,
       lifecycle,
       actions: Object.freeze({
         canTogglePause: canAcceptLifecycleCommands,

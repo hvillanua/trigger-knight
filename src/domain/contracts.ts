@@ -4,6 +4,7 @@ export type RuleSetId = string;
 /** Profile snapshot supplied explicitly when a run is created. */
 export interface ProfileState {
   readonly schemaVersion: number;
+  readonly scoreMultiplier: number;
   readonly tutorialPreference?: "enabled" | "disabled";
 }
 
@@ -25,11 +26,16 @@ export interface RunLifecycleState {
 
 /** Authoritative state owned by the gameplay domain. */
 export interface RunState {
-  readonly schemaVersion: 2;
+  readonly schemaVersion: 3;
   readonly ruleset: RuleSetId;
   readonly random: RandomState;
   readonly steps: number;
   readonly activeTicks: number;
+  readonly scoreMultiplier: number;
+  readonly movementSpeed: number;
+  readonly distance: number;
+  readonly day: number;
+  readonly score: number;
   readonly lifecycle: RunLifecycleState;
 }
 
@@ -79,6 +85,10 @@ export interface GameObservation {
   readonly ruleset: RuleSetId;
   readonly steps: number;
   readonly activeTicks: number;
+  readonly movementSpeed: number;
+  readonly distance: number;
+  readonly day: number;
+  readonly score: number;
   readonly lifecycle: LifecycleObservation;
   readonly actions: ActionEligibility;
 }

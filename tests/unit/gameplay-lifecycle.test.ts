@@ -13,6 +13,7 @@ const gameplayEngine = createTestGameplayEngine();
 function createRun(
   initialProfile: RunConfig["initialProfile"] = {
     schemaVersion: 1,
+    scoreMultiplier: 1,
   },
 ): RunState {
   return gameplayEngine.createRun({
@@ -36,6 +37,7 @@ describe("original-v1.3 lifecycle", () => {
   it("gates every new run on tutorial page 0 regardless of preference", () => {
     const state = createRun({
       schemaVersion: 1,
+      scoreMultiplier: 1,
       tutorialPreference: "disabled",
     });
 
@@ -53,6 +55,10 @@ describe("original-v1.3 lifecycle", () => {
       ruleset: ORIGINAL_V13_RULESET_ID,
       steps: 0,
       activeTicks: 0,
+      movementSpeed: 0,
+      distance: 0,
+      day: 1,
+      score: 0,
       lifecycle: {
         phase: "running",
         paused: false,

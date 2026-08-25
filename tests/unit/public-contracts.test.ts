@@ -158,11 +158,16 @@ describe("public application contracts", () => {
       readonly initialProfile: ProfileState;
     }>();
     expectTypeOf<RunState>().toMatchTypeOf<{
-      readonly schemaVersion: 2;
+      readonly schemaVersion: 3;
       readonly ruleset: RuleSetId;
       readonly random: RandomState;
       readonly steps: number;
       readonly activeTicks: number;
+      readonly scoreMultiplier: number;
+      readonly movementSpeed: number;
+      readonly distance: number;
+      readonly day: number;
+      readonly score: number;
       readonly lifecycle: {
         readonly phase: "running" | "ended";
         readonly paused: boolean;
@@ -174,6 +179,10 @@ describe("public application contracts", () => {
       readonly ruleset: RuleSetId;
       readonly steps: number;
       readonly activeTicks: number;
+      readonly movementSpeed: number;
+      readonly distance: number;
+      readonly day: number;
+      readonly score: number;
       readonly lifecycle: {
         readonly phase: "running" | "ended";
         readonly paused: boolean;
