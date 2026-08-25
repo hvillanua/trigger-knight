@@ -117,7 +117,7 @@ describe("browser gameplay session", () => {
           canDismissTutorial: true,
         },
       },
-      interpolation: 1,
+      interpolation: 0,
       events: [{ type: "step-advanced", step: 1 }],
     });
   });
@@ -130,11 +130,13 @@ describe("browser gameplay session", () => {
     session.dispatch([]);
     const traceBeforePresentation = session.readDiagnostics();
 
-    session.render(0);
     session.render(0.5);
     session.render(1);
 
     expect(session.readDiagnostics()).toEqual(traceBeforePresentation);
+    expect(present.mock.calls.map(([frame]) => frame.interpolation)).toEqual([
+      1, 0, 0.5, 1,
+    ]);
     expect(
       present.mock.calls.slice(-3).map(([frame]) => ({
         interpolation: frame.interpolation,

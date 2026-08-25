@@ -37,9 +37,12 @@ changing the camera or gameplay coordinates.
 `CanvasPresentation.resize()` recalculates the physical projection and redraws
 the stored `PresentationFrame`. It does not call the gameplay engine. The
 browser session can also present its latest transition at interpolation values
-between 0 and 1 without dispatching another logical step. Interpolation uses
-the observed distance to move a presentation marker; displayed authoritative
-values and action eligibility still come from `PresentationFrame.current`.
+between 0 and 1 without dispatching another logical step. Dispatch publishes a
+new transition at 0 so a display loop can move monotonically toward 1. The
+manual browser control completes that presentation immediately. Interpolation
+uses the observed distance to move a presentation marker; displayed
+authoritative values and action eligibility still come from
+`PresentationFrame.current`.
 
 Canvas data attributes expose the observed camera, physical projection,
 interpolation amount, and authoritative gameplay values for browser checks.

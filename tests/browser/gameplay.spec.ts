@@ -25,6 +25,7 @@ test("drives one fixed shared-engine step from the browser", async ({
   await expect(page.getByTestId("game-status")).toHaveText("Step 1");
   await expect(canvas).toHaveAttribute("data-observation-step", "1");
   await expect(canvas).toHaveAttribute("data-events", "step-advanced:1");
+  await expect(canvas).toHaveAttribute("data-interpolation", "1");
 });
 
 test("physical Canvas size does not change the engine result", async ({

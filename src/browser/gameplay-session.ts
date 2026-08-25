@@ -69,7 +69,7 @@ export function createBrowserGameplaySession(
       const checkpoint = execution.dispatch(commands);
       observation = checkpoint.observation;
       events = checkpoint.events;
-      render(1);
+      render(0);
 
       return Object.freeze({
         observation,
