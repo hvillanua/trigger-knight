@@ -124,3 +124,7 @@ State, results, events, event lists, and observations are frozen. A
 JSON-restored checkpoint produces the same next state, observation, and events
 as uninterrupted execution. Browser and headless parity traces are described in
 [`gameplay-diagnostics.md`](gameplay-diagnostics.md).
+
+The complete no-gameplay-action lifecycle, including explicit tutorial and
+pause release commands, is covered by the
+[`Milestone 2 lifecycle verification`](milestone-2-lifecycle-verification.md).

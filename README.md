@@ -72,6 +72,9 @@ batch behavior are recorded in
 Cross-host checkpoints, parity hashes, and structured first-difference output
 are recorded in
 [`docs/gameplay-diagnostics.md`](docs/gameplay-diagnostics.md).
+The complete Milestone 2 lifecycle scenario, locked terminal values and hashes,
+checkpoint continuation matrix, and research labels are recorded in
+[`docs/milestone-2-lifecycle-verification.md`](docs/milestone-2-lifecycle-verification.md).
 
 ## Directory boundaries
 
