@@ -5,9 +5,9 @@ It creates `original-v1.3` runs through the same ruleset registry and
 `GameplayEngine` operations as the browser session. Ordinary policies receive
 the same `GameObservation` and `GameEvent` values used by presentation.
 
-This slice proves the application boundary. It does not implement original
-Trigger Knight behavior, gameplay termination, worker concurrency, reporting,
-or Monte Carlo tooling.
+The runner now recognizes committed gameplay termination. Worker concurrency,
+reporting, Monte Carlo tooling, combat death, and gold remain outside this
+slice.
 
 ## Run sequence
 
@@ -20,20 +20,25 @@ Create a runner with `createSimulationRunner(gameplayEngine)` and supply a
    decision.
 4. Step the engine with that decision's commands.
 5. Pass the new observation and that step's events to the next decision.
-6. Stop after exactly `maxSteps` engine steps and return `step-limit`.
+6. Stop when the engine commits a terminal reason, or after `maxSteps` when no
+   gameplay death occurs.
 
 The included `nonProgressingPolicy` returns no commands and creates a new agent
 for every run. It exists to prove that a policy which never reaches gameplay
 termination still cannot hang a run or batch.
 
-The engine reports authoritative lifecycle and running progression. A policy
-that does not dismiss initial tutorial page 0 remains gated, so its active-tick
-count, speed, distance, and score stay zero while `steps` still reaches the
-finite budget. Day starts at 1. The runner copies `activeTicks`, `score`, `day`,
-and `distance` from the final state into the result. Gameplay termination and
-gold remain assigned to later tickets, so the runner still returns
-`step-limit` and zero gold. The runner's `steps` field counts every engine step
-taken against the finite budget.
+The engine reports authoritative lifecycle, running progression, and lifespan.
+A policy that does not dismiss initial tutorial page 0 remains gated, so its
+active-tick count, speed, distance, score, and lifespan stay unchanged while
+`steps` still reaches the finite budget. Day starts at 1. Such a run returns
+`step-limit`, which is a runner outcome rather than gameplay death.
+
+A policy that dismisses page 0 and otherwise takes no action completes the
+60-step pregame gate, then reaches lifespan death on active tick 2,500. The
+runner stops at elapsed step 2,560 even when `maxSteps` is larger. It returns
+terminal reason `lifespan` and copies the actual steps, active ticks, score,
+day, and distance from the committed state. A smaller budget still returns
+`step-limit`. Gold remains zero until the economy tickets implement it.
 
 ## Reproducible identity
 

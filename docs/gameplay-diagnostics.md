@@ -2,10 +2,10 @@
 
 The browser and headless hosts record the same structured execution trace around
 `gameplayEngine`. Checkpoints include elapsed steps, active ticks, lifecycle
-phase and gates, running speed, distance, day, score, public action eligibility,
-the ruleset-owned world camera, and lifecycle command events. The initial
-profile's score multiplier remains in authoritative state and does not enter
-the public observation.
+phase, terminal reason and gates, integer lifespan, running speed, distance,
+day, score, public action eligibility, the ruleset-owned world camera, and
+semantic gameplay events. The initial profile's score multiplier remains in
+authoritative state and does not enter the public observation.
 
 ## Checkpoints and hashes
 
@@ -48,6 +48,11 @@ full diagnostic history for ordinary batches.
 The browser session and simulation runner both step through the same
 application execution owner. Presentation remains optional. Replacing or
 disabling it does not change checkpoint values or hashes.
+
+Lifespan death adds one terminal checkpoint containing `lifespan-death` and
+`run-ended` events. The simulation runner stops on that checkpoint. Browser
+presentation can redraw or interpolate it any number of times without stepping
+the execution, adding checkpoints, changing results, or changing trace hashes.
 
 ## Checkpoint continuation
 

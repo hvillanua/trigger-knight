@@ -74,6 +74,33 @@ render interpolation, or wall-clock input.
 The browser projection and the distinction between world and physical values
 are documented in [`world-camera.md`](world-camera.md).
 
+## Lifespan and termination
+
+A new run stores and publishes lifespan as the two confirmed integers `whole`
+and `fraction`, both initialized to 99. Each active tick subtracts 4 from the
+fraction. A value at or below zero resets the fraction to 99 and subtracts one
+from the whole value. Tutorial, pregame, pause, and ended gates do not drain
+lifespan.
+
+At the derived 2,500-tick boundary, the state changes from `{ whole: 0,
+fraction: 3 }` to `{ whole: -1, fraction: 99 }` and commits the lifecycle phase
+`ended` with terminal reason `lifespan`. The research confirms that movement,
+score, and lifespan are active-frame systems, but it does not establish their
+ordering on the terminal frame. This implementation advances movement,
+distance, day, and running score before committing lifespan death on the same
+active tick. That ordering is a clean-room compatibility decision.
+
+The terminal transition emits `lifespan-death` followed by `run-ended` with
+reason `lifespan`. Later steps cannot drain lifespan or emit either terminal
+event again. Lifecycle commands become ineligible as soon as the ended state is
+observable.
+
+The original artifact's 60-frame post-death delay is confirmed presentation
+timing. It starts only after gameplay death has been committed and is not part
+of `RunState`, active ticks, simulation results, or trace advancement. The
+browser may shorten, skip, or redesign that non-interactive delay under the
+presentation modernization boundary.
+
 ## Tutorial and pregame compatibility
 
 Tutorial page 0 gates every newly created run, even when the supplied profile
@@ -91,8 +118,7 @@ gates. `original-v1.3` uses this explicit clean-room decision:
 - Pregame opportunities do not increment `activeTicks`. The first active tick
   is the next eligible step after the counter reaches zero.
 
-Lifespan drain, encounters, combat, tutorial presentation, and run termination
-remain assigned to later tickets.
+Encounters, combat, and tutorial presentation remain assigned to later tickets.
 
 State, results, events, event lists, and observations are frozen. A
 JSON-restored checkpoint produces the same next state, observation, and events

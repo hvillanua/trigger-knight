@@ -92,6 +92,7 @@ describe("deterministic randomness", () => {
       60,
       1,
       0,
+      { whole: 99, fraction: 99 },
     );
     const beforeCheckpoint = drawSequence(initial.random, 3);
     const checkpoint: RunState = {
@@ -115,6 +116,7 @@ describe("deterministic randomness", () => {
       60,
       1,
       0,
+      { whole: 99, fraction: 99 },
     );
     const second = createRunState(
       ORIGINAL_V13_RULESET_ID,
@@ -122,6 +124,7 @@ describe("deterministic randomness", () => {
       60,
       1,
       0,
+      { whole: 99, fraction: 99 },
     );
     const firstDraw = nextRandom(first.random);
 

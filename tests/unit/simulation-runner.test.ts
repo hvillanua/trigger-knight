@@ -48,8 +48,13 @@ function tutorialGatedObservation(steps: number): GameObservation {
     distance: 0,
     day: 1,
     score: 0,
+    lifespan: {
+      whole: 99,
+      fraction: 99,
+    },
     lifecycle: {
       phase: "running",
+      terminalReason: null,
       paused: false,
       tutorialPage: 0,
       pregameStepsRemaining: 60,
@@ -102,7 +107,7 @@ describe("headless simulation runner", () => {
       distance: 0,
       gold: 0,
       traceHash:
-        "sha256-v1:a1f53077d9e0e5be80cc67f78b21fb11840bfff77e54630baea8cf73b6139829",
+        "sha256-v1:2035a05aa0afbfcd086a2a1f8288f36bfb9ff1c84087046cfa425524bfef94b4",
       metrics: {},
     });
     expect(Object.isFrozen(result)).toBe(true);
@@ -162,6 +167,67 @@ describe("headless simulation runner", () => {
       score: 30,
       day: 1,
       distance: 3,
+    });
+  });
+
+  it("stops at lifespan death and reports the actual run totals", () => {
+    const dismissTutorialPolicy: PlayerPolicy = {
+      descriptor: { id: "dismiss-tutorial", version: "1", config: {} },
+      createAgent: () => {
+        let firstDecision = true;
+
+        return {
+          decide: () => {
+            if (firstDecision) {
+              firstDecision = false;
+              return [{ type: "dismiss-tutorial" }];
+            }
+
+            return [];
+          },
+        };
+      },
+    };
+    const runner = createSimulationRunner(gameplayEngine);
+
+    const result = runner.run(
+      request(dismissTutorialPolicy, { maxSteps: 3_000 }),
+    );
+
+    expect(result).toMatchObject({
+      maxSteps: 3_000,
+      steps: 2_560,
+      activeTicks: 2_500,
+      terminalReason: "lifespan",
+      score: 373_950,
+      day: 6,
+      distance: 37_395,
+    });
+  });
+
+  it("returns step-limit when the budget is reached before lifespan death", () => {
+    const dismissTutorialPolicy: PlayerPolicy = {
+      descriptor: { id: "dismiss-tutorial", version: "1", config: {} },
+      createAgent: () => ({
+        decide: (observation) =>
+          observation.actions.canDismissTutorial
+            ? [{ type: "dismiss-tutorial" }]
+            : [],
+      }),
+    };
+    const runner = createSimulationRunner(gameplayEngine);
+
+    const result = runner.run(
+      request(dismissTutorialPolicy, { maxSteps: 2_559 }),
+    );
+
+    expect(result).toMatchObject({
+      steps: 2_559,
+      activeTicks: 2_499,
+      terminalReason: "step-limit",
+      score: 373_800,
+      day: 6,
+      distance: 37_380,
     });
   });
 

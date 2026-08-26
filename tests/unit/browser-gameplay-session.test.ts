@@ -49,8 +49,13 @@ describe("browser gameplay session", () => {
         distance: 0,
         day: 1,
         score: 0,
+        lifespan: {
+          whole: 99,
+          fraction: 99,
+        },
         lifecycle: {
           phase: "running",
+          terminalReason: null,
           paused: false,
           tutorialPage: 0,
           pregameStepsRemaining: 60,
@@ -79,8 +84,13 @@ describe("browser gameplay session", () => {
         distance: 0,
         day: 1,
         score: 0,
+        lifespan: {
+          whole: 99,
+          fraction: 99,
+        },
         lifecycle: {
           phase: "running",
+          terminalReason: null,
           paused: false,
           tutorialPage: 0,
           pregameStepsRemaining: 60,
@@ -105,8 +115,13 @@ describe("browser gameplay session", () => {
         distance: 0,
         day: 1,
         score: 0,
+        lifespan: {
+          whole: 99,
+          fraction: 99,
+        },
         lifecycle: {
           phase: "running",
+          terminalReason: null,
           paused: false,
           tutorialPage: 0,
           pregameStepsRemaining: 60,
@@ -150,6 +165,50 @@ describe("browser gameplay session", () => {
         previous: traceBeforePresentation.checkpoints[0]?.observation,
         current: traceBeforePresentation.checkpoints[1]?.observation,
         events: traceBeforePresentation.checkpoints[1]?.events,
+      })),
+    );
+  });
+
+  it("keeps the committed lifespan death trace fixed during later presentation", () => {
+    const present = vi.fn<(frame: PresentationFrame) => void>();
+    const session = createBrowserGameplaySession(gameplayEngine, config, {
+      present,
+    });
+    session.dispatch([{ type: "dismiss-tutorial" }]);
+    for (let step = 1; step < 2_560; step += 1) {
+      session.dispatch([]);
+    }
+    const terminalTrace = session.readDiagnostics();
+
+    expect(terminalTrace.checkpoints.at(-1)).toMatchObject({
+      state: {
+        steps: 2_560,
+        activeTicks: 2_500,
+        lifecycle: { phase: "ended", terminalReason: "lifespan" },
+      },
+      events: [
+        { type: "step-advanced", step: 2_560 },
+        { type: "lifespan-death" },
+        { type: "run-ended", reason: "lifespan" },
+      ],
+    });
+
+    session.render(0);
+    session.render(0.5);
+    session.render(1);
+
+    expect(session.readDiagnostics()).toEqual(terminalTrace);
+    expect(
+      present.mock.calls.slice(-3).map(([frame]) => ({
+        interpolation: frame.interpolation,
+        current: frame.current,
+        events: frame.events,
+      })),
+    ).toEqual(
+      [0, 0.5, 1].map((interpolation) => ({
+        interpolation,
+        current: terminalTrace.checkpoints.at(-1)?.observation,
+        events: terminalTrace.checkpoints.at(-1)?.events,
       })),
     );
   });

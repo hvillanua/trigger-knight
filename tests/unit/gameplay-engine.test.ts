@@ -53,7 +53,7 @@ describe("gameplay engine", () => {
     expect(repeated).toEqual(state);
     expect(repeated).not.toBe(state);
     expect(state).toMatchObject({
-      schemaVersion: 3,
+      schemaVersion: 4,
       ruleset: "original-v1.3",
       steps: 0,
       activeTicks: 0,
@@ -62,8 +62,13 @@ describe("gameplay engine", () => {
       distance: 0,
       day: 1,
       score: 0,
+      lifespan: {
+        whole: 99,
+        fraction: 99,
+      },
       lifecycle: {
         phase: "running",
+        terminalReason: null,
         paused: false,
         tutorialPage: 0,
         pregameStepsRemaining: 60,
@@ -83,8 +88,13 @@ describe("gameplay engine", () => {
       distance: 0,
       day: 1,
       score: 0,
+      lifespan: {
+        whole: 99,
+        fraction: 99,
+      },
       lifecycle: {
         phase: "running",
+        terminalReason: null,
         paused: false,
         tutorialPage: 0,
         pregameStepsRemaining: 60,
@@ -146,8 +156,13 @@ describe("gameplay engine", () => {
       distance: 0,
       day: 1,
       score: 0,
+      lifespan: {
+        whole: 99,
+        fraction: 99,
+      },
       lifecycle: {
         phase: "running",
+        terminalReason: null,
         paused: false,
         tutorialPage: null,
         pregameStepsRemaining: 59,

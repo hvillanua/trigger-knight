@@ -1,13 +1,14 @@
 import type {
   GameCommand,
   GameEvent,
+  LifespanState,
   RuleSetId,
   RunLifecycleState,
   RunState,
 } from "./contracts.js";
 import { createRandomState } from "./random.js";
 
-export const RUN_STATE_SCHEMA_VERSION = 3 as const;
+export const RUN_STATE_SCHEMA_VERSION = 4 as const;
 
 /** Creates a fresh minimal state value for one independent run. */
 export function createRunState(
@@ -16,6 +17,7 @@ export function createRunState(
   pregameSteps: number,
   scoreMultiplier: number,
   initialMovementSpeed: number,
+  initialLifespan: Readonly<LifespanState>,
 ): RunState {
   return Object.freeze({
     schemaVersion: RUN_STATE_SCHEMA_VERSION,
@@ -28,8 +30,10 @@ export function createRunState(
     distance: 0,
     day: 1,
     score: 0,
+    lifespan: Object.freeze({ ...initialLifespan }),
     lifecycle: Object.freeze({
       phase: "running",
+      terminalReason: null,
       paused: false,
       tutorialPage: 0,
       pregameStepsRemaining: pregameSteps,
