@@ -9,6 +9,14 @@ import {
 import { ORIGINAL_V13_RULESET_ID } from "../../src/domain/rulesets.js";
 import { createRunState } from "../../src/domain/run-state.js";
 
+const player = Object.freeze({
+  gold: 300,
+  weapon: Object.freeze({ tier: 1, attack: 216 }),
+  armor: Object.freeze({ tier: 1 }),
+  hp: Object.freeze({ current: 1_908, maximum: 1_908 }),
+  inventory: Object.freeze({ item: "elixir" as const }),
+});
+
 function drawSequence(
   initialState: Readonly<RandomState>,
   length: number,
@@ -93,6 +101,7 @@ describe("deterministic randomness", () => {
       1,
       0,
       { whole: 99, fraction: 99 },
+      player,
     );
     const beforeCheckpoint = drawSequence(initial.random, 3);
     const checkpoint: RunState = {
@@ -117,6 +126,7 @@ describe("deterministic randomness", () => {
       1,
       0,
       { whole: 99, fraction: 99 },
+      player,
     );
     const second = createRunState(
       ORIGINAL_V13_RULESET_ID,
@@ -125,6 +135,7 @@ describe("deterministic randomness", () => {
       1,
       0,
       { whole: 99, fraction: 99 },
+      player,
     );
     const firstDraw = nextRandom(first.random);
 

@@ -13,7 +13,7 @@ ruleset implementations, so a later identity can coexist without changing the
 
 ## Owned constants and decisions
 
-The ruleset owns the Milestone 2 values that later lifecycle tickets will use:
+The ruleset owns the confirmed compatibility values implemented so far:
 
 | Group            | Values                                                                                                                     | Evidence                                                                       |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
@@ -21,6 +21,10 @@ The ruleset owns the Milestone 2 values that later lifecycle tickets will use:
 | Pregame delay    | 60 logical opportunities                                                                                                   | Confirmed value; gate interaction is a clean-room decision                     |
 | Running movement | Speed starts at 0, gains 1 per active tick, caps at 15, and contributes one distance unit per speed unit                   | Confirmed original behavior                                                    |
 | Day and score    | 7,000 distance units per day; running score uses 10 points per speed unit before the profile multiplier                    | Confirmed original behavior                                                    |
+| Economy          | A run starts with 300 integer-valued gold                                                                                  | Confirmed original behavior                                                    |
+| Weapon           | Tier 1; attack is `129 + 87 * tier`, which starts at 216                                                                   | Confirmed original behavior                                                    |
+| Armor and HP     | Tier 1; maximum HP is `1009 + 899 * tier`, which starts at 1,908; current HP starts full                                   | Confirmed original behavior                                                    |
+| Inventory        | One item slot containing an Elixir                                                                                         | Confirmed original behavior                                                    |
 | Lifespan         | Starts at 99.99, drains the fractional field by 4 per active tick, resets the fraction to 99, and dies below whole value 0 | Confirmed original behavior                                                    |
 | World camera     | One original stage unit maps to one world unit; initial camera is 480 by 320 world units                                   | Clean-room coordinate-model decision preserving confirmed original coordinates |
 | Random sequence  | `mulberry32-fnv1a32-v1`                                                                                                    | Clean-room reproducibility decision                                            |
@@ -64,7 +68,7 @@ for checkpoint replay but is not part of `GameObservation`. Public observation
 includes movement speed, distance, day, and score for presentation and ordinary
 policies. It also includes the ruleset's initial 480x320-world-unit camera so
 presentation does not need access to ruleset internals or `RunState`. The
-headless result copies score, day, and distance from the same state.
+headless result copies score, day, distance, and gold from the same state.
 
 Tutorial, pregame, pause, and ended gates leave all four progression values
 unchanged. They also prevent `activeTicks` from advancing. These values use
@@ -73,6 +77,25 @@ render interpolation, or wall-clock input.
 
 The browser projection and the distinction between world and physical values
 are documented in [`world-camera.md`](world-camera.md).
+
+## Economy and loadout state
+
+The ruleset creates one authoritative `player` record in each fresh run. It
+contains gold, weapon tier and attack, armor tier, current and maximum HP, and
+the single inventory slot. `GameObservation.player` publishes the same current
+values without exposing random state or future encounter-generation state.
+
+The original-v1.3 constants own the starting tiers and the confirmed formulas.
+The run derives attack 216 from `129 + 87 * 1`. It derives maximum HP 1,908
+from `1009 + 899 * 1`, and current HP starts at that maximum. The inventory item
+identifiers cover Elixir, Divine Edge, and Gold Voucher, but this slice only
+initializes the confirmed starting Elixir. Purchases, item use, and other
+mutations remain in later Milestone 3 and 4 tickets.
+
+Player state and each nested equipment, HP, and inventory value are frozen.
+Stepping a JSON-restored checkpoint copies those values back into frozen domain
+state. Run-state schema version 5, gameplay-trace schema version 2, and
+run-result schema version 2 identify this contract change.
 
 ## Lifespan and termination
 
@@ -118,7 +141,8 @@ gates. `original-v1.3` uses this explicit clean-room decision:
 - Pregame opportunities do not increment `activeTicks`. The first active tick
   is the next eligible step after the counter reaches zero.
 
-Encounters, combat, and tutorial presentation remain assigned to later tickets.
+Encounter generation, purchases, item use, combat, and tutorial presentation
+remain assigned to later tickets.
 
 State, results, events, event lists, and observations are frozen. A
 JSON-restored checkpoint produces the same next state, observation, and events

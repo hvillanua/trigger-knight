@@ -4,6 +4,7 @@ import type {
   GameCommand,
   GameEvent,
   GameObservation,
+  GameplayEngine,
   PlayerPolicy,
   RunConfig,
   SimulationRequest,
@@ -52,6 +53,13 @@ function tutorialGatedObservation(steps: number): GameObservation {
       whole: 99,
       fraction: 99,
     },
+    player: {
+      gold: 300,
+      weapon: { tier: 1, attack: 216 },
+      armor: { tier: 1 },
+      hp: { current: 1_908, maximum: 1_908 },
+      inventory: { item: "elixir" },
+    },
     lifecycle: {
       phase: "running",
       terminalReason: null,
@@ -88,7 +96,7 @@ describe("headless simulation runner", () => {
 
     expect(secondAgent).not.toBe(firstAgent);
     expect(result).toEqual({
-      schemaVersion: 1,
+      schemaVersion: 2,
       ruleset: ORIGINAL_V13_RULESET_ID,
       seed: "simulation-seed",
       initialProfileFingerprint:
@@ -105,9 +113,9 @@ describe("headless simulation runner", () => {
       score: 0,
       day: 1,
       distance: 0,
-      gold: 0,
+      gold: 300,
       traceHash:
-        "sha256-v1:2035a05aa0afbfcd086a2a1f8288f36bfb9ff1c84087046cfa425524bfef94b4",
+        "sha256-v1:d957f4de30b89135bb8bd9a86604759288f8f7a9e12be79edbdc6f29c126a005",
       metrics: {},
     });
     expect(Object.isFrozen(result)).toBe(true);
@@ -168,6 +176,23 @@ describe("headless simulation runner", () => {
       day: 1,
       distance: 3,
     });
+  });
+
+  it("reads result gold from authoritative run state", () => {
+    const authoritativeGoldEngine: GameplayEngine = {
+      ...gameplayEngine,
+      createRun(runConfig) {
+        const state = gameplayEngine.createRun(runConfig);
+
+        return Object.freeze({
+          ...state,
+          player: Object.freeze({ ...state.player, gold: 271 }),
+        });
+      },
+    };
+    const runner = createSimulationRunner(authoritativeGoldEngine);
+
+    expect(runner.run(request()).gold).toBe(271);
   });
 
   it("stops at lifespan death and reports the actual run totals", () => {

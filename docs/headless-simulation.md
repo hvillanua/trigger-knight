@@ -5,9 +5,9 @@ It creates `original-v1.3` runs through the same ruleset registry and
 `GameplayEngine` operations as the browser session. Ordinary policies receive
 the same `GameObservation` and `GameEvent` values used by presentation.
 
-The runner now recognizes committed gameplay termination. Worker concurrency,
-reporting, Monte Carlo tooling, combat death, and gold remain outside this
-slice.
+The runner recognizes committed gameplay termination and reports current gold
+from authoritative player state. Worker concurrency, reporting, Monte Carlo
+tooling, combat death, purchases, and rewards remain outside this slice.
 
 ## Run sequence
 
@@ -37,8 +37,9 @@ A policy that dismisses page 0 and otherwise takes no action completes the
 60-step pregame gate, then reaches lifespan death on active tick 2,500. The
 runner stops at elapsed step 2,560 even when `maxSteps` is larger. It returns
 terminal reason `lifespan` and copies the actual steps, active ticks, score,
-day, and distance from the committed state. A smaller budget still returns
-`step-limit`. Gold remains zero until the economy tickets implement it.
+day, distance, and gold from the committed state. A smaller budget still
+returns `step-limit`. With no purchases or combat rewards in this slice, gold
+remains at the confirmed starting balance of 300.
 
 ## Reproducible identity
 
@@ -66,6 +67,10 @@ host-parity trace omits policy identity and the finite budget from its digest so
 the browser can produce the same authoritative checkpoint hashes from an equal
 run configuration and command schedule. See
 [`gameplay-diagnostics.md`](gameplay-diagnostics.md).
+
+Run-result schema version 2 records the replacement of placeholder gold with
+authoritative state. The streamed trace covers the complete version-5 run state
+and its player observation on every step.
 
 ## Minimal batches
 

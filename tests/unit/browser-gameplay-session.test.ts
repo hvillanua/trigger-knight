@@ -17,6 +17,14 @@ const config: RunConfig = Object.freeze({
   initialProfile: Object.freeze({ schemaVersion: 1, scoreMultiplier: 1 }),
 });
 
+const initialPlayer = {
+  gold: 300,
+  weapon: { tier: 1, attack: 216 },
+  armor: { tier: 1 },
+  hp: { current: 1_908, maximum: 1_908 },
+  inventory: { item: "elixir" },
+} as const;
+
 describe("browser gameplay session", () => {
   it("produces the same public result with replaced or disabled presentation", () => {
     const present = vi.fn<(frame: PresentationFrame) => void>();
@@ -53,6 +61,7 @@ describe("browser gameplay session", () => {
           whole: 99,
           fraction: 99,
         },
+        player: initialPlayer,
         lifecycle: {
           phase: "running",
           terminalReason: null,
@@ -88,6 +97,7 @@ describe("browser gameplay session", () => {
           whole: 99,
           fraction: 99,
         },
+        player: initialPlayer,
         lifecycle: {
           phase: "running",
           terminalReason: null,
@@ -119,6 +129,7 @@ describe("browser gameplay session", () => {
           whole: 99,
           fraction: 99,
         },
+        player: initialPlayer,
         lifecycle: {
           phase: "running",
           terminalReason: null,

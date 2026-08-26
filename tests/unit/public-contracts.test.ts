@@ -75,7 +75,7 @@ describe("public application contracts", () => {
       "dispatch" | "readCurrentCheckpoint" | "readDiagnostics"
     >();
     expectTypeOf<GameplayTrace>().toMatchTypeOf<{
-      readonly schemaVersion: 1;
+      readonly schemaVersion: 2;
       readonly config: Readonly<RunConfig>;
       readonly checkpoints: readonly {
         readonly index: number;
@@ -158,7 +158,7 @@ describe("public application contracts", () => {
       readonly initialProfile: ProfileState;
     }>();
     expectTypeOf<RunState>().toMatchTypeOf<{
-      readonly schemaVersion: 4;
+      readonly schemaVersion: 5;
       readonly ruleset: RuleSetId;
       readonly random: RandomState;
       readonly steps: number;
@@ -171,6 +171,15 @@ describe("public application contracts", () => {
       readonly lifespan: {
         readonly whole: number;
         readonly fraction: number;
+      };
+      readonly player: {
+        readonly gold: number;
+        readonly weapon: { readonly tier: number; readonly attack: number };
+        readonly armor: { readonly tier: number };
+        readonly hp: { readonly current: number; readonly maximum: number };
+        readonly inventory: {
+          readonly item: "elixir" | "divine-edge" | "gold-voucher" | null;
+        };
       };
       readonly lifecycle: {
         readonly phase: "running" | "ended";
@@ -197,6 +206,15 @@ describe("public application contracts", () => {
       readonly lifespan: {
         readonly whole: number;
         readonly fraction: number;
+      };
+      readonly player: {
+        readonly gold: number;
+        readonly weapon: { readonly tier: number; readonly attack: number };
+        readonly armor: { readonly tier: number };
+        readonly hp: { readonly current: number; readonly maximum: number };
+        readonly inventory: {
+          readonly item: "elixir" | "divine-edge" | "gold-voucher" | null;
+        };
       };
       readonly lifecycle: {
         readonly phase: "running" | "ended";

@@ -10,7 +10,7 @@ import {
 } from "./canonical-json.js";
 import type { GameplayEngine, RunConfig } from "./gameplay-engine.js";
 
-const GAMEPLAY_TRACE_SCHEMA_VERSION = 1 as const;
+const GAMEPLAY_TRACE_SCHEMA_VERSION = 2 as const;
 
 export interface GameplayCheckpoint {
   readonly index: number;

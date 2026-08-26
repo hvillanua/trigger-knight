@@ -2,12 +2,15 @@ import type {
   GameCommand,
   GameEvent,
   GameObservation,
+  InventoryItemId,
+  PlayerState,
   ProfileState,
   RuleSetId,
   RunState,
   WorldCamera,
 } from "./contracts.js";
 import { advanceLifespan } from "./lifespan.js";
+import { createPlayerState } from "./player-state.js";
 import { RANDOM_ALGORITHM } from "./random.js";
 import { advanceRunningProgression } from "./running-progression.js";
 import {
@@ -29,6 +32,22 @@ export interface RuleSetConstants {
     readonly distancePerDay: number;
   };
   readonly runningScorePerSpeedUnit: number;
+  readonly economy: {
+    readonly initialGold: number;
+  };
+  readonly loadout: {
+    readonly weapon: {
+      readonly initialTier: number;
+      readonly baseAttack: number;
+      readonly attackPerTier: number;
+    };
+    readonly armor: {
+      readonly initialTier: number;
+      readonly baseMaximumHp: number;
+      readonly maximumHpPerTier: number;
+    };
+    readonly initialInventoryItem: InventoryItemId;
+  };
   readonly lifespan: {
     readonly initialWhole: number;
     readonly initialFraction: number;
@@ -84,6 +103,22 @@ const originalV13Constants: RuleSetConstants = Object.freeze({
     distancePerDay: 7_000,
   }),
   runningScorePerSpeedUnit: 10,
+  economy: Object.freeze({
+    initialGold: 300,
+  }),
+  loadout: Object.freeze({
+    weapon: Object.freeze({
+      initialTier: 1,
+      baseAttack: 129,
+      attackPerTier: 87,
+    }),
+    armor: Object.freeze({
+      initialTier: 1,
+      baseMaximumHp: 1_009,
+      maximumHpPerTier: 899,
+    }),
+    initialInventoryItem: "elixir",
+  }),
   lifespan: Object.freeze({
     initialWhole: 99,
     initialFraction: 99,
@@ -126,6 +161,25 @@ const originalV13LifespanRules = Object.freeze({
   deathBelowWhole: originalV13Constants.lifespan.deathBelowWhole,
 });
 
+function createOriginalV13InitialPlayerState(): PlayerState {
+  const weaponTier = originalV13Constants.loadout.weapon.initialTier;
+  const armorTier = originalV13Constants.loadout.armor.initialTier;
+  const weaponAttack =
+    originalV13Constants.loadout.weapon.baseAttack +
+    originalV13Constants.loadout.weapon.attackPerTier * weaponTier;
+  const maximumHp =
+    originalV13Constants.loadout.armor.baseMaximumHp +
+    originalV13Constants.loadout.armor.maximumHpPerTier * armorTier;
+
+  return createPlayerState({
+    gold: originalV13Constants.economy.initialGold,
+    weapon: { tier: weaponTier, attack: weaponAttack },
+    armor: { tier: armorTier },
+    hp: { current: maximumHp, maximum: maximumHp },
+    inventory: { item: originalV13Constants.loadout.initialInventoryItem },
+  });
+}
+
 export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
   id: ORIGINAL_V13_RULESET_ID,
   constants: originalV13Constants,
@@ -142,6 +196,7 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
         whole: originalV13Constants.lifespan.initialWhole,
         fraction: originalV13Constants.lifespan.initialFraction,
       }),
+      createOriginalV13InitialPlayerState(),
     );
   },
 
@@ -184,6 +239,7 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
       day: state.day,
       score: state.score,
       lifespan: Object.freeze({ ...state.lifespan }),
+      player: createPlayerState(state.player),
       lifecycle,
       actions: Object.freeze({
         canTogglePause: canAcceptLifecycleCommands,

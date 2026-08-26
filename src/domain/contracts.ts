@@ -32,9 +32,29 @@ export interface LifespanState {
   readonly fraction: number;
 }
 
+export type InventoryItemId = "elixir" | "divine-edge" | "gold-voucher";
+
+export interface PlayerState {
+  readonly gold: number;
+  readonly weapon: {
+    readonly tier: number;
+    readonly attack: number;
+  };
+  readonly armor: {
+    readonly tier: number;
+  };
+  readonly hp: {
+    readonly current: number;
+    readonly maximum: number;
+  };
+  readonly inventory: {
+    readonly item: InventoryItemId | null;
+  };
+}
+
 /** Authoritative state owned by the gameplay domain. */
 export interface RunState {
-  readonly schemaVersion: 4;
+  readonly schemaVersion: 5;
   readonly ruleset: RuleSetId;
   readonly random: RandomState;
   readonly steps: number;
@@ -45,6 +65,7 @@ export interface RunState {
   readonly day: number;
   readonly score: number;
   readonly lifespan: LifespanState;
+  readonly player: PlayerState;
   readonly lifecycle: RunLifecycleState;
 }
 
@@ -121,6 +142,7 @@ export interface GameObservation {
   readonly day: number;
   readonly score: number;
   readonly lifespan: LifespanState;
+  readonly player: PlayerState;
   readonly lifecycle: LifecycleObservation;
   readonly actions: ActionEligibility;
 }
