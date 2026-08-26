@@ -91,6 +91,10 @@ This milestone establishes:
 - browser render cadence and physical viewport size cannot change the run outcome;
 - checkpoint replay matches uninterrupted execution across supported runtimes.
 
+The integrated Node and Chromium evidence, locked hashes, research labels, and
+clean-room decisions are recorded in
+[`../docs/milestone-2-lifecycle-verification.md`](../docs/milestone-2-lifecycle-verification.md).
+
 ## Milestone 3 — Encounter queue, shops, and economy
 
 ### Builds

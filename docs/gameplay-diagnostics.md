@@ -60,3 +60,8 @@ the execution, adding checkpoints, changing results, or changing trace hashes.
 checkpoint state, restore it, and pass it back to `gameplayEngine.step()`. The
 checkpoint continuation test compares the restored transition, events, and
 observation with uninterrupted execution.
+
+The complete Milestone 2 scenario extends this check across tutorial, pregame,
+pause, lifespan carry, and pre-death checkpoints in Node and Chromium. Its
+locked hashes and cross-host evidence are recorded in
+[`milestone-2-lifecycle-verification.md`](milestone-2-lifecycle-verification.md).
