@@ -158,7 +158,7 @@ describe("public application contracts", () => {
       readonly initialProfile: ProfileState;
     }>();
     expectTypeOf<RunState>().toMatchTypeOf<{
-      readonly schemaVersion: 3;
+      readonly schemaVersion: 4;
       readonly ruleset: RuleSetId;
       readonly random: RandomState;
       readonly steps: number;
@@ -168,8 +168,13 @@ describe("public application contracts", () => {
       readonly distance: number;
       readonly day: number;
       readonly score: number;
+      readonly lifespan: {
+        readonly whole: number;
+        readonly fraction: number;
+      };
       readonly lifecycle: {
         readonly phase: "running" | "ended";
+        readonly terminalReason: "lifespan" | "combat" | null;
         readonly paused: boolean;
         readonly tutorialPage: 0 | null;
         readonly pregameStepsRemaining: number;
@@ -189,8 +194,13 @@ describe("public application contracts", () => {
       readonly distance: number;
       readonly day: number;
       readonly score: number;
+      readonly lifespan: {
+        readonly whole: number;
+        readonly fraction: number;
+      };
       readonly lifecycle: {
         readonly phase: "running" | "ended";
+        readonly terminalReason: "lifespan" | "combat" | null;
         readonly paused: boolean;
         readonly tutorialPage: 0 | null;
         readonly pregameStepsRemaining: number;
@@ -202,7 +212,9 @@ describe("public application contracts", () => {
       };
     }>();
     expectTypeOf<GameEvent>().toEqualTypeOf<
+      | Readonly<{ type: "lifespan-death" }>
       | Readonly<{ type: "pause-toggled"; paused: boolean }>
+      | Readonly<{ type: "run-ended"; reason: "lifespan" | "combat" }>
       | Readonly<{ type: "step-advanced"; step: number }>
       | Readonly<{ type: "tutorial-dismissed"; page: 0 }>
     >();

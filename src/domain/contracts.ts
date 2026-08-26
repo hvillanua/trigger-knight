@@ -15,18 +15,26 @@ export interface RandomState {
 }
 
 export type RunPhase = "running" | "ended";
+export type RunTerminalReason = "lifespan" | "combat";
 
 /** Authoritative run phase and the independent gates that can halt gameplay. */
 export interface RunLifecycleState {
   readonly phase: RunPhase;
+  readonly terminalReason: RunTerminalReason | null;
   readonly paused: boolean;
   readonly tutorialPage: 0 | null;
   readonly pregameStepsRemaining: number;
 }
 
+/** Original two-part integer lifespan value. */
+export interface LifespanState {
+  readonly whole: number;
+  readonly fraction: number;
+}
+
 /** Authoritative state owned by the gameplay domain. */
 export interface RunState {
-  readonly schemaVersion: 3;
+  readonly schemaVersion: 4;
   readonly ruleset: RuleSetId;
   readonly random: RandomState;
   readonly steps: number;
@@ -36,6 +44,7 @@ export interface RunState {
   readonly distance: number;
   readonly day: number;
   readonly score: number;
+  readonly lifespan: LifespanState;
   readonly lifecycle: RunLifecycleState;
 }
 
@@ -67,9 +76,22 @@ export interface TutorialDismissedEvent {
   readonly page: 0;
 }
 
+export interface LifespanDeathEvent {
+  readonly type: "lifespan-death";
+}
+
+export interface RunEndedEvent {
+  readonly type: "run-ended";
+  readonly reason: RunTerminalReason;
+}
+
 /** Authoritative outcome emitted by a gameplay transition. */
 export type GameEvent =
-  PauseToggledEvent | StepAdvancedEvent | TutorialDismissedEvent;
+  | LifespanDeathEvent
+  | PauseToggledEvent
+  | RunEndedEvent
+  | StepAdvancedEvent
+  | TutorialDismissedEvent;
 
 export interface LifecycleObservation extends RunLifecycleState {
   readonly activeGameplay: boolean;
@@ -98,6 +120,7 @@ export interface GameObservation {
   readonly distance: number;
   readonly day: number;
   readonly score: number;
+  readonly lifespan: LifespanState;
   readonly lifecycle: LifecycleObservation;
   readonly actions: ActionEligibility;
 }

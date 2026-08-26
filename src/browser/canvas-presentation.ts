@@ -11,12 +11,16 @@ import {
 
 function describeEvent(event: GameEvent): string {
   switch (event.type) {
+    case "lifespan-death":
+      return event.type;
     case "pause-toggled":
       return `${event.type}:${String(event.paused)}`;
     case "step-advanced":
       return `${event.type}:${event.step}`;
     case "tutorial-dismissed":
       return `${event.type}:${event.page}`;
+    case "run-ended":
+      return `${event.type}:${event.reason}`;
   }
 }
 

@@ -46,6 +46,7 @@ describe("original-v1.3 lifecycle", () => {
       activeTicks: 0,
       lifecycle: {
         phase: "running",
+        terminalReason: null,
         paused: false,
         tutorialPage: 0,
         pregameStepsRemaining: 60,
@@ -65,8 +66,13 @@ describe("original-v1.3 lifecycle", () => {
       distance: 0,
       day: 1,
       score: 0,
+      lifespan: {
+        whole: 99,
+        fraction: 99,
+      },
       lifecycle: {
         phase: "running",
+        terminalReason: null,
         paused: false,
         tutorialPage: 0,
         pregameStepsRemaining: 60,
@@ -211,6 +217,7 @@ describe("original-v1.3 lifecycle", () => {
       activeTicks: 0,
       lifecycle: {
         phase: "ended",
+        terminalReason: null,
         paused: false,
         tutorialPage: 0,
         pregameStepsRemaining: 60,

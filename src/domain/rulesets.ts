@@ -7,6 +7,7 @@ import type {
   RunState,
   WorldCamera,
 } from "./contracts.js";
+import { advanceLifespan } from "./lifespan.js";
 import { RANDOM_ALGORITHM } from "./random.js";
 import { advanceRunningProgression } from "./running-progression.js";
 import {
@@ -119,6 +120,12 @@ const originalV13RunningProgressionRules = Object.freeze({
   scorePerSpeedUnit: originalV13Constants.runningScorePerSpeedUnit,
 });
 
+const originalV13LifespanRules = Object.freeze({
+  drainPerActiveTick: originalV13Constants.lifespan.drainPerActiveTick,
+  fractionReset: originalV13Constants.lifespan.fractionReset,
+  deathBelowWhole: originalV13Constants.lifespan.deathBelowWhole,
+});
+
 export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
   id: ORIGINAL_V13_RULESET_ID,
   constants: originalV13Constants,
@@ -131,6 +138,10 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
       originalV13Constants.pregameDelaySteps,
       initialProfile.scoreMultiplier,
       originalV13Constants.movement.initialSpeed,
+      Object.freeze({
+        whole: originalV13Constants.lifespan.initialWhole,
+        fraction: originalV13Constants.lifespan.initialFraction,
+      }),
     );
   },
 
@@ -139,14 +150,20 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
     commands: readonly GameCommand[],
   ): RuleSetStepResult {
     const result = advanceRunState(state, commands);
+    const progressed = advanceRunningProgression(
+      state,
+      result.state,
+      originalV13RunningProgressionRules,
+    );
+    const lifespan = advanceLifespan(
+      state,
+      progressed,
+      originalV13LifespanRules,
+    );
 
     return Object.freeze({
-      state: advanceRunningProgression(
-        state,
-        result.state,
-        originalV13RunningProgressionRules,
-      ),
-      events: result.events,
+      state: lifespan.state,
+      events: Object.freeze([...result.events, ...lifespan.events]),
     });
   },
 
@@ -166,6 +183,7 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
       distance: state.distance,
       day: state.day,
       score: state.score,
+      lifespan: Object.freeze({ ...state.lifespan }),
       lifecycle,
       actions: Object.freeze({
         canTogglePause: canAcceptLifecycleCommands,

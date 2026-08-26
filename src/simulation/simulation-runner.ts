@@ -110,6 +110,10 @@ function runSimulation(
       observation,
       state,
     });
+
+    if (state.lifecycle.terminalReason !== null) {
+      break;
+    }
   }
 
   options.onTrace?.(execution.readDiagnostics());
@@ -121,9 +125,9 @@ function runSimulation(
     initialProfileFingerprint,
     policy,
     maxSteps,
-    steps: maxSteps,
+    steps: state.steps,
     activeTicks: state.activeTicks,
-    terminalReason: "step-limit",
+    terminalReason: state.lifecycle.terminalReason ?? "step-limit",
     score: state.score,
     day: state.day,
     distance: state.distance,

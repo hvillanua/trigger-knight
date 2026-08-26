@@ -3,6 +3,7 @@ import type {
   GameEvent,
   GameObservation,
   RuleSetId,
+  RunTerminalReason,
 } from "../domain/contracts.js";
 import type { RunConfig } from "./gameplay-engine.js";
 
@@ -50,7 +51,7 @@ export interface RunResult {
   readonly maxSteps: number;
   readonly steps: number;
   readonly activeTicks: number;
-  readonly terminalReason: "lifespan" | "combat" | "step-limit";
+  readonly terminalReason: RunTerminalReason | "step-limit";
   readonly score: number;
   readonly day: number;
   readonly distance: number;
