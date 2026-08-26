@@ -34,13 +34,13 @@ sequence so retained seeds and checkpoints remain reproducible.
 
 ## Run state and isolation
 
-Run-state schema version `3` includes fixed-step lifecycle state, running
-progression, the consumed profile multiplier, the ruleset identity, and the
-complete random state:
+Run-state schema version `5` includes fixed-step lifecycle state, running
+progression, the consumed profile multiplier, player economy and loadout, the
+ruleset identity, and the complete random state:
 
 ```json
 {
-  "schemaVersion": 3,
+  "schemaVersion": 5,
   "ruleset": "original-v1.3",
   "steps": 0,
   "activeTicks": 0,
@@ -49,8 +49,20 @@ complete random state:
   "distance": 0,
   "day": 1,
   "score": 0,
+  "lifespan": {
+    "whole": 99,
+    "fraction": 99
+  },
+  "player": {
+    "gold": 300,
+    "weapon": { "tier": 1, "attack": 216 },
+    "armor": { "tier": 1 },
+    "hp": { "current": 1908, "maximum": 1908 },
+    "inventory": { "item": "elixir" }
+  },
   "lifecycle": {
     "phase": "running",
+    "terminalReason": null,
     "paused": false,
     "tutorialPage": 0,
     "pregameStepsRemaining": 60

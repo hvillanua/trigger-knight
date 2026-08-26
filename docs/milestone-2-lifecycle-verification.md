@@ -22,14 +22,20 @@ The terminal values are:
 | Score           | 373,950    |
 | Day             | 6          |
 | Distance        | 37,395     |
+| Gold            | 300        |
 
 The locked host-neutral gameplay trace hash is
-`sha256-v1:1df71a75867b64933bfcbe613956443dc4eb9d4b9e916aa2842a30fb465f3cf8`.
+`sha256-v1:276ea9d0deb25b5dcbaeeec8cdc9ded6cbfac22cf093c9a20f1d357ca9b0f0ca`.
 The terminal checkpoint hash is
-`sha256-v1:3fb10f49dfe2d0e62546457d1c87ded5d78f93df9292dea2bf02d3bb5759dd5e`.
+`sha256-v1:4e5f36dd56921a66f0456531cd58f3e2a7ed66104d1e93165a2c2f1030245661`.
 The simulation result trace hash, which also covers policy identity and the
 3,000-step budget, is
-`sha256-v1:914d7f0236b4babd1316deffa6f70cd499dedc78db495449306b1a0179b3d944`.
+`sha256-v1:8210a4ccc83aec221ebe896bdabfcd07b8f2b02d915997d7f1ae86724fcafc44`.
+
+Issue #40 added version-5 economy and loadout state, version-2 gameplay traces
+with player observations, and authoritative gold in version-2 run results. The
+scenario and command schedule are unchanged. The added serializable fields
+changed the locked hashes above.
 
 The unit check compares every browser-session checkpoint with the headless
 trace. This includes commands, complete state, public observations, events,

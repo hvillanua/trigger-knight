@@ -70,6 +70,13 @@ describe("original-v1.3 lifecycle", () => {
         whole: 99,
         fraction: 99,
       },
+      player: {
+        gold: 300,
+        weapon: { tier: 1, attack: 216 },
+        armor: { tier: 1 },
+        hp: { current: 1_908, maximum: 1_908 },
+        inventory: { item: "elixir" },
+      },
       lifecycle: {
         phase: "running",
         terminalReason: null,

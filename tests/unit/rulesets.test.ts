@@ -22,6 +22,22 @@ describe("ruleset registry", () => {
           distancePerDay: 7_000,
         },
         runningScorePerSpeedUnit: 10,
+        economy: {
+          initialGold: 300,
+        },
+        loadout: {
+          weapon: {
+            initialTier: 1,
+            baseAttack: 129,
+            attackPerTier: 87,
+          },
+          armor: {
+            initialTier: 1,
+            baseMaximumHp: 1_009,
+            maximumHpPerTier: 899,
+          },
+          initialInventoryItem: "elixir",
+        },
         lifespan: {
           initialWhole: 99,
           initialFraction: 99,
@@ -49,6 +65,12 @@ describe("ruleset registry", () => {
     });
     expect(Object.isFrozen(originalV13RuleSet)).toBe(true);
     expect(Object.isFrozen(originalV13RuleSet.constants.movement)).toBe(true);
+    expect(Object.isFrozen(originalV13RuleSet.constants.loadout.weapon)).toBe(
+      true,
+    );
+    expect(Object.isFrozen(originalV13RuleSet.constants.loadout.armor)).toBe(
+      true,
+    );
     expect(
       Object.isFrozen(originalV13RuleSet.constants.world.initialCamera),
     ).toBe(true);

@@ -3,9 +3,10 @@
 The browser and headless hosts record the same structured execution trace around
 `gameplayEngine`. Checkpoints include elapsed steps, active ticks, lifecycle
 phase, terminal reason and gates, integer lifespan, running speed, distance,
-day, score, public action eligibility, the ruleset-owned world camera, and
-semantic gameplay events. The initial profile's score multiplier remains in
-authoritative state and does not enter the public observation.
+day, score, player economy and loadout values, public action eligibility, the
+ruleset-owned world camera, and semantic gameplay events. The initial profile's
+score multiplier remains in authoritative state and does not enter the public
+observation.
 
 ## Checkpoints and hashes
 
@@ -25,6 +26,10 @@ a SHA-256 hash of that configuration and the unhashed checkpoint fields. Hashes
 use canonical JSON, so object insertion order cannot change their value. The
 portable digest implementation returns the same `sha256-v1` value in Chromium
 and Node.
+
+Gameplay-trace schema version 2 covers the version-5 run state and the player
+values added to public observations. This intentionally changes checkpoint and
+trace hashes from the Milestone 2 fixtures.
 
 `compareGameplayTraces(expected, actual)` compares configuration and checkpoint
 fields before derived hashes. A mismatch reports a concrete path such as

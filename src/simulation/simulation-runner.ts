@@ -18,7 +18,7 @@ import {
   normalizeCanonicalJson,
 } from "./canonical-json.js";
 
-const RUN_RESULT_SCHEMA_VERSION = 1;
+const RUN_RESULT_SCHEMA_VERSION = 2;
 const NO_EVENTS: readonly GameEvent[] = Object.freeze([]);
 const NO_METRICS = Object.freeze({});
 
@@ -131,7 +131,7 @@ function runSimulation(
     score: state.score,
     day: state.day,
     distance: state.distance,
-    gold: 0,
+    gold: state.player.gold,
     traceHash: trace.digest(),
     metrics: NO_METRICS,
   });
