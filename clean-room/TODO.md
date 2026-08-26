@@ -112,7 +112,8 @@ This milestone establishes:
 
 ### Complete when
 
-- deterministic headless policies can encounter and purchase every shop, equipment upgrade, and item;
+- deterministic headless policies can encounter and purchase every shop, equipment upgrade, and item reachable before combat;
+- focused deterministic state-transition scenarios cover later-day, higher-cost, and post-battle-dependent shop and economy behavior until Milestone 4 supplies battle resolution and rewards;
 - queue, inventory, tier, price, and gold invariants hold across a fixed seed set;
 - known cached-price and forced-shrine behaviors have compatibility coverage;
 - the browser can issue the same semantic purchase commands without owning purchase rules.
@@ -135,7 +136,8 @@ This milestone establishes:
 
 ### Complete when
 
-- complete deterministic runs can reach shops and battles repeatedly and terminate from either lifespan or combat death;
+- complete deterministic runs can reach shops and battles repeatedly, earn and spend rewards, and terminate from either lifespan or combat death;
+- deterministic purchasing policies extend the Milestone 3 scenarios through every shop, equipment upgrade, and item in continuously generated runs;
 - all enemies, the Dragon, and every item are exercised by deterministic scenarios;
 - visual animation rate cannot alter hit timing, damage, rewards, or RNG consumption;
 - browser and headless executions remain state- and trace-equivalent.
