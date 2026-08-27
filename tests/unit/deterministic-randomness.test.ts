@@ -16,6 +16,21 @@ const player = Object.freeze({
   hp: Object.freeze({ current: 1_908, maximum: 1_908 }),
   inventory: Object.freeze({ item: "elixir" as const }),
 });
+const encounters = Object.freeze({
+  upcoming: Object.freeze([
+    Object.freeze({ kind: "battle" as const }),
+    Object.freeze({ kind: "battle" as const }),
+    Object.freeze({ kind: "battle" as const }),
+  ]),
+  generation: Object.freeze({
+    shopsUntilBattle: 1,
+    seenSinceBattle: Object.freeze({
+      bladesmith: false,
+      armorsmith: false,
+      soulShrine: false,
+    }),
+  }),
+});
 
 function drawSequence(
   initialState: Readonly<RandomState>,
@@ -96,12 +111,13 @@ describe("deterministic randomness", () => {
   it("continues identically after a run-state serialization round trip", () => {
     const initial = createRunState(
       ORIGINAL_V13_RULESET_ID,
-      "checkpoint-seed",
+      createRandomState("checkpoint-seed"),
       60,
       1,
       0,
       { whole: 99, fraction: 99 },
       player,
+      encounters,
     );
     const beforeCheckpoint = drawSequence(initial.random, 3);
     const checkpoint: RunState = {
@@ -121,21 +137,23 @@ describe("deterministic randomness", () => {
   it("keeps independent runs free of shared mutable random state", () => {
     const first = createRunState(
       ORIGINAL_V13_RULESET_ID,
-      "shared-seed",
+      createRandomState("shared-seed"),
       60,
       1,
       0,
       { whole: 99, fraction: 99 },
       player,
+      encounters,
     );
     const second = createRunState(
       ORIGINAL_V13_RULESET_ID,
-      "shared-seed",
+      createRandomState("shared-seed"),
       60,
       1,
       0,
       { whole: 99, fraction: 99 },
       player,
+      encounters,
     );
     const firstDraw = nextRandom(first.random);
 

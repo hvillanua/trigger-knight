@@ -52,9 +52,43 @@ export interface PlayerState {
   };
 }
 
+export type ShopId =
+  | "bladesmith"
+  | "armorsmith"
+  | "soul-shrine"
+  | "pharmacy"
+  | "grims-shop"
+  | "voucher-store";
+
+export interface ShopEncounter {
+  readonly kind: "shop";
+  readonly shop: ShopId;
+  readonly cachedPrice: number;
+}
+
+export interface BattleEncounter {
+  readonly kind: "battle";
+}
+
+export type QueuedEncounter = ShopEncounter | BattleEncounter;
+
+export interface EncounterGenerationState {
+  readonly shopsUntilBattle: number;
+  readonly seenSinceBattle: {
+    readonly bladesmith: boolean;
+    readonly armorsmith: boolean;
+    readonly soulShrine: boolean;
+  };
+}
+
+export interface EncounterQueueState {
+  readonly upcoming: readonly QueuedEncounter[];
+  readonly generation: EncounterGenerationState;
+}
+
 /** Authoritative state owned by the gameplay domain. */
 export interface RunState {
-  readonly schemaVersion: 5;
+  readonly schemaVersion: 6;
   readonly ruleset: RuleSetId;
   readonly random: RandomState;
   readonly steps: number;
@@ -66,6 +100,7 @@ export interface RunState {
   readonly score: number;
   readonly lifespan: LifespanState;
   readonly player: PlayerState;
+  readonly encounters: EncounterQueueState;
   readonly lifecycle: RunLifecycleState;
 }
 

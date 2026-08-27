@@ -25,17 +25,17 @@ The terminal values are:
 | Gold            | 300        |
 
 The locked host-neutral gameplay trace hash is
-`sha256-v1:276ea9d0deb25b5dcbaeeec8cdc9ded6cbfac22cf093c9a20f1d357ca9b0f0ca`.
+`sha256-v1:64ee434bb49aab6bfa05e2310b2870781fd4f5485a61fa5c7b68af623d1b2319`.
 The terminal checkpoint hash is
-`sha256-v1:4e5f36dd56921a66f0456531cd58f3e2a7ed66104d1e93165a2c2f1030245661`.
+`sha256-v1:1d3030fa5618f36228ed60166496e760276f1f8b1739d044ad5ab7218ad0fbaa`.
 The simulation result trace hash, which also covers policy identity and the
 3,000-step budget, is
-`sha256-v1:8210a4ccc83aec221ebe896bdabfcd07b8f2b02d915997d7f1ae86724fcafc44`.
+`sha256-v1:710f3c6a23920efd8de30b2527ae0cf21e0785c15f30e05542dc92dec76afb8e`.
 
-Issue #40 added version-5 economy and loadout state, version-2 gameplay traces
-with player observations, and authoritative gold in version-2 run results. The
-scenario and command schedule are unchanged. The added serializable fields
-changed the locked hashes above.
+Issue #41 added the version-6 encounter queue and hidden generation state. The
+scenario and command schedule are unchanged. The added serializable fields and
+post-generation random state changed the locked hashes above. Gameplay traces
+and run results remain at version 2.
 
 The unit check compares every browser-session checkpoint with the headless
 trace. This includes commands, complete state, public observations, events,
@@ -83,5 +83,5 @@ The implementation and verification keep the research labels separate:
   original stage unit equals one world unit, and the explicit random algorithm
   is `mulberry32-fnv1a32-v1`.
 
-Encounter queues, shops, combat, persistence, final presentation, and batch
-comparison tooling remain in later milestones.
+Encounter movement, purchases, combat, persistence, final presentation, and
+batch comparison tooling remain in later milestones.
