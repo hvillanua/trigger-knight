@@ -13,9 +13,9 @@ such as an encounter entering at x 600. Treating those coordinates as world
 units is the clean-room product decision recorded in the PRD and TDD. It does
 not claim that the original Flash implementation had a separate camera model.
 
-World positions may sit outside the camera. Later encounter work can therefore
-use x 600 without expanding the 480-world-unit view or converting the position
-to a physical pixel value.
+World positions may sit outside the camera. Encounter promotion therefore uses
+x 600 without expanding the 480-world-unit view or converting the position to
+a physical pixel value.
 
 ## Browser projection
 

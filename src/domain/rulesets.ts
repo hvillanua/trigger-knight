@@ -10,6 +10,7 @@ import type {
   WorldCamera,
 } from "./contracts.js";
 import {
+  advanceEncounterLifecycle,
   initializeEncounterQueue,
   type EncounterGenerationRules,
 } from "./encounters.js";
@@ -72,6 +73,8 @@ export interface RuleSetCompatibilityDecisions {
   readonly coordinateModel: "original-stage-units-as-world-units";
   readonly pregameDelayProgression: "after-commands-while-other-gates-open";
   readonly pregameDelayCountsAsActiveGameplay: false;
+  readonly encounterInitializationDrawOrder: "queue-then-distance";
+  readonly encounterPromotionDrawOrder: "replacement-then-distance";
 }
 
 export interface RuleSetStepResult {
@@ -131,6 +134,17 @@ const originalV13Constants: RuleSetConstants = Object.freeze({
     laterShopsUntilBattleBase: 1,
     voucherFirstDay: 4,
     shopRollUpperBound: 100,
+    initialDistanceBase: 1_000,
+    initialDistanceUpperBound: 1_000,
+    laterDistanceBase: 1_500,
+    laterDistanceUpperBound: 300,
+    entryX: 600,
+    shopSpeedFactor: 0.5,
+    shopActionMinimumX: 0,
+    shopActionMaximumX: 420,
+    shopDepartureX: -100,
+    battleSpeedFactor: 1,
+    battleHandoffX: 420,
     rollMinimums: Object.freeze({
       bladesmith: 66,
       armorsmith: 31,
@@ -174,6 +188,8 @@ const originalV13CompatibilityDecisions: RuleSetCompatibilityDecisions =
     coordinateModel: "original-stage-units-as-world-units",
     pregameDelayProgression: "after-commands-while-other-gates-open",
     pregameDelayCountsAsActiveGameplay: false,
+    encounterInitializationDrawOrder: "queue-then-distance",
+    encounterPromotionDrawOrder: "replacement-then-distance",
   });
 
 const originalV13RunningProgressionRules = Object.freeze({
@@ -249,15 +265,24 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
       result.state,
       originalV13RunningProgressionRules,
     );
-    const lifespan = advanceLifespan(
+    const encounters = advanceEncounterLifecycle(
       state,
       progressed,
+      originalV13Constants.encounters,
+    );
+    const lifespan = advanceLifespan(
+      state,
+      encounters.state,
       originalV13LifespanRules,
     );
 
     return Object.freeze({
       state: lifespan.state,
-      events: Object.freeze([...result.events, ...lifespan.events]),
+      events: Object.freeze([
+        ...result.events,
+        ...encounters.events,
+        ...lifespan.events,
+      ]),
     });
   },
 
@@ -266,7 +291,8 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
       ...state.lifecycle,
       activeGameplay: isActiveGameplay(state.lifecycle),
     });
-    const canAcceptLifecycleCommands = state.lifecycle.phase === "running";
+    const canAcceptLifecycleCommands = state.lifecycle.phase !== "ended";
+    const currentEncounter = state.encounters.current;
 
     return Object.freeze({
       ruleset: state.ruleset,
@@ -279,11 +305,30 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
       score: state.score,
       lifespan: Object.freeze({ ...state.lifespan }),
       player: createPlayerState(state.player),
+      encounters: Object.freeze({
+        current:
+          currentEncounter === null
+            ? null
+            : Object.freeze({ ...currentEncounter }),
+        upcoming: Object.freeze(
+          state.encounters.upcoming.map((encounter) =>
+            Object.freeze({ ...encounter }),
+          ),
+        ),
+      }),
       lifecycle,
       actions: Object.freeze({
         canTogglePause: canAcceptLifecycleCommands,
         canDismissTutorial:
           canAcceptLifecycleCommands && state.lifecycle.tutorialPage !== null,
+        canPurchaseCurrentEncounter:
+          isActiveGameplay(state.lifecycle) &&
+          state.lifecycle.phase === "running" &&
+          currentEncounter?.kind === "shop" &&
+          currentEncounter.x >
+            originalV13Constants.encounters.shopActionMinimumX &&
+          currentEncounter.x <
+            originalV13Constants.encounters.shopActionMaximumX,
       }),
     });
   },

@@ -14,7 +14,7 @@ export interface RandomState {
   readonly state: number;
 }
 
-export type RunPhase = "running" | "ended";
+export type RunPhase = "running" | "battle-handoff" | "ended";
 export type RunTerminalReason = "lifespan" | "combat";
 
 /** Authoritative run phase and the independent gates that can halt gameplay. */
@@ -72,6 +72,17 @@ export interface BattleEncounter {
 
 export type QueuedEncounter = ShopEncounter | BattleEncounter;
 
+export interface PositionedShopEncounter extends ShopEncounter {
+  readonly x: number;
+}
+
+export interface PositionedBattleEncounter extends BattleEncounter {
+  readonly x: number;
+}
+
+export type CurrentEncounter =
+  PositionedShopEncounter | PositionedBattleEncounter;
+
 export interface EncounterGenerationState {
   readonly shopsUntilBattle: number;
   readonly seenSinceBattle: {
@@ -82,13 +93,20 @@ export interface EncounterGenerationState {
 }
 
 export interface EncounterQueueState {
+  readonly current: CurrentEncounter | null;
+  readonly distanceUntilNext: number;
   readonly upcoming: readonly QueuedEncounter[];
   readonly generation: EncounterGenerationState;
 }
 
+export interface EncounterObservation {
+  readonly current: CurrentEncounter | null;
+  readonly upcoming: readonly QueuedEncounter[];
+}
+
 /** Authoritative state owned by the gameplay domain. */
 export interface RunState {
-  readonly schemaVersion: 6;
+  readonly schemaVersion: 7;
   readonly ruleset: RuleSetId;
   readonly random: RandomState;
   readonly steps: number;
@@ -141,12 +159,29 @@ export interface RunEndedEvent {
   readonly reason: RunTerminalReason;
 }
 
+export interface EncounterPromotedEvent {
+  readonly type: "encounter-promoted";
+  readonly encounter: CurrentEncounter;
+}
+
+export interface ShopDepartedEvent {
+  readonly type: "shop-departed";
+  readonly shop: ShopId;
+}
+
+export interface BattleHandoffEvent {
+  readonly type: "battle-handoff";
+}
+
 /** Authoritative outcome emitted by a gameplay transition. */
 export type GameEvent =
+  | BattleHandoffEvent
+  | EncounterPromotedEvent
   | LifespanDeathEvent
   | PauseToggledEvent
   | RunEndedEvent
   | StepAdvancedEvent
+  | ShopDepartedEvent
   | TutorialDismissedEvent;
 
 export interface LifecycleObservation extends RunLifecycleState {
@@ -156,6 +191,7 @@ export interface LifecycleObservation extends RunLifecycleState {
 export interface ActionEligibility {
   readonly canTogglePause: boolean;
   readonly canDismissTutorial: boolean;
+  readonly canPurchaseCurrentEncounter: boolean;
 }
 
 /** Ruleset-space view consumed by presentation without physical pixel values. */
@@ -178,6 +214,7 @@ export interface GameObservation {
   readonly score: number;
   readonly lifespan: LifespanState;
   readonly player: PlayerState;
+  readonly encounters: EncounterObservation;
   readonly lifecycle: LifecycleObservation;
   readonly actions: ActionEligibility;
 }

@@ -19,23 +19,25 @@ The terminal values are:
 | Elapsed steps   | 2,564      |
 | Active ticks    | 2,500      |
 | Terminal reason | `lifespan` |
-| Score           | 373,950    |
-| Day             | 6          |
-| Distance        | 37,395     |
+| Score           | 28,200     |
+| Day             | 1          |
+| Distance        | 2,820      |
 | Gold            | 300        |
 
 The locked host-neutral gameplay trace hash is
-`sha256-v1:64ee434bb49aab6bfa05e2310b2870781fd4f5485a61fa5c7b68af623d1b2319`.
+`sha256-v1:aa9cebfc619d84ef872086d36effb7dff0d76bbee1ab4b1d7731cdd5204115e4`.
 The terminal checkpoint hash is
-`sha256-v1:1d3030fa5618f36228ed60166496e760276f1f8b1739d044ad5ab7218ad0fbaa`.
+`sha256-v1:02a32303e277bc3010d6366afda8d64b95c6b198aede7b98315561f34872bc6e`.
 The simulation result trace hash, which also covers policy identity and the
 3,000-step budget, is
-`sha256-v1:710f3c6a23920efd8de30b2527ae0cf21e0785c15f30e05542dc92dec76afb8e`.
+`sha256-v1:9dcd9e913c22f97fca676ad0126c2b14d19b41601f49b3e1d353ae9ce23cd812`.
 
-Issue #41 added the version-6 encounter queue and hidden generation state. The
-scenario and command schedule are unchanged. The added serializable fields and
-post-generation random state changed the locked hashes above. Gameplay traces
-and run results remain at version 2.
+Issue #42 advances the version-7 encounter queue through world space. The
+scenario and command schedule are unchanged. It reaches its first battle at
+distance 2,820, then waits at the battle handoff while active-tick lifespan
+continues to death. The new serializable state, observation, events, and random
+draws changed the locked hashes above. Gameplay traces and run results remain
+at version 2.
 
 The unit check compares every browser-session checkpoint with the headless
 trace. This includes commands, complete state, public observations, events,
@@ -81,7 +83,8 @@ The implementation and verification keep the research labels separate:
   and tutorial freeze pregame, pregame does not count as active gameplay,
   running progression occurs before lifespan death on the terminal tick, one
   original stage unit equals one world unit, and the explicit random algorithm
-  is `mulberry32-fnv1a32-v1`.
+  is `mulberry32-fnv1a32-v1`, and queue/refill draws precede their associated
+  distance draws.
 
-Encounter movement, purchases, combat, persistence, final presentation, and
-batch comparison tooling remain in later milestones.
+Purchases, combat resolution, persistence, final presentation, and batch
+comparison tooling remain in later milestones.

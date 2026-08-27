@@ -67,7 +67,9 @@ describe("original-v1.3 encounter queue", () => {
         soulShrine: false,
       },
     });
-    expect(initialized.random).toEqual(randomAt(3_031_295_956));
+    expect(initialized.encounters.current).toBeNull();
+    expect(initialized.encounters.distanceUntilNext).toBe(1_467);
+    expect(initialized.random).toEqual(randomAt(567_894_473));
     expect(Object.isFrozen(initialized.encounters)).toBe(true);
     expect(Object.isFrozen(initialized.encounters.upcoming)).toBe(true);
     expect(
@@ -247,7 +249,7 @@ describe("original-v1.3 encounter queue", () => {
     expect(requireShop(queuedAtTierOne.encounter).cachedPrice).toBe(236);
   });
 
-  it("stores deterministic hidden queue state without exposing it to players", () => {
+  it("starts the world lifecycle with a public queue and a confirmed distance counter", () => {
     const config = Object.freeze({
       ruleset: ORIGINAL_V13_RULESET_ID,
       seed: "encounter-queue-seed",
@@ -257,13 +259,30 @@ describe("original-v1.3 encounter queue", () => {
     const repeated = gameplayEngine.createRun(config);
     const restored = JSON.parse(JSON.stringify(initial)) as RunState;
 
-    expect(initial.schemaVersion).toBe(6);
+    expect(initial.schemaVersion).toBe(7);
+    expect(initial.encounters.current).toBeNull();
+    expect(initial.encounters.distanceUntilNext).toBeGreaterThanOrEqual(1_000);
+    expect(initial.encounters.distanceUntilNext).toBeLessThanOrEqual(1_999);
     expect(initial.encounters.upcoming).toHaveLength(3);
     expect(repeated).toEqual(initial);
     expect(gameplayEngine.step(restored, [])).toEqual(
       gameplayEngine.step(initial, []),
     );
-    expect(gameplayEngine.observe(initial)).not.toHaveProperty("encounters");
+    expect(gameplayEngine.observe(initial)).toMatchObject({
+      encounters: {
+        current: null,
+        upcoming: initial.encounters.upcoming,
+      },
+      actions: {
+        canPurchaseCurrentEncounter: false,
+      },
+    });
+    expect(gameplayEngine.observe(initial).encounters).not.toHaveProperty(
+      "distanceUntilNext",
+    );
+    expect(gameplayEngine.observe(initial).encounters).not.toHaveProperty(
+      "generation",
+    );
     expect(gameplayEngine.observe(initial)).not.toHaveProperty("random");
   });
 });

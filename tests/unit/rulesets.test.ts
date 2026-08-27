@@ -61,6 +61,8 @@ describe("ruleset registry", () => {
         coordinateModel: "original-stage-units-as-world-units",
         pregameDelayProgression: "after-commands-while-other-gates-open",
         pregameDelayCountsAsActiveGameplay: false,
+        encounterInitializationDrawOrder: "queue-then-distance",
+        encounterPromotionDrawOrder: "replacement-then-distance",
       },
     });
     expect(Object.isFrozen(originalV13RuleSet)).toBe(true);

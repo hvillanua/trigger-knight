@@ -77,6 +77,10 @@ describe("original-v1.3 lifecycle", () => {
         hp: { current: 1_908, maximum: 1_908 },
         inventory: { item: "elixir" },
       },
+      encounters: {
+        current: null,
+        upcoming: state.encounters.upcoming,
+      },
       lifecycle: {
         phase: "running",
         terminalReason: null,
@@ -88,6 +92,7 @@ describe("original-v1.3 lifecycle", () => {
       actions: {
         canTogglePause: true,
         canDismissTutorial: true,
+        canPurchaseCurrentEncounter: false,
       },
     });
   });
@@ -134,6 +139,7 @@ describe("original-v1.3 lifecycle", () => {
     expect(gameplayEngine.observe(stillPaused.state).actions).toEqual({
       canTogglePause: true,
       canDismissTutorial: false,
+      canPurchaseCurrentEncounter: false,
     });
   });
 
@@ -234,6 +240,7 @@ describe("original-v1.3 lifecycle", () => {
     expect(gameplayEngine.observe(result.state).actions).toEqual({
       canTogglePause: false,
       canDismissTutorial: false,
+      canPurchaseCurrentEncounter: false,
     });
   });
 });

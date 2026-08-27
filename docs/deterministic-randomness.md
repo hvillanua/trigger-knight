@@ -34,14 +34,15 @@ sequence so retained seeds and checkpoints remain reproducible.
 
 ## Run state and isolation
 
-Run-state schema version `6` includes fixed-step lifecycle state, running
+Run-state schema version `7` includes fixed-step lifecycle state, running
 progression, the consumed profile multiplier, player economy and loadout, the
-three-entry encounter queue, its hidden generation bookkeeping, the ruleset
-identity, and the complete post-generation random state:
+current encounter and three-entry queue, its world counter and hidden generation
+bookkeeping, the ruleset identity, and the complete post-generation random
+state:
 
 ```json
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "ruleset": "original-v1.3",
   "steps": 0,
   "activeTicks": 0,
@@ -62,6 +63,8 @@ identity, and the complete post-generation random state:
     "inventory": { "item": "elixir" }
   },
   "encounters": {
+    "current": null,
+    "distanceUntilNext": 1467,
     "upcoming": [
       { "kind": "shop", "shop": "bladesmith", "cachedPrice": 236 },
       { "kind": "battle" },
@@ -99,4 +102,8 @@ engine outcomes. Authoritative domain code remains prohibited from reading
 ambient randomness by the repository lint validation. Queue generation consumes
 only explicit bounded draws. Rejected duplicate shops and early-day Voucher
 candidates consume another `random(100)` draw; battle entries currently consume
-only their next-spacing draw because enemy selection is deferred to Milestone 4.
+only their shop-count draw because enemy selection is deferred to Milestone 4.
+Fresh runs draw `random(1000)` after filling the queue. Promotions generate the
+replacement queue entry, then draw `random(300)` for the next world-space
+distance. The research does not confirm the relative order of queue and distance
+draws, so this ordering is an explicit clean-room decision.

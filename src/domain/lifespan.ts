@@ -19,7 +19,7 @@ export function advanceLifespan(
 ): LifespanStepResult {
   if (
     stepped.activeTicks === previous.activeTicks ||
-    stepped.lifecycle.phase !== "running"
+    stepped.lifecycle.phase === "ended"
   ) {
     return Object.freeze({ state: stepped, events: Object.freeze([]) });
   }

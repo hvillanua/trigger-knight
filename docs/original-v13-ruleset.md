@@ -26,6 +26,7 @@ The ruleset owns the confirmed compatibility values implemented so far:
 | Armor and HP     | Tier 1; maximum HP is `1009 + 899 * tier`, which starts at 1,908; current HP starts full                                   | Confirmed original behavior                                                    |
 | Inventory        | One item slot containing an Elixir                                                                                         | Confirmed original behavior                                                    |
 | Encounter queue  | Three entries; zero to two initial shops before battle, then one to three; confirmed shop roll ranges and duplicate rules  | Confirmed original behavior                                                    |
+| Encounter world  | Initial spacing 1,000-1,999; later spacing 1,500-1,799; entry x 600; shop and battle speeds and strict thresholds          | Confirmed original behavior                                                    |
 | Shop prices      | Generation-time equipment formulas; Shrine 50, Pharmacy 150, Grim's Shop 200, and Voucher Store 500                        | Confirmed original behavior                                                    |
 | Lifespan         | Starts at 99.99, drains the fractional field by 4 per active tick, resets the fraction to 99, and dies below whole value 0 | Confirmed original behavior                                                    |
 | World camera     | One original stage unit maps to one world unit; initial camera is 480 by 320 world units                                   | Clean-room coordinate-model decision preserving confirmed original coordinates |
@@ -42,14 +43,18 @@ that sequence. The exact seed expansion and bounded integer mapping are in
 Each `step(state, commands)` call is one 30 Hz logical opportunity. It accepts
 no elapsed time or render information. `steps` increments for every call,
 including calls made when pause, tutorial, pregame, or ended state prevents
-active gameplay. `activeTicks` increments only when the run phase is `running`,
-pause is off, no tutorial is open, and the pregame counter has reached zero.
+active gameplay. `activeTicks` increments when the run has not ended, pause is
+off, no tutorial is open, and the pregame counter has reached zero. The
+`running` phase advances distance and encounters. The `battle-handoff` phase
+keeps active ticks and lifespan available while running systems wait for
+Milestone 4 combat.
 
-Run state stores the base `running` or `ended` phase separately from the pause,
-tutorial, and pregame gates. This allows pause to be toggled while tutorial page
-0 remains open. The public observation reports those fields, whether active
-gameplay can advance on the next step, and whether pause or tutorial dismissal
-commands are currently eligible. It does not expose random state.
+Run state stores the `running`, `battle-handoff`, or `ended` phase separately
+from the pause, tutorial, and pregame gates. This allows pause to be toggled
+while tutorial page 0 remains open. The public observation reports those fields,
+whether active gameplay can advance on the next step, and whether pause,
+tutorial dismissal, or a current shop purchase is eligible. It does not expose
+random state or encounter generation bookkeeping.
 
 Commands are processed in list order before the same logical opportunity is
 evaluated. A successful command emits `pause-toggled` or `tutorial-dismissed`,
@@ -102,7 +107,8 @@ state.
 
 A fresh run first draws `random(3)` for the initial number of shops before a
 battle. It then calls the encounter generator three times to fill the upcoming
-queue. A count at or below zero consumes `random(3)`, queues a battle, resets
+queue and draws `random(1000)` for the initial world-space counter. A count at
+or below zero consumes `random(3)`, queues a battle, resets
 the next count to one through three, and clears the Bladesmith, Armorsmith, and
 Soul Shrine duplicate flags. This battle entry is only `{ kind: "battle" }`.
 Enemy identity and Dragon eligibility consume no draws yet. Milestone 4 will
@@ -123,19 +129,48 @@ shop prices are 150, 200, and 500. Purchases and Shrine price progression remain
 in later Milestone 3 tickets. Forced emergency Shrine state and its random
 draws are also deferred to its behavior ticket.
 
-The queue, duplicate flags, counter, and complete post-generation random state
-are authoritative, serializable, and deeply frozen. Ordinary
-`GameObservation` does not publish hidden duplicate or random state. The
-player-facing current and upcoming encounter view belongs to the world-space
-lifecycle ticket.
+The queue, duplicate flags, counters, positions, and complete post-generation
+random state are authoritative, serializable, and deeply frozen. Ordinary
+`GameObservation` publishes the current encounter and three upcoming entries,
+but not the distance counter, duplicate flags, or random state.
 
-Run-state schema version 6 identifies the encounter queue addition. Gameplay
-traces and run results remain at schema version 2. The locked seed
+The research confirms the queue and distance draws but does not establish
+their relative order during initialization or refill. The clean-room order
+fills the initial queue before drawing its distance. A promotion generates the
+replacement entry before drawing the later distance. This keeps the choice
+visible without claiming that the original Flash runtime used the same order.
+
+Run-state schema version 7 identifies the world-space lifecycle addition.
+Gameplay traces and run results remain at schema version 2. The locked seed
 `encounter-host-parity` produces encounter hash
-`sha256-v1:1466c6dbe82e210625dbc472789e4b86acb0190df26bd3568a6619f9d6ce8e4b`
+`sha256-v1:e9a33e6a60dcd2f9ad88495fbc43fa98eebb7fc82a9821b2cec8843a57b05da2`
 and initial state hash
-`sha256-v1:708f1fef6eabfa91020a7af87284cd874fe35fa32a39bc32aa5ee83438dc7400`
+`sha256-v1:e0f2086619699848e19f7d3b00c298218d11f67a6c461243b70a30e1cffa862b`
 in both Node and Chromium.
+
+## Encounter world lifecycle
+
+The initial counter is `1000 + random(1000)`. Every promotion resets it to
+`1500 + random(300)`. Active running ticks subtract the current movement speed.
+When a due encounter can enter, the first queue entry becomes current at x 600
+and one generated replacement restores the queue to three entries.
+
+Shops move left by half the running speed. A current shop is purchase-eligible
+only during active running and only while `0 < x < 420`. This ticket exposes
+that eligibility but does not implement purchases. A shop departs below x -100
+and emits `shop-departed`.
+
+Battles move left by the full running speed. Crossing below x 420 changes the
+phase to `battle-handoff` and emits `battle-handoff`. Later steps freeze
+distance, day, score, the encounter counter, and the current battle position.
+They still advance active ticks and lifespan until pause, a tutorial, run death,
+or future Milestone 4 combat changes the state. No enemy, reward, auto-win, or
+battle resolution exists in this handoff.
+
+Promotion emits `encounter-promoted` with the positioned current encounter.
+All three encounter events are semantic domain outcomes. Canvas redraws and
+interpolation consume observations without stepping or changing purchase
+eligibility.
 
 ## Lifespan and termination
 
@@ -181,8 +216,8 @@ gates. `original-v1.3` uses this explicit clean-room decision:
 - Pregame opportunities do not increment `activeTicks`. The first active tick
   is the next eligible step after the counter reaches zero.
 
-Encounter movement, purchases, item use, combat, and tutorial presentation
-remain assigned to later tickets.
+Purchases, item use, combat resolution, and tutorial presentation remain
+assigned to later tickets.
 
 State, results, events, event lists, and observations are frozen. A
 JSON-restored checkpoint produces the same next state, observation, and events

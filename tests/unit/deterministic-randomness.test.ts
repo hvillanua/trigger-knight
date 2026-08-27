@@ -17,6 +17,8 @@ const player = Object.freeze({
   inventory: Object.freeze({ item: "elixir" as const }),
 });
 const encounters = Object.freeze({
+  current: null,
+  distanceUntilNext: 1_500,
   upcoming: Object.freeze([
     Object.freeze({ kind: "battle" as const }),
     Object.freeze({ kind: "battle" as const }),

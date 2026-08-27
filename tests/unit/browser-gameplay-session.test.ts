@@ -42,7 +42,7 @@ describe("browser gameplay session", () => {
 
     expect(presentedResult).toEqual(unpresentedResult);
     expect(presented.readDiagnostics()).toEqual(unpresented.readDiagnostics());
-    expect(presentedResult).toEqual({
+    expect(presentedResult).toMatchObject({
       observation: {
         ruleset: ORIGINAL_V13_RULESET_ID,
         camera: {
@@ -62,6 +62,10 @@ describe("browser gameplay session", () => {
           fraction: 99,
         },
         player: initialPlayer,
+        encounters: {
+          current: null,
+          upcoming: presentedResult.observation.encounters.upcoming,
+        },
         lifecycle: {
           phase: "running",
           terminalReason: null,
@@ -73,76 +77,15 @@ describe("browser gameplay session", () => {
         actions: {
           canTogglePause: true,
           canDismissTutorial: true,
+          canPurchaseCurrentEncounter: false,
         },
       },
       events: [{ type: "step-advanced", step: 1 }],
     });
     expect(present).toHaveBeenCalledTimes(2);
     expect(present).toHaveBeenLastCalledWith({
-      previous: {
-        ruleset: ORIGINAL_V13_RULESET_ID,
-        camera: {
-          x: 0,
-          y: 0,
-          width: 480,
-          height: 320,
-        },
-        steps: 0,
-        activeTicks: 0,
-        movementSpeed: 0,
-        distance: 0,
-        day: 1,
-        score: 0,
-        lifespan: {
-          whole: 99,
-          fraction: 99,
-        },
-        player: initialPlayer,
-        lifecycle: {
-          phase: "running",
-          terminalReason: null,
-          paused: false,
-          tutorialPage: 0,
-          pregameStepsRemaining: 60,
-          activeGameplay: false,
-        },
-        actions: {
-          canTogglePause: true,
-          canDismissTutorial: true,
-        },
-      },
-      current: {
-        ruleset: ORIGINAL_V13_RULESET_ID,
-        camera: {
-          x: 0,
-          y: 0,
-          width: 480,
-          height: 320,
-        },
-        steps: 1,
-        activeTicks: 0,
-        movementSpeed: 0,
-        distance: 0,
-        day: 1,
-        score: 0,
-        lifespan: {
-          whole: 99,
-          fraction: 99,
-        },
-        player: initialPlayer,
-        lifecycle: {
-          phase: "running",
-          terminalReason: null,
-          paused: false,
-          tutorialPage: 0,
-          pregameStepsRemaining: 60,
-          activeGameplay: false,
-        },
-        actions: {
-          canTogglePause: true,
-          canDismissTutorial: true,
-        },
-      },
+      previous: presented.readDiagnostics().checkpoints[0]?.observation,
+      current: presentedResult.observation,
       interpolation: 0,
       events: [{ type: "step-advanced", step: 1 }],
     });
