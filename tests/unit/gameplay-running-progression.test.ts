@@ -36,7 +36,14 @@ function finishPregame(state: RunState): RunState {
     { type: "dismiss-tutorial" },
   ]).state;
 
-  return stepMany(dismissed, 59);
+  return {
+    ...stepMany(dismissed, 59),
+    encounters: {
+      ...state.encounters,
+      current: null,
+      distanceUntilNext: 100_000,
+    },
+  };
 }
 
 describe("original-v1.3 running progression", () => {

@@ -11,12 +11,18 @@ import {
 
 function describeEvent(event: GameEvent): string {
   switch (event.type) {
+    case "battle-handoff":
+      return event.type;
+    case "encounter-promoted":
+      return `${event.type}:${event.encounter.kind}`;
     case "lifespan-death":
       return event.type;
     case "pause-toggled":
       return `${event.type}:${String(event.paused)}`;
     case "step-advanced":
       return `${event.type}:${event.step}`;
+    case "shop-departed":
+      return `${event.type}:${event.shop}`;
     case "tutorial-dismissed":
       return `${event.type}:${event.page}`;
     case "run-ended":

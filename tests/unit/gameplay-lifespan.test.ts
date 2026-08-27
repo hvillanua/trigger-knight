@@ -80,7 +80,7 @@ describe("original-v1.3 lifespan", () => {
     expect(beforeDeath).toMatchObject({
       activeTicks: 2_499,
       lifespan: { whole: 0, fraction: 3 },
-      lifecycle: { phase: "running", terminalReason: null },
+      lifecycle: { phase: "battle-handoff", terminalReason: null },
     });
 
     const death = gameplayEngine.step(beforeDeath, []);
@@ -110,6 +110,7 @@ describe("original-v1.3 lifespan", () => {
       actions: {
         canTogglePause: false,
         canDismissTutorial: false,
+        canPurchaseCurrentEncounter: false,
       },
     });
 

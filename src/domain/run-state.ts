@@ -12,7 +12,7 @@ import type {
 import { createEncounterQueueState } from "./encounters.js";
 import { createPlayerState } from "./player-state.js";
 
-export const RUN_STATE_SCHEMA_VERSION = 6 as const;
+export const RUN_STATE_SCHEMA_VERSION = 7 as const;
 
 /** Creates a fresh minimal state value for one independent run. */
 export function createRunState(
@@ -59,7 +59,7 @@ export function isActiveGameplay(
   lifecycle: Readonly<RunLifecycleState>,
 ): boolean {
   return (
-    lifecycle.phase === "running" &&
+    lifecycle.phase !== "ended" &&
     !lifecycle.paused &&
     lifecycle.tutorialPage === null &&
     lifecycle.pregameStepsRemaining === 0
@@ -111,7 +111,7 @@ export function advanceRunState(
 ): RunStateStepResult {
   const commandResult = processCommands(state.lifecycle, commands);
   const gameplayGatesOpen =
-    commandResult.lifecycle.phase === "running" &&
+    commandResult.lifecycle.phase !== "ended" &&
     !commandResult.lifecycle.paused &&
     commandResult.lifecycle.tutorialPage === null;
   const pregameStepsRemaining =

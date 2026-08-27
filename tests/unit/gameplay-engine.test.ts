@@ -53,7 +53,7 @@ describe("gameplay engine", () => {
     expect(repeated).toEqual(state);
     expect(repeated).not.toBe(state);
     expect(state).toMatchObject({
-      schemaVersion: 6,
+      schemaVersion: 7,
       ruleset: "original-v1.3",
       steps: 0,
       activeTicks: 0,
@@ -72,6 +72,10 @@ describe("gameplay engine", () => {
         armor: { tier: 1 },
         hp: { current: 1_908, maximum: 1_908 },
         inventory: { item: "elixir" },
+      },
+      encounters: {
+        current: null,
+        upcoming: state.encounters.upcoming,
       },
       lifecycle: {
         phase: "running",
@@ -106,6 +110,10 @@ describe("gameplay engine", () => {
         hp: { current: 1_908, maximum: 1_908 },
         inventory: { item: "elixir" },
       },
+      encounters: {
+        current: null,
+        upcoming: state.encounters.upcoming,
+      },
       lifecycle: {
         phase: "running",
         terminalReason: null,
@@ -117,6 +125,7 @@ describe("gameplay engine", () => {
       actions: {
         canTogglePause: true,
         canDismissTutorial: true,
+        canPurchaseCurrentEncounter: false,
       },
     });
     expect(observation).not.toHaveProperty("random");
@@ -181,6 +190,10 @@ describe("gameplay engine", () => {
         hp: { current: 1_908, maximum: 1_908 },
         inventory: { item: "elixir" },
       },
+      encounters: {
+        current: null,
+        upcoming: first.state.encounters.upcoming,
+      },
       lifecycle: {
         phase: "running",
         terminalReason: null,
@@ -192,6 +205,7 @@ describe("gameplay engine", () => {
       actions: {
         canTogglePause: true,
         canDismissTutorial: false,
+        canPurchaseCurrentEncounter: false,
       },
     });
     expect(Object.isFrozen(first)).toBe(true);

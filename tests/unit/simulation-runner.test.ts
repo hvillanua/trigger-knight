@@ -60,6 +60,14 @@ function tutorialGatedObservation(steps: number): GameObservation {
       hp: { current: 1_908, maximum: 1_908 },
       inventory: { item: "elixir" },
     },
+    encounters: {
+      current: null,
+      upcoming: [
+        { kind: "battle" },
+        { kind: "shop", shop: "bladesmith", cachedPrice: 236 },
+        { kind: "shop", shop: "armorsmith", cachedPrice: 204 },
+      ],
+    },
     lifecycle: {
       phase: "running",
       terminalReason: null,
@@ -71,6 +79,7 @@ function tutorialGatedObservation(steps: number): GameObservation {
     actions: {
       canTogglePause: true,
       canDismissTutorial: true,
+      canPurchaseCurrentEncounter: false,
     },
   };
 }
@@ -115,7 +124,7 @@ describe("headless simulation runner", () => {
       distance: 0,
       gold: 300,
       traceHash:
-        "sha256-v1:3c6c5cb68439d21276a824294a53790b51dec5a2b56382f0d03b3692c6426f66",
+        "sha256-v1:29cc7b43829a2b90cd0457e0b2ff5618ad9440a7838a46812e75c30825691b49",
       metrics: {},
     });
     expect(Object.isFrozen(result)).toBe(true);
@@ -224,9 +233,9 @@ describe("headless simulation runner", () => {
       steps: 2_560,
       activeTicks: 2_500,
       terminalReason: "lifespan",
-      score: 373_950,
-      day: 6,
-      distance: 37_395,
+      score: 14_400,
+      day: 1,
+      distance: 1_440,
     });
   });
 
@@ -250,9 +259,9 @@ describe("headless simulation runner", () => {
       steps: 2_559,
       activeTicks: 2_499,
       terminalReason: "step-limit",
-      score: 373_800,
-      day: 6,
-      distance: 37_380,
+      score: 14_400,
+      day: 1,
+      distance: 1_440,
     });
   });
 

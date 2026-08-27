@@ -108,7 +108,23 @@ test("interpolates public observations without mutating gameplay", async ({
         };
       };
       const presentation = new presentationModule.CanvasPresentation(element);
-      const current = Object.freeze({ ...previous, distance: 10 });
+      const current = Object.freeze({
+        ...previous,
+        distance: 10,
+        encounters: Object.freeze({
+          ...previous.encounters,
+          current: Object.freeze({
+            kind: "shop" as const,
+            shop: "pharmacy" as const,
+            cachedPrice: 150,
+            x: 100,
+          }),
+        }),
+        actions: Object.freeze({
+          ...previous.actions,
+          canPurchaseCurrentEncounter: true,
+        }),
+      });
       const events = Object.freeze([]);
       const inputsBefore = JSON.stringify({ previous, current, events });
       const traceBefore = JSON.stringify(trace);
@@ -125,6 +141,8 @@ test("interpolates public observations without mutating gameplay", async ({
       return {
         interpolatedDistances,
         authoritativeDistance: element.dataset.distance,
+        currentEncounterX: current.encounters.current?.x,
+        purchaseEligibility: current.actions.canPurchaseCurrentEncounter,
         inputsUnchanged:
           JSON.stringify({ previous, current, events }) === inputsBefore,
         traceUnchanged:
@@ -136,6 +154,8 @@ test("interpolates public observations without mutating gameplay", async ({
   expect(result).toEqual({
     interpolatedDistances: ["0", "5", "10"],
     authoritativeDistance: "10",
+    currentEncounterX: 100,
+    purchaseEligibility: true,
     inputsUnchanged: true,
     traceUnchanged: true,
   });

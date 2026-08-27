@@ -1,11 +1,14 @@
 import type {
   EncounterGenerationState,
+  CurrentEncounter,
   EncounterQueueState,
+  GameEvent,
   PlayerState,
   QueuedEncounter,
   RandomState,
   ShopEncounter,
   ShopId,
+  RunState,
 } from "./contracts.js";
 import { nextRandomInteger } from "./random.js";
 
@@ -16,6 +19,17 @@ export interface EncounterGenerationRules {
   readonly laterShopsUntilBattleBase: number;
   readonly voucherFirstDay: number;
   readonly shopRollUpperBound: number;
+  readonly initialDistanceBase: number;
+  readonly initialDistanceUpperBound: number;
+  readonly laterDistanceBase: number;
+  readonly laterDistanceUpperBound: number;
+  readonly entryX: number;
+  readonly shopSpeedFactor: number;
+  readonly shopActionMinimumX: number;
+  readonly shopActionMaximumX: number;
+  readonly shopDepartureX: number;
+  readonly battleSpeedFactor: number;
+  readonly battleHandoffX: number;
   readonly rollMinimums: {
     readonly bladesmith: number;
     readonly armorsmith: number;
@@ -46,6 +60,11 @@ export interface InitializedEncounterQueue {
   readonly random: RandomState;
 }
 
+export interface EncounterLifecycleStepResult {
+  readonly state: RunState;
+  readonly events: readonly GameEvent[];
+}
+
 function createSeenSinceBattle(
   seen: Readonly<EncounterGenerationState["seenSinceBattle"]>,
 ): EncounterGenerationState["seenSinceBattle"] {
@@ -69,11 +88,46 @@ function createQueuedEncounter(
     : Object.freeze({ ...encounter });
 }
 
+function createCurrentEncounter(
+  encounter: Readonly<CurrentEncounter> | null,
+): CurrentEncounter | null {
+  return encounter === null
+    ? null
+    : encounter.kind === "battle"
+      ? Object.freeze({ kind: "battle", x: encounter.x })
+      : Object.freeze({ ...encounter });
+}
+
+function positionEncounter(
+  encounter: Readonly<QueuedEncounter>,
+  x: number,
+): CurrentEncounter {
+  return encounter.kind === "battle"
+    ? Object.freeze({ kind: "battle", x })
+    : Object.freeze({ ...encounter, x });
+}
+
+function moveCurrentEncounter(
+  encounter: Readonly<CurrentEncounter>,
+  movementSpeed: number,
+  rules: Readonly<EncounterGenerationRules>,
+): CurrentEncounter {
+  const speedFactor =
+    encounter.kind === "shop" ? rules.shopSpeedFactor : rules.battleSpeedFactor;
+
+  return positionEncounter(
+    encounter,
+    encounter.x - movementSpeed * speedFactor,
+  );
+}
+
 /** Copies authoritative encounter values into deeply frozen state. */
 export function createEncounterQueueState(
   encounters: Readonly<EncounterQueueState>,
 ): EncounterQueueState {
   return Object.freeze({
+    current: createCurrentEncounter(encounters.current),
+    distanceUntilNext: encounters.distanceUntilNext,
     upcoming: Object.freeze(encounters.upcoming.map(createQueuedEncounter)),
     generation: createGenerationState(encounters.generation),
   });
@@ -255,8 +309,116 @@ export function initializeEncounterQueue(
     nextRandom = generated.random;
   }
 
+  const initialDistance = nextRandomInteger(
+    nextRandom,
+    rules.initialDistanceUpperBound,
+  );
+
   return Object.freeze({
-    encounters: createEncounterQueueState({ upcoming, generation }),
-    random: nextRandom,
+    encounters: createEncounterQueueState({
+      current: null,
+      distanceUntilNext: rules.initialDistanceBase + initialDistance.value,
+      upcoming,
+      generation,
+    }),
+    random: initialDistance.state,
+  });
+}
+
+/** Advances countdowns and mechanic-bearing positions for one running tick. */
+export function advanceEncounterLifecycle(
+  previous: Readonly<RunState>,
+  stepped: Readonly<RunState>,
+  rules: Readonly<EncounterGenerationRules>,
+): EncounterLifecycleStepResult {
+  if (
+    stepped.activeTicks === previous.activeTicks ||
+    previous.lifecycle.phase !== "running" ||
+    stepped.lifecycle.phase !== "running"
+  ) {
+    return Object.freeze({ state: stepped, events: Object.freeze([]) });
+  }
+
+  const events: GameEvent[] = [];
+  const distanceUntilNext =
+    previous.encounters.distanceUntilNext - stepped.movementSpeed;
+  let current = previous.encounters.current;
+
+  if (current !== null) {
+    current = moveCurrentEncounter(current, stepped.movementSpeed, rules);
+
+    if (current.kind === "shop" && current.x < rules.shopDepartureX) {
+      events.push(Object.freeze({ type: "shop-departed", shop: current.shop }));
+      current = null;
+    } else if (current.kind === "battle" && current.x < rules.battleHandoffX) {
+      const encounters = createEncounterQueueState({
+        ...previous.encounters,
+        current,
+        distanceUntilNext,
+      });
+
+      events.push(Object.freeze({ type: "battle-handoff" }));
+
+      return Object.freeze({
+        state: Object.freeze({
+          ...stepped,
+          encounters,
+          lifecycle: Object.freeze({
+            ...stepped.lifecycle,
+            phase: "battle-handoff",
+          }),
+        }),
+        events: Object.freeze(events),
+      });
+    }
+  }
+
+  if (current !== null || distanceUntilNext > 0) {
+    return Object.freeze({
+      state: Object.freeze({
+        ...stepped,
+        encounters: createEncounterQueueState({
+          ...previous.encounters,
+          current,
+          distanceUntilNext,
+        }),
+      }),
+      events: Object.freeze(events),
+    });
+  }
+
+  const [promoted, ...remaining] = previous.encounters.upcoming;
+  if (promoted === undefined) {
+    throw new RangeError("Encounter queue must contain a promotable entry");
+  }
+
+  const generated = generateEncounter(
+    stepped.random,
+    previous.encounters.generation,
+    stepped.day,
+    stepped.player,
+    rules,
+  );
+  const nextDistance = nextRandomInteger(
+    generated.random,
+    rules.laterDistanceUpperBound,
+  );
+  current = positionEncounter(promoted, rules.entryX);
+  events.push(
+    Object.freeze({ type: "encounter-promoted", encounter: current }),
+  );
+
+  return Object.freeze({
+    state: Object.freeze({
+      ...stepped,
+      random: nextDistance.state,
+      encounters: createEncounterQueueState({
+        current,
+        distanceUntilNext: rules.laterDistanceBase + nextDistance.value,
+        upcoming: [...remaining, generated.encounter],
+        generation: generated.generation,
+      }),
+    }),
+    events: Object.freeze(events),
   });
 }

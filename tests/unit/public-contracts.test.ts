@@ -157,6 +157,16 @@ describe("public application contracts", () => {
       Readonly<{ kind: "battle" }>
     >();
     expectTypeOf<EncounterQueueState>().toMatchTypeOf<{
+      readonly current:
+        | Readonly<{
+            kind: "shop";
+            shop: ShopId;
+            cachedPrice: number;
+            x: number;
+          }>
+        | Readonly<{ kind: "battle"; x: number }>
+        | null;
+      readonly distanceUntilNext: number;
       readonly upcoming: readonly (ShopEncounter | BattleEncounter)[];
       readonly generation: EncounterGenerationState;
     }>();
@@ -183,7 +193,7 @@ describe("public application contracts", () => {
       readonly initialProfile: ProfileState;
     }>();
     expectTypeOf<RunState>().toMatchTypeOf<{
-      readonly schemaVersion: 6;
+      readonly schemaVersion: 7;
       readonly ruleset: RuleSetId;
       readonly random: RandomState;
       readonly steps: number;
@@ -207,6 +217,22 @@ describe("public application contracts", () => {
         };
       };
       readonly encounters: {
+        readonly current:
+          | Readonly<{
+              kind: "shop";
+              shop:
+                | "bladesmith"
+                | "armorsmith"
+                | "soul-shrine"
+                | "pharmacy"
+                | "grims-shop"
+                | "voucher-store";
+              cachedPrice: number;
+              x: number;
+            }>
+          | Readonly<{ kind: "battle"; x: number }>
+          | null;
+        readonly distanceUntilNext: number;
         readonly upcoming: readonly (
           | Readonly<{
               kind: "shop";
@@ -231,7 +257,7 @@ describe("public application contracts", () => {
         };
       };
       readonly lifecycle: {
-        readonly phase: "running" | "ended";
+        readonly phase: "running" | "battle-handoff" | "ended";
         readonly terminalReason: "lifespan" | "combat" | null;
         readonly paused: boolean;
         readonly tutorialPage: 0 | null;
@@ -265,8 +291,20 @@ describe("public application contracts", () => {
           readonly item: "elixir" | "divine-edge" | "gold-voucher" | null;
         };
       };
+      readonly encounters: {
+        readonly current:
+          | Readonly<{
+              kind: "shop";
+              shop: ShopId;
+              cachedPrice: number;
+              x: number;
+            }>
+          | Readonly<{ kind: "battle"; x: number }>
+          | null;
+        readonly upcoming: readonly (ShopEncounter | BattleEncounter)[];
+      };
       readonly lifecycle: {
-        readonly phase: "running" | "ended";
+        readonly phase: "running" | "battle-handoff" | "ended";
         readonly terminalReason: "lifespan" | "combat" | null;
         readonly paused: boolean;
         readonly tutorialPage: 0 | null;
@@ -276,13 +314,27 @@ describe("public application contracts", () => {
       readonly actions: {
         readonly canTogglePause: boolean;
         readonly canDismissTutorial: boolean;
+        readonly canPurchaseCurrentEncounter: boolean;
       };
     }>();
     expectTypeOf<GameEvent>().toEqualTypeOf<
+      | Readonly<{ type: "battle-handoff" }>
+      | Readonly<{
+          type: "encounter-promoted";
+          encounter:
+            | Readonly<{
+                kind: "shop";
+                shop: ShopId;
+                cachedPrice: number;
+                x: number;
+              }>
+            | Readonly<{ kind: "battle"; x: number }>;
+        }>
       | Readonly<{ type: "lifespan-death" }>
       | Readonly<{ type: "pause-toggled"; paused: boolean }>
       | Readonly<{ type: "run-ended"; reason: "lifespan" | "combat" }>
       | Readonly<{ type: "step-advanced"; step: number }>
+      | Readonly<{ type: "shop-departed"; shop: ShopId }>
       | Readonly<{ type: "tutorial-dismissed"; page: 0 }>
     >();
   });
