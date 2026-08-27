@@ -21,10 +21,10 @@ The ruleset owns the confirmed compatibility values implemented so far:
 | Pregame delay    | 60 logical opportunities                                                                                                   | Confirmed value; gate interaction is a clean-room decision                     |
 | Running movement | Speed starts at 0, gains 1 per active tick, caps at 15, and contributes one distance unit per speed unit                   | Confirmed original behavior                                                    |
 | Day and score    | 7,000 distance units per day; running score uses 10 points per speed unit before the profile multiplier                    | Confirmed original behavior                                                    |
-| Economy          | A run starts with 300 integer-valued gold                                                                                  | Confirmed original behavior                                                    |
+| Economy          | A run starts with 300 integer gold; purchases require and subtract the encounter's cached price                            | Confirmed original behavior                                                    |
 | Weapon           | Tier 1; attack is `129 + 87 * tier`, which starts at 216                                                                   | Confirmed original behavior                                                    |
 | Armor and HP     | Tier 1; maximum HP is `1009 + 899 * tier`, which starts at 1,908; current HP starts full                                   | Confirmed original behavior                                                    |
-| Inventory        | One item slot containing an Elixir                                                                                         | Confirmed original behavior                                                    |
+| Inventory        | One slot; item-shop purchases replace it with Elixir, Divine Edge, or Gold Voucher                                         | Confirmed original behavior                                                    |
 | Encounter queue  | Three entries; zero to two initial shops before battle, then one to three; confirmed shop roll ranges and duplicate rules  | Confirmed original behavior                                                    |
 | Encounter world  | Initial spacing 1,000-1,999; later spacing 1,500-1,799; entry x 600; shop and battle speeds and strict thresholds          | Confirmed original behavior                                                    |
 | Shop prices      | Generation-time equipment formulas; Shrine 50, Pharmacy 150, Grim's Shop 200, and Voucher Store 500                        | Confirmed original behavior                                                    |
@@ -56,11 +56,12 @@ whether active gameplay can advance on the next step, and whether pause,
 tutorial dismissal, or a current shop purchase is eligible. It does not expose
 random state or encounter generation bookkeeping.
 
-Commands are processed in list order before the same logical opportunity is
-evaluated. A successful command emits `pause-toggled` or `tutorial-dismissed`,
-followed by the step's `step-advanced` event. Commands do nothing after the run
-phase becomes `ended`, but the host can still account for an attempted engine
-step.
+Commands are processed before the same logical opportunity is evaluated.
+Purchase attempts emit `shop-purchased` or `purchase-rejected`; lifecycle
+commands emit `pause-toggled` or `tutorial-dismissed`. The logical opportunity
+then emits `step-advanced`. An ended run rejects a purchase through its
+lifecycle gate and ignores lifecycle commands, while the host can still account
+for the attempted engine step.
 
 ## Running progression
 
@@ -95,9 +96,22 @@ values without exposing random state or future encounter-generation state.
 The original-v1.3 constants own the starting tiers and the confirmed formulas.
 The run derives attack 216 from `129 + 87 * 1`. It derives maximum HP 1,908
 from `1009 + 899 * 1`, and current HP starts at that maximum. The inventory item
-identifiers cover Elixir, Divine Edge, and Gold Voucher, but this slice only
-initializes the confirmed starting Elixir. Purchases, item use, and other
-mutations remain in later Milestone 3 and 4 tickets.
+identifiers cover Elixir, Divine Edge, and Gold Voucher. Pharmacy, Grim's Shop,
+and Voucher Store purchases replace the one slot with their corresponding item,
+including when the same item is already carried. Item use remains in Milestone 4.
+
+The device-independent `purchase-current-encounter` command contains no price,
+effect, or coordinate. The domain accepts it only for an active, unused,
+supported current shop strictly inside `0 < x < 420` when gold covers the
+cached price. Success subtracts that exact integer once and marks the positioned
+shop used. Public action eligibility runs the same validation. Rejections name
+the failed check without mutating player economy or inventory.
+
+Equipment upgrades and Soul Shrine restoration remain assigned to issues #44
+and #45. Until those effects exist, their current shops report purchase as
+ineligible and a direct command emits `shop-effect-unavailable` without charging
+gold or marking the shop used. This is an implementation-stage boundary, not a
+claim about original behavior.
 
 Player state and each nested equipment, HP, and inventory value are frozen.
 Stepping a JSON-restored checkpoint copies those values back into frozen domain
@@ -125,9 +139,8 @@ flag; another candidate of the same type rerolls. Item shops can repeat.
 Every accepted shop stores its integer price on the queue entry. Bladesmith
 uses `200 + 36 * currentWeaponTier`; Armorsmith uses
 `150 + 54 * currentArmorTier`. The initial Shrine price is 50, and the item
-shop prices are 150, 200, and 500. Purchases and Shrine price progression remain
-in later Milestone 3 tickets. Forced emergency Shrine state and its random
-draws are also deferred to its behavior ticket.
+shop prices are 150, 200, and 500. Shrine price progression and forced emergency
+Shrine state remain deferred to their behavior ticket.
 
 The queue, duplicate flags, counters, positions, and complete post-generation
 random state are authoritative, serializable, and deeply frozen. Ordinary
@@ -140,12 +153,12 @@ fills the initial queue before drawing its distance. A promotion generates the
 replacement entry before drawing the later distance. This keeps the choice
 visible without claiming that the original Flash runtime used the same order.
 
-Run-state schema version 7 identifies the world-space lifecycle addition.
+Run-state schema version 8 adds the current shop's one-use purchase state.
 Gameplay traces and run results remain at schema version 2. The locked seed
 `encounter-host-parity` produces encounter hash
 `sha256-v1:e9a33e6a60dcd2f9ad88495fbc43fa98eebb7fc82a9821b2cec8843a57b05da2`
 and initial state hash
-`sha256-v1:e0f2086619699848e19f7d3b00c298218d11f67a6c461243b70a30e1cffa862b`
+`sha256-v1:6ed00592d72a7fbc0bdf547a57302d9a3fe396ddee3a8eae987ab699cab7cf15`
 in both Node and Chromium.
 
 ## Encounter world lifecycle
@@ -155,10 +168,10 @@ The initial counter is `1000 + random(1000)`. Every promotion resets it to
 When a due encounter can enter, the first queue entry becomes current at x 600
 and one generated replacement restores the queue to three entries.
 
-Shops move left by half the running speed. A current shop is purchase-eligible
-only during active running and only while `0 < x < 420`. This ticket exposes
-that eligibility but does not implement purchases. A shop departs below x -100
-and emits `shop-departed`.
+Shops move left by half the running speed. A supported current item shop is
+purchase-eligible only during active running, while unused, while affordable,
+and only while `0 < x < 420`. A shop departs below x -100 and emits
+`shop-departed` whether it was used or passed.
 
 Battles move left by the full running speed. Crossing below x 420 changes the
 phase to `battle-handoff` and emits `battle-handoff`. Later steps freeze
@@ -216,8 +229,8 @@ gates. `original-v1.3` uses this explicit clean-room decision:
 - Pregame opportunities do not increment `activeTicks`. The first active tick
   is the next eligible step after the counter reaches zero.
 
-Purchases, item use, combat resolution, and tutorial presentation remain
-assigned to later tickets.
+Equipment and Shrine purchases, item use, combat resolution, and tutorial
+presentation remain assigned to later tickets.
 
 State, results, events, event lists, and observations are frozen. A
 JSON-restored checkpoint produces the same next state, observation, and events

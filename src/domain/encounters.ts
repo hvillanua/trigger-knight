@@ -104,7 +104,7 @@ function positionEncounter(
 ): CurrentEncounter {
   return encounter.kind === "battle"
     ? Object.freeze({ kind: "battle", x })
-    : Object.freeze({ ...encounter, x });
+    : Object.freeze({ ...encounter, x, used: false });
 }
 
 function moveCurrentEncounter(
@@ -115,10 +115,10 @@ function moveCurrentEncounter(
   const speedFactor =
     encounter.kind === "shop" ? rules.shopSpeedFactor : rules.battleSpeedFactor;
 
-  return positionEncounter(
-    encounter,
-    encounter.x - movementSpeed * speedFactor,
-  );
+  return Object.freeze({
+    ...encounter,
+    x: encounter.x - movementSpeed * speedFactor,
+  });
 }
 
 /** Copies authoritative encounter values into deeply frozen state. */

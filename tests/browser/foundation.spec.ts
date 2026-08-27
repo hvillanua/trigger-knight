@@ -118,6 +118,7 @@ test("interpolates public observations without mutating gameplay", async ({
             shop: "pharmacy" as const,
             cachedPrice: 150,
             x: 100,
+            used: false,
           }),
         }),
         actions: Object.freeze({

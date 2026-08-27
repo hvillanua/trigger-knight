@@ -58,6 +58,7 @@ function currentShop(x: number): CurrentEncounter {
     shop: "pharmacy",
     cachedPrice: 150,
     x,
+    used: false,
   };
 }
 
@@ -89,6 +90,7 @@ describe("original-v1.3 encounter world lifecycle", () => {
       shop: "pharmacy",
       cachedPrice: 150,
       x: 600,
+      used: false,
     });
     expect(result.state.encounters.upcoming).toHaveLength(3);
     expect(result.state.encounters.upcoming.slice(0, 2)).toEqual([
@@ -108,6 +110,7 @@ describe("original-v1.3 encounter world lifecycle", () => {
         shop: "pharmacy",
         cachedPrice: 150,
         x: 600,
+        used: false,
       },
     });
   });

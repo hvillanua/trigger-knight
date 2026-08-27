@@ -19,10 +19,14 @@ function describeEvent(event: GameEvent): string {
       return event.type;
     case "pause-toggled":
       return `${event.type}:${String(event.paused)}`;
+    case "purchase-rejected":
+      return `${event.type}:${event.reason}`;
     case "step-advanced":
       return `${event.type}:${event.step}`;
     case "shop-departed":
       return `${event.type}:${event.shop}`;
+    case "shop-purchased":
+      return `${event.type}:${event.shop}:${event.price}`;
     case "tutorial-dismissed":
       return `${event.type}:${event.page}`;
     case "run-ended":

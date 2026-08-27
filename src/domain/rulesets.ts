@@ -16,6 +16,11 @@ import {
 } from "./encounters.js";
 import { advanceLifespan } from "./lifespan.js";
 import { createPlayerState } from "./player-state.js";
+import {
+  advancePurchases,
+  purchaseRejectionReason,
+  type PurchaseRules,
+} from "./purchases.js";
 import { createRandomState, RANDOM_ALGORITHM } from "./random.js";
 import { advanceRunningProgression } from "./running-progression.js";
 import {
@@ -207,6 +212,16 @@ const originalV13LifespanRules = Object.freeze({
   deathBelowWhole: originalV13Constants.lifespan.deathBelowWhole,
 });
 
+const originalV13PurchaseRules: PurchaseRules = Object.freeze({
+  actionMinimumX: originalV13Constants.encounters.shopActionMinimumX,
+  actionMaximumX: originalV13Constants.encounters.shopActionMaximumX,
+  itemByShop: Object.freeze({
+    pharmacy: "elixir",
+    "grims-shop": "divine-edge",
+    "voucher-store": "gold-voucher",
+  }),
+});
+
 function createOriginalV13InitialPlayerState(): PlayerState {
   const weaponTier = originalV13Constants.loadout.weapon.initialTier;
   const armorTier = originalV13Constants.loadout.armor.initialTier;
@@ -259,19 +274,24 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
     state: Readonly<RunState>,
     commands: readonly GameCommand[],
   ): RuleSetStepResult {
-    const result = advanceRunState(state, commands);
-    const progressed = advanceRunningProgression(
+    const purchases = advancePurchases(
       state,
+      commands,
+      originalV13PurchaseRules,
+    );
+    const result = advanceRunState(purchases.state, commands);
+    const progressed = advanceRunningProgression(
+      purchases.state,
       result.state,
       originalV13RunningProgressionRules,
     );
     const encounters = advanceEncounterLifecycle(
-      state,
+      purchases.state,
       progressed,
       originalV13Constants.encounters,
     );
     const lifespan = advanceLifespan(
-      state,
+      purchases.state,
       encounters.state,
       originalV13LifespanRules,
     );
@@ -279,6 +299,7 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
     return Object.freeze({
       state: lifespan.state,
       events: Object.freeze([
+        ...purchases.events,
         ...result.events,
         ...encounters.events,
         ...lifespan.events,
@@ -322,13 +343,7 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
         canDismissTutorial:
           canAcceptLifecycleCommands && state.lifecycle.tutorialPage !== null,
         canPurchaseCurrentEncounter:
-          isActiveGameplay(state.lifecycle) &&
-          state.lifecycle.phase === "running" &&
-          currentEncounter?.kind === "shop" &&
-          currentEncounter.x >
-            originalV13Constants.encounters.shopActionMinimumX &&
-          currentEncounter.x <
-            originalV13Constants.encounters.shopActionMaximumX,
+          purchaseRejectionReason(state, originalV13PurchaseRules) === null,
       }),
     });
   },

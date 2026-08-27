@@ -12,7 +12,7 @@ import type {
 import { createEncounterQueueState } from "./encounters.js";
 import { createPlayerState } from "./player-state.js";
 
-export const RUN_STATE_SCHEMA_VERSION = 7 as const;
+export const RUN_STATE_SCHEMA_VERSION = 8 as const;
 
 /** Creates a fresh minimal state value for one independent run. */
 export function createRunState(
@@ -94,6 +94,8 @@ function processCommands(
           );
           tutorialPage = null;
         }
+        break;
+      case "purchase-current-encounter":
         break;
     }
   }
