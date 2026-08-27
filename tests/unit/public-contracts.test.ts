@@ -1,6 +1,9 @@
 import { describe, expectTypeOf, it } from "vitest";
 
 import type {
+  BattleEncounter,
+  EncounterGenerationState,
+  EncounterQueueState,
   GameCommand,
   GameEvent,
   GameObservation,
@@ -20,6 +23,8 @@ import type {
   RunConfig,
   RunResult,
   RunState,
+  ShopEncounter,
+  ShopId,
   SimulationRequest,
   SimulationRunner,
   StepResult,
@@ -135,6 +140,26 @@ describe("public application contracts", () => {
   });
 
   it("identifies normalized run results with their reproducibility inputs", () => {
+    expectTypeOf<ShopId>().toEqualTypeOf<
+      | "bladesmith"
+      | "armorsmith"
+      | "soul-shrine"
+      | "pharmacy"
+      | "grims-shop"
+      | "voucher-store"
+    >();
+    expectTypeOf<ShopEncounter>().toMatchTypeOf<{
+      readonly kind: "shop";
+      readonly shop: ShopId;
+      readonly cachedPrice: number;
+    }>();
+    expectTypeOf<BattleEncounter>().toEqualTypeOf<
+      Readonly<{ kind: "battle" }>
+    >();
+    expectTypeOf<EncounterQueueState>().toMatchTypeOf<{
+      readonly upcoming: readonly (ShopEncounter | BattleEncounter)[];
+      readonly generation: EncounterGenerationState;
+    }>();
     expectTypeOf<RunResult>().toMatchTypeOf<{
       readonly schemaVersion: number;
       readonly ruleset: RuleSetId;
@@ -158,7 +183,7 @@ describe("public application contracts", () => {
       readonly initialProfile: ProfileState;
     }>();
     expectTypeOf<RunState>().toMatchTypeOf<{
-      readonly schemaVersion: 5;
+      readonly schemaVersion: 6;
       readonly ruleset: RuleSetId;
       readonly random: RandomState;
       readonly steps: number;
@@ -179,6 +204,30 @@ describe("public application contracts", () => {
         readonly hp: { readonly current: number; readonly maximum: number };
         readonly inventory: {
           readonly item: "elixir" | "divine-edge" | "gold-voucher" | null;
+        };
+      };
+      readonly encounters: {
+        readonly upcoming: readonly (
+          | Readonly<{
+              kind: "shop";
+              shop:
+                | "bladesmith"
+                | "armorsmith"
+                | "soul-shrine"
+                | "pharmacy"
+                | "grims-shop"
+                | "voucher-store";
+              cachedPrice: number;
+            }>
+          | Readonly<{ kind: "battle" }>
+        )[];
+        readonly generation: {
+          readonly shopsUntilBattle: number;
+          readonly seenSinceBattle: {
+            readonly bladesmith: boolean;
+            readonly armorsmith: boolean;
+            readonly soulShrine: boolean;
+          };
         };
       };
       readonly lifecycle: {

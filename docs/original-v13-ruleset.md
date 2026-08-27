@@ -25,6 +25,8 @@ The ruleset owns the confirmed compatibility values implemented so far:
 | Weapon           | Tier 1; attack is `129 + 87 * tier`, which starts at 216                                                                   | Confirmed original behavior                                                    |
 | Armor and HP     | Tier 1; maximum HP is `1009 + 899 * tier`, which starts at 1,908; current HP starts full                                   | Confirmed original behavior                                                    |
 | Inventory        | One item slot containing an Elixir                                                                                         | Confirmed original behavior                                                    |
+| Encounter queue  | Three entries; zero to two initial shops before battle, then one to three; confirmed shop roll ranges and duplicate rules  | Confirmed original behavior                                                    |
+| Shop prices      | Generation-time equipment formulas; Shrine 50, Pharmacy 150, Grim's Shop 200, and Voucher Store 500                        | Confirmed original behavior                                                    |
 | Lifespan         | Starts at 99.99, drains the fractional field by 4 per active tick, resets the fraction to 99, and dies below whole value 0 | Confirmed original behavior                                                    |
 | World camera     | One original stage unit maps to one world unit; initial camera is 480 by 320 world units                                   | Clean-room coordinate-model decision preserving confirmed original coordinates |
 | Random sequence  | `mulberry32-fnv1a32-v1`                                                                                                    | Clean-room reproducibility decision                                            |
@@ -94,8 +96,46 @@ mutations remain in later Milestone 3 and 4 tickets.
 
 Player state and each nested equipment, HP, and inventory value are frozen.
 Stepping a JSON-restored checkpoint copies those values back into frozen domain
-state. Run-state schema version 5, gameplay-trace schema version 2, and
-run-result schema version 2 identify this contract change.
+state.
+
+## Encounter generation
+
+A fresh run first draws `random(3)` for the initial number of shops before a
+battle. It then calls the encounter generator three times to fill the upcoming
+queue. A count at or below zero consumes `random(3)`, queues a battle, resets
+the next count to one through three, and clears the Bladesmith, Armorsmith, and
+Soul Shrine duplicate flags. This battle entry is only `{ kind: "battle" }`.
+Enemy identity and Dragon eligibility consume no draws yet. Milestone 4 will
+add those draws when it implements enemy selection. The current sequence is
+therefore not the final original battle draw order.
+
+A shop generation call consumes `random(100)`. The exact accepted ranges are
+66 through 99 for Bladesmith, 31 through 65 for Armorsmith, 26 through 30 for
+Soul Shrine, 11 through 25 for Pharmacy, 6 through 10 for Grim's Shop, and 0
+through 5 for Voucher Store. Voucher candidates reroll on days 1 through 3.
+Accepted equipment and normal Shrine candidates set their per-cycle duplicate
+flag; another candidate of the same type rerolls. Item shops can repeat.
+
+Every accepted shop stores its integer price on the queue entry. Bladesmith
+uses `200 + 36 * currentWeaponTier`; Armorsmith uses
+`150 + 54 * currentArmorTier`. The initial Shrine price is 50, and the item
+shop prices are 150, 200, and 500. Purchases and Shrine price progression remain
+in later Milestone 3 tickets. Forced emergency Shrine state and its random
+draws are also deferred to its behavior ticket.
+
+The queue, duplicate flags, counter, and complete post-generation random state
+are authoritative, serializable, and deeply frozen. Ordinary
+`GameObservation` does not publish hidden duplicate or random state. The
+player-facing current and upcoming encounter view belongs to the world-space
+lifecycle ticket.
+
+Run-state schema version 6 identifies the encounter queue addition. Gameplay
+traces and run results remain at schema version 2. The locked seed
+`encounter-host-parity` produces encounter hash
+`sha256-v1:1466c6dbe82e210625dbc472789e4b86acb0190df26bd3568a6619f9d6ce8e4b`
+and initial state hash
+`sha256-v1:708f1fef6eabfa91020a7af87284cd874fe35fa32a39bc32aa5ee83438dc7400`
+in both Node and Chromium.
 
 ## Lifespan and termination
 
@@ -141,7 +181,7 @@ gates. `original-v1.3` uses this explicit clean-room decision:
 - Pregame opportunities do not increment `activeTicks`. The first active tick
   is the next eligible step after the counter reaches zero.
 
-Encounter generation, purchases, item use, combat, and tutorial presentation
+Encounter movement, purchases, item use, combat, and tutorial presentation
 remain assigned to later tickets.
 
 State, results, events, event lists, and observations are frozen. A

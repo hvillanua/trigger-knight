@@ -1,31 +1,34 @@
 import type {
   GameCommand,
   GameEvent,
+  EncounterQueueState,
   LifespanState,
   PlayerState,
+  RandomState,
   RuleSetId,
   RunLifecycleState,
   RunState,
 } from "./contracts.js";
+import { createEncounterQueueState } from "./encounters.js";
 import { createPlayerState } from "./player-state.js";
-import { createRandomState } from "./random.js";
 
-export const RUN_STATE_SCHEMA_VERSION = 5 as const;
+export const RUN_STATE_SCHEMA_VERSION = 6 as const;
 
 /** Creates a fresh minimal state value for one independent run. */
 export function createRunState(
   ruleset: RuleSetId,
-  seed: string,
+  random: Readonly<RandomState>,
   pregameSteps: number,
   scoreMultiplier: number,
   initialMovementSpeed: number,
   initialLifespan: Readonly<LifespanState>,
   initialPlayer: Readonly<PlayerState>,
+  initialEncounters: Readonly<EncounterQueueState>,
 ): RunState {
   return Object.freeze({
     schemaVersion: RUN_STATE_SCHEMA_VERSION,
     ruleset,
-    random: createRandomState(seed),
+    random: Object.freeze({ ...random }),
     steps: 0,
     activeTicks: 0,
     scoreMultiplier,
@@ -35,6 +38,7 @@ export function createRunState(
     score: 0,
     lifespan: Object.freeze({ ...initialLifespan }),
     player: createPlayerState(initialPlayer),
+    encounters: createEncounterQueueState(initialEncounters),
     lifecycle: Object.freeze({
       phase: "running",
       terminalReason: null,
@@ -122,6 +126,7 @@ export function advanceRunState(
     schemaVersion: RUN_STATE_SCHEMA_VERSION,
     random: Object.freeze({ ...state.random }),
     player: createPlayerState(state.player),
+    encounters: createEncounterQueueState(state.encounters),
     steps: state.steps + 1,
     activeTicks,
     lifecycle: Object.freeze({

@@ -34,13 +34,14 @@ sequence so retained seeds and checkpoints remain reproducible.
 
 ## Run state and isolation
 
-Run-state schema version `5` includes fixed-step lifecycle state, running
+Run-state schema version `6` includes fixed-step lifecycle state, running
 progression, the consumed profile multiplier, player economy and loadout, the
-ruleset identity, and the complete random state:
+three-entry encounter queue, its hidden generation bookkeeping, the ruleset
+identity, and the complete post-generation random state:
 
 ```json
 {
-  "schemaVersion": 5,
+  "schemaVersion": 6,
   "ruleset": "original-v1.3",
   "steps": 0,
   "activeTicks": 0,
@@ -59,6 +60,21 @@ ruleset identity, and the complete random state:
     "armor": { "tier": 1 },
     "hp": { "current": 1908, "maximum": 1908 },
     "inventory": { "item": "elixir" }
+  },
+  "encounters": {
+    "upcoming": [
+      { "kind": "shop", "shop": "bladesmith", "cachedPrice": 236 },
+      { "kind": "battle" },
+      { "kind": "shop", "shop": "pharmacy", "cachedPrice": 150 }
+    ],
+    "generation": {
+      "shopsUntilBattle": 0,
+      "seenSinceBattle": {
+        "bladesmith": false,
+        "armorsmith": false,
+        "soulShrine": false
+      }
+    }
   },
   "lifecycle": {
     "phase": "running",
@@ -80,4 +96,7 @@ random-state values, and serializing and restoring a state does not change its
 subsequent unit or bounded-integer sequence. Because the complete random state
 lives in `RunState`, a restored engine checkpoint also produces the same later
 engine outcomes. Authoritative domain code remains prohibited from reading
-ambient randomness by the repository lint validation.
+ambient randomness by the repository lint validation. Queue generation consumes
+only explicit bounded draws. Rejected duplicate shops and early-day Voucher
+candidates consume another `random(100)` draw; battle entries currently consume
+only their next-spacing draw because enemy selection is deferred to Milestone 4.

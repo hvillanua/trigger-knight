@@ -9,9 +9,13 @@ import type {
   RunState,
   WorldCamera,
 } from "./contracts.js";
+import {
+  initializeEncounterQueue,
+  type EncounterGenerationRules,
+} from "./encounters.js";
 import { advanceLifespan } from "./lifespan.js";
 import { createPlayerState } from "./player-state.js";
-import { RANDOM_ALGORITHM } from "./random.js";
+import { createRandomState, RANDOM_ALGORITHM } from "./random.js";
 import { advanceRunningProgression } from "./running-progression.js";
 import {
   advanceRunState,
@@ -48,6 +52,7 @@ export interface RuleSetConstants {
     };
     readonly initialInventoryItem: InventoryItemId;
   };
+  readonly encounters: EncounterGenerationRules;
   readonly lifespan: {
     readonly initialWhole: number;
     readonly initialFraction: number;
@@ -119,6 +124,31 @@ const originalV13Constants: RuleSetConstants = Object.freeze({
     }),
     initialInventoryItem: "elixir",
   }),
+  encounters: Object.freeze({
+    queueLength: 3,
+    initialShopsUntilBattleUpperBound: 3,
+    laterShopsUntilBattleUpperBound: 3,
+    laterShopsUntilBattleBase: 1,
+    voucherFirstDay: 4,
+    shopRollUpperBound: 100,
+    rollMinimums: Object.freeze({
+      bladesmith: 66,
+      armorsmith: 31,
+      soulShrine: 26,
+      pharmacy: 11,
+      grimsShop: 6,
+    }),
+    prices: Object.freeze({
+      bladesmithBase: 200,
+      bladesmithPerCurrentTier: 36,
+      armorsmithBase: 150,
+      armorsmithPerCurrentTier: 54,
+      soulShrineInitial: 50,
+      pharmacy: 150,
+      grimsShop: 200,
+      voucherStore: 500,
+    }),
+  }),
   lifespan: Object.freeze({
     initialWhole: 99,
     initialFraction: 99,
@@ -186,9 +216,17 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
   compatibilityDecisions: originalV13CompatibilityDecisions,
 
   createRun(seed: string, initialProfile: Readonly<ProfileState>): RunState {
+    const player = createOriginalV13InitialPlayerState();
+    const initializedEncounters = initializeEncounterQueue(
+      createRandomState(seed),
+      1,
+      player,
+      originalV13Constants.encounters,
+    );
+
     return createRunState(
       ORIGINAL_V13_RULESET_ID,
-      seed,
+      initializedEncounters.random,
       originalV13Constants.pregameDelaySteps,
       initialProfile.scoreMultiplier,
       originalV13Constants.movement.initialSpeed,
@@ -196,7 +234,8 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
         whole: originalV13Constants.lifespan.initialWhole,
         fraction: originalV13Constants.lifespan.initialFraction,
       }),
-      createOriginalV13InitialPlayerState(),
+      player,
+      initializedEncounters.encounters,
     );
   },
 
