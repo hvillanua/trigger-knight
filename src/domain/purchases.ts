@@ -1,5 +1,4 @@
 import type {
-  GameCommand,
   GameEvent,
   InventoryItemId,
   PurchaseRejectionReason,
@@ -56,63 +55,52 @@ export function purchaseRejectionReason(
   return null;
 }
 
-/** Applies purchase commands without consulting presentation or device input. */
-export function advancePurchases(
+/** Attempts one purchase without consulting presentation or device input. */
+export function attemptPurchase(
   state: Readonly<RunState>,
-  commands: readonly GameCommand[],
   rules: Readonly<PurchaseRules>,
 ): PurchaseStepResult {
-  let currentState = state;
-  const events: GameEvent[] = [];
-
-  for (const command of commands) {
-    if (command.type !== "purchase-current-encounter") {
-      continue;
-    }
-
-    const rejectionReason = purchaseRejectionReason(currentState, rules);
-    if (rejectionReason !== null) {
-      events.push(
+  const rejectionReason = purchaseRejectionReason(state, rules);
+  if (rejectionReason !== null) {
+    return Object.freeze({
+      state,
+      events: Object.freeze([
         Object.freeze({
           type: "purchase-rejected",
           reason: rejectionReason,
         }),
-      );
-      continue;
-    }
+      ]),
+    });
+  }
 
-    const encounter = currentState.encounters.current;
-    if (encounter?.kind !== "shop") {
-      throw new Error("Purchase validation accepted a non-shop encounter");
-    }
-    const item = rules.itemByShop[encounter.shop];
-    if (item === undefined) {
-      throw new Error("Purchase validation accepted a shop without an effect");
-    }
+  const encounter = state.encounters.current;
+  if (encounter?.kind !== "shop") {
+    throw new Error("Purchase validation accepted a non-shop encounter");
+  }
+  const item = rules.itemByShop[encounter.shop];
+  if (item === undefined) {
+    throw new Error("Purchase validation accepted a shop without an effect");
+  }
 
-    currentState = Object.freeze({
-      ...currentState,
+  return Object.freeze({
+    state: Object.freeze({
+      ...state,
       player: createPlayerState({
-        ...currentState.player,
-        gold: currentState.player.gold - encounter.cachedPrice,
+        ...state.player,
+        gold: state.player.gold - encounter.cachedPrice,
         inventory: { item },
       }),
       encounters: createEncounterQueueState({
-        ...currentState.encounters,
+        ...state.encounters,
         current: { ...encounter, used: true },
       }),
-    });
-    events.push(
+    }),
+    events: Object.freeze([
       Object.freeze({
         type: "shop-purchased",
         shop: encounter.shop,
         price: encounter.cachedPrice,
       }),
-    );
-  }
-
-  return Object.freeze({
-    state: currentState,
-    events: Object.freeze(events),
+    ]),
   });
 }

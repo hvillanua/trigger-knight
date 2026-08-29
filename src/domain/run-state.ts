@@ -1,13 +1,14 @@
 import type {
-  GameCommand,
-  GameEvent,
+  DismissTutorialCommand,
   EncounterQueueState,
+  GameEvent,
   LifespanState,
   PlayerState,
   RandomState,
   RuleSetId,
   RunLifecycleState,
   RunState,
+  TogglePauseCommand,
 } from "./contracts.js";
 import { createEncounterQueueState } from "./encounters.js";
 import { createPlayerState } from "./player-state.js";
@@ -54,6 +55,11 @@ export interface RunStateStepResult {
   readonly events: readonly GameEvent[];
 }
 
+export interface RunCommandResult {
+  readonly state: RunState;
+  readonly events: readonly GameEvent[];
+}
+
 /** Reports whether ordinary active-tick systems can advance. */
 export function isActiveGameplay(
   lifecycle: Readonly<RunLifecycleState>,
@@ -66,61 +72,58 @@ export function isActiveGameplay(
   );
 }
 
-function processCommands(
-  lifecycle: Readonly<RunLifecycleState>,
-  commands: readonly GameCommand[],
-): Readonly<{
-  lifecycle: RunLifecycleState;
-  events: readonly GameEvent[];
-}> {
-  if (lifecycle.phase === "ended") {
-    return Object.freeze({ lifecycle, events: Object.freeze([]) });
+/** Applies one lifecycle command without advancing the logical opportunity. */
+export function applyLifecycleCommand(
+  state: Readonly<RunState>,
+  command: Readonly<TogglePauseCommand | DismissTutorialCommand>,
+): RunCommandResult {
+  if (state.lifecycle.phase === "ended") {
+    return Object.freeze({ state, events: Object.freeze([]) });
   }
 
-  let paused = lifecycle.paused;
-  let tutorialPage = lifecycle.tutorialPage;
-  const events: GameEvent[] = [];
+  switch (command.type) {
+    case "toggle-pause": {
+      const paused = !state.lifecycle.paused;
+      return Object.freeze({
+        state: Object.freeze({
+          ...state,
+          lifecycle: Object.freeze({ ...state.lifecycle, paused }),
+        }),
+        events: Object.freeze([
+          Object.freeze({ type: "pause-toggled", paused }),
+        ]),
+      });
+    }
+    case "dismiss-tutorial": {
+      const tutorialPage = state.lifecycle.tutorialPage;
+      if (tutorialPage === null) {
+        return Object.freeze({ state, events: Object.freeze([]) });
+      }
 
-  for (const command of commands) {
-    switch (command.type) {
-      case "toggle-pause":
-        paused = !paused;
-        events.push(Object.freeze({ type: "pause-toggled", paused }));
-        break;
-      case "dismiss-tutorial":
-        if (tutorialPage !== null) {
-          events.push(
-            Object.freeze({ type: "tutorial-dismissed", page: tutorialPage }),
-          );
-          tutorialPage = null;
-        }
-        break;
-      case "purchase-current-encounter":
-        break;
+      return Object.freeze({
+        state: Object.freeze({
+          ...state,
+          lifecycle: Object.freeze({ ...state.lifecycle, tutorialPage: null }),
+        }),
+        events: Object.freeze([
+          Object.freeze({ type: "tutorial-dismissed", page: tutorialPage }),
+        ]),
+      });
     }
   }
-
-  return Object.freeze({
-    lifecycle: Object.freeze({ ...lifecycle, paused, tutorialPage }),
-    events: Object.freeze(events),
-  });
 }
 
-/** Processes commands and advances one fixed logical opportunity. */
-export function advanceRunState(
-  state: Readonly<RunState>,
-  commands: readonly GameCommand[],
-): RunStateStepResult {
-  const commandResult = processCommands(state.lifecycle, commands);
+/** Advances one fixed logical opportunity after commands have been applied. */
+export function advanceRunState(state: Readonly<RunState>): RunStateStepResult {
   const gameplayGatesOpen =
-    commandResult.lifecycle.phase !== "ended" &&
-    !commandResult.lifecycle.paused &&
-    commandResult.lifecycle.tutorialPage === null;
+    state.lifecycle.phase !== "ended" &&
+    !state.lifecycle.paused &&
+    state.lifecycle.tutorialPage === null;
   const pregameStepsRemaining =
-    gameplayGatesOpen && commandResult.lifecycle.pregameStepsRemaining > 0
-      ? commandResult.lifecycle.pregameStepsRemaining - 1
-      : commandResult.lifecycle.pregameStepsRemaining;
-  const activeTicks = isActiveGameplay(commandResult.lifecycle)
+    gameplayGatesOpen && state.lifecycle.pregameStepsRemaining > 0
+      ? state.lifecycle.pregameStepsRemaining - 1
+      : state.lifecycle.pregameStepsRemaining;
+  const activeTicks = isActiveGameplay(state.lifecycle)
     ? state.activeTicks + 1
     : state.activeTicks;
   const nextState: RunState = Object.freeze({
@@ -132,7 +135,7 @@ export function advanceRunState(
     steps: state.steps + 1,
     activeTicks,
     lifecycle: Object.freeze({
-      ...commandResult.lifecycle,
+      ...state.lifecycle,
       pregameStepsRemaining,
     }),
   });
@@ -143,6 +146,6 @@ export function advanceRunState(
 
   return Object.freeze({
     state: nextState,
-    events: Object.freeze([...commandResult.events, stepEvent]),
+    events: Object.freeze([stepEvent]),
   });
 }

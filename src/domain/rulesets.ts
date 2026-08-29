@@ -17,13 +17,14 @@ import {
 import { advanceLifespan } from "./lifespan.js";
 import { createPlayerState } from "./player-state.js";
 import {
-  advancePurchases,
+  attemptPurchase,
   purchaseRejectionReason,
   type PurchaseRules,
 } from "./purchases.js";
 import { createRandomState, RANDOM_ALGORITHM } from "./random.js";
 import { advanceRunningProgression } from "./running-progression.js";
 import {
+  applyLifecycleCommand,
   advanceRunState,
   createRunState,
   isActiveGameplay,
@@ -274,24 +275,31 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
     state: Readonly<RunState>,
     commands: readonly GameCommand[],
   ): RuleSetStepResult {
-    const purchases = advancePurchases(
-      state,
-      commands,
-      originalV13PurchaseRules,
-    );
-    const result = advanceRunState(purchases.state, commands);
+    let commandedState = state;
+    const commandEvents: GameEvent[] = [];
+
+    for (const command of commands) {
+      const commandResult =
+        command.type === "purchase-current-encounter"
+          ? attemptPurchase(commandedState, originalV13PurchaseRules)
+          : applyLifecycleCommand(commandedState, command);
+      commandedState = commandResult.state;
+      commandEvents.push(...commandResult.events);
+    }
+
+    const result = advanceRunState(commandedState);
     const progressed = advanceRunningProgression(
-      purchases.state,
+      commandedState,
       result.state,
       originalV13RunningProgressionRules,
     );
     const encounters = advanceEncounterLifecycle(
-      purchases.state,
+      commandedState,
       progressed,
       originalV13Constants.encounters,
     );
     const lifespan = advanceLifespan(
-      purchases.state,
+      commandedState,
       encounters.state,
       originalV13LifespanRules,
     );
@@ -299,7 +307,7 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
     return Object.freeze({
       state: lifespan.state,
       events: Object.freeze([
-        ...purchases.events,
+        ...commandEvents,
         ...result.events,
         ...encounters.events,
         ...lifespan.events,

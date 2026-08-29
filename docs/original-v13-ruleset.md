@@ -56,7 +56,7 @@ whether active gameplay can advance on the next step, and whether pause,
 tutorial dismissal, or a current shop purchase is eligible. It does not expose
 random state or encounter generation bookkeeping.
 
-Commands are processed before the same logical opportunity is evaluated.
+Commands are processed in list order before the same logical opportunity is evaluated.
 Purchase attempts emit `shop-purchased` or `purchase-rejected`; lifecycle
 commands emit `pause-toggled` or `tutorial-dismissed`. The logical opportunity
 then emits `step-advanced`. An ended run rejects a purchase through its

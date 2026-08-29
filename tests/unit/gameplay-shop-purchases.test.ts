@@ -135,6 +135,47 @@ describe("original-v1.3 semantic shop purchases", () => {
 
   it.each([
     {
+      name: "rejects after pausing",
+      paused: false,
+      expectedGold: 600,
+      expectedEvents: [
+        { type: "pause-toggled", paused: true },
+        { type: "purchase-rejected", reason: "lifecycle-gated" },
+        { type: "step-advanced", step: 1 },
+      ],
+      expectedUsed: false,
+    },
+    {
+      name: "succeeds after resuming",
+      paused: true,
+      expectedGold: 450,
+      expectedEvents: [
+        { type: "pause-toggled", paused: false },
+        { type: "shop-purchased", shop: "pharmacy", price: 150 },
+        { type: "step-advanced", step: 1 },
+      ],
+      expectedUsed: true,
+    },
+  ] as const)(
+    "$name when toggle-pause precedes purchase in one command list",
+    ({ paused, expectedGold, expectedEvents, expectedUsed }) => {
+      const state = atShop("pharmacy", 150);
+      const result = gameplayEngine.step(
+        { ...state, lifecycle: { ...state.lifecycle, paused } },
+        [{ type: "toggle-pause" }, purchaseCommand],
+      );
+
+      expect(result.state.player.gold).toBe(expectedGold);
+      expect(result.state.encounters.current).toMatchObject({
+        kind: "shop",
+        used: expectedUsed,
+      });
+      expect(result.events).toEqual(expectedEvents);
+    },
+  );
+
+  it.each([
+    {
       name: "insufficient gold",
       state: () => atShop("pharmacy", 150, { gold: 149 }),
       reason: "insufficient-gold",
