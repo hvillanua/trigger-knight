@@ -61,6 +61,11 @@ describe("public application contracts", () => {
       (state: Readonly<RunState>) => GameObservation
     >();
     expectTypeOf<StepResult["events"]>().toEqualTypeOf<readonly GameEvent[]>();
+    expectTypeOf<GameCommand>().toEqualTypeOf<
+      | Readonly<{ type: "dismiss-tutorial" }>
+      | Readonly<{ type: "purchase-current-encounter" }>
+      | Readonly<{ type: "toggle-pause" }>
+    >();
   });
 
   it("gives presentation the shared read-only game observation", () => {
@@ -163,6 +168,7 @@ describe("public application contracts", () => {
             shop: ShopId;
             cachedPrice: number;
             x: number;
+            used: boolean;
           }>
         | Readonly<{ kind: "battle"; x: number }>
         | null;
@@ -193,7 +199,7 @@ describe("public application contracts", () => {
       readonly initialProfile: ProfileState;
     }>();
     expectTypeOf<RunState>().toMatchTypeOf<{
-      readonly schemaVersion: 7;
+      readonly schemaVersion: 8;
       readonly ruleset: RuleSetId;
       readonly random: RandomState;
       readonly steps: number;
@@ -229,6 +235,7 @@ describe("public application contracts", () => {
                 | "voucher-store";
               cachedPrice: number;
               x: number;
+              used: boolean;
             }>
           | Readonly<{ kind: "battle"; x: number }>
           | null;
@@ -298,6 +305,7 @@ describe("public application contracts", () => {
               shop: ShopId;
               cachedPrice: number;
               x: number;
+              used: boolean;
             }>
           | Readonly<{ kind: "battle"; x: number }>
           | null;
@@ -327,12 +335,28 @@ describe("public application contracts", () => {
                 shop: ShopId;
                 cachedPrice: number;
                 x: number;
+                used: boolean;
               }>
             | Readonly<{ kind: "battle"; x: number }>;
         }>
       | Readonly<{ type: "lifespan-death" }>
       | Readonly<{ type: "pause-toggled"; paused: boolean }>
+      | Readonly<{
+          type: "purchase-rejected";
+          reason:
+            | "already-used"
+            | "insufficient-gold"
+            | "lifecycle-gated"
+            | "no-current-shop"
+            | "out-of-range"
+            | "shop-effect-unavailable";
+        }>
       | Readonly<{ type: "run-ended"; reason: "lifespan" | "combat" }>
+      | Readonly<{
+          type: "shop-purchased";
+          shop: ShopId;
+          price: number;
+        }>
       | Readonly<{ type: "step-advanced"; step: number }>
       | Readonly<{ type: "shop-departed"; shop: ShopId }>
       | Readonly<{ type: "tutorial-dismissed"; page: 0 }>

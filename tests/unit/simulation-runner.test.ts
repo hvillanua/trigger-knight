@@ -124,7 +124,7 @@ describe("headless simulation runner", () => {
       distance: 0,
       gold: 300,
       traceHash:
-        "sha256-v1:29cc7b43829a2b90cd0457e0b2ff5618ad9440a7838a46812e75c30825691b49",
+        "sha256-v1:e39ad5633b1c49149c13f33010c5d8f630d8ba1155ba63e1445a79675118cad6",
       metrics: {},
     });
     expect(Object.isFrozen(result)).toBe(true);

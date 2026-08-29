@@ -25,19 +25,19 @@ The terminal values are:
 | Gold            | 300        |
 
 The locked host-neutral gameplay trace hash is
-`sha256-v1:aa9cebfc619d84ef872086d36effb7dff0d76bbee1ab4b1d7731cdd5204115e4`.
+`sha256-v1:53350db67b5a761ae53521b912fb6e83272ea9bd103a5067456be128aeea14d1`.
 The terminal checkpoint hash is
-`sha256-v1:02a32303e277bc3010d6366afda8d64b95c6b198aede7b98315561f34872bc6e`.
+`sha256-v1:ba0a5b59696304e03eee3b7e15ac0e12673b4746179fcc6728e0eac9f80792e4`.
 The simulation result trace hash, which also covers policy identity and the
 3,000-step budget, is
-`sha256-v1:9dcd9e913c22f97fca676ad0126c2b14d19b41601f49b3e1d353ae9ce23cd812`.
+`sha256-v1:c9c785a7bcd5b71dba4e88a3ea3d6305d6857b37d13ef28849f15199d4437f19`.
 
-Issue #42 advances the version-7 encounter queue through world space. The
-scenario and command schedule are unchanged. It reaches its first battle at
-distance 2,820, then waits at the battle handoff while active-tick lifespan
-continues to death. The new serializable state, observation, events, and random
-draws changed the locked hashes above. Gameplay traces and run results remain
-at version 2.
+Issue #42 advances the version-7 encounter queue through world space. Issue #43
+adds the version-8 current-shop use state. The scenario and command schedule are
+unchanged. It reaches its first battle at distance 2,820, then waits at the
+battle handoff while active-tick lifespan continues to death. The serializable
+state change updates the locked hashes above. Gameplay traces and run results
+remain at version 2.
 
 The unit check compares every browser-session checkpoint with the headless
 trace. This includes commands, complete state, public observations, events,

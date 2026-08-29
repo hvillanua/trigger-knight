@@ -16,9 +16,15 @@ import {
 } from "./encounters.js";
 import { advanceLifespan } from "./lifespan.js";
 import { createPlayerState } from "./player-state.js";
+import {
+  attemptPurchase,
+  purchaseRejectionReason,
+  type PurchaseRules,
+} from "./purchases.js";
 import { createRandomState, RANDOM_ALGORITHM } from "./random.js";
 import { advanceRunningProgression } from "./running-progression.js";
 import {
+  applyLifecycleCommand,
   advanceRunState,
   createRunState,
   isActiveGameplay,
@@ -207,6 +213,16 @@ const originalV13LifespanRules = Object.freeze({
   deathBelowWhole: originalV13Constants.lifespan.deathBelowWhole,
 });
 
+const originalV13PurchaseRules: PurchaseRules = Object.freeze({
+  actionMinimumX: originalV13Constants.encounters.shopActionMinimumX,
+  actionMaximumX: originalV13Constants.encounters.shopActionMaximumX,
+  itemByShop: Object.freeze({
+    pharmacy: "elixir",
+    "grims-shop": "divine-edge",
+    "voucher-store": "gold-voucher",
+  }),
+});
+
 function createOriginalV13InitialPlayerState(): PlayerState {
   const weaponTier = originalV13Constants.loadout.weapon.initialTier;
   const armorTier = originalV13Constants.loadout.armor.initialTier;
@@ -259,19 +275,31 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
     state: Readonly<RunState>,
     commands: readonly GameCommand[],
   ): RuleSetStepResult {
-    const result = advanceRunState(state, commands);
+    let commandedState = state;
+    const commandEvents: GameEvent[] = [];
+
+    for (const command of commands) {
+      const commandResult =
+        command.type === "purchase-current-encounter"
+          ? attemptPurchase(commandedState, originalV13PurchaseRules)
+          : applyLifecycleCommand(commandedState, command);
+      commandedState = commandResult.state;
+      commandEvents.push(...commandResult.events);
+    }
+
+    const result = advanceRunState(commandedState);
     const progressed = advanceRunningProgression(
-      state,
+      commandedState,
       result.state,
       originalV13RunningProgressionRules,
     );
     const encounters = advanceEncounterLifecycle(
-      state,
+      commandedState,
       progressed,
       originalV13Constants.encounters,
     );
     const lifespan = advanceLifespan(
-      state,
+      commandedState,
       encounters.state,
       originalV13LifespanRules,
     );
@@ -279,6 +307,7 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
     return Object.freeze({
       state: lifespan.state,
       events: Object.freeze([
+        ...commandEvents,
         ...result.events,
         ...encounters.events,
         ...lifespan.events,
@@ -322,13 +351,7 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
         canDismissTutorial:
           canAcceptLifecycleCommands && state.lifecycle.tutorialPage !== null,
         canPurchaseCurrentEncounter:
-          isActiveGameplay(state.lifecycle) &&
-          state.lifecycle.phase === "running" &&
-          currentEncounter?.kind === "shop" &&
-          currentEncounter.x >
-            originalV13Constants.encounters.shopActionMinimumX &&
-          currentEncounter.x <
-            originalV13Constants.encounters.shopActionMaximumX,
+          purchaseRejectionReason(state, originalV13PurchaseRules) === null,
       }),
     });
   },

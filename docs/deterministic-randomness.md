@@ -34,15 +34,15 @@ sequence so retained seeds and checkpoints remain reproducible.
 
 ## Run state and isolation
 
-Run-state schema version `7` includes fixed-step lifecycle state, running
+Run-state schema version `8` includes fixed-step lifecycle state, running
 progression, the consumed profile multiplier, player economy and loadout, the
-current encounter and three-entry queue, its world counter and hidden generation
-bookkeeping, the ruleset identity, and the complete post-generation random
-state:
+current encounter and its one-use purchase state, the three-entry queue, its
+world counter and hidden generation bookkeeping, the ruleset identity, and the
+complete post-generation random state:
 
 ```json
 {
-  "schemaVersion": 7,
+  "schemaVersion": 8,
   "ruleset": "original-v1.3",
   "steps": 0,
   "activeTicks": 0,

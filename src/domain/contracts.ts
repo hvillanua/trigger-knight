@@ -74,6 +74,7 @@ export type QueuedEncounter = ShopEncounter | BattleEncounter;
 
 export interface PositionedShopEncounter extends ShopEncounter {
   readonly x: number;
+  readonly used: boolean;
 }
 
 export interface PositionedBattleEncounter extends BattleEncounter {
@@ -106,7 +107,7 @@ export interface EncounterObservation {
 
 /** Authoritative state owned by the gameplay domain. */
 export interface RunState {
-  readonly schemaVersion: 7;
+  readonly schemaVersion: 8;
   readonly ruleset: RuleSetId;
   readonly random: RandomState;
   readonly steps: number;
@@ -132,7 +133,13 @@ export interface DismissTutorialCommand {
   readonly type: "dismiss-tutorial";
 }
 
-export type GameCommand = TogglePauseCommand | DismissTutorialCommand;
+/** Attempts the domain-owned purchase offered by the current encounter. */
+export interface PurchaseCurrentEncounterCommand {
+  readonly type: "purchase-current-encounter";
+}
+
+export type GameCommand =
+  TogglePauseCommand | DismissTutorialCommand | PurchaseCurrentEncounterCommand;
 
 /** Authoritative elapsed-step outcome. */
 export interface StepAdvancedEvent {
@@ -173,13 +180,34 @@ export interface BattleHandoffEvent {
   readonly type: "battle-handoff";
 }
 
+export interface ShopPurchasedEvent {
+  readonly type: "shop-purchased";
+  readonly shop: ShopId;
+  readonly price: number;
+}
+
+export type PurchaseRejectionReason =
+  | "already-used"
+  | "insufficient-gold"
+  | "lifecycle-gated"
+  | "no-current-shop"
+  | "out-of-range"
+  | "shop-effect-unavailable";
+
+export interface PurchaseRejectedEvent {
+  readonly type: "purchase-rejected";
+  readonly reason: PurchaseRejectionReason;
+}
+
 /** Authoritative outcome emitted by a gameplay transition. */
 export type GameEvent =
   | BattleHandoffEvent
   | EncounterPromotedEvent
   | LifespanDeathEvent
   | PauseToggledEvent
+  | PurchaseRejectedEvent
   | RunEndedEvent
+  | ShopPurchasedEvent
   | StepAdvancedEvent
   | ShopDepartedEvent
   | TutorialDismissedEvent;
