@@ -22,8 +22,8 @@ const gameplayEngine = createTestGameplayEngine();
 const encounterRules = originalV13RuleSet.constants.encounters;
 const player: PlayerState = Object.freeze({
   gold: 300,
-  weapon: Object.freeze({ tier: 1, attack: 216 }),
-  armor: Object.freeze({ tier: 1 }),
+  weapon: Object.freeze({ tier: 1, name: "Dagger", attack: 216 }),
+  armor: Object.freeze({ tier: 1, name: "Clothing" }),
   hp: Object.freeze({ current: 1_908, maximum: 1_908 }),
   inventory: Object.freeze({ item: "elixir" }),
 });
@@ -234,7 +234,7 @@ describe("original-v1.3 encounter queue", () => {
     );
     const tierFourPlayer: PlayerState = Object.freeze({
       ...player,
-      weapon: Object.freeze({ tier: 4, attack: 477 }),
+      weapon: Object.freeze({ tier: 4, name: "Falchion", attack: 477 }),
     });
     const queuedAtTierFour = generateEncounter(
       randomAt(91),
@@ -259,7 +259,7 @@ describe("original-v1.3 encounter queue", () => {
     const repeated = gameplayEngine.createRun(config);
     const restored = JSON.parse(JSON.stringify(initial)) as RunState;
 
-    expect(initial.schemaVersion).toBe(8);
+    expect(initial.schemaVersion).toBe(9);
     expect(initial.encounters.current).toBeNull();
     expect(initial.encounters.distanceUntilNext).toBeGreaterThanOrEqual(1_000);
     expect(initial.encounters.distanceUntilNext).toBeLessThanOrEqual(1_999);

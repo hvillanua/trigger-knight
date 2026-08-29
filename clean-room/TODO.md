@@ -106,7 +106,8 @@ This milestone establishes:
 - the three-entry encounter queue and current-encounter lifecycle;
 - deterministic encounter generation, spacing, duplicate rules, battle placement, and forced-shrine behavior;
 - mechanic-bearing world positions and action windows;
-- gold, cached prices, purchases, equipment tiers, inventory replacement, and lifespan restoration;
+- gold, cached prices, purchases, equipment tiers, max-tier equipment
+  ineligibility, inventory replacement, and lifespan restoration;
 - original-v1.3 economy quirks that are observable in the researched behavior;
 - public observations and events sufficient for browser controls and automated purchasing policies.
 
@@ -115,7 +116,8 @@ This milestone establishes:
 - deterministic headless policies can encounter and purchase every shop, equipment upgrade, and item reachable before combat;
 - focused deterministic state-transition scenarios cover later-day, higher-cost, and post-battle-dependent shop and economy behavior until Milestone 4 supplies battle resolution and rewards;
 - queue, inventory, tier, price, and gold invariants hold across a fixed seed set;
-- known cached-price and forced-shrine behaviors have compatibility coverage;
+- known cached-price, max-tier equipment availability, and forced-shrine
+  behaviors have compatibility coverage;
 - the browser can issue the same semantic purchase commands without owning purchase rules.
 
 ## Milestone 4 — Combat, enemies, items, and rewards
@@ -219,6 +221,7 @@ This milestone establishes:
 
 - title, gameplay, tutorial, pause, achievement/collection, score, replay, and navigation flows;
 - the complete HUD, encounter information, battle feedback, action feedback, and required controls;
+- clear unavailable-shop feedback driven by public action eligibility;
 - responsive, high-density, fullscreen-capable Canvas presentation using the 480x320-world-unit reference camera;
 - pointer, touch, keyboard, and remappable input adapters;
 - display-rate visual interpolation and presentation-only transitions and effects;

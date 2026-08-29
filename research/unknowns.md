@@ -25,6 +25,7 @@ future clean-room build and validation pass.
 | Intent of unconditional tutorial page 0                         | Code bypasses the tutorial preference only for page 0.                                                                                                    | Observe original projector and, if possible, consult author notes.                                          |
 | Intent of dual `WeaponUnlocked` submission                      | Code sends armor and weapon counts to the same stat; wrapper defines `ArmorUnlocked`.                                                                     | Treat as a confirmed original defect; decide compatibility policy later.                                    |
 | Intent of cached stale shop prices                              | Price belongs to the queued event, enabling two same-type shops visible across a battle boundary to grant successive upgrades at the same old-tier price. | Treat as confirmed original behavior; only the author's intent is unknown.                                  |
+| Tier-10 equipment shop GUI availability                         | Static scripts expose a no-op purchase path, while a player report from an online build describes a red-cross cursor and no dispatched interaction.       | Reproduce the preserved Kongregate build at tier 10 and inspect cursor and click handling.                  |
 | Purpose of undefined `checkBattle()` call                       | A call is present, but no definition exists in any exported primary script.                                                                               | Check Flash global resolution in a runtime; apparent gameplay resolution is already in AI/damage functions. |
 | Exact dynamic screen composition and transitions                | Static timeline renders do not run ActionScript placement.                                                                                                | Run SWF in a controlled Flash projector/Ruffle harness and capture frames.                                  |
 | Exact sound latency/mixing                                      | Host decoder and Flash mixer behavior are outside code export.                                                                                            | Capture projector audio and compare exported streams.                                                       |
@@ -43,8 +44,8 @@ These should not be “corrected” silently in a compatibility specification:
 - A queued shop retains the price calculated at generation time. Two visible
   same-type shops across a battle boundary can therefore sell successive tiers
   at the same cached price.
-- At equipment tier 10, an adequately funded upgrade click silently does
-  nothing and leaves the building actionable.
+- At equipment tier 10, the purchase routine does nothing when invoked with
+  enough gold. Whether the preserved GUI invokes it remains unresolved.
 - Other tutorial pages honor the preference, while page 0 is called every run.
 - Lifespan drains during battle, but low-lifespan hero alpha is updated only
   while running.

@@ -55,8 +55,8 @@ function tutorialGatedObservation(steps: number): GameObservation {
     },
     player: {
       gold: 300,
-      weapon: { tier: 1, attack: 216 },
-      armor: { tier: 1 },
+      weapon: { tier: 1, name: "Dagger", attack: 216 },
+      armor: { tier: 1, name: "Clothing" },
       hp: { current: 1_908, maximum: 1_908 },
       inventory: { item: "elixir" },
     },
@@ -124,7 +124,7 @@ describe("headless simulation runner", () => {
       distance: 0,
       gold: 300,
       traceHash:
-        "sha256-v1:e39ad5633b1c49149c13f33010c5d8f630d8ba1155ba63e1445a79675118cad6",
+        "sha256-v1:fc0f7ecb820f3b52044b0777140bf7767f3ac22a8a12857b557802cd9a2060f5",
       metrics: {},
     });
     expect(Object.isFrozen(result)).toBe(true);

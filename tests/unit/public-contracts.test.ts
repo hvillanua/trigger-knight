@@ -199,7 +199,7 @@ describe("public application contracts", () => {
       readonly initialProfile: ProfileState;
     }>();
     expectTypeOf<RunState>().toMatchTypeOf<{
-      readonly schemaVersion: 8;
+      readonly schemaVersion: 9;
       readonly ruleset: RuleSetId;
       readonly random: RandomState;
       readonly steps: number;
@@ -215,8 +215,12 @@ describe("public application contracts", () => {
       };
       readonly player: {
         readonly gold: number;
-        readonly weapon: { readonly tier: number; readonly attack: number };
-        readonly armor: { readonly tier: number };
+        readonly weapon: {
+          readonly tier: number;
+          readonly name: string;
+          readonly attack: number;
+        };
+        readonly armor: { readonly tier: number; readonly name: string };
         readonly hp: { readonly current: number; readonly maximum: number };
         readonly inventory: {
           readonly item: "elixir" | "divine-edge" | "gold-voucher" | null;
@@ -291,8 +295,12 @@ describe("public application contracts", () => {
       };
       readonly player: {
         readonly gold: number;
-        readonly weapon: { readonly tier: number; readonly attack: number };
-        readonly armor: { readonly tier: number };
+        readonly weapon: {
+          readonly tier: number;
+          readonly name: string;
+          readonly attack: number;
+        };
+        readonly armor: { readonly tier: number; readonly name: string };
         readonly hp: { readonly current: number; readonly maximum: number };
         readonly inventory: {
           readonly item: "elixir" | "divine-edge" | "gold-voucher" | null;
@@ -347,6 +355,7 @@ describe("public application contracts", () => {
             | "already-used"
             | "insufficient-gold"
             | "lifecycle-gated"
+            | "maximum-tier"
             | "no-current-shop"
             | "out-of-range"
             | "shop-effect-unavailable";

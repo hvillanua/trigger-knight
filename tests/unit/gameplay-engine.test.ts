@@ -53,7 +53,7 @@ describe("gameplay engine", () => {
     expect(repeated).toEqual(state);
     expect(repeated).not.toBe(state);
     expect(state).toMatchObject({
-      schemaVersion: 8,
+      schemaVersion: 9,
       ruleset: "original-v1.3",
       steps: 0,
       activeTicks: 0,
@@ -68,8 +68,8 @@ describe("gameplay engine", () => {
       },
       player: {
         gold: 300,
-        weapon: { tier: 1, attack: 216 },
-        armor: { tier: 1 },
+        weapon: { tier: 1, name: "Dagger", attack: 216 },
+        armor: { tier: 1, name: "Clothing" },
         hp: { current: 1_908, maximum: 1_908 },
         inventory: { item: "elixir" },
       },
@@ -105,8 +105,8 @@ describe("gameplay engine", () => {
       },
       player: {
         gold: 300,
-        weapon: { tier: 1, attack: 216 },
-        armor: { tier: 1 },
+        weapon: { tier: 1, name: "Dagger", attack: 216 },
+        armor: { tier: 1, name: "Clothing" },
         hp: { current: 1_908, maximum: 1_908 },
         inventory: { item: "elixir" },
       },
@@ -185,8 +185,8 @@ describe("gameplay engine", () => {
       },
       player: {
         gold: 300,
-        weapon: { tier: 1, attack: 216 },
-        armor: { tier: 1 },
+        weapon: { tier: 1, name: "Dagger", attack: 216 },
+        armor: { tier: 1, name: "Clothing" },
         hp: { current: 1_908, maximum: 1_908 },
         inventory: { item: "elixir" },
       },

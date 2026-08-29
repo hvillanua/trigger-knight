@@ -89,7 +89,7 @@ interface PresentationPort {
 
 The presentation may interpolate between observations, but only `current` is authoritative for displayed values and action eligibility. Visual animation never calls gameplay rules or decides when damage, purchases, rewards, or other domain transitions occur.
 
-Input adapters translate pointer, touch, keyboard, or future devices into `GameCommand` values. A sound-effects adapter maps domain events and UI actions to semantic cues without putting file paths or playback operations in the domain. Background music is outside the initial scope; a future music controller can observe application or screen lifecycle without changing gameplay contracts or deterministic state.
+Input adapters translate pointer, touch, keyboard, or future devices into `GameCommand` values. They must honor public action eligibility rather than recreate availability rules. A max-tier equipment shop is therefore ineligible before input mapping, and a direct invalid command cannot spend gold, heal HP, or consume the shop. Presentation chooses the unavailable cue but cannot display an ineligible shop as purchasable. A sound-effects adapter maps domain events and UI actions to semantic cues without putting file paths or playback operations in the domain. Background music is outside the initial scope; a future music controller can observe application or screen lifecycle without changing gameplay contracts or deterministic state.
 
 Persistence is also an application boundary. It loads the initial profile and atomically stores completed progression and settings. Persistence timing and technology must not become gameplay rules.
 

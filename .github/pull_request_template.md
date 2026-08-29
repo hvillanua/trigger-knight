@@ -1,12 +1,12 @@
 Closes #<!-- ticket number -->
 
-## Why
-
-<!-- Explain the problem or need this pull request addresses and why the change is necessary. Do not describe the implementation here. -->
-
 ## What
 
 <!-- Describe the concrete changes delivered by this pull request, including important scope boundaries. Keep implementation detail proportional to review needs. -->
+
+## Why
+
+<!-- Explain the problem or need this pull request addresses and why the change is necessary. Do not describe the implementation here. -->
 
 ## Acceptance criteria
 

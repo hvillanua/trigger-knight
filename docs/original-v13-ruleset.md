@@ -22,8 +22,8 @@ The ruleset owns the confirmed compatibility values implemented so far:
 | Running movement | Speed starts at 0, gains 1 per active tick, caps at 15, and contributes one distance unit per speed unit                   | Confirmed original behavior                                                    |
 | Day and score    | 7,000 distance units per day; running score uses 10 points per speed unit before the profile multiplier                    | Confirmed original behavior                                                    |
 | Economy          | A run starts with 300 integer gold; purchases require and subtract the encounter's cached price                            | Confirmed original behavior                                                    |
-| Weapon           | Tier 1; attack is `129 + 87 * tier`, which starts at 216                                                                   | Confirmed original behavior                                                    |
-| Armor and HP     | Tier 1; maximum HP is `1009 + 899 * tier`, which starts at 1,908; current HP starts full                                   | Confirmed original behavior                                                    |
+| Weapon           | Named tiers 1 through 10; attack is `129 + 87 * tier`, from Dagger at 216 through Astral Sword at 999                      | Confirmed original behavior                                                    |
+| Armor and HP     | Named tiers 1 through 10; maximum HP is `1009 + 899 * tier`, from Clothing at 1,908 through Astral Armor at 9,999          | Confirmed original behavior                                                    |
 | Inventory        | One slot; item-shop purchases replace it with Elixir, Divine Edge, or Gold Voucher                                         | Confirmed original behavior                                                    |
 | Encounter queue  | Three entries; zero to two initial shops before battle, then one to three; confirmed shop roll ranges and duplicate rules  | Confirmed original behavior                                                    |
 | Encounter world  | Initial spacing 1,000-1,999; later spacing 1,500-1,799; entry x 600; shop and battle speeds and strict thresholds          | Confirmed original behavior                                                    |
@@ -89,16 +89,21 @@ are documented in [`world-camera.md`](world-camera.md).
 ## Economy and loadout state
 
 The ruleset creates one authoritative `player` record in each fresh run. It
-contains gold, weapon tier and attack, armor tier, current and maximum HP, and
-the single inventory slot. `GameObservation.player` publishes the same current
-values without exposing random state or future encounter-generation state.
+contains gold, weapon tier, name, and attack, armor tier and name, current and
+maximum HP, and the single inventory slot. `GameObservation.player` publishes
+the same current values without exposing random state or future
+encounter-generation state.
 
-The original-v1.3 constants own the starting tiers and the confirmed formulas.
-The run derives attack 216 from `129 + 87 * 1`. It derives maximum HP 1,908
-from `1009 + 899 * 1`, and current HP starts at that maximum. The inventory item
-identifiers cover Elixir, Divine Edge, and Gold Voucher. Pharmacy, Grim's Shop,
-and Voucher Store purchases replace the one slot with their corresponding item,
-including when the same item is already carried. Item use remains in Milestone 4.
+The original-v1.3 constants own all ten names, the tier cap, and the confirmed
+formulas. Weapon tiers are Dagger, Sword, Rapier, Falchion, Katana, Flamberge,
+Zweihander, Broad Kris, Excalibur, and Astral Sword. Armor tiers are Clothing,
+Protector, Breastplate, Chainmail, Fullplate, Samurai Mail, Valkyrie Garb, Odin
+Garb, Avalon, and Astral Armor. The run derives attack 216 from `129 + 87 * 1`.
+It derives maximum HP 1,908 from `1009 + 899 * 1`, and current HP starts at that
+maximum. The inventory item identifiers cover Elixir, Divine Edge, and Gold
+Voucher. Pharmacy, Grim's Shop, and Voucher Store purchases replace the one slot
+with their corresponding item, including when the same item is already carried.
+Item use remains in Milestone 4.
 
 The device-independent `purchase-current-encounter` command contains no price,
 effect, or coordinate. The domain accepts it only for an active, unused,
@@ -107,11 +112,22 @@ cached price. Success subtracts that exact integer once and marks the positioned
 shop used. Public action eligibility runs the same validation. Rejections name
 the failed check without mutating player economy or inventory.
 
-Equipment upgrades and Soul Shrine restoration remain assigned to issues #44
-and #45. Until those effects exist, their current shops report purchase as
-ineligible and a direct command emits `shop-effect-unavailable` without charging
-gold or marking the shop used. This is an implementation-stage boundary, not a
-claim about original behavior.
+A Bladesmith purchase advances one tier, recomputes attack, and leaves HP
+unchanged. An Armorsmith purchase advances one tier, recomputes maximum HP, and
+fully heals current HP. Both use the price stored when the encounter entered
+the queue. Shops on opposite sides of an already queued battle can therefore
+advance successive tiers at the same earlier price.
+
+Static scripts confirm that the tier-10 purchase routine is a no-op when
+invoked, but a player report describes an online GUI that shows a red cross and
+does not dispatch the purchase. Until controlled runtime evidence resolves that
+discrepancy, the clean-room ruleset treats both max-tier equipment shops as
+ineligible. Public action eligibility is false, and a direct command emits
+`maximum-tier` without spending gold, healing HP, or marking the shop used.
+Presentation must show an unavailable cue, with the exact treatment deferred to
+the browser milestone. Soul Shrine restoration remains assigned to issue #45.
+Until that effect exists, its current shop reports purchase as ineligible and
+rejects a direct command with `shop-effect-unavailable`.
 
 Player state and each nested equipment, HP, and inventory value are frozen.
 Stepping a JSON-restored checkpoint copies those values back into frozen domain
@@ -153,12 +169,13 @@ fills the initial queue before drawing its distance. A promotion generates the
 replacement entry before drawing the later distance. This keeps the choice
 visible without claiming that the original Flash runtime used the same order.
 
-Run-state schema version 8 adds the current shop's one-use purchase state.
+Run-state schema version 9 adds equipment names to the authoritative player
+state. Version 8 added the current shop's one-use purchase state.
 Gameplay traces and run results remain at schema version 2. The locked seed
 `encounter-host-parity` produces encounter hash
 `sha256-v1:e9a33e6a60dcd2f9ad88495fbc43fa98eebb7fc82a9821b2cec8843a57b05da2`
 and initial state hash
-`sha256-v1:6ed00592d72a7fbc0bdf547a57302d9a3fe396ddee3a8eae987ab699cab7cf15`
+`sha256-v1:5e5827c9b6f98dad42d23579b0550613da40b4bd4d3b28551f6f179aead2dc0e`
 in both Node and Chromium.
 
 ## Encounter world lifecycle
@@ -229,8 +246,8 @@ gates. `original-v1.3` uses this explicit clean-room decision:
 - Pregame opportunities do not increment `activeTicks`. The first active tick
   is the next eligible step after the counter reaches zero.
 
-Equipment and Shrine purchases, item use, combat resolution, and tutorial
-presentation remain assigned to later tickets.
+Shrine purchases, item use, combat resolution, and tutorial presentation remain
+assigned to later tickets.
 
 State, results, events, event lists, and observations are frozen. A
 JSON-restored checkpoint produces the same next state, observation, and events

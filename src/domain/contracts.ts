@@ -34,14 +34,40 @@ export interface LifespanState {
 
 export type InventoryItemId = "elixir" | "divine-edge" | "gold-voucher";
 
+export type WeaponName =
+  | "Dagger"
+  | "Sword"
+  | "Rapier"
+  | "Falchion"
+  | "Katana"
+  | "Flamberge"
+  | "Zweihander"
+  | "Broad Kris"
+  | "Excalibur"
+  | "Astral Sword";
+
+export type ArmorName =
+  | "Clothing"
+  | "Protector"
+  | "Breastplate"
+  | "Chainmail"
+  | "Fullplate"
+  | "Samurai Mail"
+  | "Valkyrie Garb"
+  | "Odin Garb"
+  | "Avalon"
+  | "Astral Armor";
+
 export interface PlayerState {
   readonly gold: number;
   readonly weapon: {
     readonly tier: number;
+    readonly name: WeaponName;
     readonly attack: number;
   };
   readonly armor: {
     readonly tier: number;
+    readonly name: ArmorName;
   };
   readonly hp: {
     readonly current: number;
@@ -107,7 +133,7 @@ export interface EncounterObservation {
 
 /** Authoritative state owned by the gameplay domain. */
 export interface RunState {
-  readonly schemaVersion: 8;
+  readonly schemaVersion: 9;
   readonly ruleset: RuleSetId;
   readonly random: RandomState;
   readonly steps: number;
@@ -190,6 +216,7 @@ export type PurchaseRejectionReason =
   | "already-used"
   | "insufficient-gold"
   | "lifecycle-gated"
+  | "maximum-tier"
   | "no-current-shop"
   | "out-of-range"
   | "shop-effect-unavailable";
