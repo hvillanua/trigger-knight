@@ -11,8 +11,8 @@ import { createRunState } from "../../src/domain/run-state.js";
 
 const player = Object.freeze({
   gold: 300,
-  weapon: Object.freeze({ tier: 1, attack: 216 }),
-  armor: Object.freeze({ tier: 1 }),
+  weapon: Object.freeze({ tier: 1, name: "Dagger", attack: 216 }),
+  armor: Object.freeze({ tier: 1, name: "Clothing" }),
   hp: Object.freeze({ current: 1_908, maximum: 1_908 }),
   inventory: Object.freeze({ item: "elixir" as const }),
 });

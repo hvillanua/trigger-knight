@@ -65,13 +65,13 @@ describe("gameplay diagnostics", () => {
     expect(
       browserTrace.checkpoints.map(({ checkpointHash }) => checkpointHash),
     ).toEqual([
-      "sha256-v1:6d2c4c4d0f0b2a94d15bff3f6439c4bafcbc2f8a230418c99a7eded079c448e4",
-      "sha256-v1:32ce843e1845444b7af821f8adf4a5a23672170a38e187c43ec3a8589a117bb6",
-      "sha256-v1:b276edac08abb9b174cbd4ea7141ca53a5ca8f158a533d660d6c899b0e6b189e",
-      "sha256-v1:75c43cfcc28884756598832d507778c716b2d993fc648f607c16bca60b2d2a44",
+      "sha256-v1:d145c8f5cea2abb3f15da6eb314162033de211b427ede0854b29f65cc4957e7f",
+      "sha256-v1:078d3034e6f759c3f30c7669c9d24cfb62b3d37c7403ced2cb4e6224cc39f900",
+      "sha256-v1:76de4197c5924706b2a0b7775ffe35135e32835fbf31e28c6daa8979cbeac1d0",
+      "sha256-v1:73bf7fccc0c12945a6ac70433ccce7aa64ab2befbddb6d1fb10fd7f91893e53b",
     ]);
     expect(browserTrace.traceHash).toBe(
-      "sha256-v1:28d2469046d4150bbf49864a60f7a5fdc79069ccfe72301c870aefe317d9369a",
+      "sha256-v1:2b44ef8926543bde7c0e806d0a962caea0fcdc3979b67b1d76a505b1f3df7600",
     );
     expect(compareGameplayTraces(browserTrace, headlessTrace)).toEqual({
       equal: true,

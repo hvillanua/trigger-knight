@@ -16,10 +16,12 @@ const initialPlayer = {
   gold: 300,
   weapon: {
     tier: 1,
+    name: "Dagger",
     attack: 216,
   },
   armor: {
     tier: 1,
+    name: "Clothing",
   },
   hp: {
     current: 1_908,
@@ -36,7 +38,7 @@ describe("original-v1.3 economy and loadout", () => {
     const observation = gameplayEngine.observe(state);
 
     expect(state).toMatchObject({
-      schemaVersion: 8,
+      schemaVersion: 9,
       player: initialPlayer,
     });
     expect(observation.player).toEqual(initialPlayer);

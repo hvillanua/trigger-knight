@@ -1,5 +1,6 @@
 export type {
   ActionEligibility,
+  ArmorName,
   BattleEncounter,
   BattleHandoffEvent,
   CurrentEncounter,
@@ -39,6 +40,7 @@ export type {
   TogglePauseCommand,
   TutorialDismissedEvent,
   WorldCamera,
+  WeaponName,
 } from "../domain/contracts.js";
 export type {
   GameplayEngine,

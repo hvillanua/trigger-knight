@@ -1,4 +1,5 @@
 import type {
+  ArmorName,
   GameCommand,
   GameEvent,
   GameObservation,
@@ -8,6 +9,7 @@ import type {
   RuleSetId,
   RunState,
   WorldCamera,
+  WeaponName,
 } from "./contracts.js";
 import {
   advanceEncounterLifecycle,
@@ -15,7 +17,7 @@ import {
   type EncounterGenerationRules,
 } from "./encounters.js";
 import { advanceLifespan } from "./lifespan.js";
-import { createPlayerState } from "./player-state.js";
+import { createPlayerState, equipmentNameAtTier } from "./player-state.js";
 import {
   attemptPurchase,
   purchaseRejectionReason,
@@ -49,11 +51,15 @@ export interface RuleSetConstants {
   readonly loadout: {
     readonly weapon: {
       readonly initialTier: number;
+      readonly maximumTier: number;
+      readonly names: readonly WeaponName[];
       readonly baseAttack: number;
       readonly attackPerTier: number;
     };
     readonly armor: {
       readonly initialTier: number;
+      readonly maximumTier: number;
+      readonly names: readonly ArmorName[];
       readonly baseMaximumHp: number;
       readonly maximumHpPerTier: number;
     };
@@ -106,6 +112,32 @@ export interface RuleSetRegistry {
   resolve(id: RuleSetId): RuleSetImplementation;
 }
 
+const originalV13WeaponNames = Object.freeze([
+  "Dagger",
+  "Sword",
+  "Rapier",
+  "Falchion",
+  "Katana",
+  "Flamberge",
+  "Zweihander",
+  "Broad Kris",
+  "Excalibur",
+  "Astral Sword",
+] as const satisfies readonly WeaponName[]);
+
+const originalV13ArmorNames = Object.freeze([
+  "Clothing",
+  "Protector",
+  "Breastplate",
+  "Chainmail",
+  "Fullplate",
+  "Samurai Mail",
+  "Valkyrie Garb",
+  "Odin Garb",
+  "Avalon",
+  "Astral Armor",
+] as const satisfies readonly ArmorName[]);
+
 const originalV13Constants: RuleSetConstants = Object.freeze({
   logicalTicksPerSecond: 30,
   pregameDelaySteps: 60,
@@ -123,11 +155,15 @@ const originalV13Constants: RuleSetConstants = Object.freeze({
   loadout: Object.freeze({
     weapon: Object.freeze({
       initialTier: 1,
+      maximumTier: 10,
+      names: originalV13WeaponNames,
       baseAttack: 129,
       attackPerTier: 87,
     }),
     armor: Object.freeze({
       initialTier: 1,
+      maximumTier: 10,
+      names: originalV13ArmorNames,
       baseMaximumHp: 1_009,
       maximumHpPerTier: 899,
     }),
@@ -221,6 +257,10 @@ const originalV13PurchaseRules: PurchaseRules = Object.freeze({
     "grims-shop": "divine-edge",
     "voucher-store": "gold-voucher",
   }),
+  equipment: Object.freeze({
+    weapon: originalV13Constants.loadout.weapon,
+    armor: originalV13Constants.loadout.armor,
+  }),
 });
 
 function createOriginalV13InitialPlayerState(): PlayerState {
@@ -235,8 +275,21 @@ function createOriginalV13InitialPlayerState(): PlayerState {
 
   return createPlayerState({
     gold: originalV13Constants.economy.initialGold,
-    weapon: { tier: weaponTier, attack: weaponAttack },
-    armor: { tier: armorTier },
+    weapon: {
+      tier: weaponTier,
+      name: equipmentNameAtTier(
+        originalV13Constants.loadout.weapon.names,
+        weaponTier,
+      ),
+      attack: weaponAttack,
+    },
+    armor: {
+      tier: armorTier,
+      name: equipmentNameAtTier(
+        originalV13Constants.loadout.armor.names,
+        armorTier,
+      ),
+    },
     hp: { current: maximumHp, maximum: maximumHp },
     inventory: { item: originalV13Constants.loadout.initialInventoryItem },
   });

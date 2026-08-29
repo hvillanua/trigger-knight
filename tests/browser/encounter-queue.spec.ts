@@ -55,6 +55,6 @@ test("reproduces encounter generation state and hashes in Node and Chromium", as
     "sha256-v1:e9a33e6a60dcd2f9ad88495fbc43fa98eebb7fc82a9821b2cec8843a57b05da2",
   );
   expect(nodeSnapshot.stateHash).toBe(
-    "sha256-v1:6ed00592d72a7fbc0bdf547a57302d9a3fe396ddee3a8eae987ab699cab7cf15",
+    "sha256-v1:5e5827c9b6f98dad42d23579b0550613da40b4bd4d3b28551f6f179aead2dc0e",
   );
 });

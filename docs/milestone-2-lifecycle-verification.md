@@ -25,16 +25,17 @@ The terminal values are:
 | Gold            | 300        |
 
 The locked host-neutral gameplay trace hash is
-`sha256-v1:53350db67b5a761ae53521b912fb6e83272ea9bd103a5067456be128aeea14d1`.
+`sha256-v1:85a5783f36c917e5a23db85b1d3bbd674c11c601efa3c22007b7930abde17771`.
 The terminal checkpoint hash is
-`sha256-v1:ba0a5b59696304e03eee3b7e15ac0e12673b4746179fcc6728e0eac9f80792e4`.
+`sha256-v1:9d1423fa252e263242dd8cec9ef1ca71737a61a7664999c822d2064780006f85`.
 The simulation result trace hash, which also covers policy identity and the
 3,000-step budget, is
-`sha256-v1:c9c785a7bcd5b71dba4e88a3ea3d6305d6857b37d13ef28849f15199d4437f19`.
+`sha256-v1:a5f03270e9c26fe2a8a5a343f6b83be277372f069cb84d0f07bb718cfd985de9`.
 
 Issue #42 advances the version-7 encounter queue through world space. Issue #43
-adds the version-8 current-shop use state. The scenario and command schedule are
-unchanged. It reaches its first battle at distance 2,820, then waits at the
+adds the version-8 current-shop use state. Issue #44 adds the version-9
+equipment names used by upgrade transitions. The scenario and command schedule
+are unchanged. It reaches its first battle at distance 2,820, then waits at the
 battle handoff while active-tick lifespan continues to death. The serializable
 state change updates the locked hashes above. Gameplay traces and run results
 remain at version 2.
@@ -86,5 +87,5 @@ The implementation and verification keep the research labels separate:
   is `mulberry32-fnv1a32-v1`, and queue/refill draws precede their associated
   distance draws.
 
-Purchases, combat resolution, persistence, final presentation, and batch
-comparison tooling remain in later milestones.
+Shrine purchases, combat resolution, persistence, final presentation, and
+batch comparison tooling remain in later milestones.

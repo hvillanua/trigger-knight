@@ -28,11 +28,37 @@ describe("ruleset registry", () => {
         loadout: {
           weapon: {
             initialTier: 1,
+            maximumTier: 10,
+            names: [
+              "Dagger",
+              "Sword",
+              "Rapier",
+              "Falchion",
+              "Katana",
+              "Flamberge",
+              "Zweihander",
+              "Broad Kris",
+              "Excalibur",
+              "Astral Sword",
+            ],
             baseAttack: 129,
             attackPerTier: 87,
           },
           armor: {
             initialTier: 1,
+            maximumTier: 10,
+            names: [
+              "Clothing",
+              "Protector",
+              "Breastplate",
+              "Chainmail",
+              "Fullplate",
+              "Samurai Mail",
+              "Valkyrie Garb",
+              "Odin Garb",
+              "Avalon",
+              "Astral Armor",
+            ],
             baseMaximumHp: 1_009,
             maximumHpPerTier: 899,
           },
@@ -70,9 +96,15 @@ describe("ruleset registry", () => {
     expect(Object.isFrozen(originalV13RuleSet.constants.loadout.weapon)).toBe(
       true,
     );
+    expect(
+      Object.isFrozen(originalV13RuleSet.constants.loadout.weapon.names),
+    ).toBe(true);
     expect(Object.isFrozen(originalV13RuleSet.constants.loadout.armor)).toBe(
       true,
     );
+    expect(
+      Object.isFrozen(originalV13RuleSet.constants.loadout.armor.names),
+    ).toBe(true);
     expect(
       Object.isFrozen(originalV13RuleSet.constants.world.initialCamera),
     ).toBe(true);

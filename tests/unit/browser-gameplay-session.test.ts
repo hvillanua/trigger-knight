@@ -19,8 +19,8 @@ const config: RunConfig = Object.freeze({
 
 const initialPlayer = {
   gold: 300,
-  weapon: { tier: 1, attack: 216 },
-  armor: { tier: 1 },
+  weapon: { tier: 1, name: "Dagger", attack: 216 },
+  armor: { tier: 1, name: "Clothing" },
   hp: { current: 1_908, maximum: 1_908 },
   inventory: { item: "elixir" },
 } as const;

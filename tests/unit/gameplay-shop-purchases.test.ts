@@ -237,20 +237,18 @@ describe("original-v1.3 semantic shop purchases", () => {
     },
   );
 
-  it("does not implement deferred equipment and Shrine effects", () => {
-    for (const shop of ["bladesmith", "armorsmith", "soul-shrine"] as const) {
-      const state = atShop(shop, 50);
-      const result = gameplayEngine.step(state, [purchaseCommand]);
+  it("does not implement the deferred Shrine effect", () => {
+    const state = atShop("soul-shrine", 50);
+    const result = gameplayEngine.step(state, [purchaseCommand]);
 
-      expect(result.state.player).toEqual(state.player);
-      expect(result.events).toContainEqual({
-        type: "purchase-rejected",
-        reason: "shop-effect-unavailable",
-      });
-      expect(
-        gameplayEngine.observe(state).actions.canPurchaseCurrentEncounter,
-      ).toBe(false);
-    }
+    expect(result.state.player).toEqual(state.player);
+    expect(result.events).toContainEqual({
+      type: "purchase-rejected",
+      reason: "shop-effect-unavailable",
+    });
+    expect(
+      gameplayEngine.observe(state).actions.canPurchaseCurrentEncounter,
+    ).toBe(false);
   });
 
   it("reproduces purchases after a checkpoint round trip without mutating inputs", () => {
