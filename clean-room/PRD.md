@@ -23,6 +23,13 @@ The game must reproduce the confirmed Trigger Knight v1.3 loop:
 
 Confirmed formulas, timing-sensitive mechanics, probabilities, encounter behavior, combat behavior, and known quirks documented in `research/` must be treated as compatibility requirements for the original-v1.3 ruleset unless this document explicitly classifies them as presentation or platform behavior to modernize.
 
+Until controlled runtime evidence resolves the tier-10 GUI discrepancy, the
+clean-room compatibility decision treats max-tier equipment shops as
+unavailable actions. Public action eligibility must be false. An attempted
+purchase cannot spend gold, heal HP, or mark the shop used. Browser presentation
+must communicate that unavailable state; its exact visual treatment may differ
+from the reported red cross.
+
 ### 2. Reproduce the browser play experience
 
 The browser version must provide the main game screens, HUD information, interactions, transitions, feedback, sound effects and their controls, pause behavior, tutorials, and local progression needed to play the game without Flash.

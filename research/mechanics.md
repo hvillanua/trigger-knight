@@ -241,6 +241,11 @@ values and the cache behavior are **CONFIRMED** directly from the SWF.
 enters the purchase function but performs no upgrade, spends no gold, and does
 not mark the building used; with insufficient gold it plays the normal error.
 
+**UNKNOWN** Whether the preserved online GUI dispatches that click at tier 10
+is not established by the static scripts. A player report describes a red-cross
+cursor and no interaction for max-tier equipment shops. That runtime report has
+not yet been reproduced against the preserved Kongregate artifact.
+
 **CONFIRMED** Buying a cached shop after another same-type shop can therefore
 use an earlier tier's cheaper price. This is observable code behavior, likely a
 pricing bug rather than an intended discount.

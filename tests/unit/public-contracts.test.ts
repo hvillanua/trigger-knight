@@ -355,6 +355,7 @@ describe("public application contracts", () => {
             | "already-used"
             | "insufficient-gold"
             | "lifecycle-gated"
+            | "maximum-tier"
             | "no-current-shop"
             | "out-of-range"
             | "shop-effect-unavailable";

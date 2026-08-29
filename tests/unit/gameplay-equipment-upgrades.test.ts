@@ -322,7 +322,7 @@ describe("original-v1.3 equipment upgrades", () => {
     expect(second.state.player.weapon).toEqual(initial.player.weapon);
   });
 
-  it("leaves a funded tier-ten shop actionable after a silent no-op", () => {
+  it("reports a funded max-tier Bladesmith as unavailable", () => {
     const initial = atEquipmentShop(
       {
         ...activeRun(),
@@ -338,24 +338,22 @@ describe("original-v1.3 equipment upgrades", () => {
 
     expect(
       gameplayEngine.observe(initial).actions.canPurchaseCurrentEncounter,
-    ).toBe(true);
+    ).toBe(false);
 
     const result = gameplayEngine.step(initial, [purchaseCommand]);
 
     expect(result.state.player).toEqual(initial.player);
     expect(result.state.encounters.current).toMatchObject({ used: false });
-    expect(result.events).not.toContainEqual(
-      expect.objectContaining({ type: "shop-purchased" }),
-    );
-    expect(result.events).not.toContainEqual(
-      expect.objectContaining({ type: "purchase-rejected" }),
-    );
+    expect(result.events).toContainEqual({
+      type: "purchase-rejected",
+      reason: "maximum-tier",
+    });
     expect(
       gameplayEngine.observe(result.state).actions.canPurchaseCurrentEncounter,
-    ).toBe(true);
+    ).toBe(false);
   });
 
-  it("uses the normal insufficient-funds outcome at tier ten", () => {
+  it("keeps max-tier Bladesmith unavailable regardless of affordability", () => {
     const initial = atEquipmentShop(
       {
         ...activeRun(),
@@ -374,11 +372,11 @@ describe("original-v1.3 equipment upgrades", () => {
     expect(result.state.encounters.current).toMatchObject({ used: false });
     expect(result.events).toContainEqual({
       type: "purchase-rejected",
-      reason: "insufficient-gold",
+      reason: "maximum-tier",
     });
   });
 
-  it("leaves a funded max-tier Armorsmith actionable without healing", () => {
+  it("reports a funded max-tier Armorsmith as unavailable without healing", () => {
     const initial = atEquipmentShop(
       {
         ...activeRun(),
@@ -396,13 +394,16 @@ describe("original-v1.3 equipment upgrades", () => {
 
     expect(result.state.player).toEqual(initial.player);
     expect(result.state.encounters.current).toMatchObject({ used: false });
-    expect(result.events).toEqual([{ type: "step-advanced", step: 1 }]);
+    expect(result.events).toContainEqual({
+      type: "purchase-rejected",
+      reason: "maximum-tier",
+    });
     expect(
       gameplayEngine.observe(result.state).actions.canPurchaseCurrentEncounter,
-    ).toBe(true);
+    ).toBe(false);
   });
 
-  it("rejects an unaffordable max-tier Armorsmith normally", () => {
+  it("keeps max-tier Armorsmith unavailable regardless of affordability", () => {
     const initial = atEquipmentShop(
       {
         ...activeRun(),
@@ -422,7 +423,7 @@ describe("original-v1.3 equipment upgrades", () => {
     expect(result.state.encounters.current).toMatchObject({ used: false });
     expect(result.events).toContainEqual({
       type: "purchase-rejected",
-      reason: "insufficient-gold",
+      reason: "maximum-tier",
     });
   });
 

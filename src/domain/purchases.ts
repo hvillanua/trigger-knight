@@ -63,6 +63,14 @@ export function purchaseRejectionReason(
     return "out-of-range";
   }
   if (
+    (encounter.shop === "bladesmith" &&
+      state.player.weapon.tier >= rules.equipment.weapon.maximumTier) ||
+    (encounter.shop === "armorsmith" &&
+      state.player.armor.tier >= rules.equipment.armor.maximumTier)
+  ) {
+    return "maximum-tier";
+  }
+  if (
     rules.itemByShop[encounter.shop] === undefined &&
     encounter.shop !== "bladesmith" &&
     encounter.shop !== "armorsmith"
@@ -139,10 +147,6 @@ export function attemptPurchase(
 
   if (encounter.shop === "bladesmith") {
     const currentTier = state.player.weapon.tier;
-    if (currentTier >= rules.equipment.weapon.maximumTier) {
-      return Object.freeze({ state, events: Object.freeze([]) });
-    }
-
     const tier = currentTier + 1;
     return completePurchase(state, {
       ...state.player,
@@ -158,10 +162,6 @@ export function attemptPurchase(
 
   if (encounter.shop === "armorsmith") {
     const currentTier = state.player.armor.tier;
-    if (currentTier >= rules.equipment.armor.maximumTier) {
-      return Object.freeze({ state, events: Object.freeze([]) });
-    }
-
     const tier = currentTier + 1;
     const maximumHp =
       rules.equipment.armor.baseMaximumHp +

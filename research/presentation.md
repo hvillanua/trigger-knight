@@ -80,6 +80,12 @@ share action. It submits run score and progression stats to Kongregate.
 changing state. Shop buildings are only actionable in their x-position window;
 items are battle-only.
 
+**UNKNOWN** A player report from an online build describes a red-cross cursor
+over equipment shops whose corresponding tier is already 10, with no purchase
+interaction. Static scripts confirm the tier-10 purchase routine is a no-op when
+invoked, but do not settle whether the preserved Kongregate GUI dispatches that
+call.
+
 ## Tutorials
 
 The tutorial panel has six timeline pages:

@@ -118,13 +118,16 @@ fully heals current HP. Both use the price stored when the encounter entered
 the queue. Shops on opposite sides of an already queued battle can therefore
 advance successive tiers at the same earlier price.
 
-At tier 10, an affordable equipment purchase attempt is a silent no-op. It
-spends no gold, emits no purchase event, and leaves the shop unused and
-actionable. Affordability is still checked first, so an underfunded attempt
-emits the normal `insufficient-gold` rejection. Soul Shrine restoration remains
-assigned to issue #45. Until that effect exists, its current shop reports
-purchase as ineligible and rejects a direct command with
-`shop-effect-unavailable`.
+Static scripts confirm that the tier-10 purchase routine is a no-op when
+invoked, but a player report describes an online GUI that shows a red cross and
+does not dispatch the purchase. Until controlled runtime evidence resolves that
+discrepancy, the clean-room ruleset treats both max-tier equipment shops as
+ineligible. Public action eligibility is false, and a direct command emits
+`maximum-tier` without spending gold, healing HP, or marking the shop used.
+Presentation must show an unavailable cue, with the exact treatment deferred to
+the browser milestone. Soul Shrine restoration remains assigned to issue #45.
+Until that effect exists, its current shop reports purchase as ineligible and
+rejects a direct command with `shop-effect-unavailable`.
 
 Player state and each nested equipment, HP, and inventory value are frozen.
 Stepping a JSON-restored checkpoint copies those values back into frozen domain
