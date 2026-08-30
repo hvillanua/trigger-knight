@@ -27,6 +27,13 @@ const player: PlayerState = Object.freeze({
   hp: Object.freeze({ current: 1_908, maximum: 1_908 }),
   inventory: Object.freeze({ item: "elixir" }),
 });
+const goblinEnemy = Object.freeze({
+  id: "goblin" as const,
+  maxHp: 660,
+  attack: 122,
+  gold: 82,
+  profileExp: 13,
+});
 const emptyGeneration: EncounterGenerationState = Object.freeze({
   shopsUntilBattle: 1,
   seenSinceBattle: Object.freeze({
@@ -34,6 +41,7 @@ const emptyGeneration: EncounterGenerationState = Object.freeze({
     armorsmith: false,
     soulShrine: false,
   }),
+  dragonSpawned: false,
   soulShrine: Object.freeze({
     extensions: 0,
     emergencyThreshold: 40,
@@ -62,26 +70,45 @@ describe("original-v1.3 encounter queue", () => {
     );
 
     expect(initialized.encounters.upcoming).toEqual([
-      { kind: "battle" },
+      {
+        kind: "battle",
+        enemy: {
+          id: "goblin",
+          maxHp: 660,
+          attack: 122,
+          gold: 82,
+          profileExp: 13,
+        },
+      },
       { kind: "shop", shop: "pharmacy", cachedPrice: 150 },
-      { kind: "battle" },
+      {
+        kind: "battle",
+        enemy: {
+          id: "golem",
+          maxHp: 980,
+          attack: 68,
+          gold: 92,
+          profileExp: 13,
+        },
+      },
     ]);
     expect(initialized.encounters.generation).toEqual({
-      shopsUntilBattle: 1,
+      shopsUntilBattle: 2,
       seenSinceBattle: {
         bladesmith: false,
         armorsmith: false,
         soulShrine: false,
       },
+      dragonSpawned: false,
       soulShrine: {
         extensions: 0,
-        emergencyThreshold: 45,
+        emergencyThreshold: 46,
         emergencyChanceGiven: false,
       },
     });
     expect(initialized.encounters.current).toBeNull();
-    expect(initialized.encounters.distanceUntilNext).toBe(1_467);
-    expect(initialized.random).toEqual(randomAt(2_399_460_286));
+    expect(initialized.encounters.distanceUntilNext).toBe(1_615);
+    expect(initialized.random).toEqual(randomAt(1_767_624_616));
     expect(Object.isFrozen(initialized.encounters)).toBe(true);
     expect(Object.isFrozen(initialized.encounters.upcoming)).toBe(true);
     expect(
@@ -222,7 +249,7 @@ describe("original-v1.3 encounter queue", () => {
     expect(second.encounter).toMatchObject({ shop: "pharmacy" });
   });
 
-  it("queues a battle, resets duplicate flags, and defers enemy draws", () => {
+  it("queues a battle, selects its enemy, and resets duplicate flags", () => {
     const generated = generateEncounter(
       randomAt(2),
       Object.freeze({
@@ -240,8 +267,10 @@ describe("original-v1.3 encounter queue", () => {
       encounterRules,
     );
 
-    expect(generated.encounter).toEqual({ kind: "battle" });
-    expect(generated.encounter).not.toHaveProperty("enemy");
+    expect(generated.encounter).toEqual({
+      kind: "battle",
+      enemy: goblinEnemy,
+    });
     expect(generated.generation).toEqual({
       shopsUntilBattle: 3,
       seenSinceBattle: {
@@ -249,9 +278,10 @@ describe("original-v1.3 encounter queue", () => {
         armorsmith: false,
         soulShrine: false,
       },
+      dragonSpawned: false,
       soulShrine: emptyGeneration.soulShrine,
     });
-    expect(generated.random).toEqual(randomAt(1_831_565_815));
+    expect(generated.random).toEqual(randomAt(3_663_131_628));
   });
 
   it("keeps generation-time equipment prices on already queued entries", () => {
@@ -291,7 +321,7 @@ describe("original-v1.3 encounter queue", () => {
     const repeated = gameplayEngine.createRun(config);
     const restored = JSON.parse(JSON.stringify(initial)) as RunState;
 
-    expect(initial.schemaVersion).toBe(10);
+    expect(initial.schemaVersion).toBe(11);
     expect(initial.encounters.current).toBeNull();
     expect(initial.encounters.distanceUntilNext).toBeGreaterThanOrEqual(1_000);
     expect(initial.encounters.distanceUntilNext).toBeLessThanOrEqual(1_999);
@@ -303,7 +333,9 @@ describe("original-v1.3 encounter queue", () => {
     expect(gameplayEngine.observe(initial)).toMatchObject({
       encounters: {
         current: null,
-        upcoming: initial.encounters.upcoming,
+        upcoming: initial.encounters.upcoming.map((encounter) =>
+          encounter.kind === "battle" ? { kind: "battle" as const } : encounter,
+        ),
       },
       actions: {
         canPurchaseCurrentEncounter: false,

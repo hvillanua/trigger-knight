@@ -12,6 +12,13 @@ import {
 import { createTestGameplayEngine } from "../helpers/gameplay-engine.js";
 
 const gameplayEngine = createTestGameplayEngine();
+const goblinEnemy = {
+  id: "goblin" as const,
+  maxHp: 660,
+  attack: 122,
+  gold: 82,
+  profileExp: 13,
+};
 
 function createRun(): RunState {
   return gameplayEngine.createRun({
@@ -78,7 +85,7 @@ describe("original-v1.3 encounter world lifecycle", () => {
       distanceUntilNext: 1,
       upcoming: [
         { kind: "shop", shop: "pharmacy", cachedPrice: 150 },
-        { kind: "battle" },
+        { kind: "battle", enemy: goblinEnemy },
         { kind: "shop", shop: "grims-shop", cachedPrice: 200 },
       ],
     });
@@ -94,7 +101,7 @@ describe("original-v1.3 encounter world lifecycle", () => {
     });
     expect(result.state.encounters.upcoming).toHaveLength(3);
     expect(result.state.encounters.upcoming.slice(0, 2)).toEqual([
-      { kind: "battle" },
+      { kind: "battle", enemy: goblinEnemy },
       { kind: "shop", shop: "grims-shop", cachedPrice: 200 },
     ]);
     expect(result.state.encounters.distanceUntilNext).toBeGreaterThanOrEqual(
@@ -177,7 +184,7 @@ describe("original-v1.3 encounter world lifecycle", () => {
 
   it("hands battles off below x=420 and freezes running systems afterward", () => {
     const ready = withEncounterState(readyRun(), {
-      current: { kind: "battle", x: 421 },
+      current: { kind: "battle", enemy: goblinEnemy, x: 421 },
       distanceUntilNext: 500,
     });
     const atBoundary = gameplayEngine.step(ready, []);
@@ -185,7 +192,7 @@ describe("original-v1.3 encounter world lifecycle", () => {
     expect(atBoundary.state).toMatchObject({
       distance: ready.distance + 1,
       encounters: {
-        current: { kind: "battle", x: 420 },
+        current: { kind: "battle", enemy: goblinEnemy, x: 420 },
         distanceUntilNext: 499,
       },
       lifecycle: { phase: "running" },
@@ -198,7 +205,7 @@ describe("original-v1.3 encounter world lifecycle", () => {
       distance: ready.distance + 3,
       activeTicks: ready.activeTicks + 2,
       encounters: {
-        current: { kind: "battle", x: 418 },
+        current: { kind: "battle", enemy: goblinEnemy, x: 418 },
         distanceUntilNext: 497,
       },
       lifecycle: { phase: "battle-handoff" },

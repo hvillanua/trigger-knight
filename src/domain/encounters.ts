@@ -1,4 +1,6 @@
 import type {
+  EnemyId,
+  EnemyStats,
   EncounterGenerationState,
   CurrentEncounter,
   EncounterQueueState,
@@ -40,6 +42,7 @@ export interface EncounterGenerationRules {
     readonly pharmacy: number;
     readonly grimsShop: number;
   };
+  readonly enemies: EnemyGenerationRules;
   readonly prices: {
     readonly bladesmithBase: number;
     readonly bladesmithPerCurrentTier: number;
@@ -51,6 +54,25 @@ export interface EncounterGenerationRules {
     readonly grimsShop: number;
     readonly voucherStore: number;
   };
+}
+
+export interface EnemyScalingRules {
+  readonly maxHpBase: number;
+  readonly maxHpPerDay: number;
+  readonly attackBase: number;
+  readonly attackPerDay: number;
+  readonly goldBase: number;
+  readonly goldPerDay: number;
+  readonly profileExpBase: number;
+  readonly profileExpPerDay: number;
+}
+
+export interface EnemyGenerationRules {
+  readonly ordinarySelectionUpperBound: number;
+  readonly dragonChanceRollUpperBound: number;
+  readonly dragonChanceStartDay: number;
+  readonly dragonChancePerDay: number;
+  readonly stats: Readonly<Record<EnemyId, EnemyScalingRules>>;
 }
 
 export interface GeneratedEncounter {
@@ -81,15 +103,23 @@ function createGenerationState(
   return Object.freeze({
     shopsUntilBattle: generation.shopsUntilBattle,
     seenSinceBattle: createSeenSinceBattle(generation.seenSinceBattle),
+    dragonSpawned: generation.dragonSpawned,
     soulShrine: Object.freeze({ ...generation.soulShrine }),
   });
+}
+
+function createEnemyStats(enemy: Readonly<EnemyStats>): EnemyStats {
+  return Object.freeze({ ...enemy });
 }
 
 function createQueuedEncounter(
   encounter: Readonly<QueuedEncounter>,
 ): QueuedEncounter {
   return encounter.kind === "battle"
-    ? Object.freeze({ kind: "battle" })
+    ? Object.freeze({
+        kind: "battle",
+        enemy: createEnemyStats(encounter.enemy),
+      })
     : Object.freeze({ ...encounter });
 }
 
@@ -99,7 +129,11 @@ function createCurrentEncounter(
   return encounter === null
     ? null
     : encounter.kind === "battle"
-      ? Object.freeze({ kind: "battle", x: encounter.x })
+      ? Object.freeze({
+          kind: "battle",
+          enemy: createEnemyStats(encounter.enemy),
+          x: encounter.x,
+        })
       : Object.freeze({ ...encounter });
 }
 
@@ -108,7 +142,11 @@ function positionEncounter(
   x: number,
 ): CurrentEncounter {
   return encounter.kind === "battle"
-    ? Object.freeze({ kind: "battle", x })
+    ? Object.freeze({
+        kind: "battle",
+        enemy: createEnemyStats(encounter.enemy),
+        x,
+      })
     : Object.freeze({ ...encounter, x, used: false });
 }
 
@@ -249,6 +287,79 @@ function shouldForceSoulShrine(
   );
 }
 
+const ordinaryEnemyIds = Object.freeze([
+  "goblin",
+  "golem",
+  "wolf",
+] as const satisfies readonly EnemyId[]);
+
+function scaleEnemyForDay(
+  id: EnemyId,
+  day: number,
+  rules: Readonly<EncounterGenerationRules>,
+): EnemyStats {
+  const scaling = rules.enemies.stats[id];
+
+  return Object.freeze({
+    id,
+    maxHp: scaling.maxHpBase + scaling.maxHpPerDay * day,
+    attack: scaling.attackBase + scaling.attackPerDay * day,
+    gold: scaling.goldBase + scaling.goldPerDay * day,
+    profileExp: scaling.profileExpBase + scaling.profileExpPerDay * day,
+  });
+}
+
+interface SelectedBattleEnemy {
+  readonly enemy: EnemyStats;
+  readonly dragonSpawned: boolean;
+  readonly random: RandomState;
+}
+
+function selectBattleEnemy(
+  random: Readonly<RandomState>,
+  generation: Readonly<EncounterGenerationState>,
+  day: number,
+  rules: Readonly<EncounterGenerationRules>,
+): SelectedBattleEnemy {
+  let nextRandom = random;
+
+  if (!generation.dragonSpawned && day >= rules.enemies.dragonChanceStartDay) {
+    const dragonRoll = nextRandomInteger(
+      nextRandom,
+      rules.enemies.dragonChanceRollUpperBound,
+    );
+    nextRandom = dragonRoll.state;
+    const dragonChance =
+      rules.enemies.dragonChancePerDay *
+      (day - rules.enemies.dragonChanceStartDay);
+
+    if (dragonRoll.value < dragonChance) {
+      return Object.freeze({
+        enemy: scaleEnemyForDay("dragon", day, rules),
+        dragonSpawned: true,
+        random: nextRandom,
+      });
+    }
+  }
+
+  const ordinaryRoll = nextRandomInteger(
+    nextRandom,
+    rules.enemies.ordinarySelectionUpperBound,
+  );
+  const ordinaryEnemy = ordinaryEnemyIds[ordinaryRoll.value];
+  if (ordinaryEnemy === undefined) {
+    throw new RangeError(
+      `Ordinary enemy roll ${ordinaryRoll.value} is outside the configured table`,
+    );
+  }
+
+  return Object.freeze({
+    enemy: scaleEnemyForDay(ordinaryEnemy, day, rules),
+    dragonSpawned: generation.dragonSpawned,
+    random: ordinaryRoll.state,
+  });
+}
+
 /** Generates one queue entry and returns every consumed hidden-state change. */
 export function generateEncounter(
   random: Readonly<RandomState>,
@@ -263,9 +374,10 @@ export function generateEncounter(
       random,
       rules.laterShopsUntilBattleUpperBound,
     );
+    const selected = selectBattleEnemy(spacing.state, generation, day, rules);
 
     return Object.freeze({
-      encounter: Object.freeze({ kind: "battle" }),
+      encounter: Object.freeze({ kind: "battle", enemy: selected.enemy }),
       generation: createGenerationState({
         shopsUntilBattle: rules.laterShopsUntilBattleBase + spacing.value,
         seenSinceBattle: {
@@ -273,9 +385,10 @@ export function generateEncounter(
           armorsmith: false,
           soulShrine: false,
         },
+        dragonSpawned: selected.dragonSpawned,
         soulShrine: generation.soulShrine,
       }),
-      random: spacing.state,
+      random: selected.random,
     });
   }
 
@@ -291,6 +404,7 @@ export function generateEncounter(
       generation: createGenerationState({
         shopsUntilBattle: generation.shopsUntilBattle - 1,
         seenSinceBattle: generation.seenSinceBattle,
+        dragonSpawned: generation.dragonSpawned,
         soulShrine: {
           ...generation.soulShrine,
           emergencyThreshold: rules.emergencyThresholdBase + threshold.value,
@@ -314,13 +428,14 @@ export function generateEncounter(
     generation: createGenerationState({
       shopsUntilBattle: generation.shopsUntilBattle - 1,
       seenSinceBattle: markShopSeen(shop, generation.seenSinceBattle),
+      dragonSpawned: generation.dragonSpawned,
       soulShrine: generation.soulShrine,
     }),
     random: nextRandom,
   });
 }
 
-/** Creates the original three-entry lookahead without selecting battle enemies. */
+/** Creates the original three-entry lookahead with queue-time enemy selection. */
 export function initializeEncounterQueue(
   random: Readonly<RandomState>,
   day: number,
@@ -345,6 +460,7 @@ export function initializeEncounterQueue(
       emergencyThreshold: rules.emergencyThresholdBase,
       emergencyChanceGiven: false,
     },
+    dragonSpawned: false,
   });
   const upcoming: QueuedEncounter[] = [];
 
@@ -456,9 +572,21 @@ export function advanceEncounterLifecycle(
     throw new RangeError("Encounter queue must contain a promotable entry");
   }
 
+  let generation = previous.encounters.generation;
+  if (
+    promoted.kind === "battle" &&
+    promoted.enemy.id !== "dragon" &&
+    generation.dragonSpawned
+  ) {
+    generation = createGenerationState({
+      ...generation,
+      dragonSpawned: false,
+    });
+  }
+
   const generated = generateEncounter(
     stepped.random,
-    previous.encounters.generation,
+    generation,
     stepped.day,
     stepped.player,
     stepped.lifespan,

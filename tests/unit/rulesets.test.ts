@@ -64,6 +64,54 @@ describe("ruleset registry", () => {
           },
           initialInventoryItem: "elixir",
         },
+        enemies: {
+          ordinarySelectionUpperBound: 3,
+          dragonChanceRollUpperBound: 100,
+          dragonChanceStartDay: 7,
+          dragonChancePerDay: 3,
+          stats: {
+            goblin: {
+              maxHpBase: 600,
+              maxHpPerDay: 60,
+              attackBase: 82,
+              attackPerDay: 40,
+              goldBase: 70,
+              goldPerDay: 12,
+              profileExpBase: 10,
+              profileExpPerDay: 3,
+            },
+            golem: {
+              maxHpBase: 860,
+              maxHpPerDay: 120,
+              attackBase: 40,
+              attackPerDay: 28,
+              goldBase: 78,
+              goldPerDay: 14,
+              profileExpBase: 9,
+              profileExpPerDay: 4,
+            },
+            wolf: {
+              maxHpBase: 450,
+              maxHpPerDay: 44,
+              attackBase: 94,
+              attackPerDay: 56,
+              goldBase: 78,
+              goldPerDay: 14,
+              profileExpBase: 8,
+              profileExpPerDay: 5,
+            },
+            dragon: {
+              maxHpBase: 2_400,
+              maxHpPerDay: 300,
+              attackBase: 160,
+              attackPerDay: 80,
+              goldBase: 350,
+              goldPerDay: 60,
+              profileExpBase: 40,
+              profileExpPerDay: 25,
+            },
+          },
+        },
         lifespan: {
           initialWhole: 99,
           initialFraction: 99,
@@ -90,6 +138,8 @@ describe("ruleset registry", () => {
         encounterInitializationDrawOrder: "queue-then-distance",
         soulShrineInitializationDrawOrder: "after-queue-and-distance",
         encounterPromotionDrawOrder: "replacement-then-distance",
+        battleGenerationDrawOrder: "shop-count-then-dragon-or-ordinary",
+        dragonFlagLifecycle: "queue-dragon-clear-on-ordinary-current",
       },
     });
     expect(Object.isFrozen(originalV13RuleSet)).toBe(true);
@@ -101,6 +151,10 @@ describe("ruleset registry", () => {
       Object.isFrozen(originalV13RuleSet.constants.loadout.weapon.names),
     ).toBe(true);
     expect(Object.isFrozen(originalV13RuleSet.constants.loadout.armor)).toBe(
+      true,
+    );
+    expect(Object.isFrozen(originalV13RuleSet.constants.enemies)).toBe(true);
+    expect(Object.isFrozen(originalV13RuleSet.constants.enemies.stats)).toBe(
       true,
     );
     expect(

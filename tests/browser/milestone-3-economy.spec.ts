@@ -36,7 +36,7 @@ function runPolicy(seed: string): {
       trace = candidate;
     },
   });
-  runner.run({ config: config(seed), policy: purchasingPolicy, maxSteps: 420 });
+  runner.run({ config: config(seed), policy: purchasingPolicy, maxSteps: 500 });
 
   if (trace === undefined) {
     throw new Error("Expected the purchasing-policy trace");

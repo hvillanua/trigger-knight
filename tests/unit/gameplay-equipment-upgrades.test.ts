@@ -18,6 +18,13 @@ const gameplayEngine = createTestGameplayEngine();
 const purchaseCommand = Object.freeze({
   type: "purchase-current-encounter" as const,
 });
+const goblinEnemy = {
+  id: "goblin" as const,
+  maxHp: 660,
+  attack: 122,
+  gold: 82,
+  profileExp: 13,
+};
 
 const weaponTiers = [
   ["Dagger", 216],
@@ -122,6 +129,7 @@ describe("original-v1.3 equipment upgrades", () => {
           armorsmith: false,
           soulShrine: false,
         },
+        dragonSpawned: false,
         soulShrine: {
           extensions: 0,
           emergencyThreshold: 40,
@@ -260,7 +268,7 @@ describe("original-v1.3 equipment upgrades", () => {
         encounters: {
           ...activeRun().encounters,
           upcoming: [
-            { kind: "battle" },
+            { kind: "battle", enemy: goblinEnemy },
             { kind: "shop", shop: "bladesmith", cachedPrice: 236 },
           ],
         },
@@ -302,7 +310,7 @@ describe("original-v1.3 equipment upgrades", () => {
         encounters: {
           ...activeRun().encounters,
           upcoming: [
-            { kind: "battle" },
+            { kind: "battle", enemy: goblinEnemy },
             { kind: "shop", shop: "armorsmith", cachedPrice: 204 },
           ],
         },

@@ -79,8 +79,9 @@ run configuration and command schedule. See
 [`gameplay-diagnostics.md`](gameplay-diagnostics.md).
 
 Run-result schema version 2 records the replacement of placeholder gold with
-authoritative state. The streamed trace covers the complete version-10 run state
-and its player observation on every step.
+authoritative state. The streamed trace covers the complete version-11 run state
+and its player observation on every step, including queue-time enemy snapshots
+in authoritative state and redacted future enemy identities in observation.
 
 ## Minimal batches
 

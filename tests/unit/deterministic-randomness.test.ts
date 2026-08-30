@@ -16,13 +16,20 @@ const player = Object.freeze({
   hp: Object.freeze({ current: 1_908, maximum: 1_908 }),
   inventory: Object.freeze({ item: "elixir" as const }),
 });
+const battleEnemy = Object.freeze({
+  id: "goblin" as const,
+  maxHp: 660,
+  attack: 122,
+  gold: 82,
+  profileExp: 13,
+});
 const encounters = Object.freeze({
   current: null,
   distanceUntilNext: 1_500,
   upcoming: Object.freeze([
-    Object.freeze({ kind: "battle" as const }),
-    Object.freeze({ kind: "battle" as const }),
-    Object.freeze({ kind: "battle" as const }),
+    Object.freeze({ kind: "battle" as const, enemy: battleEnemy }),
+    Object.freeze({ kind: "battle" as const, enemy: battleEnemy }),
+    Object.freeze({ kind: "battle" as const, enemy: battleEnemy }),
   ]),
   generation: Object.freeze({
     shopsUntilBattle: 1,
@@ -31,6 +38,7 @@ const encounters = Object.freeze({
       armorsmith: false,
       soulShrine: false,
     }),
+    dragonSpawned: false,
     soulShrine: Object.freeze({
       extensions: 0,
       emergencyThreshold: 40,

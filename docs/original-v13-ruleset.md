@@ -15,23 +15,24 @@ ruleset implementations, so a later identity can coexist without changing the
 
 The ruleset owns the confirmed compatibility values implemented so far:
 
-| Group            | Values                                                                                                                     | Evidence                                                                       |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Logical time     | 30 gameplay ticks per second                                                                                               | Confirmed original behavior                                                    |
-| Pregame delay    | 60 logical opportunities                                                                                                   | Confirmed value; gate interaction is a clean-room decision                     |
-| Running movement | Speed starts at 0, gains 1 per active tick, caps at 15, and contributes one distance unit per speed unit                   | Confirmed original behavior                                                    |
-| Day and score    | 7,000 distance units per day; running score uses 10 points per speed unit before the profile multiplier                    | Confirmed original behavior                                                    |
-| Economy          | A run starts with 300 integer gold; purchases require and subtract the encounter's cached price                            | Confirmed original behavior                                                    |
-| Weapon           | Named tiers 1 through 10; attack is `129 + 87 * tier`, from Dagger at 216 through Astral Sword at 999                      | Confirmed original behavior                                                    |
-| Armor and HP     | Named tiers 1 through 10; maximum HP is `1009 + 899 * tier`, from Clothing at 1,908 through Astral Armor at 9,999          | Confirmed original behavior                                                    |
-| Inventory        | One slot; item-shop purchases replace it with Elixir, Divine Edge, or Gold Voucher                                         | Confirmed original behavior                                                    |
-| Encounter queue  | Three entries; zero to two initial shops before battle, then one to three; confirmed shop roll ranges and duplicate rules  | Confirmed original behavior                                                    |
-| Encounter world  | Initial spacing 1,000-1,999; later spacing 1,500-1,799; entry x 600; shop and battle speeds and strict thresholds          | Confirmed original behavior                                                    |
-| Shop prices      | Generation-time equipment formulas; Shrine starts at 50 and gains 70 per purchase; item shops cost 150, 200, and 500       | Confirmed original behavior                                                    |
-| Emergency Shrine | Threshold 40-49; one forced chance below it per restoration cycle when the battle cycle has no Shrine                      | Confirmed original behavior                                                    |
-| Lifespan         | Starts at 99.99, drains the fractional field by 4 per active tick, resets the fraction to 99, and dies below whole value 0 | Confirmed original behavior                                                    |
-| World camera     | One original stage unit maps to one world unit; initial camera is 480 by 320 world units                                   | Clean-room coordinate-model decision preserving confirmed original coordinates |
-| Random sequence  | `mulberry32-fnv1a32-v1`                                                                                                    | Clean-room reproducibility decision                                            |
+| Group            | Values                                                                                                                                                    | Evidence                                                                       |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Logical time     | 30 gameplay ticks per second                                                                                                                              | Confirmed original behavior                                                    |
+| Pregame delay    | 60 logical opportunities                                                                                                                                  | Confirmed value; gate interaction is a clean-room decision                     |
+| Running movement | Speed starts at 0, gains 1 per active tick, caps at 15, and contributes one distance unit per speed unit                                                  | Confirmed original behavior                                                    |
+| Day and score    | 7,000 distance units per day; running score uses 10 points per speed unit before the profile multiplier                                                   | Confirmed original behavior                                                    |
+| Economy          | A run starts with 300 integer gold; purchases require and subtract the encounter's cached price                                                           | Confirmed original behavior                                                    |
+| Weapon           | Named tiers 1 through 10; attack is `129 + 87 * tier`, from Dagger at 216 through Astral Sword at 999                                                     | Confirmed original behavior                                                    |
+| Armor and HP     | Named tiers 1 through 10; maximum HP is `1009 + 899 * tier`, from Clothing at 1,908 through Astral Armor at 9,999                                         | Confirmed original behavior                                                    |
+| Inventory        | One slot; item-shop purchases replace it with Elixir, Divine Edge, or Gold Voucher                                                                        | Confirmed original behavior                                                    |
+| Enemies          | Goblin, Golem, and Wolf use uniform `random(3)` selection; Dragon uses its day-based chance and all four use day-scaled HP, attack, gold, and profile EXP | Confirmed original behavior                                                    |
+| Encounter queue  | Three entries; zero to two initial shops before battle, then one to three; confirmed shop roll ranges and duplicate rules                                 | Confirmed original behavior                                                    |
+| Encounter world  | Initial spacing 1,000-1,999; later spacing 1,500-1,799; entry x 600; shop and battle speeds and strict thresholds                                         | Confirmed original behavior                                                    |
+| Shop prices      | Generation-time equipment formulas; Shrine starts at 50 and gains 70 per purchase; item shops cost 150, 200, and 500                                      | Confirmed original behavior                                                    |
+| Emergency Shrine | Threshold 40-49; one forced chance below it per restoration cycle when the battle cycle has no Shrine                                                     | Confirmed original behavior                                                    |
+| Lifespan         | Starts at 99.99, drains the fractional field by 4 per active tick, resets the fraction to 99, and dies below whole value 0                                | Confirmed original behavior                                                    |
+| World camera     | One original stage unit maps to one world unit; initial camera is 480 by 320 world units                                                                  | Clean-room coordinate-model decision preserving confirmed original coordinates |
+| Random sequence  | `mulberry32-fnv1a32-v1`                                                                                                                                   | Clean-room reproducibility decision                                            |
 
 The compatibility target for randomness is the confirmed original ranges,
 probabilities, and gameplay draw order. The Flash Player's PRNG and seed
@@ -93,7 +94,8 @@ The ruleset creates one authoritative `player` record in each fresh run. It
 contains gold, weapon tier, name, and attack, armor tier and name, current and
 maximum HP, and the single inventory slot. `GameObservation.player` publishes
 the same current values without exposing random state or future
-encounter-generation state.
+encounter-generation state. A current battle publishes its selected enemy
+snapshot; future battle identities are omitted from the public lookahead.
 
 The original-v1.3 constants own all ten names, the tier cap, and the confirmed
 formulas. Weapon tiers are Dagger, Sword, Rapier, Falchion, Katana, Flamberge,
@@ -142,10 +144,21 @@ battle. It then calls the encounter generator three times to fill the upcoming
 queue and draws `random(1000)` for the initial world-space counter. A count at
 or below zero consumes `random(3)`, queues a battle, resets
 the next count to one through three, and clears the Bladesmith, Armorsmith, and
-Soul Shrine duplicate flags. This battle entry is only `{ kind: "battle" }`.
-Enemy identity and Dragon eligibility consume no draws yet. Milestone 4 will
-add those draws when it implements enemy selection. The current sequence is
-therefore not the final original battle draw order.
+Soul Shrine duplicate flags. The battle then selects and stores an immutable
+enemy snapshot using the current day. The battle's `random(3)` shop-count draw
+comes first. If the Dragon flag is clear and the day is at least 7, generation
+consumes `random(100)` and selects Dragon when the result is below
+`3 * (day - 7)`. A failed roll consumes `random(3)` for Goblin, Golem, or
+Wolf. Before day 7, or while the Dragon flag is set, generation consumes only
+the ordinary `random(3)` draw. Day 7 has a zero Dragon threshold, day 8 is the
+first day with a non-zero chance, and day 41 and later are guaranteed because
+the threshold exceeds every `random(100)` result.
+
+Selecting Dragon sets the hidden `dragonSpawned` flag. An ordinary selection
+does not clear that flag while it remains in the queue. When an ordinary battle
+becomes current, the flag clears before the replacement entry is generated.
+This prevents consecutive queued Dragons while allowing another eligible roll
+after the ordinary battle reaches the player.
 
 A shop generation call consumes `random(100)`. The exact accepted ranges are
 66 through 99 for Bladesmith, 31 through 65 for Armorsmith, 26 through 30 for
@@ -159,6 +172,16 @@ uses `200 + 36 * currentWeaponTier`; Armorsmith uses
 `150 + 54 * currentArmorTier`. Shrine uses `50 + 70 * successfulPurchases`,
 and the item shop prices are 150, 200, and 500.
 
+Each queued battle stores the selected enemy's day-scaled snapshot. The fields
+are `id`, `maxHp`, `attack`, `gold`, and `profileExp`.
+
+| Enemy  | Max HP           | ATK            | Gold           | Profile EXP   |
+| ------ | ---------------- | -------------- | -------------- | ------------- |
+| Goblin | `600 + 60 * D`   | `82 + 40 * D`  | `70 + 12 * D`  | `10 + 3 * D`  |
+| Golem  | `860 + 120 * D`  | `40 + 28 * D`  | `78 + 14 * D`  | `9 + 4 * D`   |
+| Wolf   | `450 + 44 * D`   | `94 + 56 * D`  | `78 + 14 * D`  | `8 + 5 * D`   |
+| Dragon | `2400 + 300 * D` | `160 + 80 * D` | `350 + 60 * D` | `40 + 25 * D` |
+
 The hidden Shrine state stores the successful-purchase count, an emergency
 threshold from 40 through 49, and whether the current restoration cycle already
 received its emergency chance. A shop is forced to Shrine when whole lifespan
@@ -169,10 +192,11 @@ It does not set the normal Shrine duplicate flag, so one later normal Shrine can
 still occur in that battle cycle. A battle clears the duplicate flag but not the
 chance flag. Only a successful Shrine purchase clears the chance flag.
 
-The queue, duplicate flags, counters, positions, and complete post-generation
-random state are authoritative, serializable, and deeply frozen. Ordinary
-`GameObservation` publishes the current encounter and three upcoming entries,
-but not the distance counter, duplicate flags, or random state.
+The queue, enemy snapshots, duplicate flags, counters, positions, and complete
+post-generation random state are authoritative, serializable, and deeply
+frozen. Ordinary `GameObservation` publishes the current encounter and three
+upcoming entries, but not the distance counter, duplicate flags, future enemy
+identities, or random state.
 
 The research confirms the queue, distance, and emergency-threshold draws but
 does not establish their relative order during initialization or refill. The
@@ -181,14 +205,15 @@ initial emergency threshold. A promotion generates the replacement entry before
 drawing the later distance. This keeps the choice visible without claiming that
 the original Flash runtime used the same order.
 
-Run-state schema version 10 adds hidden Shrine extension and emergency state.
+Run-state schema version 11 adds queue-time enemy snapshots and the hidden
+Dragon flag alongside the Shrine extension and emergency state.
 Version 9 added equipment names to the authoritative player state. Version 8
 added the current shop's one-use purchase state.
 Gameplay traces and run results remain at schema version 2. The locked seed
 `encounter-host-parity` produces encounter hash
-`sha256-v1:b5917969c3894517e146a5cf8ce1a7be4420ec9b87d2e7674df4e5f9e0bddcab`
+`sha256-v1:58425b60d8c9ecf36934f6f5fc79160de00e4132ce366f47f35a6fbc30d6ecff`
 and initial state hash
-`sha256-v1:be044245834fcc2c72d683d3e9f64fc73d271b93c51f260637c887aacabb1abf`
+`sha256-v1:5be837de2020c3da70b17add850750e8bc4cd6f432aeb84909a08b7f475d9dc6`
 in both Node and Chromium.
 
 ## Encounter world lifecycle
@@ -204,11 +229,12 @@ and only while `0 < x < 420`. A shop departs below x -100 and emits
 `shop-departed` whether it was used or passed.
 
 Battles move left by the full running speed. Crossing below x 420 changes the
-phase to `battle-handoff` and emits `battle-handoff`. Later steps freeze
-distance, day, score, the encounter counter, and the current battle position.
-They still advance active ticks and lifespan until pause, a tutorial, run death,
-or future Milestone 4 combat changes the state. No enemy, reward, auto-win, or
-battle resolution exists in this handoff.
+phase to `battle-handoff` and emits `battle-handoff`. The current battle keeps
+the selected enemy snapshot. Later steps freeze distance, day, score, the
+encounter counter, and the current battle position. They still advance active
+ticks and lifespan until pause, a tutorial, run death, or future Milestone 4
+combat changes the state. No reward, auto-win, or battle resolution exists in
+this handoff.
 
 Promotion emits `encounter-promoted` with the positioned current encounter.
 All three encounter events are semantic domain outcomes. Canvas redraws and

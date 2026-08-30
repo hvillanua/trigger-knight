@@ -46,6 +46,13 @@ const POLICY_SEEDS = [
   "m3-policy-15",
   "m3-policy-16",
 ] as const;
+const goblinEnemy = {
+  id: "goblin" as const,
+  maxHp: 660,
+  attack: 122,
+  gold: 82,
+  profileExp: 13,
+};
 
 function config(seed: string): RunConfig {
   return {
@@ -68,7 +75,7 @@ function runPolicy(seed: string): {
   const result = runner.run({
     config: config(seed),
     policy: purchasingPolicy,
-    maxSteps: 420,
+    maxSteps: 500,
   });
 
   if (trace === undefined) {
@@ -309,7 +316,16 @@ describe("Milestone 3 economy verification", () => {
       initial.lifespan,
       originalV13RuleSet.constants.encounters,
     );
-    expect(battleQueued.encounter).toEqual({ kind: "battle" });
+    expect(battleQueued.encounter).toMatchObject({
+      kind: "battle",
+      enemy: {
+        id: "goblin",
+        maxHp: 840,
+        attack: 242,
+        gold: 118,
+        profileExp: 22,
+      },
+    });
     expect(battleQueued.generation.seenSinceBattle).toEqual({
       bladesmith: false,
       armorsmith: false,
@@ -383,7 +399,7 @@ describe("Milestone 3 economy verification", () => {
       player: { ...initial.player, gold: 64 },
       encounters: {
         ...initial.encounters,
-        current: { kind: "battle", x: 421 },
+        current: { kind: "battle", enemy: goblinEnemy, x: 421 },
         distanceUntilNext: 500,
       },
       lifecycle: {
@@ -423,7 +439,7 @@ describe("Milestone 3 economy verification", () => {
       equal: true,
     });
     expect(headless.trace.traceHash).toBe(
-      "sha256-v1:65e6d65612a5a53a8665b44758606e75bee252fe0343c2f882c591096961272d",
+      "sha256-v1:53cdbdda8f54d22791e8432cb7ab238f876d2ab20f1e891e63792cbff11fc567",
     );
     expect(browser.readDiagnostics().traceHash).toBe(headless.trace.traceHash);
   });

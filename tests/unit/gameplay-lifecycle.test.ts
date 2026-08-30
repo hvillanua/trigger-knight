@@ -33,6 +33,12 @@ function stepMany(state: RunState, count: number): RunState {
   return current;
 }
 
+function publicUpcoming(state: RunState) {
+  return state.encounters.upcoming.map((encounter) =>
+    encounter.kind === "battle" ? { kind: "battle" as const } : encounter,
+  );
+}
+
 describe("original-v1.3 lifecycle", () => {
   it("gates every new run on tutorial page 0 regardless of preference", () => {
     const state = createRun({
@@ -79,7 +85,7 @@ describe("original-v1.3 lifecycle", () => {
       },
       encounters: {
         current: null,
-        upcoming: state.encounters.upcoming,
+        upcoming: publicUpcoming(state),
       },
       lifecycle: {
         phase: "running",

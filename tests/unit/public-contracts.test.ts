@@ -2,6 +2,7 @@ import { describe, expectTypeOf, it } from "vitest";
 
 import type {
   BattleEncounter,
+  EnemyStats,
   EncounterGenerationState,
   EncounterQueueState,
   GameCommand,
@@ -18,6 +19,7 @@ import type {
   PresentationFrame,
   PresentationPort,
   ProfileState,
+  PublicBattleEncounter,
   RandomState,
   RuleSetId,
   RunConfig,
@@ -159,7 +161,7 @@ describe("public application contracts", () => {
       readonly cachedPrice: number;
     }>();
     expectTypeOf<BattleEncounter>().toEqualTypeOf<
-      Readonly<{ kind: "battle" }>
+      Readonly<{ kind: "battle"; enemy: EnemyStats }>
     >();
     expectTypeOf<EncounterQueueState>().toMatchTypeOf<{
       readonly current:
@@ -170,7 +172,7 @@ describe("public application contracts", () => {
             x: number;
             used: boolean;
           }>
-        | Readonly<{ kind: "battle"; x: number }>
+        | Readonly<{ kind: "battle"; enemy: EnemyStats; x: number }>
         | null;
       readonly distanceUntilNext: number;
       readonly upcoming: readonly (ShopEncounter | BattleEncounter)[];
@@ -199,7 +201,7 @@ describe("public application contracts", () => {
       readonly initialProfile: ProfileState;
     }>();
     expectTypeOf<RunState>().toMatchTypeOf<{
-      readonly schemaVersion: 10;
+      readonly schemaVersion: 11;
       readonly ruleset: RuleSetId;
       readonly random: RandomState;
       readonly steps: number;
@@ -241,7 +243,7 @@ describe("public application contracts", () => {
               x: number;
               used: boolean;
             }>
-          | Readonly<{ kind: "battle"; x: number }>
+          | Readonly<{ kind: "battle"; enemy: EnemyStats; x: number }>
           | null;
         readonly distanceUntilNext: number;
         readonly upcoming: readonly (
@@ -256,7 +258,7 @@ describe("public application contracts", () => {
                 | "voucher-store";
               cachedPrice: number;
             }>
-          | Readonly<{ kind: "battle" }>
+          | Readonly<{ kind: "battle"; enemy: EnemyStats }>
         )[];
         readonly generation: {
           readonly shopsUntilBattle: number;
@@ -265,6 +267,7 @@ describe("public application contracts", () => {
             readonly armorsmith: boolean;
             readonly soulShrine: boolean;
           };
+          readonly dragonSpawned: boolean;
           readonly soulShrine: {
             readonly extensions: number;
             readonly emergencyThreshold: number;
@@ -320,9 +323,9 @@ describe("public application contracts", () => {
               x: number;
               used: boolean;
             }>
-          | Readonly<{ kind: "battle"; x: number }>
+          | Readonly<{ kind: "battle"; enemy: EnemyStats; x: number }>
           | null;
-        readonly upcoming: readonly (ShopEncounter | BattleEncounter)[];
+        readonly upcoming: readonly (ShopEncounter | PublicBattleEncounter)[];
       };
       readonly lifecycle: {
         readonly phase: "running" | "battle-handoff" | "ended";
@@ -350,7 +353,11 @@ describe("public application contracts", () => {
                 x: number;
                 used: boolean;
               }>
-            | Readonly<{ kind: "battle"; x: number }>;
+            | Readonly<{
+                kind: "battle";
+                enemy: EnemyStats;
+                x: number;
+              }>;
         }>
       | Readonly<{ type: "lifespan-death" }>
       | Readonly<{ type: "pause-toggled"; paused: boolean }>

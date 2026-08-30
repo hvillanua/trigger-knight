@@ -19,27 +19,29 @@ The terminal values are:
 | Elapsed steps   | 2,564      |
 | Active ticks    | 2,500      |
 | Terminal reason | `lifespan` |
-| Score           | 28,950     |
+| Score           | 31,350     |
 | Day             | 1          |
-| Distance        | 2,895      |
+| Distance        | 3,135      |
 | Gold            | 300        |
 
 The locked host-neutral gameplay trace hash is
-`sha256-v1:85d3d8eb822ee80a510ddce6cd7a20810fe9cef45a4f9e63950a1ed27282a012`.
+`sha256-v1:b918b1a921b7419f7c34216fa028ada9f204f2fe8e81f0f46a70cec6735449a1`.
 The terminal checkpoint hash is
-`sha256-v1:7dbb8f459165f30a229b7b79ea0d2804522c1d4deffbd1e9f4d2c8a2209039b8`.
+`sha256-v1:0a4476328ead74ccd4fa696e8470c3375e1400b7a45b8d23944029c629957599`.
 The simulation result trace hash, which also covers policy identity and the
 3,000-step budget, is
-`sha256-v1:979efa3772f62bc32e2cacd9b7f33ac5c8b98c613b64994870474074847e8c8a`.
+`sha256-v1:151ca5164cf6d7f595219bf3e91df9b73f9b3e13ebd7f478244f3484ebb5f6f2`.
 
 Issue #42 advances the version-7 encounter queue through world space. Issue #43
 adds the version-8 current-shop use state. Issue #44 adds the version-9
 equipment names used by upgrade transitions. Issue #45 adds the version-10
-hidden Soul Shrine state and its initial threshold draw. The scenario and
-command schedule are unchanged. It reaches its first battle at distance 2,895.
+hidden Soul Shrine state and its initial threshold draw. Issue #55 adds the
+version-11 queue-time enemy snapshots and Dragon generation state. The
+scenario and command schedule are unchanged. It reaches its first battle at
+distance 3,135.
 It then waits at the battle handoff while active-tick lifespan continues to
-death. The serializable state change updates the locked hashes above. Gameplay
-traces and run results remain at version 2.
+death. Queue-time enemy snapshots and their added generation draws update the
+locked hashes above. Gameplay traces and run results remain at version 2.
 
 The unit check compares every browser-session checkpoint with the headless
 trace. This includes commands, complete state, public observations, events,

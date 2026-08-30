@@ -28,7 +28,7 @@ that command without calculating affordability or effects.
 ## Fixed seed evidence
 
 The unit scenario runs the policy against this reviewed seed set. Each run uses
-the `original-v1.3` ruleset, the level-one starting profile, and a 420-step
+the `original-v1.3` ruleset, the level-one starting profile, and a 500-step
 budget. The budget is long enough to reach the explicit battle handoff. Since
 combat is not implemented, each result ends with `step-limit` after the handoff.
 
@@ -80,7 +80,7 @@ with the Node trace. Canvas size, device pixel ratio, redraw cadence, and
 interpolation therefore do not affect encounter or economy state.
 
 The locked `m3-parity-schedule` trace hash is
-`sha256-v1:65e6d65612a5a53a8665b44758606e75bee252fe0343c2f882c591096961272d`.
+`sha256-v1:53cdbdda8f54d22791e8432cb7ab238f876d2ab20f1e891e63792cbff11fc567`.
 
 ## Compatibility labels and boundary
 
@@ -93,10 +93,12 @@ the public contracts.
 
 The current battle transition emits `battle-handoff` when the battle reaches
 the confirmed world threshold and changes the run phase to `battle-handoff`.
-After that point, distance, day, score, encounter movement, and encounter
-generation stay fixed while lifespan can continue to drain. No enemy, combat
-outcome, reward, or post-battle purchase cycle is invented here. Those cases
-remain deferred to Milestone 4, as required by the ticket and the roadmap.
+Queued battles now carry their selected, day-scaled enemy snapshot, and the
+Dragon eligibility draw and hidden repeat-prevention flag are resolved during
+queue generation. After handoff, distance, day, score, encounter movement,
+and encounter generation stay fixed while lifespan can continue to drain.
+Combat outcome, reward application, and the post-battle purchase cycle remain
+Milestone 4 work.
 
 The research ledger's unresolved tier-10 GUI question remains unchanged. The
 clean-room decision continues to make max-tier equipment ineligible in public

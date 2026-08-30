@@ -75,6 +75,7 @@ function generationState(
       emergencyChanceGiven: false,
     },
     ...overrides,
+    dragonSpawned: overrides.dragonSpawned ?? false,
   };
 }
 
@@ -103,7 +104,16 @@ function stateGeneratingReplacement(
       distanceUntilNext: 0,
       upcoming: [
         { kind: "shop", shop: "pharmacy", cachedPrice: 150 },
-        { kind: "battle" },
+        {
+          kind: "battle",
+          enemy: {
+            id: "goblin",
+            maxHp: 660,
+            attack: 122,
+            gold: 82,
+            profileExp: 13,
+          },
+        },
         { kind: "shop", shop: "grims-shop", cachedPrice: 200 },
       ],
       generation: generationState({
@@ -337,7 +347,10 @@ describe("original-v1.3 Soul Shrine behavior", () => {
     );
 
     expect(forced.encounter).toMatchObject({ shop: "soul-shrine" });
-    expect(battle.encounter).toEqual({ kind: "battle" });
+    expect(battle.encounter).toMatchObject({
+      kind: "battle",
+      enemy: { id: "wolf" },
+    });
     expect(battle.generation.seenSinceBattle.soulShrine).toBe(false);
     expect(afterPassing.encounter).toMatchObject({ shop: "bladesmith" });
     expect(afterPassing.generation.soulShrine.emergencyChanceGiven).toBe(true);

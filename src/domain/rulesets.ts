@@ -1,5 +1,6 @@
 import type {
   ArmorName,
+  EnemyId,
   GameCommand,
   GameEvent,
   GameObservation,
@@ -14,6 +15,7 @@ import type {
 import {
   advanceEncounterLifecycle,
   initializeEncounterQueue,
+  type EnemyGenerationRules,
   type EncounterGenerationRules,
 } from "./encounters.js";
 import { advanceLifespan } from "./lifespan.js";
@@ -66,6 +68,7 @@ export interface RuleSetConstants {
     readonly initialInventoryItem: InventoryItemId;
   };
   readonly encounters: EncounterGenerationRules;
+  readonly enemies: EnemyGenerationRules;
   readonly lifespan: {
     readonly initialWhole: number;
     readonly initialFraction: number;
@@ -88,6 +91,8 @@ export interface RuleSetCompatibilityDecisions {
   readonly encounterInitializationDrawOrder: "queue-then-distance";
   readonly soulShrineInitializationDrawOrder: "after-queue-and-distance";
   readonly encounterPromotionDrawOrder: "replacement-then-distance";
+  readonly battleGenerationDrawOrder: "shop-count-then-dragon-or-ordinary";
+  readonly dragonFlagLifecycle: "queue-dragon-clear-on-ordinary-current";
 }
 
 export interface RuleSetStepResult {
@@ -138,6 +143,57 @@ const originalV13ArmorNames = Object.freeze([
   "Avalon",
   "Astral Armor",
 ] as const satisfies readonly ArmorName[]);
+
+const originalV13EnemyRules: EnemyGenerationRules = Object.freeze({
+  ordinarySelectionUpperBound: 3,
+  dragonChanceRollUpperBound: 100,
+  dragonChanceStartDay: 7,
+  dragonChancePerDay: 3,
+  stats: Object.freeze({
+    goblin: Object.freeze({
+      maxHpBase: 600,
+      maxHpPerDay: 60,
+      attackBase: 82,
+      attackPerDay: 40,
+      goldBase: 70,
+      goldPerDay: 12,
+      profileExpBase: 10,
+      profileExpPerDay: 3,
+    }),
+    golem: Object.freeze({
+      maxHpBase: 860,
+      maxHpPerDay: 120,
+      attackBase: 40,
+      attackPerDay: 28,
+      goldBase: 78,
+      goldPerDay: 14,
+      profileExpBase: 9,
+      profileExpPerDay: 4,
+    }),
+    wolf: Object.freeze({
+      maxHpBase: 450,
+      maxHpPerDay: 44,
+      attackBase: 94,
+      attackPerDay: 56,
+      goldBase: 78,
+      goldPerDay: 14,
+      profileExpBase: 8,
+      profileExpPerDay: 5,
+    }),
+    dragon: Object.freeze({
+      maxHpBase: 2_400,
+      maxHpPerDay: 300,
+      attackBase: 160,
+      attackPerDay: 80,
+      goldBase: 350,
+      goldPerDay: 60,
+      profileExpBase: 40,
+      profileExpPerDay: 25,
+    }),
+  } satisfies Readonly<
+    Record<EnemyId, EnemyGenerationRules["stats"][EnemyId]>
+  >),
+});
 
 const originalV13Constants: RuleSetConstants = Object.freeze({
   logicalTicksPerSecond: 30,
@@ -197,6 +253,7 @@ const originalV13Constants: RuleSetConstants = Object.freeze({
       pharmacy: 11,
       grimsShop: 6,
     }),
+    enemies: originalV13EnemyRules,
     prices: Object.freeze({
       bladesmithBase: 200,
       bladesmithPerCurrentTier: 36,
@@ -209,6 +266,7 @@ const originalV13Constants: RuleSetConstants = Object.freeze({
       voucherStore: 500,
     }),
   }),
+  enemies: originalV13EnemyRules,
   lifespan: Object.freeze({
     initialWhole: 99,
     initialFraction: 99,
@@ -237,6 +295,8 @@ const originalV13CompatibilityDecisions: RuleSetCompatibilityDecisions =
     encounterInitializationDrawOrder: "queue-then-distance",
     soulShrineInitializationDrawOrder: "after-queue-and-distance",
     encounterPromotionDrawOrder: "replacement-then-distance",
+    battleGenerationDrawOrder: "shop-count-then-dragon-or-ordinary",
+    dragonFlagLifecycle: "queue-dragon-clear-on-ordinary-current",
   });
 
 const originalV13RunningProgressionRules = Object.freeze({
@@ -402,10 +462,17 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
         current:
           currentEncounter === null
             ? null
-            : Object.freeze({ ...currentEncounter }),
+            : currentEncounter.kind === "battle"
+              ? Object.freeze({
+                  ...currentEncounter,
+                  enemy: Object.freeze({ ...currentEncounter.enemy }),
+                })
+              : Object.freeze({ ...currentEncounter }),
         upcoming: Object.freeze(
           state.encounters.upcoming.map((encounter) =>
-            Object.freeze({ ...encounter }),
+            encounter.kind === "battle"
+              ? Object.freeze({ kind: "battle" as const })
+              : Object.freeze({ ...encounter }),
           ),
         ),
       }),

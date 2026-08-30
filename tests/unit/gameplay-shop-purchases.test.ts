@@ -12,6 +12,13 @@ const gameplayEngine = createTestGameplayEngine();
 const purchaseCommand = Object.freeze({
   type: "purchase-current-encounter" as const,
 });
+const goblinEnemy = {
+  id: "goblin" as const,
+  maxHp: 660,
+  attack: 122,
+  gold: 82,
+  profileExp: 13,
+};
 
 function activeRun(): RunState {
   const state = gameplayEngine.createRun({
@@ -211,7 +218,7 @@ describe("original-v1.3 semantic shop purchases", () => {
           ...state,
           encounters: {
             ...state.encounters,
-            current: { kind: "battle" as const, x: 500 },
+            current: { kind: "battle" as const, enemy: goblinEnemy, x: 500 },
           },
         };
       },
