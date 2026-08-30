@@ -44,20 +44,25 @@ jobs:
             changed_files="$(git diff --name-only "$BEFORE_SHA" "$HEAD_SHA")"
           fi
 
-          code_pattern='^((src|tests|build)/|\.github/workflows/|\.node-version$|\.npmrc$|\.prettierignore$|\.prettierrc(\.[^.]+)?$|package(-lock)?\.json$|tsconfig(\.[^.]+)?\.json$)|.*\.(js|mjs|cjs|ts|mts|cts|json|jsonc|yml|yaml|css|scss|html|py|sh)$'
           code=false
 
           while IFS= read -r file; do
             case "$file" in
-              *.md | *.mdx | *.txt | *.rst)
+              *.md | *.mdx | *.rst)
                 continue
                 ;;
+              src/*.txt | tests/*.txt | build/*.txt)
+                code=true
+                break
+                ;;
+              *.txt)
+                continue
+                ;;
+              *)
+                code=true
+                break
+                ;;
             esac
-
-            if [[ "$file" =~ $code_pattern ]]; then
-              code=true
-              break
-            fi
           done <<< "$changed_files"
 
           echo "code=$code" >> "$GITHUB_OUTPUT"
