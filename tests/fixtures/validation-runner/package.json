@@ -1,0 +1,13 @@
+{
+  "name": "validation-runner-fixture",
+  "private": true,
+  "scripts": {
+    "build": "node gate.mjs build",
+    "check:architecture": "node gate.mjs check:architecture",
+    "format:check": "node gate.mjs format:check",
+    "lint": "node gate.mjs lint",
+    "test:browser": "node gate.mjs test:browser",
+    "test:unit": "node gate.mjs test:unit",
+    "typecheck": "node gate.mjs typecheck"
+  }
+}
