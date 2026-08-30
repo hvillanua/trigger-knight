@@ -164,9 +164,10 @@ threshold from 40 through 49, and whether the current restoration cycle already
 received its emergency chance. A shop is forced to Shrine when whole lifespan
 is strictly below the threshold, no chance has been given, and the current
 battle cycle has no Shrine. The force bypasses the ordinary shop roll, rerolls
-the threshold with one `random(10)` draw, marks the Shrine duplicate flag, and
-records that the chance was given. A battle clears the duplicate flag but not
-the chance flag. Only a successful Shrine purchase clears the chance flag.
+the threshold with one `random(10)` draw, and records that the chance was given.
+It does not set the normal Shrine duplicate flag, so one later normal Shrine can
+still occur in that battle cycle. A battle clears the duplicate flag but not the
+chance flag. Only a successful Shrine purchase clears the chance flag.
 
 The queue, duplicate flags, counters, positions, and complete post-generation
 random state are authoritative, serializable, and deeply frozen. Ordinary

@@ -248,11 +248,40 @@ describe("original-v1.3 Soul Shrine behavior", () => {
       cachedPrice: 50,
     });
     expect(result.state.encounters.generation.seenSinceBattle.soulShrine).toBe(
-      true,
+      false,
     );
     expect(shrine.emergencyThreshold).toBeGreaterThanOrEqual(40);
     expect(shrine.emergencyThreshold).toBeLessThanOrEqual(49);
     expect(shrine.emergencyChanceGiven).toBe(true);
+  });
+
+  it("allows one normal Shrine after a forced Shrine in the same battle cycle", () => {
+    const lifespan = Object.freeze({ whole: 20, fraction: 99 });
+    const forced = generateEncounter(
+      randomAt(91),
+      generationState({ shopsUntilBattle: 2 }),
+      4,
+      activeRun().player,
+      lifespan,
+      originalV13RuleSet.constants.encounters,
+    );
+    const normal = generateEncounter(
+      randomAt(0),
+      forced.generation,
+      4,
+      activeRun().player,
+      lifespan,
+      originalV13RuleSet.constants.encounters,
+    );
+
+    expect(forced.encounter).toMatchObject({ shop: "soul-shrine" });
+    expect(forced.generation.seenSinceBattle.soulShrine).toBe(false);
+    expect(normal.encounter).toEqual({
+      kind: "shop",
+      shop: "soul-shrine",
+      cachedPrice: 50,
+    });
+    expect(normal.generation.seenSinceBattle.soulShrine).toBe(true);
   });
 
   it.each([

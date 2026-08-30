@@ -290,7 +290,7 @@ export function generateEncounter(
       encounter: createShopEncounter(shop, player, generation, rules),
       generation: createGenerationState({
         shopsUntilBattle: generation.shopsUntilBattle - 1,
-        seenSinceBattle: markShopSeen(shop, generation.seenSinceBattle),
+        seenSinceBattle: generation.seenSinceBattle,
         soulShrine: {
           ...generation.soulShrine,
           emergencyThreshold: rules.emergencyThresholdBase + threshold.value,
