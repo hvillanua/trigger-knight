@@ -78,6 +78,7 @@ body:
       value: |
         - [ ] Follow red-green-refactor for every behavior change.
         - [ ] Record the failing test or check used to establish the change, when applicable.
-        - [ ] Run every repository validation command available at this stage and record the results in the pull request.
+        - [ ] Run only the smallest focused local checks needed for red-green evidence and record the results in the pull request.
+        - [ ] Record the complete GitHub Actions validation result for code-affecting changes when it is available.
     validations:
       required: true
