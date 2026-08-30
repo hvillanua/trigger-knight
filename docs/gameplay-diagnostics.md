@@ -55,6 +55,11 @@ The browser session and simulation runner both step through the same
 application execution owner. Presentation remains optional. Replacing or
 disabling it does not change checkpoint values or hashes.
 
+The Milestone 3 economy scenario applies this comparison to a versioned
+purchasing policy, including shop purchases and the explicit battle handoff.
+Its fixed seeds and presentation-invariance checks are recorded in
+[`milestone-3-economy-verification.md`](milestone-3-economy-verification.md).
+
 Lifespan death adds one terminal checkpoint containing `lifespan-death` and
 `run-ended` events. The simulation runner stops on that checkpoint. Browser
 presentation can redraw or interpolate it any number of times without stepping

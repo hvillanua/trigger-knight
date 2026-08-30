@@ -4,6 +4,7 @@ import {
   commandsForAdvanceActivation,
   commandsForPurchaseActivation,
 } from "../../src/browser/input.js";
+import { PURCHASE_CURRENT_ENCOUNTER_COMMAND } from "../../src/application/commands.js";
 
 it("does not represent a manual engine step as gameplay intent", () => {
   const commands = commandsForAdvanceActivation();
@@ -16,6 +17,7 @@ it("maps browser purchase activation to device-independent gameplay intent", () 
   const commands = commandsForPurchaseActivation();
 
   expect(commands).toEqual([{ type: "purchase-current-encounter" }]);
+  expect(commands[0]).toBe(PURCHASE_CURRENT_ENCOUNTER_COMMAND);
   expect(Object.isFrozen(commands)).toBe(true);
   expect(Object.isFrozen(commands[0])).toBe(true);
   expect(commands[0]).not.toHaveProperty("price");
