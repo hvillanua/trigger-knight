@@ -11,6 +11,14 @@ command as browser input, including equipment upgrades and Soul Shrine
 restoration. Worker concurrency, reporting, Monte Carlo tooling, combat death,
 and rewards remain outside this slice.
 
+The `purchasingPolicy` is the versioned `purchase-reachable-shops` policy. It
+dismisses the public tutorial gate and buys a current shop only when public
+action eligibility is true. It receives preceding public events but never
+reads hidden run state or calculates prices, affordability, ranges, or effects.
+The browser purchase activation uses the same semantic command. Its fixed-seed
+coverage and host-parity evidence are recorded in
+[`milestone-3-economy-verification.md`](milestone-3-economy-verification.md).
+
 ## Run sequence
 
 Create a runner with `createSimulationRunner(gameplayEngine)` and supply a

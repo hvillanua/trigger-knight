@@ -30,6 +30,9 @@ browser and automated players receive the same public gameplay information.
 `src/application/gameplay-engine.ts` exports the engine contract and a factory
 that accepts a ruleset registry. It does not select the production registry.
 `src/main.ts` supplies the concrete registry when it composes the browser host.
+`src/application/commands.ts` provides shared device-independent command values;
+it contains no purchase rules and is used by both browser input and simulation
+policies.
 
 ## Authoritative domain restrictions
 

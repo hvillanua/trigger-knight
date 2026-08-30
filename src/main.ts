@@ -1,9 +1,13 @@
 import { createGameplayEngine } from "./application/gameplay-engine.js";
 import { CanvasPresentation } from "./browser/canvas-presentation.js";
 import { observeDevicePixelRatioChanges } from "./browser/device-pixel-ratio.js";
+import type { GameCommand } from "./application/contracts.js";
 import type { CssDimensions } from "./browser/foundation.js";
 import { createBrowserGameplaySession } from "./browser/gameplay-session.js";
-import { commandsForAdvanceActivation } from "./browser/input.js";
+import {
+  commandsForAdvanceActivation,
+  commandsForPurchaseActivation,
+} from "./browser/input.js";
 import { ORIGINAL_V13_RULESET_ID, ruleSetRegistry } from "./domain/rulesets.js";
 import "./browser/style.css";
 
@@ -11,13 +15,16 @@ const gameplayEngine = createGameplayEngine(ruleSetRegistry);
 
 const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
 const advanceButton = document.querySelector<HTMLButtonElement>("#advance-run");
+const purchaseButton = document.querySelector<HTMLButtonElement>(
+  "#purchase-current-encounter",
+);
 const gameStatus = document.querySelector<HTMLElement>("#game-status");
 
 if (canvas === null) {
   throw new Error("Missing #game-canvas");
 }
 
-if (advanceButton === null || gameStatus === null) {
+if (advanceButton === null || purchaseButton === null || gameStatus === null) {
   throw new Error("Missing browser gameplay controls");
 }
 
@@ -49,10 +56,20 @@ const render = (): void => {
   presentation.resize(contentBox, window.devicePixelRatio);
 };
 
-advanceButton.addEventListener("click", () => {
-  const result = session.dispatch(commandsForAdvanceActivation());
+const dispatch = (commands: readonly GameCommand[]): void => {
+  const result = session.dispatch(commands);
   session.render(1);
   gameStatus.textContent = `Step ${result.observation.steps}`;
+  purchaseButton.disabled =
+    !result.observation.actions.canPurchaseCurrentEncounter;
+};
+
+advanceButton.addEventListener("click", () => {
+  dispatch(commandsForAdvanceActivation());
+});
+
+purchaseButton.addEventListener("click", () => {
+  dispatch(commandsForPurchaseActivation());
 });
 
 observeDevicePixelRatioChanges(window, render);
