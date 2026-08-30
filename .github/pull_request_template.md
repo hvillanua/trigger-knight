@@ -30,10 +30,10 @@ Closes #<!-- ticket number -->
 
 ## Validation
 
-<!-- Record the result for every available repository gate. Do not leave a command checked if it was not run. -->
+<!-- Record focused local checks. GitHub Actions is the sole complete gate. -->
 
-- [ ] `npm run validate:fast`
-- [ ] `npm run validate`
+- [ ] Focused red and green checks are recorded below.
+- [ ] GitHub Actions `Validate` passes, or its current status is noted below.
 
 Additional focused checks and results:
 

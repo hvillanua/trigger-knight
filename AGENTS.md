@@ -69,18 +69,26 @@ On a fresh Linux or CI host that also needs Chromium system dependencies, use
 
 | Purpose                                   | Command                      |
 | ----------------------------------------- | ---------------------------- |
-| Apply formatting                          | `npm run format`             |
-| Check formatting                          | `npm run format:check`       |
+| Apply repository formatting               | `npm run format`             |
+| Check repository formatting               | `npm run format:check`       |
 | Lint                                      | `npm run lint`               |
 | Check architecture and clean-room imports | `npm run check:architecture` |
 | Type-check                                | `npm run typecheck`          |
 | Run unit tests                            | `npm run test:unit`          |
 | Run browser tests                         | `npm run test:browser`       |
 | Build production output                   | `npm run build`              |
-| Pre-commit gate                           | `npm run validate:fast`      |
-| Complete pre-push and CI gate             | `npm run validate`           |
+| Concise fast CI gate                      | `npm run validate:fast`      |
+| Concise complete CI gate                  | `npm run validate`           |
 
-Run the focused red/green check during implementation, then
-`npm run validate:fast` before committing and `npm run validate` before pushing.
-Pull requests must identify the ticket, describe the observed red failure and
-green result, account for refactoring, and record complete validation results.
+For code changes, run only the smallest focused checks needed for the red and
+green evidence during local implementation. Do not run aggregate validation
+locally unless the user requests it or a CI failure needs reproduction. Markdown
+and plain-text-only changes require no code validation. The formatting commands
+still cover the whole repository when invoked.
+
+GitHub Actions is the sole complete validation gate and runs it only when code,
+tests, runtime assets, build scripts, or configuration change. Do not install or
+invoke repository-owned pre-commit or pre-push hooks, and do not poll a
+successful CI run. Pull requests must identify the ticket, describe the observed
+red failure and green result, account for refactoring, list focused local checks,
+and record the CI result when it is available.

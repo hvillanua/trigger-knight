@@ -29,7 +29,7 @@ This milestone establishes:
 - the latest stable, mutually compatible dependency versions available when installation begins, followed by pinned runtime/tool versions and a committed lockfile;
 - stable install, development, formatting, linting, type-checking, unit-test, browser-test, build, and aggregate validation commands;
 - mandatory red-green-refactor expectations and pull-request evidence for test-driven work;
-- fast pre-commit validation and a complete pre-push validation gate;
+- focused local validation and a complete CI validation gate;
 - CI that performs a clean install and invokes the same repository validation commands used locally;
 - mechanically enforced clean-room, dependency-direction, deterministic-randomness, and generated-file boundaries;
 - milestone, issue, and pull-request templates suitable for the later ticket workflow.
@@ -37,8 +37,8 @@ This milestone establishes:
 ### Complete when
 
 - a fresh checkout can be installed and fully validated using only documented commands;
-- local hooks reject representative formatting, type, test, and architectural failures before they reach CI;
-- CI passes from the committed lockfile and rejects the same representative failures;
+- focused local checks provide red-green evidence without repeating the complete gate;
+- CI passes from the committed lockfile and rejects representative formatting, type, test, and architectural failures;
 - dependency and runtime versions used by the scaffold are recorded and reproducible;
 - the repository contains a minimal passing test and production build without claiming that gameplay has been implemented.
 

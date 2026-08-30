@@ -37,9 +37,22 @@ describe("continuous integration", () => {
     );
     expect(workflow).toContain("node-version-file: .node-version");
     expect(workflow).toContain("cache-dependency-path: package-lock.json");
+    expect(workflow).toContain("fetch-depth: 0");
     expect(workflow).toContain("run: corepack enable npm");
     expect(workflow).toContain("run: npm ci");
     expect(workflow).not.toMatch(/run: npm install\s*$/mu);
+  });
+
+  it("skips toolchain setup and validation when only documentation changed", () => {
+    const workflow = readWorkflow();
+    const codeChangeCondition = "if: steps.code_changes.outputs.code == 'true'";
+
+    expect(workflow).toContain("id: code_changes");
+    expect(workflow).toContain("git diff --name-only");
+    expect(workflow).toContain("git ls-tree -r --name-only");
+    expect(workflow).toContain("code=true");
+    expect(workflow).toContain("code=false");
+    expect(workflow.split(codeChangeCondition)).toHaveLength(6);
   });
 
   it("prepares Chromium before invoking the repository validation gate", () => {
@@ -55,18 +68,13 @@ describe("continuous integration", () => {
     expect(validation).toBeGreaterThan(browserSetup);
   });
 
-  it("delegates all checks to the same complete gate used by pre-push", () => {
+  it("delegates all checks to the repository's sole complete gate", () => {
     const workflow = readWorkflow();
-    const prePushHook = readFileSync(
-      path.join(repositoryRoot, ".githooks/pre-push"),
-      "utf8",
-    );
     const workflowValidationCommands = workflow.match(
       /^\s*run: npm run validate\s*$/gmu,
     );
 
     expect(workflowValidationCommands).toHaveLength(1);
-    expect(prePushHook).toContain("npm run validate");
     expect(workflow).not.toMatch(
       /run: npm run (?:format:check|lint|check:architecture|typecheck|test|test:unit|test:browser|build)\s*$/mu,
     );
