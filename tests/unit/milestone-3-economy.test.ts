@@ -309,7 +309,10 @@ describe("Milestone 3 economy verification", () => {
       initial.lifespan,
       originalV13RuleSet.constants.encounters,
     );
-    expect(battleQueued.encounter).toEqual({ kind: "battle" });
+    expect(battleQueued.encounter).toMatchObject({
+      kind: "battle",
+      enemy: { id: "goblin" },
+    });
     expect(battleQueued.generation.seenSinceBattle).toEqual({
       bladesmith: false,
       armorsmith: false,
@@ -377,13 +380,19 @@ describe("Milestone 3 economy verification", () => {
 
   it("keeps the unresolved battle handoff explicit and reward-free", () => {
     const initial = gameplayEngine.createRun(config("m3-battle-handoff"));
+    const queuedBattle = initial.encounters.upcoming.find(
+      (encounter) => encounter.kind === "battle",
+    );
+    if (queuedBattle === undefined) {
+      throw new Error("Expected a queued battle fixture");
+    }
     const state: RunState = {
       ...initial,
       movementSpeed: 15,
       player: { ...initial.player, gold: 64 },
       encounters: {
         ...initial.encounters,
-        current: { kind: "battle", x: 421 },
+        current: { ...queuedBattle, x: 421 },
         distanceUntilNext: 500,
       },
       lifecycle: {
@@ -423,7 +432,7 @@ describe("Milestone 3 economy verification", () => {
       equal: true,
     });
     expect(headless.trace.traceHash).toBe(
-      "sha256-v1:65e6d65612a5a53a8665b44758606e75bee252fe0343c2f882c591096961272d",
+      "sha256-v1:a38512975da6edd259dc04f795a75c45ec203e5d2daa6fd32adb0676ef2a4154",
     );
     expect(browser.readDiagnostics().traceHash).toBe(headless.trace.traceHash);
   });

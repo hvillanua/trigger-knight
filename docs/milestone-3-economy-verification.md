@@ -72,15 +72,19 @@ The browser and headless tests run the same command schedule for equal run
 configuration and compare every checkpoint observation, event list,
 authoritative state, checkpoint hash, and trace hash. The browser scenario
 re-renders the final transition at several interpolation values without
-stepping the engine.
+stepping the engine. Issue #55 moved the `m3-parity-schedule` battle beyond its
+old 420-step browser budget by adding battle-generation draws, so the browser
+parity schedule now uses 600 steps. The reviewed unit seed set keeps its
+420-step budget.
 
 A second Chromium scenario uses 480x640 output at DPR 1 and 1280x720 output at
 DPR 2. It uses different redraw counts and still compares both browser traces
 with the Node trace. Canvas size, device pixel ratio, redraw cadence, and
 interpolation therefore do not affect encounter or economy state.
 
-The locked `m3-parity-schedule` trace hash is
-`sha256-v1:65e6d65612a5a53a8665b44758606e75bee252fe0343c2f882c591096961272d`.
+The locked `m3-parity-schedule` trace hash, updated when issue #55 added enemy
+snapshots to battle entries, is
+`sha256-v1:a38512975da6edd259dc04f795a75c45ec203e5d2daa6fd32adb0676ef2a4154`.
 
 ## Compatibility labels and boundary
 
@@ -91,12 +95,13 @@ clean-room implementation and selected deterministic inputs. The policy
 descriptor and command sharing are clean-room implementation decisions built on
 the public contracts.
 
-The current battle transition emits `battle-handoff` when the battle reaches
+The Milestone 3 battle transition emits `battle-handoff` when the battle reaches
 the confirmed world threshold and changes the run phase to `battle-handoff`.
 After that point, distance, day, score, encounter movement, and encounter
-generation stay fixed while lifespan can continue to drain. No enemy, combat
-outcome, reward, or post-battle purchase cycle is invented here. Those cases
-remain deferred to Milestone 4, as required by the ticket and the roadmap.
+generation stay fixed while lifespan can continue to drain. Its original
+verification did not select an enemy or invent a combat outcome, reward, or
+post-battle purchase cycle. Issue #55 later added generation-time enemy
+selection; combat resolution remains Milestone 4 work.
 
 The research ledger's unresolved tier-10 GUI question remains unchanged. The
 clean-room decision continues to make max-tier equipment ineligible in public

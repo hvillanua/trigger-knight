@@ -88,6 +88,8 @@ export interface RuleSetCompatibilityDecisions {
   readonly encounterInitializationDrawOrder: "queue-then-distance";
   readonly soulShrineInitializationDrawOrder: "after-queue-and-distance";
   readonly encounterPromotionDrawOrder: "replacement-then-distance";
+  readonly battleGenerationDrawOrder: "shop-count-then-dragon-check-then-ordinary-enemy";
+  readonly dragonResetPoint: "ordinary-battle-promotion-before-replacement";
 }
 
 export interface RuleSetStepResult {
@@ -190,6 +192,56 @@ const originalV13Constants: RuleSetConstants = Object.freeze({
     battleHandoffX: 420,
     emergencyThresholdBase: 40,
     emergencyThresholdUpperBound: 10,
+    enemySelection: Object.freeze({
+      ordinaryIds: Object.freeze(["goblin", "golem", "wolf"] as const),
+      ordinaryRollUpperBound: 3,
+      dragonRollFirstDay: 7,
+      dragonChanceDayOffset: 7,
+      dragonChancePerDay: 3,
+      dragonRollUpperBound: 100,
+      scaling: Object.freeze({
+        goblin: Object.freeze({
+          maximumHpBase: 600,
+          maximumHpPerDay: 60,
+          attackBase: 82,
+          attackPerDay: 40,
+          goldRewardBase: 70,
+          goldRewardPerDay: 12,
+          profileExpBase: 10,
+          profileExpPerDay: 3,
+        }),
+        golem: Object.freeze({
+          maximumHpBase: 860,
+          maximumHpPerDay: 120,
+          attackBase: 40,
+          attackPerDay: 28,
+          goldRewardBase: 78,
+          goldRewardPerDay: 14,
+          profileExpBase: 9,
+          profileExpPerDay: 4,
+        }),
+        wolf: Object.freeze({
+          maximumHpBase: 450,
+          maximumHpPerDay: 44,
+          attackBase: 94,
+          attackPerDay: 56,
+          goldRewardBase: 78,
+          goldRewardPerDay: 14,
+          profileExpBase: 8,
+          profileExpPerDay: 5,
+        }),
+        dragon: Object.freeze({
+          maximumHpBase: 2_400,
+          maximumHpPerDay: 300,
+          attackBase: 160,
+          attackPerDay: 80,
+          goldRewardBase: 350,
+          goldRewardPerDay: 60,
+          profileExpBase: 40,
+          profileExpPerDay: 25,
+        }),
+      }),
+    }),
     rollMinimums: Object.freeze({
       bladesmith: 66,
       armorsmith: 31,
@@ -237,6 +289,9 @@ const originalV13CompatibilityDecisions: RuleSetCompatibilityDecisions =
     encounterInitializationDrawOrder: "queue-then-distance",
     soulShrineInitializationDrawOrder: "after-queue-and-distance",
     encounterPromotionDrawOrder: "replacement-then-distance",
+    battleGenerationDrawOrder:
+      "shop-count-then-dragon-check-then-ordinary-enemy",
+    dragonResetPoint: "ordinary-battle-promotion-before-replacement",
   });
 
 const originalV13RunningProgressionRules = Object.freeze({
@@ -402,10 +457,17 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
         current:
           currentEncounter === null
             ? null
-            : Object.freeze({ ...currentEncounter }),
+            : currentEncounter.kind === "battle"
+              ? Object.freeze({
+                  ...currentEncounter,
+                  enemy: Object.freeze({ ...currentEncounter.enemy }),
+                })
+              : Object.freeze({ ...currentEncounter }),
         upcoming: Object.freeze(
           state.encounters.upcoming.map((encounter) =>
-            Object.freeze({ ...encounter }),
+            encounter.kind === "battle"
+              ? Object.freeze({ kind: "battle" as const })
+              : Object.freeze({ ...encounter }),
           ),
         ),
       }),

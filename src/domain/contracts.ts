@@ -92,18 +92,35 @@ export interface ShopEncounter {
   readonly cachedPrice: number;
 }
 
+export type EnemyId = "goblin" | "golem" | "wolf" | "dragon";
+
+export interface EnemySnapshot {
+  readonly id: EnemyId;
+  readonly maximumHp: number;
+  readonly attack: number;
+  readonly goldReward: number;
+  readonly profileExp: number;
+}
+
+/** Public marker for a queued battle whose enemy is not yet visible. */
 export interface BattleEncounter {
   readonly kind: "battle";
 }
 
-export type QueuedEncounter = ShopEncounter | BattleEncounter;
+/** Authoritative queued battle with its generation-time enemy values. */
+export interface QueuedBattleEncounter extends BattleEncounter {
+  readonly enemy: EnemySnapshot;
+}
+
+export type QueuedEncounter = ShopEncounter | QueuedBattleEncounter;
+export type ObservedQueuedEncounter = ShopEncounter | BattleEncounter;
 
 export interface PositionedShopEncounter extends ShopEncounter {
   readonly x: number;
   readonly used: boolean;
 }
 
-export interface PositionedBattleEncounter extends BattleEncounter {
+export interface PositionedBattleEncounter extends QueuedBattleEncounter {
   readonly x: number;
 }
 
@@ -112,6 +129,7 @@ export type CurrentEncounter =
 
 export interface EncounterGenerationState {
   readonly shopsUntilBattle: number;
+  readonly dragonSpawned: boolean;
   readonly seenSinceBattle: {
     readonly bladesmith: boolean;
     readonly armorsmith: boolean;
@@ -133,12 +151,12 @@ export interface EncounterQueueState {
 
 export interface EncounterObservation {
   readonly current: CurrentEncounter | null;
-  readonly upcoming: readonly QueuedEncounter[];
+  readonly upcoming: readonly ObservedQueuedEncounter[];
 }
 
 /** Authoritative state owned by the gameplay domain. */
 export interface RunState {
-  readonly schemaVersion: 10;
+  readonly schemaVersion: 11;
   readonly ruleset: RuleSetId;
   readonly random: RandomState;
   readonly steps: number;

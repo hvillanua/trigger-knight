@@ -26,6 +26,8 @@ The ruleset owns the confirmed compatibility values implemented so far:
 | Armor and HP     | Named tiers 1 through 10; maximum HP is `1009 + 899 * tier`, from Clothing at 1,908 through Astral Armor at 9,999          | Confirmed original behavior                                                    |
 | Inventory        | One slot; item-shop purchases replace it with Elixir, Divine Edge, or Gold Voucher                                         | Confirmed original behavior                                                    |
 | Encounter queue  | Three entries; zero to two initial shops before battle, then one to three; confirmed shop roll ranges and duplicate rules  | Confirmed original behavior                                                    |
+| Enemies          | Uniform Goblin, Golem, and Wolf selection; day-scaled HP, attack, gold, and profile EXP                                    | Confirmed original behavior                                                    |
+| Dragon           | Day-based chance from day 8, guaranteed from day 41, with no consecutive queued Dragons                                    | Confirmed and derived original behavior                                        |
 | Encounter world  | Initial spacing 1,000-1,999; later spacing 1,500-1,799; entry x 600; shop and battle speeds and strict thresholds          | Confirmed original behavior                                                    |
 | Shop prices      | Generation-time equipment formulas; Shrine starts at 50 and gains 70 per purchase; item shops cost 150, 200, and 500       | Confirmed original behavior                                                    |
 | Emergency Shrine | Threshold 40-49; one forced chance below it per restoration cycle when the battle cycle has no Shrine                      | Confirmed original behavior                                                    |
@@ -140,12 +142,32 @@ state.
 A fresh run first draws `random(3)` for the initial number of shops before a
 battle. It then calls the encounter generator three times to fill the upcoming
 queue and draws `random(1000)` for the initial world-space counter. A count at
-or below zero consumes `random(3)`, queues a battle, resets
-the next count to one through three, and clears the Bladesmith, Armorsmith, and
-Soul Shrine duplicate flags. This battle entry is only `{ kind: "battle" }`.
-Enemy identity and Dragon eligibility consume no draws yet. Milestone 4 will
-add those draws when it implements enemy selection. The current sequence is
-therefore not the final original battle draw order.
+or below zero consumes `random(3)`, resets the next count to one through three,
+and clears the Bladesmith, Armorsmith, and Soul Shrine duplicate flags. The same
+generation call then selects and scales the battle enemy.
+
+Ordinary battles consume `random(3)` for Goblin, Golem, or Wolf. From day 7
+onward, when no Dragon is already queued, generation first consumes
+`random(100)` and selects Dragon when the result is less than `3 * (day - 7)`.
+Day 7 consumes the check with a zero-percent threshold, day 8 has a 3 percent
+chance, day 40 has a 99 percent chance, and day 41 onward is guaranteed. A
+successful Dragon check skips the ordinary-enemy draw. Days 1 through 6 and a
+set Dragon flag skip the Dragon check and draw the ordinary enemy directly.
+
+All enemy values are fixed when the battle enters the queue. Goblin uses HP
+`600 + 60 * day`, attack `82 + 40 * day`, gold `70 + 12 * day`, and profile EXP
+`10 + 3 * day`. Golem uses `860 + 120 * day`, `40 + 28 * day`,
+`78 + 14 * day`, and `9 + 4 * day`. Wolf uses `450 + 44 * day`,
+`94 + 56 * day`, `78 + 14 * day`, and `8 + 5 * day`. Dragon uses
+`2400 + 300 * day`, `160 + 80 * day`, `350 + 60 * day`, and
+`40 + 25 * day`.
+
+Queueing a Dragon sets hidden generation state that blocks another Dragon. The
+flag remains set while later ordinary battles wait in the queue. It clears when
+an ordinary battle becomes current, before that promotion generates its
+replacement. Authoritative state stores each queued enemy snapshot. Public
+observation hides enemy identity on future battles and reveals it only on the
+current positioned battle.
 
 A shop generation call consumes `random(100)`. The exact accepted ranges are
 66 through 99 for Bladesmith, 31 through 65 for Armorsmith, 26 through 30 for
@@ -169,26 +191,29 @@ It does not set the normal Shrine duplicate flag, so one later normal Shrine can
 still occur in that battle cycle. A battle clears the duplicate flag but not the
 chance flag. Only a successful Shrine purchase clears the chance flag.
 
-The queue, duplicate flags, counters, positions, and complete post-generation
-random state are authoritative, serializable, and deeply frozen. Ordinary
-`GameObservation` publishes the current encounter and three upcoming entries,
-but not the distance counter, duplicate flags, or random state.
+The queue, enemy snapshots, duplicate flags, Dragon flag, counters, positions,
+and complete post-generation random state are authoritative, serializable, and
+deeply frozen. Ordinary `GameObservation` publishes the current encounter and
+three upcoming entry kinds, but not future enemy identity, the distance counter,
+generation flags, or random state.
 
 The research confirms the queue, distance, and emergency-threshold draws but
 does not establish their relative order during initialization or refill. The
 clean-room order fills the initial queue, draws its distance, and then draws the
-initial emergency threshold. A promotion generates the replacement entry before
-drawing the later distance. This keeps the choice visible without claiming that
-the original Flash runtime used the same order.
+initial emergency threshold. A promotion updates Dragon state for the promoted
+battle, generates the replacement entry, and then draws the later distance.
+This keeps the choice visible without claiming that the original Flash runtime
+used the same initialization or refill order.
 
-Run-state schema version 10 adds hidden Shrine extension and emergency state.
-Version 9 added equipment names to the authoritative player state. Version 8
-added the current shop's one-use purchase state.
+Run-state schema version 11 adds enemy snapshots and hidden Dragon state.
+Version 10 added hidden Shrine extension and emergency state. Version 9 added
+equipment names to the authoritative player state. Version 8 added the current
+shop's one-use purchase state.
 Gameplay traces and run results remain at schema version 2. The locked seed
 `encounter-host-parity` produces encounter hash
-`sha256-v1:b5917969c3894517e146a5cf8ce1a7be4420ec9b87d2e7674df4e5f9e0bddcab`
+`sha256-v1:c4bf0b847f029df30bc8eea291d4d6db844f2f4d3e76077e7de81c08552d2e46`
 and initial state hash
-`sha256-v1:be044245834fcc2c72d683d3e9f64fc73d271b93c51f260637c887aacabb1abf`
+`sha256-v1:c37275062ee662954667cef15c7974198ad97c011a7325860f3259644a18199d`
 in both Node and Chromium.
 
 ## Encounter world lifecycle

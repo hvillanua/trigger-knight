@@ -16,6 +16,12 @@ const config: RunConfig = Object.freeze({
   initialProfile: Object.freeze({ schemaVersion: 1, scoreMultiplier: 1 }),
 });
 
+function publicUpcoming(state: Readonly<RunState>) {
+  return state.encounters.upcoming.map((encounter) =>
+    encounter.kind === "battle" ? { kind: "battle" as const } : encounter,
+  );
+}
+
 function createUnsupportedState(): RunState {
   return Object.freeze({
     ...gameplayEngine.createRun(config),
@@ -53,7 +59,7 @@ describe("gameplay engine", () => {
     expect(repeated).toEqual(state);
     expect(repeated).not.toBe(state);
     expect(state).toMatchObject({
-      schemaVersion: 10,
+      schemaVersion: 11,
       ruleset: "original-v1.3",
       steps: 0,
       activeTicks: 0,
@@ -112,7 +118,7 @@ describe("gameplay engine", () => {
       },
       encounters: {
         current: null,
-        upcoming: state.encounters.upcoming,
+        upcoming: publicUpcoming(state),
       },
       lifecycle: {
         phase: "running",
@@ -192,7 +198,7 @@ describe("gameplay engine", () => {
       },
       encounters: {
         current: null,
-        upcoming: first.state.encounters.upcoming,
+        upcoming: publicUpcoming(first.state),
       },
       lifecycle: {
         phase: "running",
