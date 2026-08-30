@@ -12,7 +12,7 @@ The product requirements in [`PRD.md`](PRD.md), architecture and contracts in [`
 - Use dependency links between tickets when the tickets are created. A ticket is ready only when its actual blockers are complete.
 - Write tickets around one meaningful outcome. Tickets state **what** must exist and **why**, with observable acceptance criteria, constraints, non-goals, required evidence, and links to the relevant PRD, TDD, and research sections. They do not prescribe **how** to implement the outcome.
 - Follow test-driven development for every behavior change: establish a failing test for the intended behavior, implement the smallest passing change, then refactor while the suite remains green. Tests are part of the behavior ticket and are never deferred to a later ticket.
-- Run fast validation locally before committing and the complete validation locally before pushing. Repository hooks enforce the local workflow; CI runs the same repository commands as the authoritative backstop.
+- Run only the smallest focused red and green checks locally. GitHub Actions is the sole complete validation gate for code-affecting changes.
 - Preserve the clean-room boundary. Implementation work uses the behavioral specification and approved clean-room assets, not copied decompiled source or unapproved original artifacts.
 - Keep the repository runnable, deterministic, and inspectable at the end of every milestone.
 
@@ -259,11 +259,11 @@ This milestone establishes:
 ### Complete when
 
 - every PRD acceptance criterion has reproducible evidence;
-- all required local and CI gates pass from a clean checkout;
+- focused local evidence and the complete CI gate pass from a clean checkout;
 - a release build can be produced and exercised using documented commands;
 - no unresolved issue blocks the declared compatibility scope;
 - deferred work, including background music and any enhanced rulesets, remains clearly outside the initial release.
 
 ## Milestone completion rule
 
-A milestone is complete only when all of its eventual tickets and blockers are complete, its exit conditions have reproducible evidence, the full local and CI validation gates pass, and the repository documentation reflects the delivered behavior. A milestone may not pass known failures or architectural decisions forward implicitly; any intentional deferral must be visible and assigned to a later milestone before completion.
+A milestone is complete only when all of its eventual tickets and blockers are complete, its exit conditions have reproducible evidence, focused local checks and the complete CI validation gate pass, and the repository documentation reflects the delivered behavior. A milestone may not pass known failures or architectural decisions forward implicitly; any intentional deferral must be visible and assigned to a later milestone before completion.
