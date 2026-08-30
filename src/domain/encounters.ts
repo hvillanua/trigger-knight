@@ -3,6 +3,7 @@ import type {
   CurrentEncounter,
   EncounterQueueState,
   GameEvent,
+  LifespanState,
   PlayerState,
   QueuedEncounter,
   RandomState,
@@ -30,6 +31,8 @@ export interface EncounterGenerationRules {
   readonly shopDepartureX: number;
   readonly battleSpeedFactor: number;
   readonly battleHandoffX: number;
+  readonly emergencyThresholdBase: number;
+  readonly emergencyThresholdUpperBound: number;
   readonly rollMinimums: {
     readonly bladesmith: number;
     readonly armorsmith: number;
@@ -43,6 +46,7 @@ export interface EncounterGenerationRules {
     readonly armorsmithBase: number;
     readonly armorsmithPerCurrentTier: number;
     readonly soulShrineInitial: number;
+    readonly soulShrinePerExtension: number;
     readonly pharmacy: number;
     readonly grimsShop: number;
     readonly voucherStore: number;
@@ -77,6 +81,7 @@ function createGenerationState(
   return Object.freeze({
     shopsUntilBattle: generation.shopsUntilBattle,
     seenSinceBattle: createSeenSinceBattle(generation.seenSinceBattle),
+    soulShrine: Object.freeze({ ...generation.soulShrine }),
   });
 }
 
@@ -192,6 +197,7 @@ function markShopSeen(
 function priceForShop(
   shop: ShopId,
   player: Readonly<PlayerState>,
+  generation: Readonly<EncounterGenerationState>,
   rules: Readonly<EncounterGenerationRules>,
 ): number {
   switch (shop) {
@@ -206,7 +212,10 @@ function priceForShop(
         rules.prices.armorsmithPerCurrentTier * player.armor.tier
       );
     case "soul-shrine":
-      return rules.prices.soulShrineInitial;
+      return (
+        rules.prices.soulShrineInitial +
+        rules.prices.soulShrinePerExtension * generation.soulShrine.extensions
+      );
     case "pharmacy":
       return rules.prices.pharmacy;
     case "grims-shop":
@@ -219,13 +228,25 @@ function priceForShop(
 function createShopEncounter(
   shop: ShopId,
   player: Readonly<PlayerState>,
+  generation: Readonly<EncounterGenerationState>,
   rules: Readonly<EncounterGenerationRules>,
 ): ShopEncounter {
   return Object.freeze({
     kind: "shop",
     shop,
-    cachedPrice: priceForShop(shop, player, rules),
+    cachedPrice: priceForShop(shop, player, generation, rules),
   });
+}
+
+function shouldForceSoulShrine(
+  generation: Readonly<EncounterGenerationState>,
+  lifespan: Readonly<LifespanState>,
+): boolean {
+  return (
+    lifespan.whole < generation.soulShrine.emergencyThreshold &&
+    !generation.soulShrine.emergencyChanceGiven &&
+    !generation.seenSinceBattle.soulShrine
+  );
 }
 
 /** Generates one queue entry and returns every consumed hidden-state change. */
@@ -234,6 +255,7 @@ export function generateEncounter(
   generation: Readonly<EncounterGenerationState>,
   day: number,
   player: Readonly<PlayerState>,
+  lifespan: Readonly<LifespanState>,
   rules: Readonly<EncounterGenerationRules>,
 ): GeneratedEncounter {
   if (generation.shopsUntilBattle <= 0) {
@@ -251,8 +273,31 @@ export function generateEncounter(
           armorsmith: false,
           soulShrine: false,
         },
+        soulShrine: generation.soulShrine,
       }),
       random: spacing.state,
+    });
+  }
+
+  if (shouldForceSoulShrine(generation, lifespan)) {
+    const threshold = nextRandomInteger(
+      random,
+      rules.emergencyThresholdUpperBound,
+    );
+    const shop = "soul-shrine";
+
+    return Object.freeze({
+      encounter: createShopEncounter(shop, player, generation, rules),
+      generation: createGenerationState({
+        shopsUntilBattle: generation.shopsUntilBattle - 1,
+        seenSinceBattle: generation.seenSinceBattle,
+        soulShrine: {
+          ...generation.soulShrine,
+          emergencyThreshold: rules.emergencyThresholdBase + threshold.value,
+          emergencyChanceGiven: true,
+        },
+      }),
+      random: threshold.state,
     });
   }
 
@@ -265,10 +310,11 @@ export function generateEncounter(
   } while (isRejectedShop(shop, day, generation, rules));
 
   return Object.freeze({
-    encounter: createShopEncounter(shop, player, rules),
+    encounter: createShopEncounter(shop, player, generation, rules),
     generation: createGenerationState({
       shopsUntilBattle: generation.shopsUntilBattle - 1,
       seenSinceBattle: markShopSeen(shop, generation.seenSinceBattle),
+      soulShrine: generation.soulShrine,
     }),
     random: nextRandom,
   });
@@ -279,6 +325,7 @@ export function initializeEncounterQueue(
   random: Readonly<RandomState>,
   day: number,
   player: Readonly<PlayerState>,
+  lifespan: Readonly<LifespanState>,
   rules: Readonly<EncounterGenerationRules>,
 ): InitializedEncounterQueue {
   const initialSpacing = nextRandomInteger(
@@ -293,6 +340,11 @@ export function initializeEncounterQueue(
       armorsmith: false,
       soulShrine: false,
     },
+    soulShrine: {
+      extensions: 0,
+      emergencyThreshold: rules.emergencyThresholdBase,
+      emergencyChanceGiven: false,
+    },
   });
   const upcoming: QueuedEncounter[] = [];
 
@@ -302,6 +354,7 @@ export function initializeEncounterQueue(
       generation,
       day,
       player,
+      lifespan,
       rules,
     );
     upcoming.push(generated.encounter);
@@ -313,15 +366,26 @@ export function initializeEncounterQueue(
     nextRandom,
     rules.initialDistanceUpperBound,
   );
+  const initialEmergencyThreshold = nextRandomInteger(
+    initialDistance.state,
+    rules.emergencyThresholdUpperBound,
+  );
 
   return Object.freeze({
     encounters: createEncounterQueueState({
       current: null,
       distanceUntilNext: rules.initialDistanceBase + initialDistance.value,
       upcoming,
-      generation,
+      generation: {
+        ...generation,
+        soulShrine: {
+          ...generation.soulShrine,
+          emergencyThreshold:
+            rules.emergencyThresholdBase + initialEmergencyThreshold.value,
+        },
+      },
     }),
-    random: initialDistance.state,
+    random: initialEmergencyThreshold.state,
   });
 }
 
@@ -397,6 +461,7 @@ export function advanceEncounterLifecycle(
     previous.encounters.generation,
     stepped.day,
     stepped.player,
+    stepped.lifespan,
     rules,
   );
   const nextDistance = nextRandomInteger(

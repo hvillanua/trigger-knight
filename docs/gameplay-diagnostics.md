@@ -27,10 +27,10 @@ use canonical JSON, so object insertion order cannot change their value. The
 portable digest implementation returns the same `sha256-v1` value in Chromium
 and Node.
 
-Gameplay-trace schema version 2 covers the version-9 run state, including
-equipment names, player values, and current-shop use state. The run-state
-schema change updates checkpoint and trace hashes without changing the trace
-format.
+Gameplay-trace schema version 2 covers the version-10 run state, including
+equipment names, player values, current-shop use state, and hidden Soul Shrine
+state. The run-state schema change updates checkpoint and trace hashes without
+changing the trace format.
 
 `compareGameplayTraces(expected, actual)` compares configuration and checkpoint
 fields before derived hashes. A mismatch reports a concrete path such as

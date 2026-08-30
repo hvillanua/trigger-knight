@@ -27,7 +27,8 @@ The ruleset owns the confirmed compatibility values implemented so far:
 | Inventory        | One slot; item-shop purchases replace it with Elixir, Divine Edge, or Gold Voucher                                         | Confirmed original behavior                                                    |
 | Encounter queue  | Three entries; zero to two initial shops before battle, then one to three; confirmed shop roll ranges and duplicate rules  | Confirmed original behavior                                                    |
 | Encounter world  | Initial spacing 1,000-1,999; later spacing 1,500-1,799; entry x 600; shop and battle speeds and strict thresholds          | Confirmed original behavior                                                    |
-| Shop prices      | Generation-time equipment formulas; Shrine 50, Pharmacy 150, Grim's Shop 200, and Voucher Store 500                        | Confirmed original behavior                                                    |
+| Shop prices      | Generation-time equipment formulas; Shrine starts at 50 and gains 70 per purchase; item shops cost 150, 200, and 500       | Confirmed original behavior                                                    |
+| Emergency Shrine | Threshold 40-49; one forced chance below it per restoration cycle when the battle cycle has no Shrine                      | Confirmed original behavior                                                    |
 | Lifespan         | Starts at 99.99, drains the fractional field by 4 per active tick, resets the fraction to 99, and dies below whole value 0 | Confirmed original behavior                                                    |
 | World camera     | One original stage unit maps to one world unit; initial camera is 480 by 320 world units                                   | Clean-room coordinate-model decision preserving confirmed original coordinates |
 | Random sequence  | `mulberry32-fnv1a32-v1`                                                                                                    | Clean-room reproducibility decision                                            |
@@ -125,9 +126,10 @@ discrepancy, the clean-room ruleset treats both max-tier equipment shops as
 ineligible. Public action eligibility is false, and a direct command emits
 `maximum-tier` without spending gold, healing HP, or marking the shop used.
 Presentation must show an unavailable cue, with the exact treatment deferred to
-the browser milestone. Soul Shrine restoration remains assigned to issue #45.
-Until that effect exists, its current shop reports purchase as ineligible and
-rejects a direct command with `shop-effect-unavailable`.
+the browser milestone. A Soul Shrine purchase spends its cached price, restores
+both lifespan integers to 99, increments the hidden extension count once, and
+resets emergency eligibility. The active tick that follows command processing
+then applies the ordinary lifespan drain.
 
 Player state and each nested equipment, HP, and inventory value are frozen.
 Stepping a JSON-restored checkpoint copies those values back into frozen domain
@@ -154,28 +156,39 @@ flag; another candidate of the same type rerolls. Item shops can repeat.
 
 Every accepted shop stores its integer price on the queue entry. Bladesmith
 uses `200 + 36 * currentWeaponTier`; Armorsmith uses
-`150 + 54 * currentArmorTier`. The initial Shrine price is 50, and the item
-shop prices are 150, 200, and 500. Shrine price progression and forced emergency
-Shrine state remain deferred to their behavior ticket.
+`150 + 54 * currentArmorTier`. Shrine uses `50 + 70 * successfulPurchases`,
+and the item shop prices are 150, 200, and 500.
+
+The hidden Shrine state stores the successful-purchase count, an emergency
+threshold from 40 through 49, and whether the current restoration cycle already
+received its emergency chance. A shop is forced to Shrine when whole lifespan
+is strictly below the threshold, no chance has been given, and the current
+battle cycle has no Shrine. The force bypasses the ordinary shop roll, rerolls
+the threshold with one `random(10)` draw, and records that the chance was given.
+It does not set the normal Shrine duplicate flag, so one later normal Shrine can
+still occur in that battle cycle. A battle clears the duplicate flag but not the
+chance flag. Only a successful Shrine purchase clears the chance flag.
 
 The queue, duplicate flags, counters, positions, and complete post-generation
 random state are authoritative, serializable, and deeply frozen. Ordinary
 `GameObservation` publishes the current encounter and three upcoming entries,
 but not the distance counter, duplicate flags, or random state.
 
-The research confirms the queue and distance draws but does not establish
-their relative order during initialization or refill. The clean-room order
-fills the initial queue before drawing its distance. A promotion generates the
-replacement entry before drawing the later distance. This keeps the choice
-visible without claiming that the original Flash runtime used the same order.
+The research confirms the queue, distance, and emergency-threshold draws but
+does not establish their relative order during initialization or refill. The
+clean-room order fills the initial queue, draws its distance, and then draws the
+initial emergency threshold. A promotion generates the replacement entry before
+drawing the later distance. This keeps the choice visible without claiming that
+the original Flash runtime used the same order.
 
-Run-state schema version 9 adds equipment names to the authoritative player
-state. Version 8 added the current shop's one-use purchase state.
+Run-state schema version 10 adds hidden Shrine extension and emergency state.
+Version 9 added equipment names to the authoritative player state. Version 8
+added the current shop's one-use purchase state.
 Gameplay traces and run results remain at schema version 2. The locked seed
 `encounter-host-parity` produces encounter hash
-`sha256-v1:e9a33e6a60dcd2f9ad88495fbc43fa98eebb7fc82a9821b2cec8843a57b05da2`
+`sha256-v1:b5917969c3894517e146a5cf8ce1a7be4420ec9b87d2e7674df4e5f9e0bddcab`
 and initial state hash
-`sha256-v1:5e5827c9b6f98dad42d23579b0550613da40b4bd4d3b28551f6f179aead2dc0e`
+`sha256-v1:be044245834fcc2c72d683d3e9f64fc73d271b93c51f260637c887aacabb1abf`
 in both Node and Chromium.
 
 ## Encounter world lifecycle
@@ -246,8 +259,8 @@ gates. `original-v1.3` uses this explicit clean-room decision:
 - Pregame opportunities do not increment `activeTicks`. The first active tick
   is the next eligible step after the counter reaches zero.
 
-Shrine purchases, item use, combat resolution, and tutorial presentation remain
-assigned to later tickets.
+Item use, combat resolution, and tutorial presentation remain assigned to later
+tickets.
 
 State, results, events, event lists, and observations are frozen. A
 JSON-restored checkpoint produces the same next state, observation, and events

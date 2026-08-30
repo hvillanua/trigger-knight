@@ -122,6 +122,11 @@ describe("original-v1.3 equipment upgrades", () => {
           armorsmith: false,
           soulShrine: false,
         },
+        soulShrine: {
+          extensions: 0,
+          emergencyThreshold: 40,
+          emergencyChanceGiven: false,
+        },
       } as const;
 
       const weapon = generateEncounter(
@@ -129,6 +134,7 @@ describe("original-v1.3 equipment upgrades", () => {
         generation,
         4,
         player,
+        { whole: 99, fraction: 99 },
         originalV13RuleSet.constants.encounters,
       );
       const armor = generateEncounter(
@@ -136,6 +142,7 @@ describe("original-v1.3 equipment upgrades", () => {
         generation,
         4,
         player,
+        { whole: 99, fraction: 99 },
         originalV13RuleSet.constants.encounters,
       );
 

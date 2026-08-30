@@ -38,7 +38,7 @@ describe("original-v1.3 economy and loadout", () => {
     const observation = gameplayEngine.observe(state);
 
     expect(state).toMatchObject({
-      schemaVersion: 9,
+      schemaVersion: 10,
       player: initialPlayer,
     });
     expect(observation.player).toEqual(initialPlayer);

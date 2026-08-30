@@ -210,8 +210,8 @@ test("proves the complete lifecycle across Node, Chromium, and Canvas variants",
     steps: 2_564,
     activeTicks: 2_500,
     terminalReason: "lifespan",
-    score: 28_200,
+    score: 28_950,
     day: 1,
-    distance: 2_820,
+    distance: 2_895,
   });
 });

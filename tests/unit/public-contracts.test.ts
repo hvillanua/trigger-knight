@@ -199,7 +199,7 @@ describe("public application contracts", () => {
       readonly initialProfile: ProfileState;
     }>();
     expectTypeOf<RunState>().toMatchTypeOf<{
-      readonly schemaVersion: 9;
+      readonly schemaVersion: 10;
       readonly ruleset: RuleSetId;
       readonly random: RandomState;
       readonly steps: number;
@@ -264,6 +264,11 @@ describe("public application contracts", () => {
             readonly bladesmith: boolean;
             readonly armorsmith: boolean;
             readonly soulShrine: boolean;
+          };
+          readonly soulShrine: {
+            readonly extensions: number;
+            readonly emergencyThreshold: number;
+            readonly emergencyChanceGiven: boolean;
           };
         };
       };

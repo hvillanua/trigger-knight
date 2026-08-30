@@ -7,9 +7,9 @@ the same `GameObservation` and `GameEvent` values used by presentation.
 
 The runner recognizes committed gameplay termination and reports current gold
 from authoritative player state. Policies can issue the same semantic purchase
-command as browser input, including equipment upgrades. Worker concurrency,
-reporting, Monte Carlo tooling, combat death, Shrine effects, and rewards remain
-outside this slice.
+command as browser input, including equipment upgrades and Soul Shrine
+restoration. Worker concurrency, reporting, Monte Carlo tooling, combat death,
+and rewards remain outside this slice.
 
 ## Run sequence
 
@@ -71,7 +71,7 @@ run configuration and command schedule. See
 [`gameplay-diagnostics.md`](gameplay-diagnostics.md).
 
 Run-result schema version 2 records the replacement of placeholder gold with
-authoritative state. The streamed trace covers the complete version-9 run state
+authoritative state. The streamed trace covers the complete version-10 run state
 and its player observation on every step.
 
 ## Minimal batches

@@ -237,18 +237,21 @@ describe("original-v1.3 semantic shop purchases", () => {
     },
   );
 
-  it("does not implement the deferred Shrine effect", () => {
+  it("buys a Soul Shrine through the same semantic purchase path", () => {
     const state = atShop("soul-shrine", 50);
     const result = gameplayEngine.step(state, [purchaseCommand]);
 
-    expect(result.state.player).toEqual(state.player);
+    expect(result.state.player.gold).toBe(550);
+    expect(result.state.lifespan).toEqual({ whole: 99, fraction: 95 });
+    expect(result.state.encounters.current).toMatchObject({ used: true });
     expect(result.events).toContainEqual({
-      type: "purchase-rejected",
-      reason: "shop-effect-unavailable",
+      type: "shop-purchased",
+      shop: "soul-shrine",
+      price: 50,
     });
     expect(
       gameplayEngine.observe(state).actions.canPurchaseCurrentEncounter,
-    ).toBe(false);
+    ).toBe(true);
   });
 
   it("reproduces purchases after a checkpoint round trip without mutating inputs", () => {

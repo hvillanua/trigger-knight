@@ -16,6 +16,10 @@ export interface PurchaseRules {
   readonly actionMinimumX: number;
   readonly actionMaximumX: number;
   readonly itemByShop: Readonly<Partial<Record<ShopId, InventoryItemId>>>;
+  readonly soulShrineRestoration: {
+    readonly whole: number;
+    readonly fraction: number;
+  };
   readonly equipment: {
     readonly weapon: {
       readonly maximumTier: number;
@@ -73,7 +77,8 @@ export function purchaseRejectionReason(
   if (
     rules.itemByShop[encounter.shop] === undefined &&
     encounter.shop !== "bladesmith" &&
-    encounter.shop !== "armorsmith"
+    encounter.shop !== "armorsmith" &&
+    encounter.shop !== "soul-shrine"
   ) {
     return "shop-effect-unavailable";
   }
@@ -174,6 +179,27 @@ export function attemptPurchase(
       },
       hp: { current: maximumHp, maximum: maximumHp },
     });
+  }
+
+  if (encounter.shop === "soul-shrine") {
+    const shrineState = state.encounters.generation.soulShrine;
+    const restoredState: RunState = Object.freeze({
+      ...state,
+      lifespan: Object.freeze({ ...rules.soulShrineRestoration }),
+      encounters: createEncounterQueueState({
+        ...state.encounters,
+        generation: {
+          ...state.encounters.generation,
+          soulShrine: {
+            ...shrineState,
+            extensions: shrineState.extensions + 1,
+            emergencyChanceGiven: false,
+          },
+        },
+      }),
+    });
+
+    return completePurchase(restoredState, restoredState.player);
   }
 
   throw new Error("Purchase validation accepted a shop without an effect");
