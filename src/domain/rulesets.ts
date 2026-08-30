@@ -86,6 +86,7 @@ export interface RuleSetCompatibilityDecisions {
   readonly pregameDelayProgression: "after-commands-while-other-gates-open";
   readonly pregameDelayCountsAsActiveGameplay: false;
   readonly encounterInitializationDrawOrder: "queue-then-distance";
+  readonly soulShrineInitializationDrawOrder: "after-queue-and-distance";
   readonly encounterPromotionDrawOrder: "replacement-then-distance";
 }
 
@@ -187,6 +188,8 @@ const originalV13Constants: RuleSetConstants = Object.freeze({
     shopDepartureX: -100,
     battleSpeedFactor: 1,
     battleHandoffX: 420,
+    emergencyThresholdBase: 40,
+    emergencyThresholdUpperBound: 10,
     rollMinimums: Object.freeze({
       bladesmith: 66,
       armorsmith: 31,
@@ -200,6 +203,7 @@ const originalV13Constants: RuleSetConstants = Object.freeze({
       armorsmithBase: 150,
       armorsmithPerCurrentTier: 54,
       soulShrineInitial: 50,
+      soulShrinePerExtension: 70,
       pharmacy: 150,
       grimsShop: 200,
       voucherStore: 500,
@@ -231,6 +235,7 @@ const originalV13CompatibilityDecisions: RuleSetCompatibilityDecisions =
     pregameDelayProgression: "after-commands-while-other-gates-open",
     pregameDelayCountsAsActiveGameplay: false,
     encounterInitializationDrawOrder: "queue-then-distance",
+    soulShrineInitializationDrawOrder: "after-queue-and-distance",
     encounterPromotionDrawOrder: "replacement-then-distance",
   });
 
@@ -256,6 +261,10 @@ const originalV13PurchaseRules: PurchaseRules = Object.freeze({
     pharmacy: "elixir",
     "grims-shop": "divine-edge",
     "voucher-store": "gold-voucher",
+  }),
+  soulShrineRestoration: Object.freeze({
+    whole: originalV13Constants.lifespan.initialWhole,
+    fraction: originalV13Constants.lifespan.initialFraction,
   }),
   equipment: Object.freeze({
     weapon: originalV13Constants.loadout.weapon,
@@ -302,10 +311,15 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
 
   createRun(seed: string, initialProfile: Readonly<ProfileState>): RunState {
     const player = createOriginalV13InitialPlayerState();
+    const lifespan = Object.freeze({
+      whole: originalV13Constants.lifespan.initialWhole,
+      fraction: originalV13Constants.lifespan.initialFraction,
+    });
     const initializedEncounters = initializeEncounterQueue(
       createRandomState(seed),
       1,
       player,
+      lifespan,
       originalV13Constants.encounters,
     );
 
@@ -315,10 +329,7 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
       originalV13Constants.pregameDelaySteps,
       initialProfile.scoreMultiplier,
       originalV13Constants.movement.initialSpeed,
-      Object.freeze({
-        whole: originalV13Constants.lifespan.initialWhole,
-        fraction: originalV13Constants.lifespan.initialFraction,
-      }),
+      lifespan,
       player,
       initializedEncounters.encounters,
     );

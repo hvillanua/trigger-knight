@@ -117,6 +117,11 @@ export interface EncounterGenerationState {
     readonly armorsmith: boolean;
     readonly soulShrine: boolean;
   };
+  readonly soulShrine: {
+    readonly extensions: number;
+    readonly emergencyThreshold: number;
+    readonly emergencyChanceGiven: boolean;
+  };
 }
 
 export interface EncounterQueueState {
@@ -133,7 +138,7 @@ export interface EncounterObservation {
 
 /** Authoritative state owned by the gameplay domain. */
 export interface RunState {
-  readonly schemaVersion: 9;
+  readonly schemaVersion: 10;
   readonly ruleset: RuleSetId;
   readonly random: RandomState;
   readonly steps: number;

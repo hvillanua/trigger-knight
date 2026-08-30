@@ -88,6 +88,7 @@ describe("ruleset registry", () => {
         pregameDelayProgression: "after-commands-while-other-gates-open",
         pregameDelayCountsAsActiveGameplay: false,
         encounterInitializationDrawOrder: "queue-then-distance",
+        soulShrineInitializationDrawOrder: "after-queue-and-distance",
         encounterPromotionDrawOrder: "replacement-then-distance",
       },
     });

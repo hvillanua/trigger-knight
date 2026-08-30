@@ -34,15 +34,15 @@ sequence so retained seeds and checkpoints remain reproducible.
 
 ## Run state and isolation
 
-Run-state schema version `9` includes fixed-step lifecycle state, running
+Run-state schema version `10` includes fixed-step lifecycle state, running
 progression, the consumed profile multiplier, player economy and named loadout,
 the current encounter and its one-use purchase state, the three-entry queue,
-its world counter and hidden generation bookkeeping, the ruleset identity, and
-the complete post-generation random state:
+its world counter and hidden generation and Soul Shrine bookkeeping, the ruleset
+identity, and the complete post-generation random state:
 
 ```json
 {
-  "schemaVersion": 9,
+  "schemaVersion": 10,
   "ruleset": "original-v1.3",
   "steps": 0,
   "activeTicks": 0,
@@ -76,6 +76,11 @@ the complete post-generation random state:
         "bladesmith": false,
         "armorsmith": false,
         "soulShrine": false
+      },
+      "soulShrine": {
+        "extensions": 0,
+        "emergencyThreshold": 45,
+        "emergencyChanceGiven": false
       }
     }
   },
@@ -103,7 +108,9 @@ ambient randomness by the repository lint validation. Queue generation consumes
 only explicit bounded draws. Rejected duplicate shops and early-day Voucher
 candidates consume another `random(100)` draw; battle entries currently consume
 only their shop-count draw because enemy selection is deferred to Milestone 4.
-Fresh runs draw `random(1000)` after filling the queue. Promotions generate the
+Fresh runs draw `random(1000)` after filling the queue, then draw `random(10)`
+for the initial 40-49 emergency Shrine threshold. Promotions generate the
 replacement queue entry, then draw `random(300)` for the next world-space
-distance. The research does not confirm the relative order of queue and distance
-draws, so this ordering is an explicit clean-room decision.
+distance. A forced Shrine skips the normal shop roll and consumes one
+`random(10)` threshold reroll. The research does not confirm the relative order
+of initialization draws, so this ordering is an explicit clean-room decision.

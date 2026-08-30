@@ -19,26 +19,27 @@ The terminal values are:
 | Elapsed steps   | 2,564      |
 | Active ticks    | 2,500      |
 | Terminal reason | `lifespan` |
-| Score           | 28,200     |
+| Score           | 28,950     |
 | Day             | 1          |
-| Distance        | 2,820      |
+| Distance        | 2,895      |
 | Gold            | 300        |
 
 The locked host-neutral gameplay trace hash is
-`sha256-v1:85a5783f36c917e5a23db85b1d3bbd674c11c601efa3c22007b7930abde17771`.
+`sha256-v1:85d3d8eb822ee80a510ddce6cd7a20810fe9cef45a4f9e63950a1ed27282a012`.
 The terminal checkpoint hash is
-`sha256-v1:9d1423fa252e263242dd8cec9ef1ca71737a61a7664999c822d2064780006f85`.
+`sha256-v1:7dbb8f459165f30a229b7b79ea0d2804522c1d4deffbd1e9f4d2c8a2209039b8`.
 The simulation result trace hash, which also covers policy identity and the
 3,000-step budget, is
-`sha256-v1:a5f03270e9c26fe2a8a5a343f6b83be277372f069cb84d0f07bb718cfd985de9`.
+`sha256-v1:979efa3772f62bc32e2cacd9b7f33ac5c8b98c613b64994870474074847e8c8a`.
 
 Issue #42 advances the version-7 encounter queue through world space. Issue #43
 adds the version-8 current-shop use state. Issue #44 adds the version-9
-equipment names used by upgrade transitions. The scenario and command schedule
-are unchanged. It reaches its first battle at distance 2,820, then waits at the
-battle handoff while active-tick lifespan continues to death. The serializable
-state change updates the locked hashes above. Gameplay traces and run results
-remain at version 2.
+equipment names used by upgrade transitions. Issue #45 adds the version-10
+hidden Soul Shrine state and its initial threshold draw. The scenario and
+command schedule are unchanged. It reaches its first battle at distance 2,895.
+It then waits at the battle handoff while active-tick lifespan continues to
+death. The serializable state change updates the locked hashes above. Gameplay
+traces and run results remain at version 2.
 
 The unit check compares every browser-session checkpoint with the headless
 trace. This includes commands, complete state, public observations, events,
@@ -83,9 +84,10 @@ The implementation and verification keep the research labels separate:
 - **CLEAN-ROOM DECISION:** commands take effect before gate evaluation, pause
   and tutorial freeze pregame, pregame does not count as active gameplay,
   running progression occurs before lifespan death on the terminal tick, one
-  original stage unit equals one world unit, and the explicit random algorithm
-  is `mulberry32-fnv1a32-v1`, and queue/refill draws precede their associated
-  distance draws.
+  original stage unit equals one world unit, the explicit random algorithm is
+  `mulberry32-fnv1a32-v1`, queue/refill draws precede their associated distance
+  draws, and the initial emergency Shrine threshold draw follows the initial
+  queue and distance draws.
 
-Shrine purchases, combat resolution, persistence, final presentation, and
-batch comparison tooling remain in later milestones.
+Combat resolution, persistence, final presentation, and batch comparison
+tooling remain in later milestones.

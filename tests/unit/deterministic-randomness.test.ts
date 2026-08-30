@@ -31,6 +31,11 @@ const encounters = Object.freeze({
       armorsmith: false,
       soulShrine: false,
     }),
+    soulShrine: Object.freeze({
+      extensions: 0,
+      emergencyThreshold: 40,
+      emergencyChanceGiven: false,
+    }),
   }),
 });
 

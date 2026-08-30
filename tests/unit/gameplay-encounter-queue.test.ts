@@ -34,7 +34,13 @@ const emptyGeneration: EncounterGenerationState = Object.freeze({
     armorsmith: false,
     soulShrine: false,
   }),
+  soulShrine: Object.freeze({
+    extensions: 0,
+    emergencyThreshold: 40,
+    emergencyChanceGiven: false,
+  }),
 });
+const fullLifespan = Object.freeze({ whole: 99, fraction: 99 });
 
 function randomAt(state: number): RandomState {
   return Object.freeze({ algorithm: RANDOM_ALGORITHM, state });
@@ -51,6 +57,7 @@ describe("original-v1.3 encounter queue", () => {
       randomAt(0),
       1,
       player,
+      fullLifespan,
       encounterRules,
     );
 
@@ -66,10 +73,15 @@ describe("original-v1.3 encounter queue", () => {
         armorsmith: false,
         soulShrine: false,
       },
+      soulShrine: {
+        extensions: 0,
+        emergencyThreshold: 45,
+        emergencyChanceGiven: false,
+      },
     });
     expect(initialized.encounters.current).toBeNull();
     expect(initialized.encounters.distanceUntilNext).toBe(1_467);
-    expect(initialized.random).toEqual(randomAt(567_894_473));
+    expect(initialized.random).toEqual(randomAt(2_399_460_286));
     expect(Object.isFrozen(initialized.encounters)).toBe(true);
     expect(Object.isFrozen(initialized.encounters.upcoming)).toBe(true);
     expect(
@@ -98,6 +110,7 @@ describe("original-v1.3 encounter queue", () => {
         emptyGeneration,
         4,
         player,
+        fullLifespan,
         encounterRules,
       );
       const encounter = requireShop(generated.encounter);
@@ -114,6 +127,7 @@ describe("original-v1.3 encounter queue", () => {
       emptyGeneration,
       3,
       player,
+      fullLifespan,
       encounterRules,
     );
 
@@ -127,6 +141,7 @@ describe("original-v1.3 encounter queue", () => {
 
   it("rerolls duplicate equipment and Shrine candidates within a battle cycle", () => {
     const afterBladesmith: EncounterGenerationState = Object.freeze({
+      ...emptyGeneration,
       shopsUntilBattle: 1,
       seenSinceBattle: Object.freeze({
         ...emptyGeneration.seenSinceBattle,
@@ -134,6 +149,7 @@ describe("original-v1.3 encounter queue", () => {
       }),
     });
     const afterArmorsmith: EncounterGenerationState = Object.freeze({
+      ...emptyGeneration,
       shopsUntilBattle: 1,
       seenSinceBattle: Object.freeze({
         ...emptyGeneration.seenSinceBattle,
@@ -141,6 +157,7 @@ describe("original-v1.3 encounter queue", () => {
       }),
     });
     const afterShrine: EncounterGenerationState = Object.freeze({
+      ...emptyGeneration,
       shopsUntilBattle: 1,
       seenSinceBattle: Object.freeze({
         ...emptyGeneration.seenSinceBattle,
@@ -154,6 +171,7 @@ describe("original-v1.3 encounter queue", () => {
         afterBladesmith,
         4,
         player,
+        fullLifespan,
         encounterRules,
       ).encounter,
     ).toMatchObject({ shop: "armorsmith" });
@@ -163,12 +181,19 @@ describe("original-v1.3 encounter queue", () => {
         afterArmorsmith,
         4,
         player,
+        fullLifespan,
         encounterRules,
       ).encounter,
     ).toMatchObject({ shop: "soul-shrine" });
     expect(
-      generateEncounter(randomAt(1_485), afterShrine, 4, player, encounterRules)
-        .encounter,
+      generateEncounter(
+        randomAt(1_485),
+        afterShrine,
+        4,
+        player,
+        fullLifespan,
+        encounterRules,
+      ).encounter,
     ).toMatchObject({ shop: "pharmacy" });
   });
 
@@ -181,6 +206,7 @@ describe("original-v1.3 encounter queue", () => {
       }),
       4,
       player,
+      fullLifespan,
       encounterRules,
     );
     const second = generateEncounter(
@@ -188,6 +214,7 @@ describe("original-v1.3 encounter queue", () => {
       first.generation,
       4,
       player,
+      fullLifespan,
       encounterRules,
     );
 
@@ -199,6 +226,7 @@ describe("original-v1.3 encounter queue", () => {
     const generated = generateEncounter(
       randomAt(2),
       Object.freeze({
+        ...emptyGeneration,
         shopsUntilBattle: 0,
         seenSinceBattle: Object.freeze({
           bladesmith: true,
@@ -208,6 +236,7 @@ describe("original-v1.3 encounter queue", () => {
       }),
       1,
       player,
+      fullLifespan,
       encounterRules,
     );
 
@@ -220,6 +249,7 @@ describe("original-v1.3 encounter queue", () => {
         armorsmith: false,
         soulShrine: false,
       },
+      soulShrine: emptyGeneration.soulShrine,
     });
     expect(generated.random).toEqual(randomAt(1_831_565_815));
   });
@@ -230,6 +260,7 @@ describe("original-v1.3 encounter queue", () => {
       emptyGeneration,
       4,
       player,
+      fullLifespan,
       encounterRules,
     );
     const tierFourPlayer: PlayerState = Object.freeze({
@@ -241,6 +272,7 @@ describe("original-v1.3 encounter queue", () => {
       emptyGeneration,
       4,
       tierFourPlayer,
+      fullLifespan,
       encounterRules,
     );
 
@@ -259,7 +291,7 @@ describe("original-v1.3 encounter queue", () => {
     const repeated = gameplayEngine.createRun(config);
     const restored = JSON.parse(JSON.stringify(initial)) as RunState;
 
-    expect(initial.schemaVersion).toBe(9);
+    expect(initial.schemaVersion).toBe(10);
     expect(initial.encounters.current).toBeNull();
     expect(initial.encounters.distanceUntilNext).toBeGreaterThanOrEqual(1_000);
     expect(initial.encounters.distanceUntilNext).toBeLessThanOrEqual(1_999);
