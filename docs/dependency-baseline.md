@@ -55,10 +55,17 @@ npm run validate:fast
 npm run validate
 ```
 
-`npm run validate:fast` is the pre-commit gate. It checks formatting, linting,
-architecture, types, and unit tests. `npm run validate` is the pre-push gate and
-adds browser tests and the production build. The aggregate commands invoke the
-same independent commands listed above.
+`npm run validate:fast` is the concise fast CI gate. It checks repository
+formatting, linting, architecture, types, and unit tests. `npm run validate` is
+the complete CI gate and adds browser tests and the production build. Successful
+steps print one summary line; a failing step prints its diagnostics. The
+aggregate commands invoke the same independent commands listed above.
+
+Local development uses only focused checks that cover changed code. Markdown and
+plain-text-only changes do not require code validation. The formatting commands
+continue to cover documentation when invoked. Commits and pushes do not run
+repository-owned hooks; GitHub Actions is the sole complete gate and skips its
+toolchain and validation steps for documentation-only changes.
 
 ## Temporary TypeScript 6 compatibility
 

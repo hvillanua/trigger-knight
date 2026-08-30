@@ -36,21 +36,26 @@ non-interactive command:
 | Run browser tests                                  | `npm run test:browser`       |
 | Build the production application                   | `npm run build`              |
 
-Before committing, run the fast validation gate:
+During implementation, run the smallest focused tests and checks that cover the
+changed code. Markdown and plain-text-only changes do not require code
+validation. The formatting commands continue to cover the whole repository. The
+aggregate commands below are concise CI gates: successful steps print one line,
+while a failing step prints its diagnostic output.
 
 ```sh
 npm run validate:fast
 ```
 
-Before pushing, run the complete validation gate, which includes every check:
+The complete CI gate includes every code check:
 
 ```sh
 npm run validate
 ```
 
-`npm ci` also activates repository-owned Git hooks. The pre-commit hook runs
-`npm run validate:fast`, and the pre-push hook runs `npm run validate`. Re-run
-`npm run setup:hooks` if local Git configuration is replaced after installation.
+Commits and pushes have no repository-owned validation hooks. GitHub Actions runs
+the complete gate only when code, tests, runtime assets, build scripts, or
+configuration change. Local aggregate validation is reserved for reproducing CI
+failures or explicit requests.
 
 TypeScript 7.0 and ESLint temporarily use side-by-side compiler packages. The
 removal condition and TODO are recorded in

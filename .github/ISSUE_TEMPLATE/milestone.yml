@@ -75,7 +75,7 @@ body:
     attributes:
       label: Milestone completion rule
       options:
-        - label: All eventual tickets and blockers must be complete, exit conditions must have reproducible evidence, full local and CI gates must pass, and delivered behavior must be documented.
+        - label: All eventual tickets and blockers must be complete, exit conditions must have reproducible evidence, focused local checks and the complete CI gate must pass, and delivered behavior must be documented.
           required: true
         - label: Any intentional deferral must be visible and assigned to a later milestone before completion.
           required: true
