@@ -14,6 +14,7 @@ import type {
 import {
   advanceEncounterLifecycle,
   initializeEncounterQueue,
+  type EnemyGenerationRules,
   type EncounterGenerationRules,
 } from "./encounters.js";
 import { advanceLifespan } from "./lifespan.js";
@@ -141,6 +142,57 @@ const originalV13ArmorNames = Object.freeze([
   "Astral Armor",
 ] as const satisfies readonly ArmorName[]);
 
+const originalV13EnemyGenerationRules: EnemyGenerationRules = Object.freeze({
+  ordinaryIds: Object.freeze(["goblin", "golem", "wolf"] as const),
+  ordinaryRollUpperBound: 3,
+  dragonRollFirstDay: 7,
+  dragonChanceDayOffset: 7,
+  dragonChancePerDay: 3,
+  dragonRollUpperBound: 100,
+  scaling: Object.freeze({
+    goblin: Object.freeze({
+      maximumHpBase: 600,
+      maximumHpPerDay: 60,
+      attackBase: 82,
+      attackPerDay: 40,
+      goldRewardBase: 70,
+      goldRewardPerDay: 12,
+      profileExpBase: 10,
+      profileExpPerDay: 3,
+    }),
+    golem: Object.freeze({
+      maximumHpBase: 860,
+      maximumHpPerDay: 120,
+      attackBase: 40,
+      attackPerDay: 28,
+      goldRewardBase: 78,
+      goldRewardPerDay: 14,
+      profileExpBase: 9,
+      profileExpPerDay: 4,
+    }),
+    wolf: Object.freeze({
+      maximumHpBase: 450,
+      maximumHpPerDay: 44,
+      attackBase: 94,
+      attackPerDay: 56,
+      goldRewardBase: 78,
+      goldRewardPerDay: 14,
+      profileExpBase: 8,
+      profileExpPerDay: 5,
+    }),
+    dragon: Object.freeze({
+      maximumHpBase: 2_400,
+      maximumHpPerDay: 300,
+      attackBase: 160,
+      attackPerDay: 80,
+      goldRewardBase: 350,
+      goldRewardPerDay: 60,
+      profileExpBase: 40,
+      profileExpPerDay: 25,
+    }),
+  }),
+});
+
 const originalV13Constants: RuleSetConstants = Object.freeze({
   logicalTicksPerSecond: 30,
   pregameDelaySteps: 60,
@@ -192,56 +244,7 @@ const originalV13Constants: RuleSetConstants = Object.freeze({
     battleHandoffX: 420,
     emergencyThresholdBase: 40,
     emergencyThresholdUpperBound: 10,
-    enemySelection: Object.freeze({
-      ordinaryIds: Object.freeze(["goblin", "golem", "wolf"] as const),
-      ordinaryRollUpperBound: 3,
-      dragonRollFirstDay: 7,
-      dragonChanceDayOffset: 7,
-      dragonChancePerDay: 3,
-      dragonRollUpperBound: 100,
-      scaling: Object.freeze({
-        goblin: Object.freeze({
-          maximumHpBase: 600,
-          maximumHpPerDay: 60,
-          attackBase: 82,
-          attackPerDay: 40,
-          goldRewardBase: 70,
-          goldRewardPerDay: 12,
-          profileExpBase: 10,
-          profileExpPerDay: 3,
-        }),
-        golem: Object.freeze({
-          maximumHpBase: 860,
-          maximumHpPerDay: 120,
-          attackBase: 40,
-          attackPerDay: 28,
-          goldRewardBase: 78,
-          goldRewardPerDay: 14,
-          profileExpBase: 9,
-          profileExpPerDay: 4,
-        }),
-        wolf: Object.freeze({
-          maximumHpBase: 450,
-          maximumHpPerDay: 44,
-          attackBase: 94,
-          attackPerDay: 56,
-          goldRewardBase: 78,
-          goldRewardPerDay: 14,
-          profileExpBase: 8,
-          profileExpPerDay: 5,
-        }),
-        dragon: Object.freeze({
-          maximumHpBase: 2_400,
-          maximumHpPerDay: 300,
-          attackBase: 160,
-          attackPerDay: 80,
-          goldRewardBase: 350,
-          goldRewardPerDay: 60,
-          profileExpBase: 40,
-          profileExpPerDay: 25,
-        }),
-      }),
-    }),
+    enemySelection: originalV13EnemyGenerationRules,
     rollMinimums: Object.freeze({
       bladesmith: 66,
       armorsmith: 31,

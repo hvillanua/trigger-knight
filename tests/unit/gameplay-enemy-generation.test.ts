@@ -281,4 +281,30 @@ describe("original-v1.3 enemy generation", () => {
       "generation",
     );
   });
+
+  it("refreezes enemy snapshots after stepping a restored checkpoint", () => {
+    const state = gameplayEngine.createRun({
+      ruleset: ORIGINAL_V13_RULESET_ID,
+      seed: "restored-enemy-snapshot",
+      initialProfile: { schemaVersion: 1, scoreMultiplier: 1 },
+    });
+    const restored = JSON.parse(JSON.stringify(state)) as RunState;
+
+    const stepped = gameplayEngine.step(restored, []).state;
+    const battle = stepped.encounters.upcoming.find(
+      (encounter) => encounter.kind === "battle",
+    );
+
+    expect(stepped).toEqual(gameplayEngine.step(state, []).state);
+    expect(battle?.kind).toBe("battle");
+    if (battle?.kind !== "battle") {
+      throw new Error("Expected a restored queued battle");
+    }
+    expect(Object.isFrozen(battle)).toBe(true);
+    expect(Object.isFrozen(battle.enemy)).toBe(true);
+    expect(Object.isFrozen(stepped.encounters.generation)).toBe(true);
+    expect(Object.isFrozen(stepped.encounters.generation.seenSinceBattle)).toBe(
+      true,
+    );
+  });
 });

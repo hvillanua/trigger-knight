@@ -15,6 +15,27 @@ import type {
 } from "./contracts.js";
 import { nextRandomInteger } from "./random.js";
 
+export interface EnemyScalingRules {
+  readonly maximumHpBase: number;
+  readonly maximumHpPerDay: number;
+  readonly attackBase: number;
+  readonly attackPerDay: number;
+  readonly goldRewardBase: number;
+  readonly goldRewardPerDay: number;
+  readonly profileExpBase: number;
+  readonly profileExpPerDay: number;
+}
+
+export interface EnemyGenerationRules {
+  readonly ordinaryIds: readonly ["goblin", "golem", "wolf"];
+  readonly ordinaryRollUpperBound: number;
+  readonly dragonRollFirstDay: number;
+  readonly dragonChanceDayOffset: number;
+  readonly dragonChancePerDay: number;
+  readonly dragonRollUpperBound: number;
+  readonly scaling: Readonly<Record<EnemyId, EnemyScalingRules>>;
+}
+
 export interface EncounterGenerationRules {
   readonly queueLength: number;
   readonly initialShopsUntilBattleUpperBound: number;
@@ -35,29 +56,7 @@ export interface EncounterGenerationRules {
   readonly battleHandoffX: number;
   readonly emergencyThresholdBase: number;
   readonly emergencyThresholdUpperBound: number;
-  readonly enemySelection: {
-    readonly ordinaryIds: readonly ["goblin", "golem", "wolf"];
-    readonly ordinaryRollUpperBound: number;
-    readonly dragonRollFirstDay: number;
-    readonly dragonChanceDayOffset: number;
-    readonly dragonChancePerDay: number;
-    readonly dragonRollUpperBound: number;
-    readonly scaling: Readonly<
-      Record<
-        EnemyId,
-        {
-          readonly maximumHpBase: number;
-          readonly maximumHpPerDay: number;
-          readonly attackBase: number;
-          readonly attackPerDay: number;
-          readonly goldRewardBase: number;
-          readonly goldRewardPerDay: number;
-          readonly profileExpBase: number;
-          readonly profileExpPerDay: number;
-        }
-      >
-    >;
-  };
+  readonly enemySelection: EnemyGenerationRules;
   readonly rollMinimums: {
     readonly bladesmith: number;
     readonly armorsmith: number;
@@ -111,13 +110,17 @@ function createGenerationState(
   });
 }
 
+function createEnemySnapshot(enemy: Readonly<EnemySnapshot>): EnemySnapshot {
+  return Object.freeze({ ...enemy });
+}
+
 function createQueuedEncounter(
   encounter: Readonly<QueuedEncounter>,
 ): QueuedEncounter {
   return encounter.kind === "battle"
     ? Object.freeze({
         kind: "battle",
-        enemy: Object.freeze({ ...encounter.enemy }),
+        enemy: createEnemySnapshot(encounter.enemy),
       })
     : Object.freeze({ ...encounter });
 }
@@ -130,7 +133,7 @@ function createCurrentEncounter(
     : encounter.kind === "battle"
       ? Object.freeze({
           kind: "battle",
-          enemy: Object.freeze({ ...encounter.enemy }),
+          enemy: createEnemySnapshot(encounter.enemy),
           x: encounter.x,
         })
       : Object.freeze({ ...encounter });
@@ -143,7 +146,7 @@ function positionEncounter(
   return encounter.kind === "battle"
     ? Object.freeze({
         kind: "battle",
-        enemy: Object.freeze({ ...encounter.enemy }),
+        enemy: createEnemySnapshot(encounter.enemy),
         x,
       })
     : Object.freeze({ ...encounter, x, used: false });
