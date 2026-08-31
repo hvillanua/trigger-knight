@@ -234,13 +234,25 @@ describe("original-v1.3 enemy generation", () => {
         pregameStepsRemaining: 0,
       },
     } as RunState;
-    const promoted = gameplayEngine.step(ready, []).state;
+    const promotion = gameplayEngine.step(ready, []);
+    const promoted = promotion.state;
 
     expect(promoted.encounters.current).toMatchObject({
       enemy: { id: "goblin" },
     });
     expect(promoted.encounters.generation).toMatchObject({
       dragonSpawned: false,
+    });
+    expect(promotion.events).toContainEqual({
+      type: "encounter-promoted",
+      encounter: {
+        kind: "battle",
+        enemy: {
+          id: "goblin",
+          maximumHp: 3_060,
+        },
+        x: 600,
+      },
     });
   });
 
@@ -273,7 +285,11 @@ describe("original-v1.3 enemy generation", () => {
       },
     };
     expect(gameplayEngine.observe(currentState).encounters.current).toEqual({
-      ...queuedBattle,
+      kind: "battle",
+      enemy: {
+        id: queuedBattle.enemy.id,
+        maximumHp: queuedBattle.enemy.maximumHp,
+      },
       x: 600,
     });
     expect(state.encounters.generation).not.toHaveProperty("enemy");

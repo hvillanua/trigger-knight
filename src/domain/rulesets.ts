@@ -14,6 +14,7 @@ import type {
 import {
   advanceEncounterLifecycle,
   initializeEncounterQueue,
+  observeCurrentEncounter,
   type EnemyGenerationRules,
   type EncounterGenerationRules,
 } from "./encounters.js";
@@ -457,15 +458,7 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
       lifespan: Object.freeze({ ...state.lifespan }),
       player: createPlayerState(state.player),
       encounters: Object.freeze({
-        current:
-          currentEncounter === null
-            ? null
-            : currentEncounter.kind === "battle"
-              ? Object.freeze({
-                  ...currentEncounter,
-                  enemy: Object.freeze({ ...currentEncounter.enemy }),
-                })
-              : Object.freeze({ ...currentEncounter }),
+        current: observeCurrentEncounter(currentEncounter),
         upcoming: Object.freeze(
           state.encounters.upcoming.map((encounter) =>
             encounter.kind === "battle"

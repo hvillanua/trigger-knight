@@ -11,6 +11,7 @@ import type {
   GameplayExecution,
   GameplayTrace,
   GameplayTraceComparison,
+  ObservedPositionedBattleEncounter,
   PlayerAgent,
   PlayerPolicy,
   PolicyConfig,
@@ -342,7 +343,7 @@ describe("public application contracts", () => {
             }>
           | Readonly<{
               kind: "battle";
-              enemy: QueuedBattleEncounter["enemy"];
+              enemy: ObservedPositionedBattleEncounter["enemy"];
               x: number;
             }>
           | null;
@@ -376,7 +377,7 @@ describe("public application contracts", () => {
               }>
             | Readonly<{
                 kind: "battle";
-                enemy: QueuedBattleEncounter["enemy"];
+                enemy: ObservedPositionedBattleEncounter["enemy"];
                 x: number;
               }>;
         }>

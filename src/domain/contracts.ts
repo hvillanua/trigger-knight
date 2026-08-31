@@ -102,6 +102,12 @@ export interface EnemySnapshot {
   readonly profileExp: number;
 }
 
+/** Player-facing enemy values shown for the current battle. */
+export interface ObservedEnemy {
+  readonly id: EnemyId;
+  readonly maximumHp: number;
+}
+
 /** Public marker for a queued battle whose enemy is not yet visible. */
 export interface BattleEncounter {
   readonly kind: "battle";
@@ -127,6 +133,14 @@ export interface PositionedBattleEncounter extends QueuedBattleEncounter {
 export type CurrentEncounter =
   PositionedShopEncounter | PositionedBattleEncounter;
 
+export interface ObservedPositionedBattleEncounter extends BattleEncounter {
+  readonly enemy: ObservedEnemy;
+  readonly x: number;
+}
+
+export type ObservedCurrentEncounter =
+  PositionedShopEncounter | ObservedPositionedBattleEncounter;
+
 export interface EncounterGenerationState {
   readonly shopsUntilBattle: number;
   readonly dragonSpawned: boolean;
@@ -150,7 +164,7 @@ export interface EncounterQueueState {
 }
 
 export interface EncounterObservation {
-  readonly current: CurrentEncounter | null;
+  readonly current: ObservedCurrentEncounter | null;
   readonly upcoming: readonly ObservedQueuedEncounter[];
 }
 
@@ -217,7 +231,7 @@ export interface RunEndedEvent {
 
 export interface EncounterPromotedEvent {
   readonly type: "encounter-promoted";
-  readonly encounter: CurrentEncounter;
+  readonly encounter: ObservedCurrentEncounter;
 }
 
 export interface ShopDepartedEvent {

@@ -83,8 +83,8 @@ with the Node trace. Canvas size, device pixel ratio, redraw cadence, and
 interpolation therefore do not affect encounter or economy state.
 
 The locked `m3-parity-schedule` trace hash, updated when issue #55 added enemy
-snapshots to battle entries, is
-`sha256-v1:a38512975da6edd259dc04f795a75c45ec203e5d2daa6fd32adb0676ef2a4154`.
+snapshots and the player-facing current-enemy projection, is
+`sha256-v1:6d20f4b544b27ae6ff55b6f9bd8f1e2d40118a360dad5199d4dbfc0f94d43181`.
 
 ## Compatibility labels and boundary
 

@@ -6,6 +6,7 @@ import type {
   EncounterQueueState,
   GameEvent,
   LifespanState,
+  ObservedCurrentEncounter,
   PlayerState,
   QueuedEncounter,
   RandomState,
@@ -134,6 +135,31 @@ function createCurrentEncounter(
       ? Object.freeze({
           kind: "battle",
           enemy: createEnemySnapshot(encounter.enemy),
+          x: encounter.x,
+        })
+      : Object.freeze({ ...encounter });
+}
+
+/** Projects authoritative encounter state into the shared player-facing model. */
+export function observeCurrentEncounter(
+  encounter: Readonly<CurrentEncounter>,
+): ObservedCurrentEncounter;
+export function observeCurrentEncounter(encounter: null): null;
+export function observeCurrentEncounter(
+  encounter: Readonly<CurrentEncounter> | null,
+): ObservedCurrentEncounter | null;
+export function observeCurrentEncounter(
+  encounter: Readonly<CurrentEncounter> | null,
+): ObservedCurrentEncounter | null {
+  return encounter === null
+    ? null
+    : encounter.kind === "battle"
+      ? Object.freeze({
+          kind: "battle",
+          enemy: Object.freeze({
+            id: encounter.enemy.id,
+            maximumHp: encounter.enemy.maximumHp,
+          }),
           x: encounter.x,
         })
       : Object.freeze({ ...encounter });
@@ -434,7 +460,7 @@ export function generateEncounter(
   });
 }
 
-/** Creates the original three-entry lookahead without selecting battle enemies. */
+/** Creates the original three-entry lookahead with queue-time enemy selection. */
 export function initializeEncounterQueue(
   random: Readonly<RandomState>,
   day: number,
@@ -592,7 +618,10 @@ export function advanceEncounterLifecycle(
   );
   current = positionEncounter(promoted, rules.entryX);
   events.push(
-    Object.freeze({ type: "encounter-promoted", encounter: current }),
+    Object.freeze({
+      type: "encounter-promoted",
+      encounter: observeCurrentEncounter(current),
+    }),
   );
 
   return Object.freeze({

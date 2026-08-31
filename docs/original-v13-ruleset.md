@@ -167,7 +167,9 @@ flag remains set while later ordinary battles wait in the queue. It clears when
 an ordinary battle becomes current, before that promotion generates its
 replacement. Authoritative state stores each queued enemy snapshot. Public
 observation hides enemy identity on future battles and reveals it only on the
-current positioned battle.
+current positioned battle. That player-facing current value contains the enemy
+identity and maximum HP. Attack, gold reward, and profile EXP remain in
+authoritative state until a public gameplay outcome needs them.
 
 A shop generation call consumes `random(100)`. The exact accepted ranges are
 66 through 99 for Bladesmith, 31 through 65 for Armorsmith, 26 through 30 for
@@ -195,7 +197,7 @@ The queue, enemy snapshots, duplicate flags, Dragon flag, counters, positions,
 and complete post-generation random state are authoritative, serializable, and
 deeply frozen. Ordinary `GameObservation` publishes the current encounter and
 three upcoming entry kinds, but not future enemy identity, the distance counter,
-generation flags, or random state.
+generation flags, reward values, enemy attack, or random state.
 
 The research confirms the queue, distance, and emergency-threshold draws but
 does not establish their relative order during initialization or refill. The
@@ -232,13 +234,14 @@ Battles move left by the full running speed. Crossing below x 420 changes the
 phase to `battle-handoff` and emits `battle-handoff`. Later steps freeze
 distance, day, score, the encounter counter, and the current battle position.
 They still advance active ticks and lifespan until pause, a tutorial, run death,
-or future Milestone 4 combat changes the state. No enemy, reward, auto-win, or
-battle resolution exists in this handoff.
+or future Milestone 4 combat changes the state. No combat actor state, reward,
+auto-win, or battle resolution exists in this handoff.
 
-Promotion emits `encounter-promoted` with the positioned current encounter.
-All three encounter events are semantic domain outcomes. Canvas redraws and
-interpolation consume observations without stepping or changing purchase
-eligibility.
+Promotion emits `encounter-promoted` with the same player-facing positioned
+encounter used by observation. It does not copy hidden enemy attack or reward
+values into the public event stream. All three encounter events are semantic
+domain outcomes. Canvas redraws and interpolation consume observations without
+stepping or changing purchase eligibility.
 
 ## Lifespan and termination
 
