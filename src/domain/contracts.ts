@@ -143,7 +143,6 @@ export interface BattleEncounter {
 export interface QueuedBattleEncounter extends BattleEncounter {
   readonly enemy: EnemySnapshot;
 }
-
 export type QueuedEncounter = ShopEncounter | QueuedBattleEncounter;
 
 /** @playerVisible Public view of a queued encounter. */
