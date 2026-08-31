@@ -8,7 +8,10 @@ export interface ProfileState {
   readonly tutorialPreference?: "enabled" | "disabled";
 }
 
-/** Versioned, serializable state for authoritative gameplay randomness. */
+/**
+ * Versioned, serializable state for authoritative gameplay randomness.
+ * @hiddenGameplayState
+ */
 export interface RandomState {
   readonly algorithm: "mulberry32-fnv1a32-v1";
   readonly state: number;
@@ -94,6 +97,7 @@ export interface ShopEncounter {
 
 export type EnemyId = "goblin" | "golem" | "wolf" | "dragon";
 
+/** @hiddenGameplayState Complete enemy values owned by authoritative gameplay. */
 export interface EnemySnapshot {
   readonly id: EnemyId;
   readonly maximumHp: number;
@@ -113,7 +117,10 @@ export interface BattleEncounter {
   readonly kind: "battle";
 }
 
-/** Authoritative queued battle with its generation-time enemy values. */
+/**
+ * Authoritative queued battle with its generation-time enemy values.
+ * @hiddenGameplayState
+ */
 export interface QueuedBattleEncounter extends BattleEncounter {
   readonly enemy: EnemySnapshot;
 }
@@ -130,6 +137,7 @@ export interface PositionedBattleEncounter extends QueuedBattleEncounter {
   readonly x: number;
 }
 
+/** @hiddenGameplayState Complete current encounter owned by gameplay. */
 export type CurrentEncounter =
   PositionedShopEncounter | PositionedBattleEncounter;
 
@@ -141,6 +149,7 @@ export interface ObservedPositionedBattleEncounter extends BattleEncounter {
 export type ObservedCurrentEncounter =
   PositionedShopEncounter | ObservedPositionedBattleEncounter;
 
+/** @hiddenGameplayState Encounter scheduling and generation internals. */
 export interface EncounterGenerationState {
   readonly shopsUntilBattle: number;
   readonly dragonSpawned: boolean;
@@ -156,6 +165,7 @@ export interface EncounterGenerationState {
   };
 }
 
+/** @hiddenGameplayState Complete authoritative encounter state. */
 export interface EncounterQueueState {
   readonly current: CurrentEncounter | null;
   readonly distanceUntilNext: number;
@@ -168,7 +178,10 @@ export interface EncounterObservation {
   readonly upcoming: readonly ObservedQueuedEncounter[];
 }
 
-/** Authoritative state owned by the gameplay domain. */
+/**
+ * Authoritative state owned by the gameplay domain.
+ * @hiddenGameplayState
+ */
 export interface RunState {
   readonly schemaVersion: 11;
   readonly ruleset: RuleSetId;
@@ -263,7 +276,10 @@ export interface PurchaseRejectedEvent {
   readonly reason: PurchaseRejectionReason;
 }
 
-/** Authoritative outcome emitted by a gameplay transition. */
+/**
+ * Player-visible outcome emitted by a gameplay transition.
+ * @playerVisible
+ */
 export type GameEvent =
   | BattleHandoffEvent
   | EncounterPromotedEvent
@@ -294,7 +310,10 @@ export interface WorldCamera {
   readonly height: number;
 }
 
-/** Public gameplay information shared by browser and automated players. */
+/**
+ * Public gameplay information shared by browser and automated players.
+ * @playerVisible
+ */
 export interface GameObservation {
   readonly ruleset: RuleSetId;
   readonly camera: WorldCamera;

@@ -10,7 +10,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "check:architecture": "depcruise --config dependency-cruiser.config.cjs src",
+    "check:architecture": "depcruise --config dependency-cruiser.config.cjs src && npm run check:public-contracts",
+    "check:public-contracts": "node build/check-public-contracts.mjs",
     "format": "prettier --write . --ignore-unknown",
     "format:check": "prettier --check . --ignore-unknown",
     "lint": "eslint . --max-warnings 0",
