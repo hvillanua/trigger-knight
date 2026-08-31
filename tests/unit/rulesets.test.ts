@@ -80,6 +80,58 @@ describe("ruleset registry", () => {
             height: 320,
           },
         },
+        encounters: {
+          enemySelection: {
+            ordinaryIds: ["goblin", "golem", "wolf"],
+            ordinaryRollUpperBound: 3,
+            dragonRollFirstDay: 7,
+            dragonChanceDayOffset: 7,
+            dragonChancePerDay: 3,
+            dragonRollUpperBound: 100,
+            scaling: {
+              goblin: {
+                maximumHpBase: 600,
+                maximumHpPerDay: 60,
+                attackBase: 82,
+                attackPerDay: 40,
+                goldRewardBase: 70,
+                goldRewardPerDay: 12,
+                profileExpBase: 10,
+                profileExpPerDay: 3,
+              },
+              golem: {
+                maximumHpBase: 860,
+                maximumHpPerDay: 120,
+                attackBase: 40,
+                attackPerDay: 28,
+                goldRewardBase: 78,
+                goldRewardPerDay: 14,
+                profileExpBase: 9,
+                profileExpPerDay: 4,
+              },
+              wolf: {
+                maximumHpBase: 450,
+                maximumHpPerDay: 44,
+                attackBase: 94,
+                attackPerDay: 56,
+                goldRewardBase: 78,
+                goldRewardPerDay: 14,
+                profileExpBase: 8,
+                profileExpPerDay: 5,
+              },
+              dragon: {
+                maximumHpBase: 2_400,
+                maximumHpPerDay: 300,
+                attackBase: 160,
+                attackPerDay: 80,
+                goldRewardBase: 350,
+                goldRewardPerDay: 60,
+                profileExpBase: 40,
+                profileExpPerDay: 25,
+              },
+            },
+          },
+        },
       },
       compatibilityDecisions: {
         randomSequence: "mulberry32-fnv1a32-v1",
@@ -90,6 +142,9 @@ describe("ruleset registry", () => {
         encounterInitializationDrawOrder: "queue-then-distance",
         soulShrineInitializationDrawOrder: "after-queue-and-distance",
         encounterPromotionDrawOrder: "replacement-then-distance",
+        battleGenerationDrawOrder:
+          "shop-count-then-dragon-check-then-ordinary-enemy",
+        dragonResetPoint: "ordinary-battle-promotion-before-replacement",
       },
     });
     expect(Object.isFrozen(originalV13RuleSet)).toBe(true);

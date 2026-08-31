@@ -211,7 +211,17 @@ describe("original-v1.3 semantic shop purchases", () => {
           ...state,
           encounters: {
             ...state.encounters,
-            current: { kind: "battle" as const, x: 500 },
+            current: {
+              kind: "battle" as const,
+              enemy: {
+                id: "goblin" as const,
+                maximumHp: 660,
+                attack: 122,
+                goldReward: 82,
+                profileExp: 13,
+              },
+              x: 500,
+            },
           },
         };
       },

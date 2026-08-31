@@ -79,7 +79,7 @@ run configuration and command schedule. See
 [`gameplay-diagnostics.md`](gameplay-diagnostics.md).
 
 Run-result schema version 2 records the replacement of placeholder gold with
-authoritative state. The streamed trace covers the complete version-10 run state
+authoritative state. The streamed trace covers the complete version-11 run state
 and its player observation on every step.
 
 ## Minimal batches

@@ -79,7 +79,9 @@ describe("original-v1.3 lifecycle", () => {
       },
       encounters: {
         current: null,
-        upcoming: state.encounters.upcoming,
+        upcoming: state.encounters.upcoming.map((encounter) =>
+          encounter.kind === "battle" ? { kind: "battle" } : encounter,
+        ),
       },
       lifecycle: {
         phase: "running",

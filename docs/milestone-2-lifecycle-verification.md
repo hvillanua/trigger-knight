@@ -19,27 +19,31 @@ The terminal values are:
 | Elapsed steps   | 2,564      |
 | Active ticks    | 2,500      |
 | Terminal reason | `lifespan` |
-| Score           | 28,950     |
+| Score           | 31,350     |
 | Day             | 1          |
-| Distance        | 2,895      |
+| Distance        | 3,135      |
 | Gold            | 300        |
 
 The locked host-neutral gameplay trace hash is
-`sha256-v1:85d3d8eb822ee80a510ddce6cd7a20810fe9cef45a4f9e63950a1ed27282a012`.
+`sha256-v1:51f0a5db71defe228e8b359318bdd639053dbde07ca6b30cfba9d88814c9b700`.
 The terminal checkpoint hash is
-`sha256-v1:7dbb8f459165f30a229b7b79ea0d2804522c1d4deffbd1e9f4d2c8a2209039b8`.
+`sha256-v1:b4cd30a1e5393400511d56acd417a03ea86dc9539a3629d6efe2cec04bfd8458`.
 The simulation result trace hash, which also covers policy identity and the
 3,000-step budget, is
-`sha256-v1:979efa3772f62bc32e2cacd9b7f33ac5c8b98c613b64994870474074847e8c8a`.
+`sha256-v1:b7c51eedfe615de7e2d1e7f4d012c3c8e2fc902cf4277f4148f451928c0bfbed`.
 
 Issue #42 advances the version-7 encounter queue through world space. Issue #43
 adds the version-8 current-shop use state. Issue #44 adds the version-9
 equipment names used by upgrade transitions. Issue #45 adds the version-10
-hidden Soul Shrine state and its initial threshold draw. The scenario and
-command schedule are unchanged. It reaches its first battle at distance 2,895.
-It then waits at the battle handoff while active-tick lifespan continues to
-death. The serializable state change updates the locked hashes above. Gameplay
-traces and run results remain at version 2.
+hidden Soul Shrine state and its initial threshold draw. Issue #55 adds the
+version-11 enemy snapshot and Dragon state. The scenario and command schedule
+are unchanged. The added enemy draws change later encounter spacing, so it now
+reaches its first battle at distance 3,135. It then waits at the battle handoff
+while active-tick lifespan continues to death. Public observations and promotion
+events expose only the current enemy identity and maximum HP, so hidden attack
+and reward values do not enter the player-facing trace. The state and public
+contract changes update the locked hashes above. Gameplay traces and run results
+remain at version 2.
 
 The unit check compares every browser-session checkpoint with the headless
 trace. This includes commands, complete state, public observations, events,

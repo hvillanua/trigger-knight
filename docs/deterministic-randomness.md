@@ -34,15 +34,16 @@ sequence so retained seeds and checkpoints remain reproducible.
 
 ## Run state and isolation
 
-Run-state schema version `10` includes fixed-step lifecycle state, running
+Run-state schema version `11` includes fixed-step lifecycle state, running
 progression, the consumed profile multiplier, player economy and named loadout,
-the current encounter and its one-use purchase state, the three-entry queue,
-its world counter and hidden generation and Soul Shrine bookkeeping, the ruleset
-identity, and the complete post-generation random state:
+the current encounter and its one-use purchase state, the three-entry queue and
+its generation-time enemy snapshots, its world counter and hidden Dragon and
+Soul Shrine bookkeeping, the ruleset identity, and the complete
+post-generation random state:
 
 ```json
 {
-  "schemaVersion": 10,
+  "schemaVersion": 11,
   "ruleset": "original-v1.3",
   "steps": 0,
   "activeTicks": 0,
@@ -67,11 +68,21 @@ identity, and the complete post-generation random state:
     "distanceUntilNext": 1467,
     "upcoming": [
       { "kind": "shop", "shop": "bladesmith", "cachedPrice": 236 },
-      { "kind": "battle" },
+      {
+        "kind": "battle",
+        "enemy": {
+          "id": "goblin",
+          "maximumHp": 660,
+          "attack": 122,
+          "goldReward": 82,
+          "profileExp": 13
+        }
+      },
       { "kind": "shop", "shop": "pharmacy", "cachedPrice": 150 }
     ],
     "generation": {
       "shopsUntilBattle": 0,
+      "dragonSpawned": false,
       "seenSinceBattle": {
         "bladesmith": false,
         "armorsmith": false,
@@ -106,11 +117,20 @@ lives in `RunState`, a restored engine checkpoint also produces the same later
 engine outcomes. Authoritative domain code remains prohibited from reading
 ambient randomness by the repository lint validation. Queue generation consumes
 only explicit bounded draws. Rejected duplicate shops and early-day Voucher
-candidates consume another `random(100)` draw; battle entries currently consume
-only their shop-count draw because enemy selection is deferred to Milestone 4.
+candidates consume another `random(100)` draw. A battle first consumes
+`random(3)` for the next shop count. On days 1 through 6, or while the Dragon
+flag is set, it then consumes `random(3)` for Goblin, Golem, or Wolf. From day 7
+onward with the flag clear, it consumes `random(100)` for the Dragon check. A
+successful check consumes no ordinary-enemy draw; a failed check then consumes
+`random(3)`. Day 7 therefore uses the Dragon draw with a zero-percent threshold.
+Queueing a Dragon sets the flag. Promoting an ordinary battle clears it before
+generating the replacement entry.
+
 Fresh runs draw `random(1000)` after filling the queue, then draw `random(10)`
 for the initial 40-49 emergency Shrine threshold. Promotions generate the
 replacement queue entry, then draw `random(300)` for the next world-space
 distance. A forced Shrine skips the normal shop roll and consumes one
 `random(10)` threshold reroll. The research does not confirm the relative order
-of initialization draws, so this ordering is an explicit clean-room decision.
+of initialization and refill draws, so those ordering choices are explicit
+clean-room decisions. The enemy ranges, probabilities, and order within a
+battle generation call are confirmed original behavior.

@@ -22,6 +22,16 @@ const gameplayEngine = createTestGameplayEngine();
 const purchaseCommand = Object.freeze({
   type: "purchase-current-encounter" as const,
 });
+const goblinBattle = Object.freeze({
+  kind: "battle" as const,
+  enemy: Object.freeze({
+    id: "goblin" as const,
+    maximumHp: 660,
+    attack: 122,
+    goldReward: 82,
+    profileExp: 13,
+  }),
+});
 const purchaseRules: PurchaseRules = Object.freeze({
   actionMinimumX: originalV13RuleSet.constants.encounters.shopActionMinimumX,
   actionMaximumX: originalV13RuleSet.constants.encounters.shopActionMaximumX,
@@ -64,6 +74,7 @@ function generationState(
 ): EncounterGenerationState {
   return {
     shopsUntilBattle: 1,
+    dragonSpawned: false,
     seenSinceBattle: {
       bladesmith: false,
       armorsmith: false,
@@ -103,7 +114,7 @@ function stateGeneratingReplacement(
       distanceUntilNext: 0,
       upcoming: [
         { kind: "shop", shop: "pharmacy", cachedPrice: 150 },
-        { kind: "battle" },
+        goblinBattle,
         { kind: "shop", shop: "grims-shop", cachedPrice: 200 },
       ],
       generation: generationState({
@@ -337,7 +348,7 @@ describe("original-v1.3 Soul Shrine behavior", () => {
     );
 
     expect(forced.encounter).toMatchObject({ shop: "soul-shrine" });
-    expect(battle.encounter).toEqual({ kind: "battle" });
+    expect(battle.encounter).toMatchObject({ kind: "battle" });
     expect(battle.generation.seenSinceBattle.soulShrine).toBe(false);
     expect(afterPassing.encounter).toMatchObject({ shop: "bladesmith" });
     expect(afterPassing.generation.soulShrine.emergencyChanceGiven).toBe(true);

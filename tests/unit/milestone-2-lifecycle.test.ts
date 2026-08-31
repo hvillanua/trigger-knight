@@ -57,7 +57,7 @@ describe("Milestone 2 original lifecycle", () => {
 
     expect(browserTrace).toEqual(headlessTrace);
     expect(browserTrace.traceHash).toBe(
-      "sha256-v1:85d3d8eb822ee80a510ddce6cd7a20810fe9cef45a4f9e63950a1ed27282a012",
+      "sha256-v1:51f0a5db71defe228e8b359318bdd639053dbde07ca6b30cfba9d88814c9b700",
     );
     expect(browserTrace.checkpoints).toHaveLength(
       ORIGINAL_LIFECYCLE_TERMINAL_STEP + 1,
@@ -133,19 +133,19 @@ describe("Milestone 2 original lifecycle", () => {
       ],
     });
     expect(terminal?.checkpointHash).toBe(
-      "sha256-v1:7dbb8f459165f30a229b7b79ea0d2804522c1d4deffbd1e9f4d2c8a2209039b8",
+      "sha256-v1:b4cd30a1e5393400511d56acd417a03ea86dc9539a3629d6efe2cec04bfd8458",
     );
     expect(result).toMatchObject({
       steps: ORIGINAL_LIFECYCLE_TERMINAL_STEP,
       activeTicks: 2_500,
       terminalReason: "lifespan",
-      score: 28_950,
+      score: 31_350,
       day: 1,
-      distance: 2_895,
+      distance: 3_135,
     });
     expect(repeated).toEqual(result);
     expect(result.traceHash).toBe(
-      "sha256-v1:979efa3772f62bc32e2cacd9b7f33ac5c8b98c613b64994870474074847e8c8a",
+      "sha256-v1:b7c51eedfe615de7e2d1e7f4d012c3c8e2fc902cf4277f4148f451928c0bfbed",
     );
     expect(repeated.traceHash).toBe(result.traceHash);
   });
