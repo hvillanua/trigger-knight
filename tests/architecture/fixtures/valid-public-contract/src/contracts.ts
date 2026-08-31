@@ -1,9 +1,9 @@
-/** @hiddenGameplayState Complete values owned by authoritative gameplay. */
 interface EnemySnapshot {
   readonly id: string;
   readonly reward: number;
 }
 
+/** @playerVisible Values deliberately included in the public contract. */
 interface ObservedEnemy {
   readonly id: string;
 }

@@ -27,14 +27,14 @@ presentation, policy, and simulation ports live in the application layer. This
 keeps adapter and device concepts out of domain-facing values while ensuring
 browser and automated players receive the same public gameplay information.
 
-Player-visible contract roots carry the `@playerVisible` JSDoc tag. Complete
-authoritative values that must not reach those roots carry
-`@hiddenGameplayState`. `npm run check:public-contracts` follows TypeScript type
-references transitively and fails when a player-visible observation or event
-reuses hidden gameplay state. Keep a separate observed type and an explicit
-projection at this boundary; do not expose an authoritative object and rely on
-consumers to ignore its hidden fields. The check is a structural backstop, so
-focused exact-shape tests still define which primitive fields are visible.
+Every declaration in the player-visible contract carries the `@playerVisible`
+JSDoc tag. All other project types are hidden by default.
+`npm run check:public-contracts` follows TypeScript type references transitively
+and fails when an approved public declaration reaches an unapproved project
+type. Keep a separate observed type and an explicit projection at this boundary;
+do not expose an authoritative object and rely on consumers to ignore its hidden
+fields. The check is a structural backstop, so focused exact-shape tests still
+define which primitive fields are visible.
 
 `src/application/gameplay-engine.ts` exports the engine contract and a factory
 that accepts a ruleset registry. It does not select the production registry.

@@ -26,15 +26,16 @@ Before changing `GameObservation`, `GameEvent`, `PresentationFrame`,
 4. Define a dedicated observed type and an explicit projection from
    authoritative state. Never spread an authoritative object into a public
    value, including patterns such as `...state`, `...encounter`, or `...enemy`.
-5. Mark player-visible type roots with `@playerVisible`. Mark authoritative
-   declarations that must never be reachable from those roots with
-   `@hiddenGameplayState`.
+5. Mark every declaration deliberately included in the public contract with
+   `@playerVisible`. Untagged project types are hidden by default. Do not approve
+   an authoritative type merely because one of its fields is currently visible.
 6. Run `npm run check:public-contracts` and the focused unit tests that cover the
    changed observation or event. If the checker fails, project the safe fields;
    do not remove a tag or weaken the checker to make the failure disappear.
 7. Update public-contract documentation and deterministic trace or hash fixtures
    when the intentional projection changes.
 
-The structural checker prevents player-visible types from transitively reusing
-tagged internal types. It cannot determine whether a new primitive field is
-secret, so evidence review and exact-shape tests remain required.
+The structural checker allows player-visible types to reference only other
+approved public types, standard library types, and primitives. It cannot
+determine whether a new primitive field is secret, so evidence review and
+exact-shape tests remain required.

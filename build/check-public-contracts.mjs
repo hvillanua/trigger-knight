@@ -4,7 +4,6 @@ import process from "node:process";
 import ts from "typescript";
 
 const PLAYER_VISIBLE_TAG = "playerVisible";
-const HIDDEN_GAMEPLAY_STATE_TAG = "hiddenGameplayState";
 
 function readProjectArgument(arguments_) {
   const projectIndex = arguments_.indexOf("--project");
@@ -129,9 +128,7 @@ if (configResult.error) {
                 declarationName(referencedDeclaration),
               ];
 
-              if (
-                hasJSDocTag(referencedDeclaration, HIDDEN_GAMEPLAY_STATE_TAG)
-              ) {
+              if (!hasJSDocTag(referencedDeclaration, PLAYER_VISIBLE_TAG)) {
                 violations.push({
                   path: nextPath,
                   root: rootDeclaration,
@@ -165,7 +162,7 @@ if (configResult.error) {
 
       process.stderr.write(
         `${relativeFile}:${line + 1}:${character + 1} ` +
-          `Player-visible type reaches hidden gameplay state: ` +
+          `Player-visible type reaches an unapproved project type: ` +
           `${violation.path.join(" -> ")}\n`,
       );
     }

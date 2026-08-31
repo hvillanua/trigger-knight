@@ -139,7 +139,7 @@ describe("player-visible contract rules", () => {
     expect(result.status).toBe(0);
   });
 
-  it("rejects a transitive reference to hidden gameplay state", () => {
+  it("rejects a transitive reference to an unapproved project type", () => {
     const result = checkPublicContractFixture("forbidden-public-contract");
 
     expect(result.status).not.toBe(0);
