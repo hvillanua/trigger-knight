@@ -212,7 +212,8 @@ describe("Milestone 3 economy verification", () => {
       commands.every(
         (command) =>
           command.type === "dismiss-tutorial" ||
-          command.type === "purchase-current-encounter",
+          command.type === "purchase-current-encounter" ||
+          command.type === "use-carried-item",
       ),
     ).toBe(true);
     expect(commands.every((command) => Object.keys(command).length === 1)).toBe(
@@ -441,7 +442,7 @@ describe("Milestone 3 economy verification", () => {
       equal: true,
     });
     expect(headless.trace.traceHash).toBe(
-      "sha256-v1:4ff4fc50db1876496dc0f3cbffcb7d14ef22a93637b89fc2efaf62ce60208a0a",
+      "sha256-v1:dd6404798f0d95a27eacfdec603ff28554680eaf17441c2e5439682f82eda18e",
     );
     expect(browser.readDiagnostics().traceHash).toBe(headless.trace.traceHash);
   });

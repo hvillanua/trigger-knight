@@ -21,6 +21,9 @@ export type {
   LifespanObservation,
   LifespanState,
   InventoryItemId,
+  ItemUseRejectedEvent,
+  ItemUseRejectionReason,
+  ItemUsedEvent,
   EnemyId,
   EnemySnapshot,
   ObservedCurrentEncounter,
@@ -56,6 +59,7 @@ export type {
   StepAdvancedEvent,
   TogglePauseCommand,
   TutorialDismissedEvent,
+  UseCarriedItemCommand,
   WorldCamera,
   WeaponName,
 } from "../domain/contracts.js";

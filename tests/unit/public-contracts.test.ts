@@ -33,6 +33,7 @@ import type {
   SimulationRequest,
   SimulationRunner,
   StepResult,
+  UseCarriedItemCommand,
 } from "../../src/application/contracts.js";
 
 describe("public application contracts", () => {
@@ -70,6 +71,7 @@ describe("public application contracts", () => {
       | Readonly<{ type: "dismiss-tutorial" }>
       | Readonly<{ type: "purchase-current-encounter" }>
       | Readonly<{ type: "toggle-pause" }>
+      | UseCarriedItemCommand
     >();
   });
 
@@ -218,7 +220,7 @@ describe("public application contracts", () => {
       readonly initialProfile: ProfileState;
     }>();
     expectTypeOf<RunState>().toMatchTypeOf<{
-      readonly schemaVersion: 12;
+      readonly schemaVersion: 13;
       readonly ruleset: RuleSetId;
       readonly random: RandomState;
       readonly steps: number;
@@ -366,6 +368,7 @@ describe("public application contracts", () => {
         readonly canTogglePause: boolean;
         readonly canDismissTutorial: boolean;
         readonly canPurchaseCurrentEncounter: boolean;
+        readonly canUseCarriedItem: boolean;
       };
     }>();
     expectTypeOf<GameEvent>().toEqualTypeOf<
@@ -401,6 +404,14 @@ describe("public application contracts", () => {
             | "no-current-shop"
             | "out-of-range"
             | "shop-effect-unavailable";
+        }>
+      | Readonly<{
+          type: "item-used";
+          item: "elixir" | "divine-edge" | "gold-voucher";
+        }>
+      | Readonly<{
+          type: "item-use-rejected";
+          reason: "lifecycle-gated" | "no-current-battle" | "no-item";
         }>
       | Readonly<{ type: "run-ended"; reason: "lifespan" | "combat" }>
       | Readonly<{

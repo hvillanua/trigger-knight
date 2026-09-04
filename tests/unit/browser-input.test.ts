@@ -2,9 +2,13 @@ import { expect, it } from "vitest";
 
 import {
   commandsForAdvanceActivation,
+  commandsForItemUseActivation,
   commandsForPurchaseActivation,
 } from "../../src/browser/input.js";
-import { PURCHASE_CURRENT_ENCOUNTER_COMMAND } from "../../src/application/commands.js";
+import {
+  PURCHASE_CURRENT_ENCOUNTER_COMMAND,
+  USE_CARRIED_ITEM_COMMAND,
+} from "../../src/application/commands.js";
 
 it("does not represent a manual engine step as gameplay intent", () => {
   const commands = commandsForAdvanceActivation();
@@ -23,4 +27,15 @@ it("maps browser purchase activation to device-independent gameplay intent", () 
   expect(commands[0]).not.toHaveProperty("price");
   expect(commands[0]).not.toHaveProperty("effect");
   expect(commands[0]).not.toHaveProperty("coordinate");
+});
+
+it("maps browser item-use activation to device-independent gameplay intent", () => {
+  const commands = commandsForItemUseActivation();
+
+  expect(commands).toEqual([{ type: "use-carried-item" }]);
+  expect(commands[0]).toBe(USE_CARRIED_ITEM_COMMAND);
+  expect(Object.isFrozen(commands)).toBe(true);
+  expect(Object.isFrozen(commands[0])).toBe(true);
+  expect(commands[0]).not.toHaveProperty("effect");
+  expect(commands[0]).not.toHaveProperty("item");
 });

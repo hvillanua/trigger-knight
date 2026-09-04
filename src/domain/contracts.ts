@@ -175,6 +175,7 @@ export interface CombatActorState {
 /** Authoritative state for the current battle. */
 export interface BattleState {
   readonly enemyHp: number;
+  readonly enemyGoldMultiplier: number;
   readonly hero: CombatActorState;
   readonly enemy: CombatActorState;
 }
@@ -280,7 +281,7 @@ export interface EncounterObservation {
 
 /** Authoritative state owned by the gameplay domain. */
 export interface RunState {
-  readonly schemaVersion: 12;
+  readonly schemaVersion: 13;
   readonly ruleset: RuleSetId;
   readonly random: RandomState;
   readonly steps: number;
@@ -312,9 +313,17 @@ export interface PurchaseCurrentEncounterCommand {
   readonly type: "purchase-current-encounter";
 }
 
+/** @playerVisible Device-independent intent to use the carried item. */
+export interface UseCarriedItemCommand {
+  readonly type: "use-carried-item";
+}
+
 /** @playerVisible Device-independent commands produced by a player. */
 export type GameCommand =
-  TogglePauseCommand | DismissTutorialCommand | PurchaseCurrentEncounterCommand;
+  | TogglePauseCommand
+  | DismissTutorialCommand
+  | PurchaseCurrentEncounterCommand
+  | UseCarriedItemCommand;
 
 /**
  * Elapsed-step outcome exposed to players.
@@ -373,6 +382,12 @@ export interface ShopPurchasedEvent {
   readonly price: number;
 }
 
+/** @playerVisible Successful carried-item use exposed to players. */
+export interface ItemUsedEvent {
+  readonly type: "item-used";
+  readonly item: InventoryItemId;
+}
+
 /** @playerVisible Purchase rejection reason exposed to players. */
 export type PurchaseRejectionReason =
   | "already-used"
@@ -389,6 +404,16 @@ export interface PurchaseRejectedEvent {
   readonly reason: PurchaseRejectionReason;
 }
 
+/** @playerVisible Item-use rejection reason exposed to players. */
+export type ItemUseRejectionReason =
+  "lifecycle-gated" | "no-current-battle" | "no-item";
+
+/** @playerVisible Rejected carried-item use exposed to players. */
+export interface ItemUseRejectedEvent {
+  readonly type: "item-use-rejected";
+  readonly reason: ItemUseRejectionReason;
+}
+
 /**
  * Player-visible outcome emitted by a gameplay transition.
  * @playerVisible
@@ -396,6 +421,8 @@ export interface PurchaseRejectedEvent {
 export type GameEvent =
   | BattleStartedEvent
   | EncounterPromotedEvent
+  | ItemUseRejectedEvent
+  | ItemUsedEvent
   | LifespanDeathEvent
   | PauseToggledEvent
   | PurchaseRejectedEvent
@@ -420,6 +447,7 @@ export interface ActionEligibility {
   readonly canTogglePause: boolean;
   readonly canDismissTutorial: boolean;
   readonly canPurchaseCurrentEncounter: boolean;
+  readonly canUseCarriedItem: boolean;
 }
 
 /**

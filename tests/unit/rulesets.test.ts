@@ -138,7 +138,12 @@ describe("ruleset registry", () => {
           initialAttackFactor: 1,
           initialAttackCount: 0,
           initialAlpha: 100,
+          initialEnemyGoldMultiplier: 1,
           speedDecayPerActiveTick: 1,
+        },
+        items: {
+          divineEdgeAttackFactor: 100,
+          goldVoucherMultiplier: 10,
         },
       },
       compatibilityDecisions: {

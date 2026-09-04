@@ -145,7 +145,10 @@ describe("original-v1.3 encounter world lifecycle", () => {
           x: 412.5,
         },
       },
-      actions: { canPurchaseCurrentEncounter: true },
+      actions: {
+        canPurchaseCurrentEncounter: true,
+        canUseCarriedItem: false,
+      },
     });
 
     for (const x of [0, 420]) {
@@ -214,6 +217,7 @@ describe("original-v1.3 encounter world lifecycle", () => {
       lifecycle: { phase: "battling" },
       battle: {
         enemyHp: 660,
+        enemyGoldMultiplier: 1,
         hero: {
           phase: "idle",
           x: 50,

@@ -6,6 +6,7 @@ import type { CssDimensions } from "./browser/foundation.js";
 import { createBrowserGameplaySession } from "./browser/gameplay-session.js";
 import {
   commandsForAdvanceActivation,
+  commandsForItemUseActivation,
   commandsForPurchaseActivation,
 } from "./browser/input.js";
 import { ORIGINAL_V13_RULESET_ID, ruleSetRegistry } from "./domain/rulesets.js";
@@ -18,13 +19,20 @@ const advanceButton = document.querySelector<HTMLButtonElement>("#advance-run");
 const purchaseButton = document.querySelector<HTMLButtonElement>(
   "#purchase-current-encounter",
 );
+const useItemButton =
+  document.querySelector<HTMLButtonElement>("#use-carried-item");
 const gameStatus = document.querySelector<HTMLElement>("#game-status");
 
 if (canvas === null) {
   throw new Error("Missing #game-canvas");
 }
 
-if (advanceButton === null || purchaseButton === null || gameStatus === null) {
+if (
+  advanceButton === null ||
+  purchaseButton === null ||
+  useItemButton === null ||
+  gameStatus === null
+) {
   throw new Error("Missing browser gameplay controls");
 }
 
@@ -62,6 +70,7 @@ const dispatch = (commands: readonly GameCommand[]): void => {
   gameStatus.textContent = `Step ${result.observation.steps}`;
   purchaseButton.disabled =
     !result.observation.actions.canPurchaseCurrentEncounter;
+  useItemButton.disabled = !result.observation.actions.canUseCarriedItem;
 };
 
 advanceButton.addEventListener("click", () => {
@@ -70,6 +79,10 @@ advanceButton.addEventListener("click", () => {
 
 purchaseButton.addEventListener("click", () => {
   dispatch(commandsForPurchaseActivation());
+});
+
+useItemButton.addEventListener("click", () => {
+  dispatch(commandsForItemUseActivation());
 });
 
 observeDevicePixelRatioChanges(window, render);

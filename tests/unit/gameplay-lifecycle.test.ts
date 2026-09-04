@@ -96,6 +96,7 @@ describe("original-v1.3 lifecycle", () => {
         canTogglePause: true,
         canDismissTutorial: true,
         canPurchaseCurrentEncounter: false,
+        canUseCarriedItem: false,
       },
     });
   });
@@ -143,6 +144,7 @@ describe("original-v1.3 lifecycle", () => {
       canTogglePause: true,
       canDismissTutorial: false,
       canPurchaseCurrentEncounter: false,
+      canUseCarriedItem: false,
     });
   });
 
@@ -244,6 +246,7 @@ describe("original-v1.3 lifecycle", () => {
       canTogglePause: false,
       canDismissTutorial: false,
       canPurchaseCurrentEncounter: false,
+      canUseCarriedItem: false,
     });
   });
 });

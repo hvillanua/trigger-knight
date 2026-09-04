@@ -57,6 +57,7 @@ describe("original-v1.3 battle entry", () => {
       lifecycle: { phase: "battling" },
       battle: {
         enemyHp: enemyMaximumHp,
+        enemyGoldMultiplier: 1,
         hero: {
           phase: "idle",
           x: 50,

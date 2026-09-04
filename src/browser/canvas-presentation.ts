@@ -21,6 +21,10 @@ function describeEvent(event: GameEvent): string {
       return `${event.type}:${String(event.paused)}`;
     case "purchase-rejected":
       return `${event.type}:${event.reason}`;
+    case "item-used":
+      return `${event.type}:${event.item}`;
+    case "item-use-rejected":
+      return `${event.type}:${event.reason}`;
     case "step-advanced":
       return `${event.type}:${event.step}`;
     case "shop-departed":

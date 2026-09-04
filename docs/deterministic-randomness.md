@@ -34,7 +34,7 @@ sequence so retained seeds and checkpoints remain reproducible.
 
 ## Run state and isolation
 
-Run-state schema version `12` includes fixed-step lifecycle state, running
+Run-state schema version `13` includes fixed-step lifecycle state, running
 progression, the consumed profile multiplier, player economy and named loadout,
 the current encounter and its one-use purchase state, the three-entry queue and
 its generation-time enemy snapshots, its world counter and hidden Dragon and
@@ -43,7 +43,7 @@ post-generation random state:
 
 ```json
 {
-  "schemaVersion": 12,
+  "schemaVersion": 13,
   "ruleset": "original-v1.3",
   "steps": 0,
   "activeTicks": 0,
@@ -135,3 +135,9 @@ distance. A forced Shrine skips the normal shop roll and consumes one
 of initialization and refill draws, so those ordering choices are explicit
 clean-room decisions. The enemy ranges, probabilities, and order within a
 battle generation call are confirmed original behavior.
+
+Starting a battle initializes its hidden enemy-gold multiplier to `1`. A valid
+Gold Voucher command changes that multiplier to `10`; it consumes no gameplay
+random draw. Divine Edge changes only the current battle's hero attack factor,
+and a new battle initializes that factor and the gold multiplier from the
+ruleset again.

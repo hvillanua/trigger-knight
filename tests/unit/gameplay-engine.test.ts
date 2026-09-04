@@ -59,7 +59,7 @@ describe("gameplay engine", () => {
     expect(repeated).toEqual(state);
     expect(repeated).not.toBe(state);
     expect(state).toMatchObject({
-      schemaVersion: 12,
+      schemaVersion: 13,
       ruleset: "original-v1.3",
       steps: 0,
       activeTicks: 0,
@@ -134,6 +134,7 @@ describe("gameplay engine", () => {
         canTogglePause: true,
         canDismissTutorial: true,
         canPurchaseCurrentEncounter: false,
+        canUseCarriedItem: false,
       },
     });
     expect(observation).not.toHaveProperty("random");
@@ -215,6 +216,7 @@ describe("gameplay engine", () => {
         canTogglePause: true,
         canDismissTutorial: false,
         canPurchaseCurrentEncounter: false,
+        canUseCarriedItem: false,
       },
     });
     expect(Object.isFrozen(first)).toBe(true);

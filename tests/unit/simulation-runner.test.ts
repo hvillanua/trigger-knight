@@ -81,6 +81,7 @@ function tutorialGatedObservation(steps: number): GameObservation {
       canTogglePause: true,
       canDismissTutorial: true,
       canPurchaseCurrentEncounter: false,
+      canUseCarriedItem: false,
     },
   };
 }
@@ -125,7 +126,7 @@ describe("headless simulation runner", () => {
       distance: 0,
       gold: 300,
       traceHash:
-        "sha256-v1:ee9e0f54a2d79822046d1fd689ef97997b5d16f8e6ab422ce7a18161a465f4d0",
+        "sha256-v1:c2cf401f3c2b8aa0f860b57362d53c9ab1566b455ecb68b4e08dedaba83550f2",
       metrics: {},
     });
     expect(Object.isFrozen(result)).toBe(true);

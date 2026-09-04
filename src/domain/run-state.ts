@@ -14,7 +14,7 @@ import { createEncounterQueueState } from "./encounters.js";
 import { createBattleState } from "./battle.js";
 import { createPlayerState } from "./player-state.js";
 
-export const RUN_STATE_SCHEMA_VERSION = 12 as const;
+export const RUN_STATE_SCHEMA_VERSION = 13 as const;
 
 /** Creates a fresh minimal state value for one independent run. */
 export function createRunState(

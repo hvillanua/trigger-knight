@@ -40,7 +40,7 @@ describe("purchasing policy", () => {
   it("has a versioned descriptor and fresh agents", () => {
     expect(purchasingPolicy.descriptor).toEqual({
       id: "purchase-reachable-shops",
-      version: "1",
+      version: "2",
       config: {},
     });
     expect(purchasingPolicy.createAgent()).not.toBe(
@@ -58,6 +58,20 @@ describe("purchasing policy", () => {
     expect(
       agent.decide(observation, [{ type: "run-ended", reason: "lifespan" }]),
     ).toEqual([]);
+  });
+
+  it("issues the shared item-use command for public item eligibility", () => {
+    const observation = gameplayEngine.observe(activeRun());
+    const itemReadyObservation = {
+      ...observation,
+      lifecycle: { ...observation.lifecycle, phase: "battling" as const },
+      actions: { ...observation.actions, canUseCarriedItem: true },
+    };
+    const agent = purchasingPolicy.createAgent();
+
+    expect(agent.decide(itemReadyObservation, [])).toEqual([
+      { type: "use-carried-item" },
+    ]);
   });
 
   it("dismisses the public tutorial gate before shopping", () => {
