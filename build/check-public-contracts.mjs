@@ -47,7 +47,7 @@ function isContractDeclaration(node) {
 }
 
 function declarationName(declaration) {
-  return declaration.name?.getText() ?? "<anonymous>";
+  return declaration.name?.text ?? "<anonymous>";
 }
 
 const projectArgument = readProjectArgument(process.argv.slice(2));
