@@ -8,7 +8,7 @@ export interface PresentationFrame {
   readonly events: readonly GameEvent[];
 }
 
-/** Output boundary implemented by browser presentation adapters. */
+/** @playerVisible Output boundary implemented by browser presentation adapters. */
 export interface PresentationPort {
   present(frame: PresentationFrame): void;
 }

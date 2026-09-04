@@ -6,6 +6,7 @@ import ts from "typescript";
 const PLAYER_VISIBLE_TAG = "playerVisible";
 const PLAYER_VISIBLE_BOUNDARY_ROOTS = Object.freeze([
   ["src/application/presentation.ts", "PresentationFrame"],
+  ["src/application/presentation.ts", "PresentationPort"],
   ["src/application/simulation.ts", "PlayerAgent"],
   ["src/domain/contracts.ts", "GameEvent"],
   ["src/domain/contracts.ts", "GameObservation"],

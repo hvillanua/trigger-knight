@@ -150,6 +150,9 @@ describe("player-visible contract rules", () => {
       "PresentationFrame -> RunState",
     );
     expect(result.stdout + result.stderr).toContain(
+      "PresentationPort -> RunState",
+    );
+    expect(result.stdout + result.stderr).toContain(
       "DeclarationObservation -> HiddenDeclarationState",
     );
     expect(result.stdout + result.stderr).toContain(

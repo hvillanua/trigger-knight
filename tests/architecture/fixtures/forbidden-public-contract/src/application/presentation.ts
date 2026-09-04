@@ -4,4 +4,8 @@ interface PresentationFrame {
   readonly state: RunState;
 }
 
-export type { PresentationFrame };
+interface PresentationPort {
+  present(state: RunState): void;
+}
+
+export type { PresentationFrame, PresentationPort };
