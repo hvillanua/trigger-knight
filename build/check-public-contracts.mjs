@@ -4,6 +4,12 @@ import process from "node:process";
 import ts from "typescript";
 
 const PLAYER_VISIBLE_TAG = "playerVisible";
+const PLAYER_VISIBLE_BOUNDARY_ROOTS = new Set([
+  "GameEvent",
+  "GameObservation",
+  "PlayerAgent",
+  "PresentationFrame",
+]);
 
 function readProjectArgument(arguments_) {
   const projectIndex = arguments_.indexOf("--project");
@@ -99,7 +105,8 @@ if (configResult.error) {
       for (const statement of sourceFile.statements) {
         if (
           isContractDeclaration(statement) &&
-          hasJSDocTag(statement, PLAYER_VISIBLE_TAG)
+          (hasJSDocTag(statement, PLAYER_VISIBLE_TAG) ||
+            PLAYER_VISIBLE_BOUNDARY_ROOTS.has(declarationName(statement)))
         ) {
           playerVisibleDeclarations.push(statement);
         }

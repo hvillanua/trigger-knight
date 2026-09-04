@@ -1,5 +1,6 @@
 import type { GameEvent, GameObservation } from "../domain/contracts.js";
 
+/** @playerVisible Values delivered to browser presentation. */
 export interface PresentationFrame {
   readonly previous: Readonly<GameObservation>;
   readonly current: Readonly<GameObservation>;

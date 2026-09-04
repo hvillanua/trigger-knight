@@ -28,7 +28,10 @@ keeps adapter and device concepts out of domain-facing values while ensuring
 browser and automated players receive the same public gameplay information.
 
 Every declaration in the player-visible contract carries the `@playerVisible`
-JSDoc tag. All other project types are hidden by default.
+JSDoc tag. All other project types are hidden by default. The concrete
+`GameObservation`, `GameEvent`, `PresentationFrame`, and `PlayerAgent`
+boundaries are always checker roots, so accidentally removing a tag cannot make
+one of those entry points disappear from validation.
 `npm run check:public-contracts` follows TypeScript type references transitively
 and fails when an approved public declaration reaches an unapproved project
 type. Keep a separate observed type and an explicit projection at this boundary;

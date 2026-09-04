@@ -23,10 +23,7 @@ export type RunPhase = "running" | "battle-handoff" | "ended";
 /** @playerVisible Public reason for a completed run. */
 export type RunTerminalReason = "lifespan" | "combat";
 
-/**
- * Run phase and gates exposed to players.
- * @playerVisible
- */
+/** Authoritative run phase and the independent gates that halt gameplay. */
 export interface RunLifecycleState {
   readonly phase: RunPhase;
   readonly terminalReason: RunTerminalReason | null;
@@ -35,11 +32,14 @@ export interface RunLifecycleState {
   readonly pregameStepsRemaining: number;
 }
 
-/**
- * Original two-part integer lifespan value.
- * @playerVisible
- */
+/** Original authoritative two-part integer lifespan value. */
 export interface LifespanState {
+  readonly whole: number;
+  readonly fraction: number;
+}
+
+/** @playerVisible Lifespan values exposed to players. */
+export interface LifespanObservation {
   readonly whole: number;
   readonly fraction: number;
 }
@@ -73,8 +73,29 @@ export type ArmorName =
   | "Avalon"
   | "Astral Armor";
 
-/** @playerVisible Player status shown by presentation and policies. */
+/** Complete authoritative player state. */
 export interface PlayerState {
+  readonly gold: number;
+  readonly weapon: {
+    readonly tier: number;
+    readonly name: WeaponName;
+    readonly attack: number;
+  };
+  readonly armor: {
+    readonly tier: number;
+    readonly name: ArmorName;
+  };
+  readonly hp: {
+    readonly current: number;
+    readonly maximum: number;
+  };
+  readonly inventory: {
+    readonly item: InventoryItemId | null;
+  };
+}
+
+/** @playerVisible Player status shown by presentation and policies. */
+export interface PlayerObservation {
   readonly gold: number;
   readonly weapon: {
     readonly tier: number;
@@ -103,8 +124,15 @@ export type ShopId =
   | "grims-shop"
   | "voucher-store";
 
-/** @playerVisible Shop encounter values exposed to players. */
+/** Complete authoritative queued shop values. */
 export interface ShopEncounter {
+  readonly kind: "shop";
+  readonly shop: ShopId;
+  readonly cachedPrice: number;
+}
+
+/** @playerVisible Queued shop values exposed to players. */
+export interface ObservedShopEncounter {
   readonly kind: "shop";
   readonly shop: ShopId;
   readonly cachedPrice: number;
@@ -146,10 +174,17 @@ export interface QueuedBattleEncounter extends BattleEncounter {
 export type QueuedEncounter = ShopEncounter | QueuedBattleEncounter;
 
 /** @playerVisible Public view of a queued encounter. */
-export type ObservedQueuedEncounter = ShopEncounter | BattleEncounter;
+export type ObservedQueuedEncounter = ObservedShopEncounter | BattleEncounter;
+
+/** Complete authoritative positioned shop values. */
+export interface PositionedShopEncounter extends ShopEncounter {
+  readonly x: number;
+  readonly used: boolean;
+}
 
 /** @playerVisible Positioned shop values exposed to players. */
-export interface PositionedShopEncounter extends ShopEncounter {
+export interface ObservedPositionedShopEncounter
+  extends ObservedShopEncounter {
   readonly x: number;
   readonly used: boolean;
 }
@@ -170,7 +205,8 @@ export interface ObservedPositionedBattleEncounter extends BattleEncounter {
 
 /** @playerVisible Public view of the current encounter. */
 export type ObservedCurrentEncounter =
-  PositionedShopEncounter | ObservedPositionedBattleEncounter;
+  | ObservedPositionedShopEncounter
+  | ObservedPositionedBattleEncounter;
 
 /** Encounter scheduling and generation internals. */
 export interface EncounterGenerationState {
@@ -220,21 +256,22 @@ export interface RunState {
   readonly lifecycle: RunLifecycleState;
 }
 
-/** Device-independent gameplay intent. */
+/** @playerVisible Device-independent gameplay intent. */
 export interface TogglePauseCommand {
   readonly type: "toggle-pause";
 }
 
-/** Device-independent gameplay intent. */
+/** @playerVisible Device-independent gameplay intent. */
 export interface DismissTutorialCommand {
   readonly type: "dismiss-tutorial";
 }
 
-/** Attempts the domain-owned purchase offered by the current encounter. */
+/** @playerVisible Attempts the domain-owned purchase offered by the current encounter. */
 export interface PurchaseCurrentEncounterCommand {
   readonly type: "purchase-current-encounter";
 }
 
+/** @playerVisible Device-independent commands produced by a player. */
 export type GameCommand =
   TogglePauseCommand | DismissTutorialCommand | PurchaseCurrentEncounterCommand;
 
@@ -327,7 +364,12 @@ export type GameEvent =
   | TutorialDismissedEvent;
 
 /** @playerVisible Lifecycle values exposed to players. */
-export interface LifecycleObservation extends RunLifecycleState {
+export interface LifecycleObservation {
+  readonly phase: RunPhase;
+  readonly terminalReason: RunTerminalReason | null;
+  readonly paused: boolean;
+  readonly tutorialPage: 0 | null;
+  readonly pregameStepsRemaining: number;
   readonly activeGameplay: boolean;
 }
 
@@ -362,8 +404,8 @@ export interface GameObservation {
   readonly distance: number;
   readonly day: number;
   readonly score: number;
-  readonly lifespan: LifespanState;
-  readonly player: PlayerState;
+  readonly lifespan: LifespanObservation;
+  readonly player: PlayerObservation;
   readonly encounters: EncounterObservation;
   readonly lifecycle: LifecycleObservation;
   readonly actions: ActionEligibility;

@@ -146,5 +146,8 @@ describe("player-visible contract rules", () => {
     expect(result.stdout + result.stderr).toContain(
       "PlayerObservation -> EncounterObservation -> EnemySnapshot",
     );
+    expect(result.stdout + result.stderr).toContain(
+      "PresentationFrame -> RunState",
+    );
   });
 });

@@ -13,4 +13,12 @@ interface PlayerObservation {
   readonly encounter: EncounterObservation;
 }
 
-export type { PlayerObservation };
+interface RunState {
+  readonly randomSeed: number;
+}
+
+interface PresentationFrame {
+  readonly state: RunState;
+}
+
+export type { PlayerObservation, PresentationFrame };
