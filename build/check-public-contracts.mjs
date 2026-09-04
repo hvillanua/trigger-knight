@@ -4,11 +4,11 @@ import process from "node:process";
 import ts from "typescript";
 
 const PLAYER_VISIBLE_TAG = "playerVisible";
-const PLAYER_VISIBLE_BOUNDARY_ROOTS = new Set([
-  "src/application/presentation.ts#PresentationFrame",
-  "src/application/simulation.ts#PlayerAgent",
-  "src/domain/contracts.ts#GameEvent",
-  "src/domain/contracts.ts#GameObservation",
+const PLAYER_VISIBLE_BOUNDARY_ROOTS = Object.freeze([
+  ["src/application/presentation.ts", "PresentationFrame"],
+  ["src/application/simulation.ts", "PlayerAgent"],
+  ["src/domain/contracts.ts", "GameEvent"],
+  ["src/domain/contracts.ts", "GameObservation"],
 ]);
 
 function readProjectArgument(arguments_) {
@@ -48,19 +48,6 @@ function isContractDeclaration(node) {
 
 function declarationName(declaration) {
   return declaration.name?.getText() ?? "<anonymous>";
-}
-
-function declarationKey(declaration, projectDirectory) {
-  const sourceFile = path.resolve(
-    projectDirectory,
-    declaration.getSourceFile().fileName,
-  );
-  const relativeFile = path
-    .relative(projectDirectory, sourceFile)
-    .split(path.sep)
-    .join("/");
-
-  return `${relativeFile}#${declarationName(declaration)}`;
 }
 
 const projectArgument = readProjectArgument(process.argv.slice(2));
@@ -118,13 +105,28 @@ if (configResult.error) {
       for (const statement of sourceFile.statements) {
         if (
           isContractDeclaration(statement) &&
-          (hasJSDocTag(statement, PLAYER_VISIBLE_TAG) ||
-            PLAYER_VISIBLE_BOUNDARY_ROOTS.has(
-              declarationKey(statement, projectDirectory),
-            ))
+          hasJSDocTag(statement, PLAYER_VISIBLE_TAG)
         ) {
           playerVisibleDeclarations.push(statement);
         }
+      }
+    }
+
+    for (const [relativeFile, declaration] of PLAYER_VISIBLE_BOUNDARY_ROOTS) {
+      const sourceFile = program.getSourceFile(
+        path.resolve(projectDirectory, relativeFile),
+      );
+      const rootDeclaration = sourceFile?.statements.find(
+        (statement) =>
+          isContractDeclaration(statement) &&
+          declarationName(statement) === declaration,
+      );
+
+      if (
+        rootDeclaration &&
+        !playerVisibleDeclarations.includes(rootDeclaration)
+      ) {
+        playerVisibleDeclarations.push(rootDeclaration);
       }
     }
 
