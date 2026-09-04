@@ -132,6 +132,14 @@ describe("ruleset registry", () => {
             },
           },
         },
+        battle: {
+          heroInitialX: 50,
+          initialAttackDelay: 0,
+          initialAttackFactor: 1,
+          initialAttackCount: 0,
+          initialAlpha: 100,
+          speedDecayPerActiveTick: 1,
+        },
       },
       compatibilityDecisions: {
         randomSequence: "mulberry32-fnv1a32-v1",
@@ -145,6 +153,8 @@ describe("ruleset registry", () => {
         battleGenerationDrawOrder:
           "shop-count-then-dragon-check-then-ordinary-enemy",
         dragonResetPoint: "ordinary-battle-promotion-before-replacement",
+        battleEntryProgression: "running-tick-then-battle-ticks",
+        battleActorPositions: "hero-x-50-enemy-at-positioned-encounter",
       },
     });
     expect(Object.isFrozen(originalV13RuleSet)).toBe(true);

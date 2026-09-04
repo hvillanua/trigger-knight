@@ -81,7 +81,7 @@ The complete Milestone 2 lifecycle scenario, locked terminal values and hashes,
 checkpoint continuation matrix, and research labels are recorded in
 [`docs/milestone-2-lifecycle-verification.md`](docs/milestone-2-lifecycle-verification.md).
 The Milestone 3 purchasing policy, fixed-seed economy invariants, host parity,
-and explicit battle-handoff boundary are recorded in
+and active battle-entry boundary are recorded in
 [`docs/milestone-3-economy-verification.md`](docs/milestone-3-economy-verification.md).
 
 ## Directory boundaries

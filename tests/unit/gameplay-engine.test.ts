@@ -59,7 +59,7 @@ describe("gameplay engine", () => {
     expect(repeated).toEqual(state);
     expect(repeated).not.toBe(state);
     expect(state).toMatchObject({
-      schemaVersion: 11,
+      schemaVersion: 12,
       ruleset: "original-v1.3",
       steps: 0,
       activeTicks: 0,
@@ -79,6 +79,7 @@ describe("gameplay engine", () => {
         hp: { current: 1_908, maximum: 1_908 },
         inventory: { item: "elixir" },
       },
+      battle: null,
       encounters: {
         current: null,
         upcoming: state.encounters.upcoming,
@@ -116,6 +117,7 @@ describe("gameplay engine", () => {
         hp: { current: 1_908, maximum: 1_908 },
         inventory: { item: "elixir" },
       },
+      battle: null,
       encounters: {
         current: null,
         upcoming: publicUpcoming(state),
@@ -196,6 +198,7 @@ describe("gameplay engine", () => {
         hp: { current: 1_908, maximum: 1_908 },
         inventory: { item: "elixir" },
       },
+      battle: null,
       encounters: {
         current: null,
         upcoming: publicUpcoming(first.state),

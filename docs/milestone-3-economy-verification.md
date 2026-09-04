@@ -29,8 +29,9 @@ that command without calculating affordability or effects.
 
 The unit scenario runs the policy against this reviewed seed set. Each run uses
 the `original-v1.3` ruleset, the level-one starting profile, and a 420-step
-budget. The budget is long enough to reach the explicit battle handoff. Since
-combat is not implemented, each result ends with `step-limit` after the handoff.
+budget. The budget is long enough to reach an active battle. Attack resolution
+and rewards were not implemented when this economy evidence was recorded, so
+each result ends with `step-limit` after battle start.
 
 | Seed                                                                                                         | Pre-combat purchase covered                      |
 | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
@@ -63,8 +64,8 @@ Every checkpoint in the fixed-seed runs checks:
 The focused state scenarios also cover day 4 Voucher Store purchase, tier-nine
 weapon pricing and tier-ten advancement, and a purchase from a shop generated
 after a queued battle resets the per-cycle duplicate flags. These states are
-deterministic fixtures, not claims that the incomplete pre-combat simulation has
-resolved a battle.
+deterministic fixtures, not claims that the combat system has resolved a battle
+or settled its rewards.
 
 ## Host parity
 
@@ -82,9 +83,9 @@ DPR 2. It uses different redraw counts and still compares both browser traces
 with the Node trace. Canvas size, device pixel ratio, redraw cadence, and
 interpolation therefore do not affect encounter or economy state.
 
-The locked `m3-parity-schedule` trace hash, updated when issue #55 added enemy
-snapshots and the player-facing current-enemy projection, is
-`sha256-v1:6d20f4b544b27ae6ff55b6f9bd8f1e2d40118a360dad5199d4dbfc0f94d43181`.
+The locked `m3-parity-schedule` trace hash, updated for the version-12 active
+battle state and public battle projection, is
+`sha256-v1:4ff4fc50db1876496dc0f3cbffcb7d14ef22a93637b89fc2efaf62ce60208a0a`.
 
 ## Compatibility labels and boundary
 
@@ -95,13 +96,14 @@ clean-room implementation and selected deterministic inputs. The policy
 descriptor and command sharing are clean-room implementation decisions built on
 the public contracts.
 
-The Milestone 3 battle transition emits `battle-handoff` when the battle reaches
-the confirmed world threshold and changes the run phase to `battle-handoff`.
-After that point, distance, day, score, encounter movement, and encounter
-generation stay fixed while lifespan can continue to drain. Its original
-verification did not select an enemy or invent a combat outcome, reward, or
-post-battle purchase cycle. Issue #55 later added generation-time enemy
-selection; combat resolution remains Milestone 4 work.
+The battle transition now emits `battle-started` when the battle crosses the
+confirmed world threshold and changes the run phase to `battling`. Issue #56
+initializes the selected enemy and both authoritative actors at that point.
+After the threshold-crossing tick, distance, day, score, encounter movement,
+and encounter generation stay fixed while battle speed decays and lifespan
+continues to drain. This verification still does not claim an attack outcome,
+reward, or post-battle purchase cycle because those remain later Milestone 4
+tickets.
 
 The research ledger's unresolved tier-10 GUI question remains unchanged. The
 clean-room decision continues to make max-tier equipment ineligible in public

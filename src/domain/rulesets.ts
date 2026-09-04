@@ -19,6 +19,11 @@ import {
   type EnemyGenerationRules,
   type EncounterGenerationRules,
 } from "./encounters.js";
+import {
+  advanceBattleLifecycle,
+  observeBattle,
+  type BattleRules,
+} from "./battle.js";
 import { advanceLifespan } from "./lifespan.js";
 import {
   createPlayerState,
@@ -73,6 +78,7 @@ export interface RuleSetConstants {
     readonly initialInventoryItem: InventoryItemId;
   };
   readonly encounters: EncounterGenerationRules;
+  readonly battle: BattleRules;
   readonly lifespan: {
     readonly initialWhole: number;
     readonly initialFraction: number;
@@ -97,6 +103,8 @@ export interface RuleSetCompatibilityDecisions {
   readonly encounterPromotionDrawOrder: "replacement-then-distance";
   readonly battleGenerationDrawOrder: "shop-count-then-dragon-check-then-ordinary-enemy";
   readonly dragonResetPoint: "ordinary-battle-promotion-before-replacement";
+  readonly battleEntryProgression: "running-tick-then-battle-ticks";
+  readonly battleActorPositions: "hero-x-50-enemy-at-positioned-encounter";
 }
 
 export interface RuleSetStepResult {
@@ -247,7 +255,7 @@ const originalV13Constants: RuleSetConstants = Object.freeze({
     shopActionMaximumX: 420,
     shopDepartureX: -100,
     battleSpeedFactor: 1,
-    battleHandoffX: 420,
+    battleStartX: 420,
     emergencyThresholdBase: 40,
     emergencyThresholdUpperBound: 10,
     enemySelection: originalV13EnemyGenerationRules,
@@ -269,6 +277,14 @@ const originalV13Constants: RuleSetConstants = Object.freeze({
       grimsShop: 200,
       voucherStore: 500,
     }),
+  }),
+  battle: Object.freeze({
+    heroInitialX: 50,
+    initialAttackDelay: 0,
+    initialAttackFactor: 1,
+    initialAttackCount: 0,
+    initialAlpha: 100,
+    speedDecayPerActiveTick: 1,
   }),
   lifespan: Object.freeze({
     initialWhole: 99,
@@ -301,6 +317,8 @@ const originalV13CompatibilityDecisions: RuleSetCompatibilityDecisions =
     battleGenerationDrawOrder:
       "shop-count-then-dragon-check-then-ordinary-enemy",
     dragonResetPoint: "ordinary-battle-promotion-before-replacement",
+    battleEntryProgression: "running-tick-then-battle-ticks",
+    battleActorPositions: "hero-x-50-enemy-at-positioned-encounter",
   });
 
 const originalV13RunningProgressionRules = Object.freeze({
@@ -316,6 +334,10 @@ const originalV13LifespanRules = Object.freeze({
   drainPerActiveTick: originalV13Constants.lifespan.drainPerActiveTick,
   fractionReset: originalV13Constants.lifespan.fractionReset,
   deathBelowWhole: originalV13Constants.lifespan.deathBelowWhole,
+});
+
+const originalV13BattleRules: BattleRules = Object.freeze({
+  ...originalV13Constants.battle,
 });
 
 const originalV13PurchaseRules: PurchaseRules = Object.freeze({
@@ -426,9 +448,14 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
       progressed,
       originalV13Constants.encounters,
     );
-    const lifespan = advanceLifespan(
+    const battle = advanceBattleLifecycle(
       commandedState,
       encounters.state,
+      originalV13BattleRules,
+    );
+    const lifespan = advanceLifespan(
+      commandedState,
+      battle.state,
       originalV13LifespanRules,
     );
 
@@ -438,6 +465,7 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
         ...commandEvents,
         ...result.events,
         ...encounters.events,
+        ...battle.events,
         ...lifespan.events,
       ]),
     });
@@ -469,6 +497,7 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
         fraction: state.lifespan.fraction,
       }),
       player: observePlayerState(state.player),
+      battle: observeBattle(state),
       encounters: Object.freeze({
         current: observeCurrentEncounter(currentEncounter),
         upcoming: Object.freeze(

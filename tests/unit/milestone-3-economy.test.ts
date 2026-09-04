@@ -195,7 +195,7 @@ describe("Milestone 3 economy verification", () => {
     expect(
       runs.every(({ trace }) =>
         trace.checkpoints.some(({ events }) =>
-          events.some((event) => event.type === "battle-handoff"),
+          events.some((event) => event.type === "battle-started"),
         ),
       ),
     ).toBe(true);
@@ -378,8 +378,8 @@ describe("Milestone 3 economy verification", () => {
     });
   });
 
-  it("keeps the unresolved battle handoff explicit and reward-free", () => {
-    const initial = gameplayEngine.createRun(config("m3-battle-handoff"));
+  it("starts the active battle without settling rewards", () => {
+    const initial = gameplayEngine.createRun(config("m3-active-battle"));
     const queuedBattle = initial.encounters.upcoming.find(
       (encounter) => encounter.kind === "battle",
     );
@@ -402,18 +402,27 @@ describe("Milestone 3 economy verification", () => {
       },
     };
 
-    const handoff = gameplayEngine.step(state, []);
-    expect(handoff.state.lifecycle.phase).toBe("battle-handoff");
-    expect(handoff.events).toContainEqual({ type: "battle-handoff" });
-    expect(handoff.state.player.gold).toBe(64);
-    expect(handoff.state.encounters.upcoming).toEqual(
+    const started = gameplayEngine.step(state, []);
+    expect(started.state.lifecycle.phase).toBe("battling");
+    expect(started.events).toContainEqual({
+      type: "battle-started",
+      enemy: {
+        id: queuedBattle.enemy.id,
+        maximumHp: queuedBattle.enemy.maximumHp,
+        currentHp: queuedBattle.enemy.maximumHp,
+      },
+    });
+    expect(started.state.player.gold).toBe(64);
+    expect(started.state.encounters.upcoming).toEqual(
       state.encounters.upcoming,
     );
+    expect(started.state.battle?.enemyHp).toBe(queuedBattle.enemy.maximumHp);
 
-    const held = gameplayEngine.step(handoff.state, []);
-    expect(held.state.lifecycle.phase).toBe("battle-handoff");
+    const held = gameplayEngine.step(started.state, []);
+    expect(held.state.lifecycle.phase).toBe("battling");
     expect(held.state.player.gold).toBe(64);
-    expect(held.state.encounters).toEqual(handoff.state.encounters);
+    expect(held.state.encounters).toEqual(started.state.encounters);
+    expect(held.state.movementSpeed).toBe(14);
     expect(held.events).not.toContainEqual({ type: "shop-purchased" });
   });
 
@@ -432,7 +441,7 @@ describe("Milestone 3 economy verification", () => {
       equal: true,
     });
     expect(headless.trace.traceHash).toBe(
-      "sha256-v1:6d20f4b544b27ae6ff55b6f9bd8f1e2d40118a360dad5199d4dbfc0f94d43181",
+      "sha256-v1:4ff4fc50db1876496dc0f3cbffcb7d14ef22a93637b89fc2efaf62ce60208a0a",
     );
     expect(browser.readDiagnostics().traceHash).toBe(headless.trace.traceHash);
   });

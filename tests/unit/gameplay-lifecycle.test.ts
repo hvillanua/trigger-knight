@@ -77,6 +77,7 @@ describe("original-v1.3 lifecycle", () => {
         hp: { current: 1_908, maximum: 1_908 },
         inventory: { item: "elixir" },
       },
+      battle: null,
       encounters: {
         current: null,
         upcoming: state.encounters.upcoming.map((encounter) =>

@@ -71,7 +71,7 @@ test("matches Node and Chromium traces for a purchasing policy schedule", async 
   ).toBe(true);
   expect(
     headless.trace.checkpoints.some(({ events }) =>
-      events.some((event) => event.type === "battle-handoff"),
+      events.some((event) => event.type === "battle-started"),
     ),
   ).toBe(true);
 
