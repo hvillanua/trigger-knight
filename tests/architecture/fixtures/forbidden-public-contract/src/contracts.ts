@@ -26,8 +26,4 @@ interface PresentationFrame {
   readonly state: RunState;
 }
 
-export type {
-  DeclarationObservation,
-  PlayerObservation,
-  PresentationFrame,
-};
+export type { DeclarationObservation, PlayerObservation, PresentationFrame };
