@@ -18,7 +18,7 @@ export interface RandomState {
 }
 
 /** @playerVisible Current phase exposed to players. */
-export type RunPhase = "running" | "battle-handoff" | "ended";
+export type RunPhase = "running" | "battling" | "ended";
 
 /** @playerVisible Public reason for a completed run. */
 export type RunTerminalReason = "lifespan" | "combat";
@@ -159,6 +159,48 @@ export interface ObservedEnemy {
   readonly maximumHp: number;
 }
 
+/** @playerVisible Mechanic-bearing actor phase exposed during a battle. */
+export type CombatActorPhase = "idle" | "move" | "attack" | "flinch" | "dead";
+
+/** Authoritative state shared by the future automatic combat transitions. */
+export interface CombatActorState {
+  readonly phase: CombatActorPhase;
+  readonly x: number;
+  readonly attackDelay: number;
+  readonly attackFactor: number;
+  readonly attackCount: number;
+  readonly alpha: number;
+}
+
+/** Authoritative state for the current battle. */
+export interface BattleState {
+  readonly enemyHp: number;
+  readonly hero: CombatActorState;
+  readonly enemy: CombatActorState;
+}
+
+/** @playerVisible Mechanic-bearing actor values exposed during a battle. */
+export interface ObservedCombatActor {
+  readonly phase: CombatActorPhase;
+  readonly x: number;
+}
+
+/** @playerVisible Current enemy values exposed during a battle. */
+export interface ObservedBattleEnemy {
+  readonly id: EnemyId;
+  readonly maximumHp: number;
+  readonly currentHp: number;
+}
+
+/** @playerVisible Current battle values exposed to players. */
+export interface BattleObservation {
+  readonly enemy: ObservedBattleEnemy;
+  readonly actors: {
+    readonly hero: ObservedCombatActor;
+    readonly enemy: ObservedCombatActor;
+  };
+}
+
 /**
  * Public marker for a queued battle whose enemy is not yet visible.
  * @playerVisible
@@ -238,7 +280,7 @@ export interface EncounterObservation {
 
 /** Authoritative state owned by the gameplay domain. */
 export interface RunState {
-  readonly schemaVersion: 11;
+  readonly schemaVersion: 12;
   readonly ruleset: RuleSetId;
   readonly random: RandomState;
   readonly steps: number;
@@ -250,6 +292,7 @@ export interface RunState {
   readonly score: number;
   readonly lifespan: LifespanState;
   readonly player: PlayerState;
+  readonly battle: BattleState | null;
   readonly encounters: EncounterQueueState;
   readonly lifecycle: RunLifecycleState;
 }
@@ -317,9 +360,10 @@ export interface ShopDepartedEvent {
   readonly shop: ShopId;
 }
 
-/** @playerVisible Battle handoff exposed to players. */
-export interface BattleHandoffEvent {
-  readonly type: "battle-handoff";
+/** @playerVisible Active battle start exposed to players. */
+export interface BattleStartedEvent {
+  readonly type: "battle-started";
+  readonly enemy: ObservedBattleEnemy;
 }
 
 /** @playerVisible Completed purchase exposed to players. */
@@ -350,7 +394,7 @@ export interface PurchaseRejectedEvent {
  * @playerVisible
  */
 export type GameEvent =
-  | BattleHandoffEvent
+  | BattleStartedEvent
   | EncounterPromotedEvent
   | LifespanDeathEvent
   | PauseToggledEvent
@@ -404,6 +448,7 @@ export interface GameObservation {
   readonly score: number;
   readonly lifespan: LifespanObservation;
   readonly player: PlayerObservation;
+  readonly battle: BattleObservation | null;
   readonly encounters: EncounterObservation;
   readonly lifecycle: LifecycleObservation;
   readonly actions: ActionEligibility;

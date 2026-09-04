@@ -1,7 +1,9 @@
 import { describe, expectTypeOf, it } from "vitest";
 
 import type {
+  BattleObservation,
   BattleEncounter,
+  BattleState,
   EncounterGenerationState,
   EncounterQueueState,
   GameCommand,
@@ -11,6 +13,7 @@ import type {
   GameplayExecution,
   GameplayTrace,
   GameplayTraceComparison,
+  ObservedBattleEnemy,
   ObservedPositionedBattleEncounter,
   PlayerAgent,
   PlayerPolicy,
@@ -215,7 +218,7 @@ describe("public application contracts", () => {
       readonly initialProfile: ProfileState;
     }>();
     expectTypeOf<RunState>().toMatchTypeOf<{
-      readonly schemaVersion: 11;
+      readonly schemaVersion: 12;
       readonly ruleset: RuleSetId;
       readonly random: RandomState;
       readonly steps: number;
@@ -242,6 +245,7 @@ describe("public application contracts", () => {
           readonly item: "elixir" | "divine-edge" | "gold-voucher" | null;
         };
       };
+      readonly battle: BattleState | null;
       readonly encounters: {
         readonly current:
           | Readonly<{
@@ -294,7 +298,7 @@ describe("public application contracts", () => {
         };
       };
       readonly lifecycle: {
-        readonly phase: "running" | "battle-handoff" | "ended";
+        readonly phase: "running" | "battling" | "ended";
         readonly terminalReason: "lifespan" | "combat" | null;
         readonly paused: boolean;
         readonly tutorialPage: 0 | null;
@@ -332,6 +336,7 @@ describe("public application contracts", () => {
           readonly item: "elixir" | "divine-edge" | "gold-voucher" | null;
         };
       };
+      readonly battle: BattleObservation | null;
       readonly encounters: {
         readonly current:
           | Readonly<{
@@ -350,7 +355,7 @@ describe("public application contracts", () => {
         readonly upcoming: readonly (ShopEncounter | BattleEncounter)[];
       };
       readonly lifecycle: {
-        readonly phase: "running" | "battle-handoff" | "ended";
+        readonly phase: "running" | "battling" | "ended";
         readonly terminalReason: "lifespan" | "combat" | null;
         readonly paused: boolean;
         readonly tutorialPage: 0 | null;
@@ -364,7 +369,10 @@ describe("public application contracts", () => {
       };
     }>();
     expectTypeOf<GameEvent>().toEqualTypeOf<
-      | Readonly<{ type: "battle-handoff" }>
+      | Readonly<{
+          type: "battle-started";
+          enemy: ObservedBattleEnemy;
+        }>
       | Readonly<{
           type: "encounter-promoted";
           encounter:

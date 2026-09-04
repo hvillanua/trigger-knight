@@ -55,7 +55,7 @@ export interface EncounterGenerationRules {
   readonly shopActionMaximumX: number;
   readonly shopDepartureX: number;
   readonly battleSpeedFactor: number;
-  readonly battleHandoffX: number;
+  readonly battleStartX: number;
   readonly emergencyThresholdBase: number;
   readonly emergencyThresholdUpperBound: number;
   readonly enemySelection: EnemyGenerationRules;
@@ -575,14 +575,12 @@ export function advanceEncounterLifecycle(
     if (current.kind === "shop" && current.x < rules.shopDepartureX) {
       events.push(Object.freeze({ type: "shop-departed", shop: current.shop }));
       current = null;
-    } else if (current.kind === "battle" && current.x < rules.battleHandoffX) {
+    } else if (current.kind === "battle" && current.x < rules.battleStartX) {
       const encounters = createEncounterQueueState({
         ...previous.encounters,
         current,
         distanceUntilNext,
       });
-
-      events.push(Object.freeze({ type: "battle-handoff" }));
 
       return Object.freeze({
         state: Object.freeze({
@@ -590,7 +588,7 @@ export function advanceEncounterLifecycle(
           encounters,
           lifecycle: Object.freeze({
             ...stepped.lifecycle,
-            phase: "battle-handoff",
+            phase: "battling",
           }),
         }),
         events: Object.freeze(events),

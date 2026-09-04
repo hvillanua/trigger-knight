@@ -111,6 +111,21 @@ test("interpolates public observations without mutating gameplay", async ({
       const current = Object.freeze({
         ...previous,
         distance: 10,
+        lifecycle: Object.freeze({
+          ...previous.lifecycle,
+          phase: "battling" as const,
+        }),
+        battle: Object.freeze({
+          enemy: Object.freeze({
+            id: "goblin" as const,
+            maximumHp: 660,
+            currentHp: 650,
+          }),
+          actors: Object.freeze({
+            hero: Object.freeze({ phase: "idle" as const, x: 50 }),
+            enemy: Object.freeze({ phase: "move" as const, x: 406 }),
+          }),
+        }),
         encounters: Object.freeze({
           ...previous.encounters,
           current: Object.freeze({
@@ -142,6 +157,11 @@ test("interpolates public observations without mutating gameplay", async ({
       return {
         interpolatedDistances,
         authoritativeDistance: element.dataset.distance,
+        phase: element.dataset.phase,
+        battleEnemy: element.dataset.battleEnemy,
+        battleEnemyHp: element.dataset.battleEnemyHp,
+        battleHeroPhase: element.dataset.battleHeroPhase,
+        battleEnemyPhase: element.dataset.battleEnemyPhase,
         currentEncounterX: current.encounters.current?.x,
         purchaseEligibility: current.actions.canPurchaseCurrentEncounter,
         inputsUnchanged:
@@ -155,6 +175,11 @@ test("interpolates public observations without mutating gameplay", async ({
   expect(result).toEqual({
     interpolatedDistances: ["0", "5", "10"],
     authoritativeDistance: "10",
+    phase: "battling",
+    battleEnemy: "goblin",
+    battleEnemyHp: "650/660",
+    battleHeroPhase: "idle",
+    battleEnemyPhase: "move",
     currentEncounterX: 100,
     purchaseEligibility: true,
     inputsUnchanged: true,

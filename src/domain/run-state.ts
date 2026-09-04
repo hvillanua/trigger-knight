@@ -11,9 +11,10 @@ import type {
   TogglePauseCommand,
 } from "./contracts.js";
 import { createEncounterQueueState } from "./encounters.js";
+import { createBattleState } from "./battle.js";
 import { createPlayerState } from "./player-state.js";
 
-export const RUN_STATE_SCHEMA_VERSION = 11 as const;
+export const RUN_STATE_SCHEMA_VERSION = 12 as const;
 
 /** Creates a fresh minimal state value for one independent run. */
 export function createRunState(
@@ -39,6 +40,7 @@ export function createRunState(
     score: 0,
     lifespan: Object.freeze({ ...initialLifespan }),
     player: createPlayerState(initialPlayer),
+    battle: null,
     encounters: createEncounterQueueState(initialEncounters),
     lifecycle: Object.freeze({
       phase: "running",
@@ -131,6 +133,7 @@ export function advanceRunState(state: Readonly<RunState>): RunStateStepResult {
     schemaVersion: RUN_STATE_SCHEMA_VERSION,
     random: Object.freeze({ ...state.random }),
     player: createPlayerState(state.player),
+    battle: state.battle === null ? null : createBattleState(state.battle),
     encounters: createEncounterQueueState(state.encounters),
     steps: state.steps + 1,
     activeTicks,

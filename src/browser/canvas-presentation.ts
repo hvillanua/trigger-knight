@@ -11,7 +11,7 @@ import {
 
 function describeEvent(event: GameEvent): string {
   switch (event.type) {
-    case "battle-handoff":
+    case "battle-started":
       return event.type;
     case "encounter-promoted":
       return `${event.type}:${event.encounter.kind}`;
@@ -64,6 +64,19 @@ export class CanvasPresentation implements PresentationPort {
     this.#canvas.dataset.distance = String(frame.current.distance);
     this.#canvas.dataset.day = String(frame.current.day);
     this.#canvas.dataset.score = String(frame.current.score);
+    this.#canvas.dataset.phase = frame.current.lifecycle.phase;
+    const battle = frame.current.battle;
+    if (battle === null) {
+      delete this.#canvas.dataset.battleEnemy;
+      delete this.#canvas.dataset.battleEnemyHp;
+      delete this.#canvas.dataset.battleHeroPhase;
+      delete this.#canvas.dataset.battleEnemyPhase;
+    } else {
+      this.#canvas.dataset.battleEnemy = battle.enemy.id;
+      this.#canvas.dataset.battleEnemyHp = `${battle.enemy.currentHp}/${battle.enemy.maximumHp}`;
+      this.#canvas.dataset.battleHeroPhase = battle.actors.hero.phase;
+      this.#canvas.dataset.battleEnemyPhase = battle.actors.enemy.phase;
+    }
     this.#draw();
   }
 

@@ -185,7 +185,7 @@ describe("original-v1.3 encounter world lifecycle", () => {
     });
   });
 
-  it("hands battles off below x=420 and freezes running systems afterward", () => {
+  it("starts battles below x=420 and freezes running systems afterward", () => {
     const ready = withEncounterState(readyRun(), {
       current: { ...goblinBattle, x: 421 },
       distanceUntilNext: 500,
@@ -200,7 +200,7 @@ describe("original-v1.3 encounter world lifecycle", () => {
       },
       lifecycle: { phase: "running" },
     });
-    expect(atBoundary.events).not.toContainEqual({ type: "battle-handoff" });
+    expect(atBoundary.events).not.toContainEqual({ type: "battle-started" });
 
     const handoff = gameplayEngine.step(atBoundary.state, []);
 
@@ -211,17 +211,41 @@ describe("original-v1.3 encounter world lifecycle", () => {
         current: { kind: "battle", x: 418 },
         distanceUntilNext: 497,
       },
-      lifecycle: { phase: "battle-handoff" },
+      lifecycle: { phase: "battling" },
+      battle: {
+        enemyHp: 660,
+        hero: {
+          phase: "idle",
+          x: 50,
+          attackDelay: 0,
+          attackFactor: 1,
+          attackCount: 0,
+          alpha: 100,
+        },
+        enemy: {
+          phase: "idle",
+          x: 418,
+          attackDelay: 0,
+          attackFactor: 1,
+          attackCount: 0,
+          alpha: 100,
+        },
+      },
     });
-    expect(handoff.events).toContainEqual({ type: "battle-handoff" });
+    expect(handoff.events).toContainEqual({
+      type: "battle-started",
+      enemy: { id: "goblin", maximumHp: 660, currentHp: 660 },
+    });
 
     const held = gameplayEngine.step(handoff.state, []).state;
 
     expect(held).toMatchObject({
       distance: handoff.state.distance,
       day: handoff.state.day,
+      movementSpeed: 1,
       activeTicks: handoff.state.activeTicks + 1,
       encounters: handoff.state.encounters,
+      lifecycle: { phase: "battling" },
     });
     expect(held.lifespan).not.toEqual(handoff.state.lifespan);
   });

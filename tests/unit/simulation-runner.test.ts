@@ -60,6 +60,7 @@ function tutorialGatedObservation(steps: number): GameObservation {
       hp: { current: 1_908, maximum: 1_908 },
       inventory: { item: "elixir" },
     },
+    battle: null,
     encounters: {
       current: null,
       upcoming: [
@@ -124,7 +125,7 @@ describe("headless simulation runner", () => {
       distance: 0,
       gold: 300,
       traceHash:
-        "sha256-v1:9898cf13e2002b2ba748bf6590a924173ed6ee5fa1a4ce170dabc37a01a14175",
+        "sha256-v1:ee9e0f54a2d79822046d1fd689ef97997b5d16f8e6ab422ce7a18161a465f4d0",
       metrics: {},
     });
     expect(Object.isFrozen(result)).toBe(true);

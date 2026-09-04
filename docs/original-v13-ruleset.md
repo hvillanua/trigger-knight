@@ -48,11 +48,11 @@ no elapsed time or render information. `steps` increments for every call,
 including calls made when pause, tutorial, pregame, or ended state prevents
 active gameplay. `activeTicks` increments when the run has not ended, pause is
 off, no tutorial is open, and the pregame counter has reached zero. The
-`running` phase advances distance and encounters. The `battle-handoff` phase
-keeps active ticks and lifespan available while running systems wait for
-Milestone 4 combat.
+`running` phase advances distance and encounters. The `battling` phase keeps
+active ticks and lifespan available while running systems are stopped and the
+battle state advances.
 
-Run state stores the `running`, `battle-handoff`, or `ended` phase separately
+Run state stores the `running`, `battling`, or `ended` phase separately
 from the pause, tutorial, and pregame gates. This allows pause to be toggled
 while tutorial page 0 remains open. The public observation reports those fields,
 whether active gameplay can advance on the next step, and whether pause,
@@ -208,6 +208,8 @@ This keeps the choice visible without claiming that the original Flash runtime
 used the same initialization or refill order.
 
 Run-state schema version 11 adds enemy snapshots and hidden Dragon state.
+Version 12 adds the active battle state and replaces the temporary battle
+handoff with authoritative combatants.
 Version 10 added hidden Shrine extension and emergency state. Version 9 added
 equipment names to the authoritative player state. Version 8 added the current
 shop's one-use purchase state.
@@ -215,7 +217,7 @@ Gameplay traces and run results remain at schema version 2. The locked seed
 `encounter-host-parity` produces encounter hash
 `sha256-v1:c4bf0b847f029df30bc8eea291d4d6db844f2f4d3e76077e7de81c08552d2e46`
 and initial state hash
-`sha256-v1:c37275062ee662954667cef15c7974198ad97c011a7325860f3259644a18199d`
+`sha256-v1:862528126f57b5f246ca20f0c680de91ca7661d69a199b0f98865fbd669548a7`
 in both Node and Chromium.
 
 ## Encounter world lifecycle
@@ -231,11 +233,20 @@ and only while `0 < x < 420`. A shop departs below x -100 and emits
 `shop-departed` whether it was used or passed.
 
 Battles move left by the full running speed. Crossing below x 420 changes the
-phase to `battle-handoff` and emits `battle-handoff`. Later steps freeze
-distance, day, score, the encounter counter, and the current battle position.
-They still advance active ticks and lifespan until pause, a tutorial, run death,
-or future Milestone 4 combat changes the state. No combat actor state, reward,
-auto-win, or battle resolution exists in this handoff.
+phase to `battling`, materializes the selected enemy at its current position,
+initializes both actors in `idle`, and emits `battle-started` with the current
+enemy identity and HP. The hero starts at x 50 with attack delay 0 and attack
+factor 1. The enemy starts at the positioned encounter x. The threshold-
+crossing step remains the last running tick; later active battle ticks reduce
+running speed by 1 down to zero.
+
+During battling, distance, day, score, the encounter counter, and the current
+battle position stay fixed. Active ticks and lifespan continue. The authoritative
+battle state holds both actor phases, mechanic-bearing positions, attack delay,
+attack factor, attack count, and alpha so later combat transitions can remain in
+the domain. The public observation exposes only the current enemy identity and
+HP plus actor phase and x position. Attack resolution, rewards, and post-battle
+transitions remain later milestone work.
 
 Promotion emits `encounter-promoted` with the same player-facing positioned
 encounter used by observation. It does not copy hidden enemy attack or reward

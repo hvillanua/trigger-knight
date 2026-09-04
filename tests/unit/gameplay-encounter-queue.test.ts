@@ -320,7 +320,7 @@ describe("original-v1.3 encounter queue", () => {
     const repeated = gameplayEngine.createRun(config);
     const restored = JSON.parse(JSON.stringify(initial)) as RunState;
 
-    expect(initial.schemaVersion).toBe(11);
+    expect(initial.schemaVersion).toBe(12);
     expect(initial.encounters.current).toBeNull();
     expect(initial.encounters.distanceUntilNext).toBeGreaterThanOrEqual(1_000);
     expect(initial.encounters.distanceUntilNext).toBeLessThanOrEqual(1_999);
