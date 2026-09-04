@@ -24,7 +24,6 @@ export function createPlayerState(player: Readonly<PlayerState>): PlayerState {
   });
 }
 
-
 /** Projects authoritative player state into the shared player-facing model. */
 export function observePlayerState(
   player: Readonly<PlayerState>,
