@@ -51,8 +51,12 @@ function declarationName(declaration) {
 }
 
 function declarationKey(declaration, projectDirectory) {
+  const sourceFile = path.resolve(
+    projectDirectory,
+    declaration.getSourceFile().fileName,
+  );
   const relativeFile = path
-    .relative(projectDirectory, declaration.getSourceFile().fileName)
+    .relative(projectDirectory, sourceFile)
     .split(path.sep)
     .join("/");
 
