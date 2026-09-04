@@ -5,10 +5,10 @@ import ts from "typescript";
 
 const PLAYER_VISIBLE_TAG = "playerVisible";
 const PLAYER_VISIBLE_BOUNDARY_ROOTS = new Set([
-  "GameEvent",
-  "GameObservation",
-  "PlayerAgent",
-  "PresentationFrame",
+  "src/application/presentation.ts#PresentationFrame",
+  "src/application/simulation.ts#PlayerAgent",
+  "src/domain/contracts.ts#GameEvent",
+  "src/domain/contracts.ts#GameObservation",
 ]);
 
 function readProjectArgument(arguments_) {
@@ -50,8 +50,18 @@ function declarationName(declaration) {
   return declaration.name?.getText() ?? "<anonymous>";
 }
 
+function declarationKey(declaration, projectDirectory) {
+  const relativeFile = path
+    .relative(projectDirectory, declaration.getSourceFile().fileName)
+    .split(path.sep)
+    .join("/");
+
+  return `${relativeFile}#${declarationName(declaration)}`;
+}
+
 const projectArgument = readProjectArgument(process.argv.slice(2));
 const projectPath = path.resolve(process.cwd(), projectArgument);
+const projectDirectory = path.dirname(projectPath);
 const configResult = ts.readConfigFile(projectPath, ts.sys.readFile);
 
 if (configResult.error) {
@@ -61,7 +71,7 @@ if (configResult.error) {
   const parsedConfig = ts.parseJsonConfigFileContent(
     configResult.config,
     ts.sys,
-    path.dirname(projectPath),
+    projectDirectory,
     undefined,
     projectPath,
   );
@@ -105,7 +115,9 @@ if (configResult.error) {
         if (
           isContractDeclaration(statement) &&
           (hasJSDocTag(statement, PLAYER_VISIBLE_TAG) ||
-            PLAYER_VISIBLE_BOUNDARY_ROOTS.has(declarationName(statement)))
+            PLAYER_VISIBLE_BOUNDARY_ROOTS.has(
+              declarationKey(statement, projectDirectory),
+            ))
         ) {
           playerVisibleDeclarations.push(statement);
         }

@@ -13,4 +13,8 @@ interface PlayerObservation {
   readonly enemy: ObservedEnemy;
 }
 
-export type { EnemySnapshot, PlayerObservation };
+interface PresentationFrame {
+  readonly internalTestValue: EnemySnapshot;
+}
+
+export type { EnemySnapshot, PlayerObservation, PresentationFrame };
