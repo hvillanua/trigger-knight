@@ -231,7 +231,7 @@ Gameplay traces and run results remain at schema version 2. The locked seed
 `encounter-host-parity` produces encounter hash
 `sha256-v1:c4bf0b847f029df30bc8eea291d4d6db844f2f4d3e76077e7de81c08552d2e46`
 and initial state hash
-`sha256-v1:862528126f57b5f246ca20f0c680de91ca7661d69a199b0f98865fbd669548a7`
+`sha256-v1:5e7da17860017069ffbdf64acaeafca08c2c242bf36cb58ce2d925e56ff18930`
 in both Node and Chromium.
 
 ## Encounter world lifecycle
