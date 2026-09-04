@@ -7,19 +7,21 @@ outside this ticket.
 
 ## Purchasing policy
 
-`purchasingPolicy` is the `purchase-reachable-shops` policy at version `1` with
+`purchasingPolicy` is the `purchase-reachable-shops` policy at version `2` with
 an empty configuration. Its agent receives the same public observation and
-preceding public events as a browser presentation. It makes three decisions:
+preceding public events as a browser presentation. It makes four decisions:
 
 - dismiss tutorial page 0 when the public dismissal action is eligible;
+- use the carried item when the public item-use action is eligible;
 - issue the shared `purchase-current-encounter` command when the public
   purchase action is eligible for a current shop;
 - otherwise issue no command.
 
 The policy never reads `RunState`, hidden encounter-generation fields, random
 state, prices, or effects. The domain still checks the cached price, range,
-gold, one-use state, tier cap, and purchase effect. A `run-ended` event also
-stops policy commands.
+gold, one-use state, tier cap, purchase effect, item-use phase, and inventory.
+A `run-ended` event also stops policy commands. The item-use command shares the
+browser input path.
 
 Browser input imports the same command constant as the policy. The browser
 purchase button is disabled from the latest public action eligibility and sends
@@ -83,9 +85,9 @@ DPR 2. It uses different redraw counts and still compares both browser traces
 with the Node trace. Canvas size, device pixel ratio, redraw cadence, and
 interpolation therefore do not affect encounter or economy state.
 
-The locked `m3-parity-schedule` trace hash, updated for the version-12 active
-battle state and public battle projection, is
-`sha256-v1:4ff4fc50db1876496dc0f3cbffcb7d14ef22a93637b89fc2efaf62ce60208a0a`.
+The locked `m3-parity-schedule` trace hash, updated for the version-13 active
+battle state, public battle projection, and policy's item-use command, is
+`sha256-v1:dd6404798f0d95a27eacfdec603ff28554680eaf17441c2e5439682f82eda18e`.
 
 ## Compatibility labels and boundary
 
@@ -93,12 +95,20 @@ The encounter, pricing, Shrine, inventory, gold, and tier rules in these tests
 are **CONFIRMED** by the human-authored research specification. The fixed seed
 coverage and full-run invariant results are **DERIVED** evidence from the
 clean-room implementation and selected deterministic inputs. The policy
-descriptor and command sharing are clean-room implementation decisions built on
-the public contracts.
+descriptor, item-use command sharing, public action name, event shapes, and
+hidden multiplier representation are clean-room implementation decisions built
+on the public contracts. The item effects and immediate consumption remain
+**CONFIRMED** research behavior.
 
 The battle transition now emits `battle-started` when the battle crosses the
 confirmed world threshold and changes the run phase to `battling`. Issue #56
 initializes the selected enemy and both authoritative actors at that point.
+Issue #58 adds a battle-only `use-carried-item` command. The public policy and
+browser input issue it only when `canUseCarriedItem` is true. Elixir restores
+current HP, Divine Edge sets the current battle's hero attack factor to 100,
+and Gold Voucher sets the current battle's hidden gold multiplier to 10. Each
+valid use consumes the one inventory slot; rejected uses emit a public reason
+and leave item state unchanged.
 After the threshold-crossing tick, distance, day, score, encounter movement,
 and encounter generation stay fixed while battle speed decays and lifespan
 continues to drain. This verification still does not claim an attack outcome,

@@ -27,11 +27,12 @@ use canonical JSON, so object insertion order cannot change their value. The
 portable digest implementation returns the same `sha256-v1` value in Chromium
 and Node.
 
-Gameplay-trace schema version 2 covers the version-12 run state, including
+Gameplay-trace schema version 2 covers the version-13 run state, including
 equipment names, player values, current-shop use state, queued enemy snapshots,
-hidden Dragon and Soul Shrine state, and the active battle state. The run-state
-schema change updates checkpoint and trace hashes without changing the trace
-format.
+hidden Dragon and Soul Shrine state, the active battle state, and its
+battle-scoped item modifiers. The run-state schema change updates checkpoint
+and trace hashes without changing the trace format. Item-use commands and
+their semantic accepted or rejected events are included in the same fields.
 
 `compareGameplayTraces(expected, actual)` compares configuration and checkpoint
 fields before derived hashes. A mismatch reports a concrete path such as

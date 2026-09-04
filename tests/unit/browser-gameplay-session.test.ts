@@ -78,6 +78,7 @@ describe("browser gameplay session", () => {
           canTogglePause: true,
           canDismissTutorial: true,
           canPurchaseCurrentEncounter: false,
+          canUseCarriedItem: false,
         },
       },
       events: [{ type: "step-advanced", step: 1 }],

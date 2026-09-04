@@ -9,11 +9,12 @@ import type {
 import {
   DISMISS_TUTORIAL_COMMANDS,
   PURCHASE_CURRENT_ENCOUNTER_COMMANDS,
+  USE_CARRIED_ITEM_COMMANDS,
 } from "../application/commands.js";
 
 const descriptor: PolicyDescriptor = Object.freeze({
   id: "purchase-reachable-shops",
-  version: "1",
+  version: "2",
   config: Object.freeze({}),
 });
 
@@ -31,6 +32,10 @@ function decide(
     return DISMISS_TUTORIAL_COMMANDS;
   }
 
+  if (observation.actions.canUseCarriedItem) {
+    return USE_CARRIED_ITEM_COMMANDS;
+  }
+
   if (
     observation.actions.canPurchaseCurrentEncounter &&
     observation.encounters.current?.kind === "shop"
@@ -41,7 +46,7 @@ function decide(
   return NO_COMMANDS;
 }
 
-/** Buys every shop that the public observation says is currently eligible. */
+/** Uses eligible carried items and buys every eligible current shop. */
 export const purchasingPolicy: PlayerPolicy = Object.freeze({
   descriptor,
   createAgent(): PlayerAgent {

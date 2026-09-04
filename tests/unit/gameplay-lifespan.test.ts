@@ -111,6 +111,7 @@ describe("original-v1.3 lifespan", () => {
         canTogglePause: false,
         canDismissTutorial: false,
         canPurchaseCurrentEncounter: false,
+        canUseCarriedItem: false,
       },
     });
 

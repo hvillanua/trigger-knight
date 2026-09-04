@@ -24,6 +24,11 @@ import {
   observeBattle,
   type BattleRules,
 } from "./battle.js";
+import {
+  attemptUseCarriedItem,
+  itemUseRejectionReason,
+  type ItemUseRules,
+} from "./items.js";
 import { advanceLifespan } from "./lifespan.js";
 import {
   createPlayerState,
@@ -79,6 +84,7 @@ export interface RuleSetConstants {
   };
   readonly encounters: EncounterGenerationRules;
   readonly battle: BattleRules;
+  readonly items: ItemUseRules;
   readonly lifespan: {
     readonly initialWhole: number;
     readonly initialFraction: number;
@@ -284,7 +290,12 @@ const originalV13Constants: RuleSetConstants = Object.freeze({
     initialAttackFactor: 1,
     initialAttackCount: 0,
     initialAlpha: 100,
+    initialEnemyGoldMultiplier: 1,
     speedDecayPerActiveTick: 1,
+  }),
+  items: Object.freeze({
+    divineEdgeAttackFactor: 100,
+    goldVoucherMultiplier: 10,
   }),
   lifespan: Object.freeze({
     initialWhole: 99,
@@ -338,6 +349,10 @@ const originalV13LifespanRules = Object.freeze({
 
 const originalV13BattleRules: BattleRules = Object.freeze({
   ...originalV13Constants.battle,
+});
+
+const originalV13ItemUseRules: ItemUseRules = Object.freeze({
+  ...originalV13Constants.items,
 });
 
 const originalV13PurchaseRules: PurchaseRules = Object.freeze({
@@ -432,7 +447,9 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
       const commandResult =
         command.type === "purchase-current-encounter"
           ? attemptPurchase(commandedState, originalV13PurchaseRules)
-          : applyLifecycleCommand(commandedState, command);
+          : command.type === "use-carried-item"
+            ? attemptUseCarriedItem(commandedState, originalV13ItemUseRules)
+            : applyLifecycleCommand(commandedState, command);
       commandedState = commandResult.state;
       commandEvents.push(...commandResult.events);
     }
@@ -511,6 +528,7 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
           canAcceptLifecycleCommands && state.lifecycle.tutorialPage !== null,
         canPurchaseCurrentEncounter:
           purchaseRejectionReason(state, originalV13PurchaseRules) === null,
+        canUseCarriedItem: itemUseRejectionReason(state) === null,
       }),
     });
   },

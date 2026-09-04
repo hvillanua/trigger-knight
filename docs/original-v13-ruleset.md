@@ -15,25 +15,26 @@ ruleset implementations, so a later identity can coexist without changing the
 
 The ruleset owns the confirmed compatibility values implemented so far:
 
-| Group            | Values                                                                                                                     | Evidence                                                                       |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Logical time     | 30 gameplay ticks per second                                                                                               | Confirmed original behavior                                                    |
-| Pregame delay    | 60 logical opportunities                                                                                                   | Confirmed value; gate interaction is a clean-room decision                     |
-| Running movement | Speed starts at 0, gains 1 per active tick, caps at 15, and contributes one distance unit per speed unit                   | Confirmed original behavior                                                    |
-| Day and score    | 7,000 distance units per day; running score uses 10 points per speed unit before the profile multiplier                    | Confirmed original behavior                                                    |
-| Economy          | A run starts with 300 integer gold; purchases require and subtract the encounter's cached price                            | Confirmed original behavior                                                    |
-| Weapon           | Named tiers 1 through 10; attack is `129 + 87 * tier`, from Dagger at 216 through Astral Sword at 999                      | Confirmed original behavior                                                    |
-| Armor and HP     | Named tiers 1 through 10; maximum HP is `1009 + 899 * tier`, from Clothing at 1,908 through Astral Armor at 9,999          | Confirmed original behavior                                                    |
-| Inventory        | One slot; item-shop purchases replace it with Elixir, Divine Edge, or Gold Voucher                                         | Confirmed original behavior                                                    |
-| Encounter queue  | Three entries; zero to two initial shops before battle, then one to three; confirmed shop roll ranges and duplicate rules  | Confirmed original behavior                                                    |
-| Enemies          | Uniform Goblin, Golem, and Wolf selection; day-scaled HP, attack, gold, and profile EXP                                    | Confirmed original behavior                                                    |
-| Dragon           | Day-based chance from day 8, guaranteed from day 41, with no consecutive queued Dragons                                    | Confirmed and derived original behavior                                        |
-| Encounter world  | Initial spacing 1,000-1,999; later spacing 1,500-1,799; entry x 600; shop and battle speeds and strict thresholds          | Confirmed original behavior                                                    |
-| Shop prices      | Generation-time equipment formulas; Shrine starts at 50 and gains 70 per purchase; item shops cost 150, 200, and 500       | Confirmed original behavior                                                    |
-| Emergency Shrine | Threshold 40-49; one forced chance below it per restoration cycle when the battle cycle has no Shrine                      | Confirmed original behavior                                                    |
-| Lifespan         | Starts at 99.99, drains the fractional field by 4 per active tick, resets the fraction to 99, and dies below whole value 0 | Confirmed original behavior                                                    |
-| World camera     | One original stage unit maps to one world unit; initial camera is 480 by 320 world units                                   | Clean-room coordinate-model decision preserving confirmed original coordinates |
-| Random sequence  | `mulberry32-fnv1a32-v1`                                                                                                    | Clean-room reproducibility decision                                            |
+| Group            | Values                                                                                                                                                   | Evidence                                                                       |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| Logical time     | 30 gameplay ticks per second                                                                                                                             | Confirmed original behavior                                                    |
+| Pregame delay    | 60 logical opportunities                                                                                                                                 | Confirmed value; gate interaction is a clean-room decision                     |
+| Running movement | Speed starts at 0, gains 1 per active tick, caps at 15, and contributes one distance unit per speed unit                                                 | Confirmed original behavior                                                    |
+| Day and score    | 7,000 distance units per day; running score uses 10 points per speed unit before the profile multiplier                                                  | Confirmed original behavior                                                    |
+| Economy          | A run starts with 300 integer gold; purchases require and subtract the encounter's cached price                                                          | Confirmed original behavior                                                    |
+| Weapon           | Named tiers 1 through 10; attack is `129 + 87 * tier`, from Dagger at 216 through Astral Sword at 999                                                    | Confirmed original behavior                                                    |
+| Armor and HP     | Named tiers 1 through 10; maximum HP is `1009 + 899 * tier`, from Clothing at 1,908 through Astral Armor at 9,999                                        | Confirmed original behavior                                                    |
+| Inventory        | One slot; item-shop purchases replace it with Elixir, Divine Edge, or Gold Voucher                                                                       | Confirmed original behavior                                                    |
+| Item use         | Active-battle command consumes the item; Elixir restores HP, Divine Edge sets attack factor to 100, and Gold Voucher multiplies the current reward by 10 | Confirmed effects; clean-room command boundary                                 |
+| Encounter queue  | Three entries; zero to two initial shops before battle, then one to three; confirmed shop roll ranges and duplicate rules                                | Confirmed original behavior                                                    |
+| Enemies          | Uniform Goblin, Golem, and Wolf selection; day-scaled HP, attack, gold, and profile EXP                                                                  | Confirmed original behavior                                                    |
+| Dragon           | Day-based chance from day 8, guaranteed from day 41, with no consecutive queued Dragons                                                                  | Confirmed and derived original behavior                                        |
+| Encounter world  | Initial spacing 1,000-1,999; later spacing 1,500-1,799; entry x 600; shop and battle speeds and strict thresholds                                        | Confirmed original behavior                                                    |
+| Shop prices      | Generation-time equipment formulas; Shrine starts at 50 and gains 70 per purchase; item shops cost 150, 200, and 500                                     | Confirmed original behavior                                                    |
+| Emergency Shrine | Threshold 40-49; one forced chance below it per restoration cycle when the battle cycle has no Shrine                                                    | Confirmed original behavior                                                    |
+| Lifespan         | Starts at 99.99, drains the fractional field by 4 per active tick, resets the fraction to 99, and dies below whole value 0                               | Confirmed original behavior                                                    |
+| World camera     | One original stage unit maps to one world unit; initial camera is 480 by 320 world units                                                                 | Clean-room coordinate-model decision preserving confirmed original coordinates |
+| Random sequence  | `mulberry32-fnv1a32-v1`                                                                                                                                  | Clean-room reproducibility decision                                            |
 
 The compatibility target for randomness is the confirmed original ranges,
 probabilities, and gameplay draw order. The Flash Player's PRNG and seed
@@ -56,13 +57,14 @@ Run state stores the `running`, `battling`, or `ended` phase separately
 from the pause, tutorial, and pregame gates. This allows pause to be toggled
 while tutorial page 0 remains open. The public observation reports those fields,
 whether active gameplay can advance on the next step, and whether pause,
-tutorial dismissal, or a current shop purchase is eligible. It does not expose
-random state or encounter generation bookkeeping.
+tutorial dismissal, a current shop purchase, or carried-item use is eligible.
+It does not expose random state or encounter generation bookkeeping.
 
 Commands are processed in list order before the same logical opportunity is evaluated.
-Purchase attempts emit `shop-purchased` or `purchase-rejected`; lifecycle
-commands emit `pause-toggled` or `tutorial-dismissed`. The logical opportunity
-then emits `step-advanced`. An ended run rejects a purchase through its
+Purchase attempts emit `shop-purchased` or `purchase-rejected`; item-use
+attempts emit `item-used` or `item-use-rejected`; lifecycle commands emit
+`pause-toggled` or `tutorial-dismissed`. The logical opportunity then emits
+`step-advanced`. An ended run rejects a purchase or item use through its
 lifecycle gate and ignores lifecycle commands, while the host can still account
 for the attempted engine step.
 
@@ -106,7 +108,18 @@ It derives maximum HP 1,908 from `1009 + 899 * 1`, and current HP starts at that
 maximum. The inventory item identifiers cover Elixir, Divine Edge, and Gold
 Voucher. Pharmacy, Grim's Shop, and Voucher Store purchases replace the one slot
 with their corresponding item, including when the same item is already carried.
-Item use remains in Milestone 4.
+Item use is a separate battle-only command. `canUseCarriedItem` is true only
+when active gameplay is in the `battling` phase and the inventory slot contains
+an item. A valid `use-carried-item` command consumes the slot immediately and
+emits `item-used` with the item identifier. Elixir sets current HP to maximum;
+Divine Edge sets the current battle hero attack factor to 100; and Gold Voucher
+sets the current battle's hidden enemy-gold multiplier to 10. These effects do
+not consume gameplay randomness. A second use or an empty slot emits
+`item-use-rejected` with `no-item`; running, pause, tutorial, and ended states
+emit the corresponding public rejection without changing item or battle state.
+The item effects and immediate consumption are **CONFIRMED** by the research.
+The semantic command, action name, event shapes, rejection vocabulary, and
+hidden multiplier representation are clean-room boundary decisions.
 
 The device-independent `purchase-current-encounter` command contains no price,
 effect, or coordinate. The domain accepts it only for an active, unused,
@@ -209,7 +222,8 @@ used the same initialization or refill order.
 
 Run-state schema version 11 adds enemy snapshots and hidden Dragon state.
 Version 12 adds the active battle state and replaces the temporary battle
-handoff with authoritative combatants.
+handoff with authoritative combatants. Version 13 adds the battle-scoped item
+modifiers used by the battle-only item command.
 Version 10 added hidden Shrine extension and emergency state. Version 9 added
 equipment names to the authoritative player state. Version 8 added the current
 shop's one-use purchase state.
@@ -217,7 +231,7 @@ Gameplay traces and run results remain at schema version 2. The locked seed
 `encounter-host-parity` produces encounter hash
 `sha256-v1:c4bf0b847f029df30bc8eea291d4d6db844f2f4d3e76077e7de81c08552d2e46`
 and initial state hash
-`sha256-v1:862528126f57b5f246ca20f0c680de91ca7661d69a199b0f98865fbd669548a7`
+`sha256-v1:5e7da17860017069ffbdf64acaeafca08c2c242bf36cb58ce2d925e56ff18930`
 in both Node and Chromium.
 
 ## Encounter world lifecycle
@@ -243,10 +257,11 @@ running speed by 1 down to zero.
 During battling, distance, day, score, the encounter counter, and the current
 battle position stay fixed. Active ticks and lifespan continue. The authoritative
 battle state holds both actor phases, mechanic-bearing positions, attack delay,
-attack factor, attack count, and alpha so later combat transitions can remain in
-the domain. The public observation exposes only the current enemy identity and
-HP plus actor phase and x position. Attack resolution, rewards, and post-battle
-transitions remain later milestone work.
+attack factor, attack count, alpha, and battle-scoped item modifiers so later
+combat transitions can remain in the domain. The public observation exposes only
+the current enemy identity and HP plus actor phase and x position. Item-use
+eligibility is exposed separately through the public action model. Attack
+resolution, rewards, and post-battle transitions remain later milestone work.
 
 Promotion emits `encounter-promoted` with the same player-facing positioned
 encounter used by observation. It does not copy hidden enemy attack or reward
@@ -298,8 +313,7 @@ gates. `original-v1.3` uses this explicit clean-room decision:
 - Pregame opportunities do not increment `activeTicks`. The first active tick
   is the next eligible step after the counter reaches zero.
 
-Item use, combat resolution, and tutorial presentation remain assigned to later
-tickets.
+Combat resolution and tutorial presentation remain assigned to later tickets.
 
 State, results, events, event lists, and observations are frozen. A
 JSON-restored checkpoint produces the same next state, observation, and events

@@ -14,3 +14,11 @@ export const DISMISS_TUTORIAL_COMMANDS: readonly GameCommand[] = Object.freeze([
 
 export const PURCHASE_CURRENT_ENCOUNTER_COMMANDS: readonly GameCommand[] =
   Object.freeze([PURCHASE_CURRENT_ENCOUNTER_COMMAND]);
+
+export const USE_CARRIED_ITEM_COMMAND = Object.freeze({
+  type: "use-carried-item",
+} as const satisfies GameCommand);
+
+export const USE_CARRIED_ITEM_COMMANDS: readonly GameCommand[] = Object.freeze([
+  USE_CARRIED_ITEM_COMMAND,
+]);

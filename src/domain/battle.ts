@@ -13,6 +13,7 @@ export interface BattleRules {
   readonly initialAttackFactor: number;
   readonly initialAttackCount: number;
   readonly initialAlpha: number;
+  readonly initialEnemyGoldMultiplier: number;
   readonly speedDecayPerActiveTick: number;
 }
 
@@ -38,6 +39,7 @@ function createCombatActor(
 export function createBattleState(battle: Readonly<BattleState>): BattleState {
   return Object.freeze({
     enemyHp: battle.enemyHp,
+    enemyGoldMultiplier: battle.enemyGoldMultiplier,
     hero: Object.freeze({ ...battle.hero }),
     enemy: Object.freeze({ ...battle.enemy }),
   });
@@ -50,6 +52,7 @@ function createInitialBattleState(
 ): BattleState {
   return Object.freeze({
     enemyHp,
+    enemyGoldMultiplier: rules.initialEnemyGoldMultiplier,
     hero: createCombatActor(rules.heroInitialX, rules),
     enemy: createCombatActor(enemyX, rules),
   });

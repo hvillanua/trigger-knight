@@ -7,15 +7,17 @@ the same `GameObservation` and `GameEvent` values used by presentation.
 
 The runner recognizes committed gameplay termination and reports current gold
 from authoritative player state. Policies can issue the same semantic purchase
-command as browser input, including equipment upgrades and Soul Shrine
-restoration. Worker concurrency, reporting, Monte Carlo tooling, combat death,
-and rewards remain outside this slice.
+and carried-item commands as browser input, including equipment upgrades,
+Soul Shrine restoration, and item use during an active battle. Worker
+concurrency, reporting, Monte Carlo tooling, combat death, and rewards remain
+outside this slice.
 
-The `purchasingPolicy` is the versioned `purchase-reachable-shops` policy. It
-dismisses the public tutorial gate and buys a current shop only when public
-action eligibility is true. It receives preceding public events but never
-reads hidden run state or calculates prices, affordability, ranges, or effects.
-The browser purchase activation uses the same semantic command. Its fixed-seed
+The `purchasingPolicy` is the version-2 `purchase-reachable-shops` policy. It
+dismisses the public tutorial gate, uses a carried item when the public action
+eligibility is true, and buys a current shop only when its public action
+eligibility is true. It receives preceding public events but never reads hidden
+run state or calculates prices, affordability, ranges, or effects. The browser
+purchase and item-use activations use the same semantic commands. Its fixed-seed
 coverage and host-parity evidence are recorded in
 [`milestone-3-economy-verification.md`](milestone-3-economy-verification.md).
 
@@ -79,7 +81,7 @@ run configuration and command schedule. See
 [`gameplay-diagnostics.md`](gameplay-diagnostics.md).
 
 Run-result schema version 2 records the replacement of placeholder gold with
-authoritative state. The streamed trace covers the complete version-12 run state
+authoritative state. The streamed trace covers the complete version-13 run state
 and its player observation on every step.
 
 ## Minimal batches
