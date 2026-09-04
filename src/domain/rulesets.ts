@@ -15,11 +15,16 @@ import {
   advanceEncounterLifecycle,
   initializeEncounterQueue,
   observeCurrentEncounter,
+  observeQueuedEncounter,
   type EnemyGenerationRules,
   type EncounterGenerationRules,
 } from "./encounters.js";
 import { advanceLifespan } from "./lifespan.js";
-import { createPlayerState, equipmentNameAtTier } from "./player-state.js";
+import {
+  createPlayerState,
+  equipmentNameAtTier,
+  observePlayerState,
+} from "./player-state.js";
 import {
   attemptPurchase,
   purchaseRejectionReason,
@@ -440,7 +445,11 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
 
   observe(state: Readonly<RunState>): GameObservation {
     const lifecycle = Object.freeze({
-      ...state.lifecycle,
+      phase: state.lifecycle.phase,
+      terminalReason: state.lifecycle.terminalReason,
+      paused: state.lifecycle.paused,
+      tutorialPage: state.lifecycle.tutorialPage,
+      pregameStepsRemaining: state.lifecycle.pregameStepsRemaining,
       activeGameplay: isActiveGameplay(state.lifecycle),
     });
     const canAcceptLifecycleCommands = state.lifecycle.phase !== "ended";
@@ -455,16 +464,15 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
       distance: state.distance,
       day: state.day,
       score: state.score,
-      lifespan: Object.freeze({ ...state.lifespan }),
-      player: createPlayerState(state.player),
+      lifespan: Object.freeze({
+        whole: state.lifespan.whole,
+        fraction: state.lifespan.fraction,
+      }),
+      player: observePlayerState(state.player),
       encounters: Object.freeze({
         current: observeCurrentEncounter(currentEncounter),
         upcoming: Object.freeze(
-          state.encounters.upcoming.map((encounter) =>
-            encounter.kind === "battle"
-              ? Object.freeze({ kind: "battle" as const })
-              : Object.freeze({ ...encounter }),
-          ),
+          state.encounters.upcoming.map(observeQueuedEncounter),
         ),
       }),
       lifecycle,

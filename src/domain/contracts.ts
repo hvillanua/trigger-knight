@@ -1,4 +1,7 @@
-/** Stable identity for a versioned gameplay ruleset. */
+/**
+ * Stable identity for a versioned gameplay ruleset.
+ * @playerVisible
+ */
 export type RuleSetId = string;
 
 /** Profile snapshot supplied explicitly when a run is created. */
@@ -14,10 +17,13 @@ export interface RandomState {
   readonly state: number;
 }
 
+/** @playerVisible Current phase exposed to players. */
 export type RunPhase = "running" | "battle-handoff" | "ended";
+
+/** @playerVisible Public reason for a completed run. */
 export type RunTerminalReason = "lifespan" | "combat";
 
-/** Authoritative run phase and the independent gates that can halt gameplay. */
+/** Authoritative run phase and the independent gates that halt gameplay. */
 export interface RunLifecycleState {
   readonly phase: RunPhase;
   readonly terminalReason: RunTerminalReason | null;
@@ -26,14 +32,22 @@ export interface RunLifecycleState {
   readonly pregameStepsRemaining: number;
 }
 
-/** Original two-part integer lifespan value. */
+/** Original authoritative two-part integer lifespan value. */
 export interface LifespanState {
   readonly whole: number;
   readonly fraction: number;
 }
 
+/** @playerVisible Lifespan values exposed to players. */
+export interface LifespanObservation {
+  readonly whole: number;
+  readonly fraction: number;
+}
+
+/** @playerVisible Inventory item identity exposed to players. */
 export type InventoryItemId = "elixir" | "divine-edge" | "gold-voucher";
 
+/** @playerVisible Weapon name exposed to players. */
 export type WeaponName =
   | "Dagger"
   | "Sword"
@@ -46,6 +60,7 @@ export type WeaponName =
   | "Excalibur"
   | "Astral Sword";
 
+/** @playerVisible Armor name exposed to players. */
 export type ArmorName =
   | "Clothing"
   | "Protector"
@@ -58,6 +73,7 @@ export type ArmorName =
   | "Avalon"
   | "Astral Armor";
 
+/** Complete authoritative player state. */
 export interface PlayerState {
   readonly gold: number;
   readonly weapon: {
@@ -78,6 +94,28 @@ export interface PlayerState {
   };
 }
 
+/** @playerVisible Player status shown by presentation and policies. */
+export interface PlayerObservation {
+  readonly gold: number;
+  readonly weapon: {
+    readonly tier: number;
+    readonly name: WeaponName;
+    readonly attack: number;
+  };
+  readonly armor: {
+    readonly tier: number;
+    readonly name: ArmorName;
+  };
+  readonly hp: {
+    readonly current: number;
+    readonly maximum: number;
+  };
+  readonly inventory: {
+    readonly item: InventoryItemId | null;
+  };
+}
+
+/** @playerVisible Shop identity exposed to players. */
 export type ShopId =
   | "bladesmith"
   | "armorsmith"
@@ -86,14 +124,24 @@ export type ShopId =
   | "grims-shop"
   | "voucher-store";
 
+/** Complete authoritative queued shop values. */
 export interface ShopEncounter {
   readonly kind: "shop";
   readonly shop: ShopId;
   readonly cachedPrice: number;
 }
 
+/** @playerVisible Queued shop values exposed to players. */
+export interface ObservedShopEncounter {
+  readonly kind: "shop";
+  readonly shop: ShopId;
+  readonly cachedPrice: number;
+}
+
+/** @playerVisible Enemy identity exposed when its encounter is current. */
 export type EnemyId = "goblin" | "golem" | "wolf" | "dragon";
 
+/** Complete enemy values owned by authoritative gameplay. */
 export interface EnemySnapshot {
   readonly id: EnemyId;
   readonly maximumHp: number;
@@ -102,13 +150,19 @@ export interface EnemySnapshot {
   readonly profileExp: number;
 }
 
-/** Player-facing enemy values shown for the current battle. */
+/**
+ * Player-facing enemy values shown for the current battle.
+ * @playerVisible
+ */
 export interface ObservedEnemy {
   readonly id: EnemyId;
   readonly maximumHp: number;
 }
 
-/** Public marker for a queued battle whose enemy is not yet visible. */
+/**
+ * Public marker for a queued battle whose enemy is not yet visible.
+ * @playerVisible
+ */
 export interface BattleEncounter {
   readonly kind: "battle";
 }
@@ -117,11 +171,19 @@ export interface BattleEncounter {
 export interface QueuedBattleEncounter extends BattleEncounter {
   readonly enemy: EnemySnapshot;
 }
-
 export type QueuedEncounter = ShopEncounter | QueuedBattleEncounter;
-export type ObservedQueuedEncounter = ShopEncounter | BattleEncounter;
 
+/** @playerVisible Public view of a queued encounter. */
+export type ObservedQueuedEncounter = ObservedShopEncounter | BattleEncounter;
+
+/** Complete authoritative positioned shop values. */
 export interface PositionedShopEncounter extends ShopEncounter {
+  readonly x: number;
+  readonly used: boolean;
+}
+
+/** @playerVisible Positioned shop values exposed to players. */
+export interface ObservedPositionedShopEncounter extends ObservedShopEncounter {
   readonly x: number;
   readonly used: boolean;
 }
@@ -130,17 +192,21 @@ export interface PositionedBattleEncounter extends QueuedBattleEncounter {
   readonly x: number;
 }
 
+/** Complete current encounter owned by gameplay. */
 export type CurrentEncounter =
   PositionedShopEncounter | PositionedBattleEncounter;
 
+/** @playerVisible Positioned battle values exposed to players. */
 export interface ObservedPositionedBattleEncounter extends BattleEncounter {
   readonly enemy: ObservedEnemy;
   readonly x: number;
 }
 
+/** @playerVisible Public view of the current encounter. */
 export type ObservedCurrentEncounter =
-  PositionedShopEncounter | ObservedPositionedBattleEncounter;
+  ObservedPositionedShopEncounter | ObservedPositionedBattleEncounter;
 
+/** Encounter scheduling and generation internals. */
 export interface EncounterGenerationState {
   readonly shopsUntilBattle: number;
   readonly dragonSpawned: boolean;
@@ -156,6 +222,7 @@ export interface EncounterGenerationState {
   };
 }
 
+/** Complete authoritative encounter state. */
 export interface EncounterQueueState {
   readonly current: CurrentEncounter | null;
   readonly distanceUntilNext: number;
@@ -163,6 +230,7 @@ export interface EncounterQueueState {
   readonly generation: EncounterGenerationState;
 }
 
+/** @playerVisible Current and upcoming encounters exposed to players. */
 export interface EncounterObservation {
   readonly current: ObservedCurrentEncounter | null;
   readonly upcoming: readonly ObservedQueuedEncounter[];
@@ -186,69 +254,82 @@ export interface RunState {
   readonly lifecycle: RunLifecycleState;
 }
 
-/** Device-independent gameplay intent. */
+/** @playerVisible Device-independent gameplay intent. */
 export interface TogglePauseCommand {
   readonly type: "toggle-pause";
 }
 
-/** Device-independent gameplay intent. */
+/** @playerVisible Device-independent gameplay intent. */
 export interface DismissTutorialCommand {
   readonly type: "dismiss-tutorial";
 }
 
-/** Attempts the domain-owned purchase offered by the current encounter. */
+/** @playerVisible Attempts the domain-owned purchase offered by the current encounter. */
 export interface PurchaseCurrentEncounterCommand {
   readonly type: "purchase-current-encounter";
 }
 
+/** @playerVisible Device-independent commands produced by a player. */
 export type GameCommand =
   TogglePauseCommand | DismissTutorialCommand | PurchaseCurrentEncounterCommand;
 
-/** Authoritative elapsed-step outcome. */
+/**
+ * Elapsed-step outcome exposed to players.
+ * @playerVisible
+ */
 export interface StepAdvancedEvent {
   readonly type: "step-advanced";
   readonly step: number;
 }
 
+/** @playerVisible Pause state change exposed to players. */
 export interface PauseToggledEvent {
   readonly type: "pause-toggled";
   readonly paused: boolean;
 }
 
+/** @playerVisible Tutorial dismissal exposed to players. */
 export interface TutorialDismissedEvent {
   readonly type: "tutorial-dismissed";
   readonly page: 0;
 }
 
+/** @playerVisible Lifespan death exposed to players. */
 export interface LifespanDeathEvent {
   readonly type: "lifespan-death";
 }
 
+/** @playerVisible Run completion exposed to players. */
 export interface RunEndedEvent {
   readonly type: "run-ended";
   readonly reason: RunTerminalReason;
 }
 
+/** @playerVisible Encounter promotion exposed to players. */
 export interface EncounterPromotedEvent {
   readonly type: "encounter-promoted";
   readonly encounter: ObservedCurrentEncounter;
 }
 
+/** @playerVisible Shop departure exposed to players. */
 export interface ShopDepartedEvent {
   readonly type: "shop-departed";
   readonly shop: ShopId;
 }
 
+/** @playerVisible Battle handoff exposed to players. */
 export interface BattleHandoffEvent {
   readonly type: "battle-handoff";
 }
 
+/** @playerVisible Completed purchase exposed to players. */
 export interface ShopPurchasedEvent {
   readonly type: "shop-purchased";
   readonly shop: ShopId;
   readonly price: number;
 }
 
+/** @playerVisible Purchase rejection reason exposed to players. */
 export type PurchaseRejectionReason =
   | "already-used"
   | "insufficient-gold"
@@ -258,12 +339,16 @@ export type PurchaseRejectionReason =
   | "out-of-range"
   | "shop-effect-unavailable";
 
+/** @playerVisible Rejected purchase exposed to players. */
 export interface PurchaseRejectedEvent {
   readonly type: "purchase-rejected";
   readonly reason: PurchaseRejectionReason;
 }
 
-/** Authoritative outcome emitted by a gameplay transition. */
+/**
+ * Player-visible outcome emitted by a gameplay transition.
+ * @playerVisible
+ */
 export type GameEvent =
   | BattleHandoffEvent
   | EncounterPromotedEvent
@@ -276,17 +361,27 @@ export type GameEvent =
   | ShopDepartedEvent
   | TutorialDismissedEvent;
 
-export interface LifecycleObservation extends RunLifecycleState {
+/** @playerVisible Lifecycle values exposed to players. */
+export interface LifecycleObservation {
+  readonly phase: RunPhase;
+  readonly terminalReason: RunTerminalReason | null;
+  readonly paused: boolean;
+  readonly tutorialPage: 0 | null;
+  readonly pregameStepsRemaining: number;
   readonly activeGameplay: boolean;
 }
 
+/** @playerVisible Available player actions. */
 export interface ActionEligibility {
   readonly canTogglePause: boolean;
   readonly canDismissTutorial: boolean;
   readonly canPurchaseCurrentEncounter: boolean;
 }
 
-/** Ruleset-space view consumed by presentation without physical pixel values. */
+/**
+ * Ruleset-space view consumed by presentation without physical pixel values.
+ * @playerVisible
+ */
 export interface WorldCamera {
   readonly x: number;
   readonly y: number;
@@ -294,7 +389,10 @@ export interface WorldCamera {
   readonly height: number;
 }
 
-/** Public gameplay information shared by browser and automated players. */
+/**
+ * Public gameplay information shared by browser and automated players.
+ * @playerVisible
+ */
 export interface GameObservation {
   readonly ruleset: RuleSetId;
   readonly camera: WorldCamera;
@@ -304,8 +402,8 @@ export interface GameObservation {
   readonly distance: number;
   readonly day: number;
   readonly score: number;
-  readonly lifespan: LifespanState;
-  readonly player: PlayerState;
+  readonly lifespan: LifespanObservation;
+  readonly player: PlayerObservation;
   readonly encounters: EncounterObservation;
   readonly lifecycle: LifecycleObservation;
   readonly actions: ActionEligibility;

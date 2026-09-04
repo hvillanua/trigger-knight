@@ -7,6 +7,7 @@ import type {
   GameEvent,
   LifespanState,
   ObservedCurrentEncounter,
+  ObservedQueuedEncounter,
   PlayerState,
   QueuedEncounter,
   RandomState,
@@ -140,6 +141,19 @@ function createCurrentEncounter(
       : Object.freeze({ ...encounter });
 }
 
+/** Projects an authoritative queued encounter into the shared player-facing model. */
+export function observeQueuedEncounter(
+  encounter: Readonly<QueuedEncounter>,
+): ObservedQueuedEncounter {
+  return encounter.kind === "battle"
+    ? Object.freeze({ kind: "battle" as const })
+    : Object.freeze({
+        kind: "shop" as const,
+        shop: encounter.shop,
+        cachedPrice: encounter.cachedPrice,
+      });
+}
+
 /** Projects authoritative encounter state into the shared player-facing model. */
 export function observeCurrentEncounter(
   encounter: Readonly<CurrentEncounter>,
@@ -162,7 +176,13 @@ export function observeCurrentEncounter(
           }),
           x: encounter.x,
         })
-      : Object.freeze({ ...encounter });
+      : Object.freeze({
+          kind: "shop" as const,
+          shop: encounter.shop,
+          cachedPrice: encounter.cachedPrice,
+          x: encounter.x,
+          used: encounter.used,
+        });
 }
 
 function positionEncounter(

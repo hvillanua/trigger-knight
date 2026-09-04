@@ -27,6 +27,18 @@ presentation, policy, and simulation ports live in the application layer. This
 keeps adapter and device concepts out of domain-facing values while ensuring
 browser and automated players receive the same public gameplay information.
 
+Every declaration in the player-visible contract carries the `@playerVisible`
+JSDoc tag. All other project types are hidden by default. The concrete
+`GameObservation`, `GameEvent`, `PresentationFrame`, and `PlayerAgent`
+boundaries are always checker roots, so accidentally removing a tag cannot make
+one of those entry points disappear from validation.
+`npm run check:public-contracts` follows TypeScript type references transitively
+and fails when an approved public declaration reaches an unapproved project
+type. Keep a separate observed type and an explicit projection at this boundary;
+do not expose an authoritative object and rely on consumers to ignore its hidden
+fields. The check is a structural backstop, so focused exact-shape tests still
+define which primitive fields are visible.
+
 `src/application/gameplay-engine.ts` exports the engine contract and a factory
 that accepts a ruleset registry. It does not select the production registry.
 `src/main.ts` supplies the concrete registry when it composes the browser host.
@@ -60,13 +72,14 @@ domain API restrictions continue to apply.
 
 ## Validation
 
-Run the dependency check directly with:
+Run the complete architecture check directly with:
 
 ```sh
 npm run check:architecture
 ```
 
-It is also part of `npm run validate:fast` and therefore of the complete
-`npm run validate` gate. Unit tests exercise passing inward dependencies and
-representative dependency, runtime API, randomness, time, storage, and artifact
-violations.
+It includes dependency and player-visible contract validation and is also part
+of `npm run validate:fast`, and therefore of the complete `npm run validate`
+gate. Unit tests exercise passing inward dependencies, safe public projections,
+and representative dependency, runtime API, randomness, time, storage,
+artifact, and hidden-state violations.

@@ -13,6 +13,10 @@ const dependencyCruiser = path.join(
   "node_modules/dependency-cruiser/bin/dependency-cruise.mjs",
 );
 const eslint = path.join(repositoryRoot, "node_modules/eslint/bin/eslint.js");
+const publicContractChecker = path.join(
+  repositoryRoot,
+  "build/check-public-contracts.mjs",
+);
 const dependencyConfig = path.join(
   repositoryRoot,
   "dependency-cruiser.config.cjs",
@@ -38,6 +42,17 @@ function lintDomain(source: string) {
       cwd: repositoryRoot,
       encoding: "utf8",
       input: source,
+    },
+  );
+}
+
+function checkPublicContractFixture(name: string) {
+  return spawnSync(
+    process.execPath,
+    [publicContractChecker, "--project", "tsconfig.json"],
+    {
+      cwd: path.join(fixtures, name),
+      encoding: "utf8",
     },
   );
 }
@@ -113,5 +128,35 @@ describe("authoritative domain API rules", () => {
 
     expect(result.stderr).toBe("");
     expect(result.status).toBe(0);
+  });
+});
+
+describe("player-visible contract rules", () => {
+  it("accepts a public projection that does not reference hidden state", () => {
+    const result = checkPublicContractFixture("valid-public-contract");
+
+    expect(result.stderr).toBe("");
+    expect(result.status).toBe(0);
+  });
+
+  it("rejects a transitive reference to an unapproved project type", () => {
+    const result = checkPublicContractFixture("forbidden-public-contract");
+
+    expect(result.status).not.toBe(0);
+    expect(result.stdout + result.stderr).toContain(
+      "PlayerObservation -> EncounterObservation -> EnemySnapshot",
+    );
+    expect(result.stdout + result.stderr).toContain(
+      "PresentationFrame -> RunState",
+    );
+    expect(result.stdout + result.stderr).toContain(
+      "PresentationPort -> RunState",
+    );
+    expect(result.stdout + result.stderr).toContain(
+      "DeclarationObservation -> HiddenDeclarationState",
+    );
+    expect(result.stdout + result.stderr).toContain(
+      "GameObservation -> MergeHiddenState",
+    );
   });
 });

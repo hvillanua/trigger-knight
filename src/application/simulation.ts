@@ -24,6 +24,7 @@ export interface PolicyDescriptor {
   readonly config: PolicyConfig;
 }
 
+/** @playerVisible Ordinary automated-player input and command boundary. */
 export interface PlayerAgent {
   decide(
     observation: Readonly<GameObservation>,
