@@ -50,6 +50,10 @@ function declarationName(declaration) {
   return declaration.name?.text ?? "<anonymous>";
 }
 
+function isDependencySourceFile(sourceFile) {
+  return sourceFile.fileName.split(/[\\/]/).includes("node_modules");
+}
+
 const projectArgument = readProjectArgument(process.argv.slice(2));
 const projectPath = path.resolve(process.cwd(), projectArgument);
 const projectDirectory = path.dirname(projectPath);
@@ -79,11 +83,20 @@ if (configResult.error) {
     const projectSourceFiles = new Set(
       program
         .getSourceFiles()
-        .filter(
-          (sourceFile) =>
-            !sourceFile.fileName.includes(`${path.sep}node_modules${path.sep}`),
-        ),
+        .filter((sourceFile) => !isDependencySourceFile(sourceFile)),
     );
+
+    function resolveMergedDeclarations(declaration) {
+      const symbol = declaration.name
+        ? checker.getSymbolAtLocation(declaration.name)
+        : undefined;
+
+      return (symbol?.declarations ?? [declaration]).filter(
+        (candidate) =>
+          isContractDeclaration(candidate) &&
+          projectSourceFiles.has(candidate.getSourceFile()),
+      );
+    }
 
     function resolveDeclarations(typeName) {
       let symbol = checker.getSymbolAtLocation(typeName);
@@ -133,7 +146,8 @@ if (configResult.error) {
     const violations = [];
 
     for (const rootDeclaration of playerVisibleDeclarations) {
-      const visited = new Set([rootDeclaration]);
+      const rootDeclarations = resolveMergedDeclarations(rootDeclaration);
+      const visited = new Set(rootDeclarations);
 
       function inspectDeclaration(declaration, typePath) {
         function inspectNode(node) {
@@ -170,7 +184,9 @@ if (configResult.error) {
         ts.forEachChild(declaration, inspectNode);
       }
 
-      inspectDeclaration(rootDeclaration, [declarationName(rootDeclaration)]);
+      for (const declaration of rootDeclarations) {
+        inspectDeclaration(declaration, [declarationName(rootDeclaration)]);
+      }
     }
 
     const uniqueViolations = new Map(

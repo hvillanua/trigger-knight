@@ -152,5 +152,8 @@ describe("player-visible contract rules", () => {
     expect(result.stdout + result.stderr).toContain(
       "DeclarationObservation -> HiddenDeclarationState",
     );
+    expect(result.stdout + result.stderr).toContain(
+      "GameObservation -> MergeHiddenState",
+    );
   });
 });
