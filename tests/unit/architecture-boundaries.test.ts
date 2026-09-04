@@ -149,5 +149,8 @@ describe("player-visible contract rules", () => {
     expect(result.stdout + result.stderr).toContain(
       "PresentationFrame -> RunState",
     );
+    expect(result.stdout + result.stderr).toContain(
+      "DeclarationObservation -> HiddenDeclarationState",
+    );
   });
 });

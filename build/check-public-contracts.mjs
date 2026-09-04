@@ -80,7 +80,6 @@ if (configResult.error) {
         .getSourceFiles()
         .filter(
           (sourceFile) =>
-            !sourceFile.isDeclarationFile &&
             !sourceFile.fileName.includes(`${path.sep}node_modules${path.sep}`),
         ),
     );
