@@ -183,8 +183,7 @@ export interface PositionedShopEncounter extends ShopEncounter {
 }
 
 /** @playerVisible Positioned shop values exposed to players. */
-export interface ObservedPositionedShopEncounter
-  extends ObservedShopEncounter {
+export interface ObservedPositionedShopEncounter extends ObservedShopEncounter {
   readonly x: number;
   readonly used: boolean;
 }
@@ -205,8 +204,7 @@ export interface ObservedPositionedBattleEncounter extends BattleEncounter {
 
 /** @playerVisible Public view of the current encounter. */
 export type ObservedCurrentEncounter =
-  | ObservedPositionedShopEncounter
-  | ObservedPositionedBattleEncounter;
+  ObservedPositionedShopEncounter | ObservedPositionedBattleEncounter;
 
 /** Encounter scheduling and generation internals. */
 export interface EncounterGenerationState {
