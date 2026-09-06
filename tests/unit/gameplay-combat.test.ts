@@ -84,6 +84,41 @@ function ticks(state: RunState, count: number): RunState {
 }
 
 describe("automatic combat", () => {
+  it("skips lethal knockback draws and resolves lethal hits before same-tick lifespan death", () => {
+    const initial = withActors(battle(), {
+      phase: "attack",
+      attackTicks: 5,
+      attackFactor: 100,
+    });
+    const dying = { ...initial, lifespan: { whole: 0, fraction: 3 } };
+    const bonus = nextRandomInteger(dying.random, 20);
+    const critical = nextRandomInteger(bonus.state, 100);
+    const damage =
+      (21600 + Math.round((bonus.value / 100) * 21600)) *
+      (critical.value >= 90 ? 2 : 1);
+    const result = engine.step(dying, []);
+    expect(result.state.random).toEqual(critical.state);
+    expect(result.state.lifecycle.terminalReason).toBe("lifespan");
+    expect(result.state.player.gold).toBe(300);
+    expect(result.events).toEqual([
+      { type: "step-advanced", step: 1 },
+      {
+        type: "combat-hit",
+        attacker: "hero",
+        target: "enemy",
+        damage,
+        critical: critical.value >= 90,
+        remainingHp: 0,
+      },
+      { type: "combat-phase-changed", actor: "enemy", phase: "dead" },
+      { type: "combat-lethal-hit", attacker: "hero", target: "enemy" },
+      { type: "lifespan-death" },
+      { type: "run-ended", reason: "lifespan" },
+    ]);
+    expect(engine.step(result.state, []).events).toEqual([
+      { type: "step-advanced", step: 2 },
+    ]);
+  });
   it("decrements idle delay and uses strict horizontal range and ten-unit movement", () => {
     const initial = withActors(battle(), { attackDelay: 2, x: 370 });
     const delayed = engine.step(initial, []);
