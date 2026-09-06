@@ -257,7 +257,7 @@ describe("automatic combat", () => {
     expect(recovered.battle!.enemy.phase).toBe("idle");
   });
 
-  it("knocks the hero left and freezes dead targets without paying rewards", () => {
+  it("knocks the hero left and ends dead targets without paying rewards", () => {
     const initial = withActors(
       battle(),
       { attackDelay: 100 },
@@ -286,7 +286,8 @@ describe("automatic combat", () => {
       killed.state.player.inventory,
     );
     const later = ticks(killed.state, 20);
-    expect(later.battle).toEqual(killed.state.battle);
+    expect(later.battle!.hero.alpha).toBe(0);
+    expect(later.lifecycle.terminalReason).toBe("combat");
     expect(later.player.gold).toBe(initial.player.gold);
     expect(later.player.hp.current).toBe(0);
   });

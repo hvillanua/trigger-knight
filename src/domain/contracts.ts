@@ -283,7 +283,7 @@ export interface EncounterObservation {
 
 /** Authoritative state owned by the gameplay domain. */
 export interface RunState {
-  readonly schemaVersion: 14;
+  readonly schemaVersion: 15;
   readonly ruleset: RuleSetId;
   readonly random: RandomState;
   readonly steps: number;
@@ -293,6 +293,8 @@ export interface RunState {
   readonly distance: number;
   readonly day: number;
   readonly score: number;
+  readonly profileExpEarned: number;
+  readonly dragonKills: number;
   readonly lifespan: LifespanState;
   readonly player: PlayerState;
   readonly battle: BattleState | null;
@@ -404,6 +406,16 @@ export interface CombatLethalHitEvent {
   readonly target: CombatActorId;
 }
 
+/** @playerVisible Earned outcomes exposed only when enemy fade completes. */
+export interface BattleRewardEvent {
+  readonly type: "battle-reward";
+  readonly enemy: EnemyId;
+  readonly gold: number;
+  readonly score: number;
+  readonly profileExp: number;
+  readonly dragonKilled: boolean;
+}
+
 /** @playerVisible Completed purchase exposed to players. */
 export interface ShopPurchasedEvent {
   readonly type: "shop-purchased";
@@ -449,6 +461,7 @@ export interface ItemUseRejectedEvent {
  */
 export type GameEvent =
   | BattleStartedEvent
+  | BattleRewardEvent
   | CombatPhaseChangedEvent
   | CombatHitEvent
   | CombatLethalHitEvent

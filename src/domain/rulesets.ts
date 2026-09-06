@@ -29,6 +29,10 @@ import {
   itemUseRejectionReason,
   type ItemUseRules,
 } from "./items.js";
+import {
+  advanceBattleResolution,
+  type BattleResolutionRules,
+} from "./battle-resolution.js";
 import { advanceLifespan } from "./lifespan.js";
 import { advanceCombat, type CombatRules } from "./combat.js";
 import {
@@ -86,6 +90,7 @@ export interface RuleSetConstants {
   readonly encounters: EncounterGenerationRules;
   readonly battle: BattleRules;
   readonly combat: CombatRules;
+  readonly battleResolution: BattleResolutionRules;
   readonly items: ItemUseRules;
   readonly lifespan: {
     readonly initialWhole: number;
@@ -298,6 +303,11 @@ const originalV13Constants: RuleSetConstants = Object.freeze({
     initialEnemyGoldMultiplier: 1,
     speedDecayPerActiveTick: 1,
   }),
+  battleResolution: Object.freeze({
+    fadePerActiveTick: 10,
+    killScorePerMaximumHp: 10,
+    killScorePerAttack: 60,
+  }),
   items: Object.freeze({
     divineEdgeAttackFactor: 100,
     goldVoucherMultiplier: 10,
@@ -507,9 +517,14 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
       battle.state,
       originalV13Constants.combat,
     );
-    const lifespan = advanceLifespan(
+    const resolution = advanceBattleResolution(
       commandedState,
       combat.state,
+      originalV13Constants.battleResolution,
+    );
+    const lifespan = advanceLifespan(
+      commandedState,
+      resolution.state,
       originalV13LifespanRules,
     );
 
@@ -521,6 +536,7 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
         ...encounters.events,
         ...battle.events,
         ...combat.events,
+        ...resolution.events,
         ...lifespan.events,
       ]),
     });

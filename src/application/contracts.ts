@@ -4,6 +4,7 @@ export type {
   BattleObservation,
   BattleEncounter,
   BattleStartedEvent,
+  BattleRewardEvent,
   BattleState,
   CombatActorPhase,
   CombatActorState,

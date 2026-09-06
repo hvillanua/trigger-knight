@@ -125,6 +125,7 @@ function assertCachedPrice(
 
 function assertQueueInvariants(trace: GameplayTrace): void {
   let spent = 0;
+  let earned = 0;
   let purchasesForCurrentShop = 0;
 
   for (const checkpoint of trace.checkpoints) {
@@ -158,6 +159,7 @@ function assertQueueInvariants(trace: GameplayTrace): void {
 
     for (const event of events) {
       expect(event.type).not.toBe("purchase-rejected");
+      if (event.type === "battle-reward") earned += event.gold;
       if (event.type === "shop-purchased") {
         spent += event.price;
         const current = state.encounters.current;
@@ -177,7 +179,7 @@ function assertQueueInvariants(trace: GameplayTrace): void {
       }
     }
 
-    expect(state.player.gold).toBe(300 - spent);
+    expect(state.player.gold).toBe(300 + earned - spent);
     expect(state.player.gold).toBeGreaterThanOrEqual(0);
   }
 }
@@ -442,7 +444,7 @@ describe("Milestone 3 economy verification", () => {
       equal: true,
     });
     expect(headless.trace.traceHash).toBe(
-      "sha256-v1:d431862bee51fdc5319d72c135d1ea69a6fe895cd9ce68a76957def7f32af075",
+      "sha256-v1:be9d0665419accda0b1c195c1b52ca431164adf0fac33d659548f1528aca851b",
     );
     expect(browser.readDiagnostics().traceHash).toBe(headless.trace.traceHash);
   });

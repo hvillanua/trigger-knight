@@ -90,3 +90,22 @@ terminal reason.
 Implementation and evidence: [rulesets.ts](../src/domain/rulesets.ts),
 [lifespan tests](../tests/unit/gameplay-lifespan.test.ts),
 [combat tests](../tests/unit/gameplay-combat.test.ts).
+
+## Death fade and settlement
+
+The [combat research](../research/mechanics.md#combat-state-machine-and-timing)
+confirms a ten-alpha-unit fade per active tick and reward settlement after the
+fade. It does not settle the first fade tick or the exact zero-alpha boundary.
+Begin fading on the active tick after a lethal hit and settle on reaching zero.
+Hero fade completion commits combat death. The researched 60-frame post-death
+screen delay is presentation timing after the terminal outcome, consistent with
+[TDD's presentation timing boundary](../clean-room/TDD.md#4-compatibility-and-modernization-boundary).
+
+Settlement precedes lifespan drain. A completed hero fade commits combat death
+without a second lifespan terminal event. A completed enemy fade pays its reward
+before same-tick lifespan death. Lifespan expiry earlier in either fade ends the
+run immediately and prevents later settlement. These ordering choices extend
+the lifespan precedence decision above, not confirmed Flash scheduling.
+
+Implementation and evidence: [battle-resolution.ts](../src/domain/battle-resolution.ts),
+[battle-resolution tests](../tests/unit/gameplay-battle-resolution.test.ts).

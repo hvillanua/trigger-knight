@@ -17,6 +17,8 @@ function describeEvent(event: GameEvent): string {
       return `${event.type}:${event.attacker}:${event.damage}`;
     case "combat-lethal-hit":
       return `${event.type}:${event.target}`;
+    case "battle-reward":
+      return `${event.type}:${event.enemy}:${event.gold}`;
     case "battle-started":
       return event.type;
     case "encounter-promoted":
