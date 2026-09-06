@@ -34,7 +34,7 @@ sequence so retained seeds and checkpoints remain reproducible.
 
 ## Run state and isolation
 
-Run-state schema version `13` includes fixed-step lifecycle state, running
+Run-state schema version `14` includes fixed-step lifecycle state, running
 progression, the consumed profile multiplier, player economy and named loadout,
 the current encounter and its one-use purchase state, the three-entry queue and
 its generation-time enemy snapshots, its world counter and hidden Dragon and
@@ -43,7 +43,7 @@ post-generation random state:
 
 ```json
 {
-  "schemaVersion": 13,
+  "schemaVersion": 14,
   "ruleset": "original-v1.3",
   "steps": 0,
   "activeTicks": 0,
@@ -141,3 +141,14 @@ Gold Voucher command changes that multiplier to `10`; it consumes no gameplay
 random draw. Divine Edge changes only the current battle's hero attack factor,
 and a new battle initializes that factor and the gold multiplier from the
 ruleset again.
+
+Automatic combat draws a `random(20)` damage bonus, then a `random(100)`
+critical check for hero hits only. A surviving defender then consumes
+`random(7)` for knockback. Lethal hits skip that draw. An uninterrupted attack
+consumes `random(24)` at its finish offset for the next delay. Movement, idle
+countdown, flinch decay, gates, and dead actors consume no draws. Hero updates
+precede enemy updates. An actor interrupted on this tick waits until the next
+tick to advance flinch. This relative ordering and the omission of cosmetic
+draws are explicit clean-room decisions. The ranges and formulas are confirmed.
+Schema 14 stores hidden elapsed attack ticks and knockback alongside the
+existing attack counters and delays. None are public observation fields.

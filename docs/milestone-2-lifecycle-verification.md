@@ -25,12 +25,12 @@ The terminal values are:
 | Gold            | 300        |
 
 The locked host-neutral gameplay trace hash is
-`sha256-v1:266e3a6d128d0d7c5dc5e8013447b7c33525acf0980e1a43c18942a38c340a85`.
+`sha256-v1:a19bf592521e3b23d57ead93b41bfcebeb6742580d382902987a9ca07dca44cf`.
 The terminal checkpoint hash is
-`sha256-v1:4486fd5988f349322d2388b90c5aed0789dd99ee074b410aa7547e98250de89a`.
+`sha256-v1:747b6121c157ffd69fdb748d54f0ae30fdcbd3c9cac2f51e5627d2c65df85db8`.
 The simulation result trace hash, which also covers policy identity and the
 3,000-step budget, is
-`sha256-v1:0708a771928ff552dd1789265c3f558927c341e7642650ca17f635c89f6d38ac`.
+`sha256-v1:692b07f0415bb94114f0bd5104db1be1feb1f942544d879e790502ef115be175`.
 
 Issue #42 advances the version-7 encounter queue through world space. Issue #43
 adds the version-8 current-shop use state. Issue #44 adds the version-9

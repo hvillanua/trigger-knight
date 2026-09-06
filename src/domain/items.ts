@@ -30,6 +30,10 @@ export function itemUseRejectionReason(
     return "no-current-battle";
   }
 
+  if (state.battle.hero.phase === "dead") {
+    return "lifecycle-gated";
+  }
+
   if (state.player.inventory.item === null) {
     return "no-item";
   }

@@ -224,6 +224,7 @@ Run-state schema version 11 adds enemy snapshots and hidden Dragon state.
 Version 12 adds the active battle state and replaces the temporary battle
 handoff with authoritative combatants. Version 13 adds the battle-scoped item
 modifiers used by the battle-only item command.
+Version 14 adds elapsed attack ticks and flinch knockback.
 Version 10 added hidden Shrine extension and emergency state. Version 9 added
 equipment names to the authoritative player state. Version 8 added the current
 shop's one-use purchase state.
@@ -231,7 +232,7 @@ Gameplay traces and run results remain at schema version 2. The locked seed
 `encounter-host-parity` produces encounter hash
 `sha256-v1:c4bf0b847f029df30bc8eea291d4d6db844f2f4d3e76077e7de81c08552d2e46`
 and initial state hash
-`sha256-v1:5e7da17860017069ffbdf64acaeafca08c2c242bf36cb58ce2d925e56ff18930`
+`sha256-v1:df455904c70db7cc6c6a6437165e608019e45c044d6ab2c780ea03ebc228d639`
 in both Node and Chromium.
 
 ## Encounter world lifecycle
@@ -261,7 +262,7 @@ attack factor, attack count, alpha, and battle-scoped item modifiers so later
 combat transitions can remain in the domain. The public observation exposes only
 the current enemy identity and HP plus actor phase and x position. Item-use
 eligibility is exposed separately through the public action model. Attack
-resolution, rewards, and post-battle transitions remain later milestone work.
+resolution is described below. Rewards and post-battle transitions remain #59.
 
 Promotion emits `encounter-promoted` with the same player-facing positioned
 encounter used by observation. It does not copy hidden enemy attack or reward
@@ -313,7 +314,46 @@ gates. `original-v1.3` uses this explicit clean-room decision:
 - Pregame opportunities do not increment `activeTicks`. The first active tick
   is the next eligible step after the counter reaches zero.
 
-Combat resolution and tutorial presentation remain assigned to later tickets.
+Tutorial presentation remains assigned to later tickets.
+
+## Automatic combat
+
+Confirmed rules advance idle delay, movement, attacks, flinch, and lethal hits
+on active battle ticks. Movement is 10 world units toward the opponent, with
+attack range strictly below 30 horizontal units. All actors hit at offset 6.
+The first finish offsets are Hero 14, Goblin/Golem/Dragon 12, and Wolf 10,
+derived by subtracting each confirmed attack label from its callback frame.
+Attack start is offset zero and consumes no RNG.
+
+Damage is `base + round(random(20) / 100 * base)`, where base includes the
+actor's attack factor. Hero-only `random(100) >= 90` doubles that final amount.
+There are no misses, defense, or damage caps. HP clamps to zero, while the hit
+event retains full computed damage. Each hit increments the attacker's counter
+and resets the defender's. Finish delay is `random(24) + 4 * attackCount` for
+the hero or `random(24) + 12 * attackCount` for enemies. Nonlethal hits interrupt
+the target and assign knockback `10 + random(7)`. Later flinch ticks move the
+hero left or enemy right, then multiply knockback by 0.8 until below 1.
+Lethal hits mark the target dead and set attacker delay to 600. Reward and
+death settlement are deferred to #59; neither actor attacks a dead opponent.
+
+Explicit clean-room decisions cover ordering absent from the human-authored
+research. Actors evaluate one phase per tick, hero first. Range is checked
+before movement. Interrupted actors begin flinch movement on the next tick.
+Flinch ends in idle and retains the pre-interruption delay. A lethal hit skips
+the knockback draw and freezes further attack progression. Combat precedes
+lifespan drain. Item use is ineligible after hero death, so an Elixir cannot
+restore a dead hero's HP. This is a clean-room terminal-state decision.
+A same-tick lethal hit is observable before lifespan death.
+These choices are reproducible implementation evidence, not verified Flash
+runtime scheduling. `tests/unit/gameplay-combat.test.ts` locks them.
+
+The public `combat-hit` event contains attacker, target, resolved damage,
+critical outcome, and remaining HP. `combat-phase-changed` contains actor and
+completed phase; `combat-lethal-hit` identifies attacker and dead target.
+These event shapes are clean-room decisions exposing visible outcomes.
+No event publishes random state, rolls, attack timers, counters, knockback,
+enemy attack, or unearned rewards. Exact event assertions and the existing
+exact battle observation tests protect that projection.
 
 State, results, events, event lists, and observations are frozen. A
 JSON-restored checkpoint produces the same next state, observation, and events
