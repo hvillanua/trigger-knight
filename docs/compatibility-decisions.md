@@ -47,17 +47,6 @@ does not count as active gameplay; the first active tick follows its completion.
 Implementation and evidence: [run-state.ts](../src/domain/run-state.ts),
 [lifecycle tests](../tests/unit/gameplay-lifecycle.test.ts).
 
-## Max-tier equipment availability
-
-The [equipment research](../research/mechanics.md#weapons-and-armor) confirms
-a no-op purchase routine at tier 10, but does not establish whether the GUI
-dispatches the click. A player report describes an unavailable cursor.
-Following the PRD's compatibility choice, max-tier shops are ineligible.
-Attempts cannot spend gold, heal HP, or consume the shop.
-
-Implementation and evidence: [purchases.ts](../src/domain/purchases.ts),
-[equipment tests](../tests/unit/gameplay-equipment-upgrades.test.ts).
-
 ## Battle entry and actor positions
 
 The [core-loop research](../research/mechanics.md#state-and-core-loop) and
