@@ -91,9 +91,9 @@ This milestone establishes:
 - browser render cadence and physical viewport size cannot change the run outcome;
 - checkpoint replay matches uninterrupted execution across supported runtimes.
 
-The integrated Node and Chromium evidence, locked hashes, research labels, and
-clean-room decisions are recorded in
-[`../docs/milestone-2-lifecycle-verification.md`](../docs/milestone-2-lifecycle-verification.md).
+The integrated evidence and locked fixtures live in the
+[unit](../tests/unit/milestone-2-lifecycle.test.ts) and
+[Chromium](../tests/browser/milestone-2-lifecycle.spec.ts) tests.
 
 ## Milestone 3 — Encounter queue, shops, and economy
 
@@ -266,4 +266,4 @@ This milestone establishes:
 
 ## Milestone completion rule
 
-A milestone is complete only when all of its eventual tickets and blockers are complete, its exit conditions have reproducible evidence, focused local checks and the complete CI validation gate pass, and the repository documentation reflects the delivered behavior. A milestone may not pass known failures or architectural decisions forward implicitly; any intentional deferral must be visible and assigned to a later milestone before completion.
+A milestone is complete only when all of its eventual tickets and blockers are complete, its exit conditions have executable evidence, and focused local checks and the complete CI validation gate pass. Record results in tests and PRs; do not create a parallel milestone verification document. Update usage or design guidance only when it changes, and record new research-gap choices in the compatibility-decisions document. A milestone may not pass known failures or architectural decisions forward implicitly; any intentional deferral must be visible and assigned to a later milestone before completion.

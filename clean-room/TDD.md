@@ -43,6 +43,11 @@ The browser and simulator call the same gameplay API. There is no reduced or app
 
 The domain uses game-oriented boundaries around run lifecycle, encounters, combat, economy, progression, rules, and randomness. These are logical modules inside one application, not separately deployed services.
 
+Adapters are peers and must not import one another. `src/main.ts` composes the
+concrete adapters and rulesets; other layers must not import the composition
+root. Code, configuration, and tests define the implemented contracts and
+enforcement. This document guides architecture and future work.
+
 ## 3. Public contracts
 
 The following contracts define what surrounding systems may rely on. Concrete types may gain fields as the model is implemented, but their responsibilities and dependency direction are architectural constraints.

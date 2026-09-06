@@ -14,8 +14,9 @@ Before changing `GameObservation`, `GameEvent`, `PresentationFrame`,
 
 1. Read the selected issue and its required context. Use `research/README.md` to
    locate presentation evidence when the visibility of a value depends on
-   original behavior. If evidence is absent, record an explicit clean-room
-   decision instead of calling the behavior confirmed.
+   original behavior. If evidence is absent and a compatibility choice is
+   needed, record it in `docs/compatibility-decisions.md` rather than code
+   comments. Do not call the chosen behavior confirmed.
 2. Classify every added value as player-visible or internal. Generation inputs,
    future outcomes, random state, AI decisions, unrevealed enemy statistics,
    rewards, cached calculations, and diagnostic state are internal unless the
@@ -32,8 +33,9 @@ Before changing `GameObservation`, `GameEvent`, `PresentationFrame`,
 6. Run `npm run check:public-contracts` and the focused unit tests that cover the
    changed observation or event. If the checker fails, project the safe fields;
    do not remove a tag or weaken the checker to make the failure disappear.
-7. Update public-contract documentation and deterministic trace or hash fixtures
-   when the intentional projection changes.
+7. Update the contract types, exact-shape tests, and affected deterministic
+   fixtures when the intentional projection changes. Do not duplicate these
+   values in a separate public-contract document.
 
 The structural checker allows player-visible types to reference only other
 approved public types, standard library types, and primitives. It cannot
