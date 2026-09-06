@@ -30,6 +30,7 @@ import {
   type ItemUseRules,
 } from "./items.js";
 import { advanceLifespan } from "./lifespan.js";
+import { advanceCombat, type CombatRules } from "./combat.js";
 import {
   createPlayerState,
   equipmentNameAtTier,
@@ -84,6 +85,7 @@ export interface RuleSetConstants {
   };
   readonly encounters: EncounterGenerationRules;
   readonly battle: BattleRules;
+  readonly combat: CombatRules;
   readonly items: ItemUseRules;
   readonly lifespan: {
     readonly initialWhole: number;
@@ -111,6 +113,9 @@ export interface RuleSetCompatibilityDecisions {
   readonly dragonResetPoint: "ordinary-battle-promotion-before-replacement";
   readonly battleEntryProgression: "running-tick-then-battle-ticks";
   readonly battleActorPositions: "hero-x-50-enemy-at-positioned-encounter";
+  readonly combatTickOrder: "hero-then-enemy-before-lifespan";
+  readonly combatTransitions: "one-phase-per-tick-interrupted-target-waits";
+  readonly combatDrawOrder: "bonus-hero-critical-nonlethal-knockback-finish-delay";
 }
 
 export interface RuleSetStepResult {
@@ -297,6 +302,30 @@ const originalV13Constants: RuleSetConstants = Object.freeze({
     divineEdgeAttackFactor: 100,
     goldVoucherMultiplier: 10,
   }),
+  combat: Object.freeze({
+    movementPerTick: 10,
+    attackRange: 30,
+    hitOffset: 6,
+    finishOffsets: Object.freeze({
+      hero: 14,
+      goblin: 12,
+      golem: 12,
+      wolf: 10,
+      dragon: 12,
+    }),
+    delayRollBound: 24,
+    heroDelayPerAttack: 4,
+    enemyDelayPerAttack: 12,
+    damageBonusRollBound: 20,
+    criticalRollBound: 100,
+    criticalMinimum: 90,
+    criticalMultiplier: 2,
+    knockbackBase: 10,
+    knockbackRollBound: 7,
+    knockbackDecay: 0.8,
+    knockbackStopBelow: 1,
+    lethalAttackDelay: 600,
+  }),
   lifespan: Object.freeze({
     initialWhole: 99,
     initialFraction: 99,
@@ -330,6 +359,9 @@ const originalV13CompatibilityDecisions: RuleSetCompatibilityDecisions =
     dragonResetPoint: "ordinary-battle-promotion-before-replacement",
     battleEntryProgression: "running-tick-then-battle-ticks",
     battleActorPositions: "hero-x-50-enemy-at-positioned-encounter",
+    combatTickOrder: "hero-then-enemy-before-lifespan",
+    combatTransitions: "one-phase-per-tick-interrupted-target-waits",
+    combatDrawOrder: "bonus-hero-critical-nonlethal-knockback-finish-delay",
   });
 
 const originalV13RunningProgressionRules = Object.freeze({
@@ -470,9 +502,14 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
       encounters.state,
       originalV13BattleRules,
     );
-    const lifespan = advanceLifespan(
+    const combat = advanceCombat(
       commandedState,
       battle.state,
+      originalV13Constants.combat,
+    );
+    const lifespan = advanceLifespan(
+      commandedState,
+      combat.state,
       originalV13LifespanRules,
     );
 
@@ -483,6 +520,7 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
         ...result.events,
         ...encounters.events,
         ...battle.events,
+        ...combat.events,
         ...lifespan.events,
       ]),
     });

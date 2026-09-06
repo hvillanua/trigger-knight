@@ -220,7 +220,7 @@ describe("public application contracts", () => {
       readonly initialProfile: ProfileState;
     }>();
     expectTypeOf<RunState>().toMatchTypeOf<{
-      readonly schemaVersion: 13;
+      readonly schemaVersion: 14;
       readonly ruleset: RuleSetId;
       readonly random: RandomState;
       readonly steps: number;
@@ -372,6 +372,24 @@ describe("public application contracts", () => {
       };
     }>();
     expectTypeOf<GameEvent>().toEqualTypeOf<
+      | Readonly<{
+          type: "combat-phase-changed";
+          actor: "hero" | "enemy";
+          phase: "idle" | "move" | "attack" | "flinch" | "dead";
+        }>
+      | Readonly<{
+          type: "combat-hit";
+          attacker: "hero" | "enemy";
+          target: "hero" | "enemy";
+          damage: number;
+          critical: boolean;
+          remainingHp: number;
+        }>
+      | Readonly<{
+          type: "combat-lethal-hit";
+          attacker: "hero" | "enemy";
+          target: "hero" | "enemy";
+        }>
       | Readonly<{
           type: "battle-started";
           enemy: ObservedBattleEnemy;

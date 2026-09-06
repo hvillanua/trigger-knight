@@ -162,7 +162,7 @@ export interface ObservedEnemy {
 /** @playerVisible Mechanic-bearing actor phase exposed during a battle. */
 export type CombatActorPhase = "idle" | "move" | "attack" | "flinch" | "dead";
 
-/** Authoritative state shared by the future automatic combat transitions. */
+/** Authoritative automatic combat timing and movement state. */
 export interface CombatActorState {
   readonly phase: CombatActorPhase;
   readonly x: number;
@@ -170,6 +170,8 @@ export interface CombatActorState {
   readonly attackFactor: number;
   readonly attackCount: number;
   readonly alpha: number;
+  readonly attackTicks: number;
+  readonly knockback: number;
 }
 
 /** Authoritative state for the current battle. */
@@ -281,7 +283,7 @@ export interface EncounterObservation {
 
 /** Authoritative state owned by the gameplay domain. */
 export interface RunState {
-  readonly schemaVersion: 13;
+  readonly schemaVersion: 14;
   readonly ruleset: RuleSetId;
   readonly random: RandomState;
   readonly steps: number;
@@ -375,6 +377,33 @@ export interface BattleStartedEvent {
   readonly enemy: ObservedBattleEnemy;
 }
 
+/** @playerVisible Actor identity for resolved combat outcomes. */
+export type CombatActorId = "hero" | "enemy";
+
+/** @playerVisible A completed actor phase transition. */
+export interface CombatPhaseChangedEvent {
+  readonly type: "combat-phase-changed";
+  readonly actor: CombatActorId;
+  readonly phase: CombatActorPhase;
+}
+
+/** @playerVisible Resolved damage, including the displayed critical outcome. */
+export interface CombatHitEvent {
+  readonly type: "combat-hit";
+  readonly attacker: CombatActorId;
+  readonly target: CombatActorId;
+  readonly damage: number;
+  readonly critical: boolean;
+  readonly remainingHp: number;
+}
+
+/** @playerVisible A lethal hit, before any reward or run settlement. */
+export interface CombatLethalHitEvent {
+  readonly type: "combat-lethal-hit";
+  readonly attacker: CombatActorId;
+  readonly target: CombatActorId;
+}
+
 /** @playerVisible Completed purchase exposed to players. */
 export interface ShopPurchasedEvent {
   readonly type: "shop-purchased";
@@ -420,6 +449,9 @@ export interface ItemUseRejectedEvent {
  */
 export type GameEvent =
   | BattleStartedEvent
+  | CombatPhaseChangedEvent
+  | CombatHitEvent
+  | CombatLethalHitEvent
   | EncounterPromotedEvent
   | ItemUseRejectedEvent
   | ItemUsedEvent

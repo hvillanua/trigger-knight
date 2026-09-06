@@ -81,7 +81,9 @@ describe("original-v1.3 carried item use", () => {
       hp: { current: state.player.hp.maximum },
       inventory: { item: null },
     });
-    expect(result.state.battle).toEqual(battleState);
+    expect(result.state.battle).toEqual(
+      gameplayEngine.step(damaged, []).state.battle,
+    );
     const event = result.events.find(
       (candidate) => candidate.type === "item-used",
     );
@@ -214,12 +216,13 @@ describe("original-v1.3 carried item use", () => {
     ({ state, reason }) => {
       const initial = state();
       const initialPlayer = initial.player;
-      const initialBattle = initial.battle;
 
       const result = gameplayEngine.step(initial, [useCarriedItemCommand]);
 
       expect(result.state.player).toEqual(initialPlayer);
-      expect(result.state.battle).toEqual(initialBattle);
+      expect(result.state.battle).toEqual(
+        gameplayEngine.step(initial, []).state.battle,
+      );
       const event = result.events.find(
         (candidate) => candidate.type === "item-use-rejected",
       );

@@ -11,6 +11,12 @@ import {
 
 function describeEvent(event: GameEvent): string {
   switch (event.type) {
+    case "combat-phase-changed":
+      return `${event.type}:${event.actor}:${event.phase}`;
+    case "combat-hit":
+      return `${event.type}:${event.attacker}:${event.damage}`;
+    case "combat-lethal-hit":
+      return `${event.type}:${event.target}`;
     case "battle-started":
       return event.type;
     case "encounter-promoted":

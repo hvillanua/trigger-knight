@@ -87,7 +87,7 @@ interpolation therefore do not affect encounter or economy state.
 
 The locked `m3-parity-schedule` trace hash, updated for the version-13 active
 battle state, public battle projection, and policy's item-use command, is
-`sha256-v1:dd6404798f0d95a27eacfdec603ff28554680eaf17441c2e5439682f82eda18e`.
+`sha256-v1:d431862bee51fdc5319d72c135d1ea69a6fe895cd9ce68a76957def7f32af075`.
 
 ## Compatibility labels and boundary
 

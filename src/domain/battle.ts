@@ -33,6 +33,8 @@ function createCombatActor(
     attackFactor: rules.initialAttackFactor,
     attackCount: rules.initialAttackCount,
     alpha: rules.initialAlpha,
+    attackTicks: 0,
+    knockback: 0,
   });
 }
 
