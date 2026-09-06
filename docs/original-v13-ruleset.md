@@ -341,7 +341,9 @@ research. Actors evaluate one phase per tick, hero first. Range is checked
 before movement. Interrupted actors begin flinch movement on the next tick.
 Flinch ends in idle and retains the pre-interruption delay. A lethal hit skips
 the knockback draw and freezes further attack progression. Combat precedes
-lifespan drain, so a same-tick lethal hit is observable before lifespan death.
+lifespan drain. Item use is ineligible after hero death, so an Elixir cannot
+restore a dead hero's HP. This is a clean-room terminal-state decision.
+A same-tick lethal hit is observable before lifespan death.
 These choices are reproducible implementation evidence, not verified Flash
 runtime scheduling. `tests/unit/gameplay-combat.test.ts` locks them.
 

@@ -242,6 +242,14 @@ describe("automatic combat", () => {
       { type: "combat-lethal-hit", attacker: "enemy", target: "hero" },
     ]);
     expect(killed.state.battle!.enemy.attackDelay).toBe(600);
+    expect(engine.observe(killed.state).actions.canUseCarriedItem).toBe(false);
+    const attemptedRevival = engine.step(killed.state, [
+      { type: "use-carried-item" },
+    ]);
+    expect(attemptedRevival.state.player.hp.current).toBe(0);
+    expect(attemptedRevival.state.player.inventory).toEqual(
+      killed.state.player.inventory,
+    );
     const later = ticks(killed.state, 20);
     expect(later.battle).toEqual(killed.state.battle);
     expect(later.player.gold).toBe(initial.player.gold);
