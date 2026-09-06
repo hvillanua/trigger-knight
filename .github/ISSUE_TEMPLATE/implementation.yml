@@ -61,7 +61,7 @@ body:
     id: required_context
     attributes:
       label: Required context
-      description: Keep the core documents and add links to the exact roadmap and research sections needed for this outcome.
+      description: Link exact product, architecture, roadmap, and research sections plus relevant source and tests. Include compatibility decisions only when the task touches that research gap. Do not require duplicate implementation summaries.
       value: |
         - [Product requirements](https://github.com/hvillanua/trigger-knight/blob/main/clean-room/PRD.md)
         - [Technical design](https://github.com/hvillanua/trigger-knight/blob/main/clean-room/TDD.md)

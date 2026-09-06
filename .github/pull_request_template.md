@@ -43,5 +43,5 @@ Additional focused checks and results:
 
 - [ ] The implementation uses human-authored behavioral research and approved clean-room assets; it does not copy decompiled code or unapproved original/generated artifacts.
 - [ ] Dependencies still point inward and authoritative domain code has no ambient browser, Node, time, or randomness inputs.
-- [ ] Documentation and explicit compatibility decisions are updated, or no documentation change is needed.
+- [ ] Usage or design guidance is updated only if it changed. Any new choice required by missing original research is recorded in docs/compatibility-decisions.md. Implemented behavior and fixtures remain in code and tests.
 - [ ] Non-goals and intentional deferrals remain outside this pull request and are linked to a later milestone when required.

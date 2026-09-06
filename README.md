@@ -15,8 +15,9 @@ npm run setup:browser
 npm run dev
 ```
 
-The exact runtime and package selections are recorded in
-[`docs/dependency-baseline.md`](docs/dependency-baseline.md). Product scope and
+Runtime and package versions are pinned in [`.node-version`](.node-version),
+[`package.json`](package.json), and [`package-lock.json`](package-lock.json).
+Code and tests define implemented behavior. Product scope and
 durable architecture live in [`clean-room/PRD.md`](clean-room/PRD.md) and
 [`clean-room/TDD.md`](clean-room/TDD.md).
 
@@ -57,32 +58,30 @@ the complete gate only when code, tests, runtime assets, build scripts, or
 configuration change. Local aggregate validation is reserved for reproducing CI
 failures or explicit requests.
 
-TypeScript 7.0 and ESLint temporarily use side-by-side compiler packages. The
-removal condition and TODO are recorded in
-[`docs/dependency-baseline.md`](docs/dependency-baseline.md#temporary-typescript-6-compatibility).
-The allowed source layers, dependency directions, deterministic-domain API
-rules, and approved production-input locations are documented in
-[`docs/architecture-boundaries.md`](docs/architecture-boundaries.md).
-The versioned seed expansion, random sequence, and serializable state contract
-are recorded in
-[`docs/deterministic-randomness.md`](docs/deterministic-randomness.md).
-The `original-v1.3` registry, owned constants, current deterministic transition,
-and public observation are recorded in
-[`docs/original-v13-ruleset.md`](docs/original-v13-ruleset.md).
-The 480x320 world camera, letterboxed Canvas projection, and redraw boundary are
-recorded in [`docs/world-camera.md`](docs/world-camera.md).
-The finite programmatic runner, policy sequence, result identity, and minimal
-batch behavior are recorded in
-[`docs/headless-simulation.md`](docs/headless-simulation.md).
-Cross-host checkpoints, parity hashes, and structured first-difference output
-are recorded in
-[`docs/gameplay-diagnostics.md`](docs/gameplay-diagnostics.md).
-The complete Milestone 2 lifecycle scenario, locked terminal values and hashes,
-checkpoint continuation matrix, and research labels are recorded in
-[`docs/milestone-2-lifecycle-verification.md`](docs/milestone-2-lifecycle-verification.md).
-The Milestone 3 purchasing policy, fixed-seed economy invariants, host parity,
-and active battle-entry boundary are recorded in
-[`docs/milestone-3-economy-verification.md`](docs/milestone-3-economy-verification.md).
+The repository currently installs two TypeScript packages. `@typescript/native`
+aliases TypeScript 7 and supplies `tsc`; `typescript` aliases TypeScript 6's
+compiler API for `typescript-eslint` and
+[`check-public-contracts.mjs`](build/check-public-contracts.mjs). Use
+`npm run typecheck`, not `tsc6`. Remove the compatibility arrangement when the
+native compiler API supports both consumers. Versions belong in the manifests.
+
+## Simulation and diagnostics
+
+Use [`createSimulationRunner`](src/simulation/simulation-runner.ts) with an
+engine, run configuration, policy, and finite `maxSteps`. See the
+[runner tests](tests/unit/simulation-runner.test.ts) for runnable examples.
+Supply its optional `onTrace` callback to retain a diagnostic trace.
+
+In the development browser, call `window.triggerKnightDiagnostics.read()` in
+the console. The hook is absent from production builds. Browser hosts also
+provide [`readDiagnostics()`](src/browser/gameplay-session.ts).
+[`compareGameplayTraces`](src/application/gameplay-execution.ts) reports the
+first differing execution field; the
+[diagnostics tests](tests/unit/gameplay-diagnostics.test.ts) show its usage.
+
+Choices required by missing original research live in
+[`docs/compatibility-decisions.md`](docs/compatibility-decisions.md). Consult
+the relevant entry only when working on that uncertainty.
 
 ## Directory boundaries
 

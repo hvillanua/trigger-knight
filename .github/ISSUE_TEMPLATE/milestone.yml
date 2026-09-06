@@ -52,7 +52,7 @@ body:
     id: required_context
     attributes:
       label: Required context
-      description: Link exact product, architecture, roadmap, and research sections governing the milestone.
+      description: Link exact product, architecture, roadmap, and research sections plus relevant source and tests. Include compatibility decisions only for relevant research gaps.
       value: |
         - [Product requirements](https://github.com/hvillanua/trigger-knight/blob/main/clean-room/PRD.md)
         - [Technical design](https://github.com/hvillanua/trigger-knight/blob/main/clean-room/TDD.md)
@@ -75,7 +75,7 @@ body:
     attributes:
       label: Milestone completion rule
       options:
-        - label: All eventual tickets and blockers must be complete, exit conditions must have reproducible evidence, focused local checks and the complete CI gate must pass, and delivered behavior must be documented.
+        - label: All tickets and blockers must be complete, exit conditions must have executable evidence, and focused local checks and the complete CI gate must pass. Record delivery evidence in tests and PRs rather than a separate verification document.
           required: true
         - label: Any intentional deferral must be visible and assigned to a later milestone before completion.
           required: true

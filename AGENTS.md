@@ -2,8 +2,9 @@
 
 ## Sources of truth
 
-Read the selected issue and every document in its **Required context** section
-before changing code. Use these repository sources in this order:
+Code, tests, and configuration are authoritative for implemented behavior,
+executable evidence, and enforcement. Read the selected issue and its **Required
+context** before changing code. Use these documents to guide intended work:
 
 1. [`clean-room/PRD.md`](clean-room/PRD.md) defines product scope and acceptance.
 2. [`clean-room/TDD.md`](clean-room/TDD.md) defines durable architecture and public
@@ -16,8 +17,11 @@ before changing code. Use these repository sources in this order:
 
 The issue defines the ticket-sized outcome, but it cannot override the product,
 architecture, milestone, or clean-room constraints above. If researched behavior
-is unknown, keep the uncertainty visible and document the implementation decision;
-do not present it as confirmed original behavior.
+is unknown, consult the relevant entry in
+[`docs/compatibility-decisions.md`](docs/compatibility-decisions.md). Update it
+only when a research gap requires a new compatibility choice. Keep these
+explanations in that document, not code comments, and never present a choice as
+confirmed original behavior.
 
 ## Repository and clean-room boundaries
 
@@ -35,12 +39,14 @@ Production code must not import from `original/`, `decompiled/`, `exports/`,
 may depend on application and domain contracts, while the domain must not depend
 on browser, Canvas, rendering, input devices, storage, audio, filesystem,
 workers, wall-clock APIs, or ambient randomness. Keep `src/main.ts` as the
-composition root. See [`docs/architecture-boundaries.md`](docs/architecture-boundaries.md)
-for the mechanically enforced layer map.
+composition root. The enforced layer map is in
+[`dependency-cruiser.config.cjs`](dependency-cruiser.config.cjs); public-contract
+enforcement is in [`build/check-public-contracts.mjs`](build/check-public-contracts.mjs).
 
 ## Required workflow
 
-Work only on a ready issue whose blockers are complete. Keep the issue's stated
+For issue-driven implementation, work only on a ready issue whose blockers are
+complete. Keep the issue's stated
 acceptance criteria and non-goals in scope.
 
 For every behavior change, follow red-green-refactor:
@@ -51,8 +57,12 @@ For every behavior change, follow red-green-refactor:
 3. **Refactor:** improve the result while keeping the relevant suite green.
 
 Do not defer tests to another ticket. Preserve deterministic, runnable, and
-inspectable behavior at each milestone. Update documentation when delivered
-behavior, commands, boundaries, or an explicit compatibility decision changes.
+inspectable behavior at each milestone. Update README when usage changes and
+PRD/TDD when product or architecture intent changes. Keep implemented formulas,
+contracts, versions, hashes, and scenario results in code, configuration, and
+tests rather than parallel prose inventories. Record delivery evidence in PRs.
+Issues should link relevant source and tests; require compatibility-decision
+context only when the task touches the corresponding research gap.
 
 ## Validation commands
 
