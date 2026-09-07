@@ -41,7 +41,6 @@ export interface PurchaseStepResult {
   readonly events: readonly GameEvent[];
 }
 
-/** Returns the public reason a purchase command cannot currently succeed. */
 export function purchaseRejectionReason(
   state: Readonly<RunState>,
   rules: Readonly<PurchaseRules>,
@@ -120,7 +119,6 @@ function completePurchase(
   });
 }
 
-/** Attempts one purchase without consulting presentation or device input. */
 export function attemptPurchase(
   state: Readonly<RunState>,
   rules: Readonly<PurchaseRules>,

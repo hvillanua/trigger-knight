@@ -17,7 +17,6 @@ export interface RandomIntegerDraw {
   readonly state: RandomState;
 }
 
-/** Expands a string seed into the complete state needed by the random source. */
 export function createRandomState(seed: string): RandomState {
   let state = FNV_OFFSET_BASIS;
 
@@ -28,7 +27,6 @@ export function createRandomState(seed: string): RandomState {
   return Object.freeze({ algorithm: RANDOM_ALGORITHM, state });
 }
 
-/** Returns one unit-interval draw and a new state without mutating the input. */
 export function nextRandom(random: Readonly<RandomState>): RandomDraw {
   if (
     random.algorithm !== RANDOM_ALGORITHM ||
@@ -54,7 +52,6 @@ export function nextRandom(random: Readonly<RandomState>): RandomDraw {
   });
 }
 
-/** Returns one random(n) integer draw and advances the source exactly once. */
 export function nextRandomInteger(
   random: Readonly<RandomState>,
   exclusiveUpperBound: number,

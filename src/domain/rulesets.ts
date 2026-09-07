@@ -128,7 +128,6 @@ export interface RuleSetStepResult {
   readonly events: readonly GameEvent[];
 }
 
-/** Pure gameplay implementation selected by one stable ruleset identity. */
 export interface RuleSetImplementation {
   readonly id: RuleSetId;
   readonly constants: RuleSetConstants;
@@ -588,7 +587,6 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
   },
 });
 
-/** Builds an immutable lookup boundary for independently versioned rulesets. */
 export function createRuleSetRegistry(
   implementations: readonly RuleSetImplementation[],
 ): RuleSetRegistry {

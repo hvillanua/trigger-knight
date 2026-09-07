@@ -17,7 +17,6 @@ export interface CanonicalTraceHasher {
   digest(): string;
 }
 
-/** Hashes a sequence of length-delimited canonical JSON records. */
 export function createCanonicalTraceHasher(): CanonicalTraceHasher {
   const hash = createHash("sha256");
   let digest: string | undefined;

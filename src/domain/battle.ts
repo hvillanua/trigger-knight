@@ -76,7 +76,6 @@ function observeBattleEnemy(
   });
 }
 
-/** Projects only mechanic-bearing battle values into the player boundary. */
 export function observeBattle(
   state: Readonly<RunState>,
 ): BattleObservation | null {
@@ -99,7 +98,6 @@ export function observeBattle(
   });
 }
 
-/** Starts battles and decays the running speed while combat is active. */
 export function advanceBattleLifecycle(
   previous: Readonly<RunState>,
   stepped: Readonly<RunState>,

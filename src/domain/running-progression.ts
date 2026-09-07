@@ -8,7 +8,6 @@ export interface RunningProgressionRules {
   readonly scorePerSpeedUnit: number;
 }
 
-/** Advances original running values when the lifecycle consumed an active tick. */
 export function advanceRunningProgression(
   previous: Readonly<RunState>,
   stepped: Readonly<RunState>,

@@ -9,7 +9,6 @@ export interface BattleResolutionRules {
   readonly killScorePerAttack: number;
 }
 
-/** Advances dead actors and commits completed battle outcomes exactly once. */
 export function advanceBattleResolution(
   previous: Readonly<RunState>,
   stepped: Readonly<RunState>,

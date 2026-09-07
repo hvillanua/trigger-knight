@@ -137,7 +137,6 @@ function runSimulation(
   });
 }
 
-/** Creates a finite headless consumer around the shared gameplay engine. */
 export function createSimulationRunner(
   engine: GameplayEngine,
   options: SimulationRunnerOptions = {},

@@ -1,6 +1,5 @@
 import type { WorldCamera } from "../domain/contracts.js";
 
-/** Physical sizing values used by Canvas presentation adapters. */
 export interface CssDimensions {
   readonly width: number;
   readonly height: number;
@@ -11,7 +10,6 @@ export interface BackingStoreSize {
   readonly height: number;
 }
 
-/** Letterboxed backing-store rectangle for one ruleset-space camera. */
 export interface WorldProjection {
   readonly scale: number;
   readonly viewport: Readonly<{
@@ -47,7 +45,6 @@ export function calculateBackingStoreSize(
   };
 }
 
-/** Fits the complete world camera into physical output without cropping it. */
 export function calculateWorldProjection(
   camera: Readonly<WorldCamera>,
   output: Readonly<BackingStoreSize>,

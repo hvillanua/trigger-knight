@@ -141,7 +141,6 @@ function createCurrentEncounter(
       : Object.freeze({ ...encounter });
 }
 
-/** Projects an authoritative queued encounter into the shared player-facing model. */
 export function observeQueuedEncounter(
   encounter: Readonly<QueuedEncounter>,
 ): ObservedQueuedEncounter {
@@ -154,7 +153,6 @@ export function observeQueuedEncounter(
       });
 }
 
-/** Projects authoritative encounter state into the shared player-facing model. */
 export function observeCurrentEncounter(
   encounter: Readonly<CurrentEncounter>,
 ): ObservedCurrentEncounter;
@@ -212,7 +210,6 @@ function moveCurrentEncounter(
   });
 }
 
-/** Copies authoritative encounter values into deeply frozen state. */
 export function createEncounterQueueState(
   encounters: Readonly<EncounterQueueState>,
 ): EncounterQueueState {
@@ -401,7 +398,6 @@ function generateBattle(
   });
 }
 
-/** Generates one queue entry and returns every consumed hidden-state change. */
 export function generateEncounter(
   random: Readonly<RandomState>,
   generation: Readonly<EncounterGenerationState>,
@@ -480,7 +476,6 @@ export function generateEncounter(
   });
 }
 
-/** Creates the original three-entry lookahead with queue-time enemy selection. */
 export function initializeEncounterQueue(
   random: Readonly<RandomState>,
   day: number,
@@ -550,7 +545,6 @@ export function initializeEncounterQueue(
   });
 }
 
-/** Advances countdowns and mechanic-bearing positions for one running tick. */
 export function advanceEncounterLifecycle(
   previous: Readonly<RunState>,
   stepped: Readonly<RunState>,

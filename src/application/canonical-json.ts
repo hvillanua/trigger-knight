@@ -85,12 +85,10 @@ function normalizeValue(
   return Object.freeze(normalized);
 }
 
-/** Copies, sorts, and freezes one JSON-compatible value. */
 export function normalizeCanonicalJson(value: unknown): CanonicalJsonValue {
   return normalizeValue(value, new Set());
 }
 
-/** Serializes one value with recursively sorted object keys. */
 export function stringifyCanonicalJson(value: unknown): string {
   return JSON.stringify(normalizeCanonicalJson(value));
 }
@@ -183,7 +181,6 @@ function sha256(value: string): string {
   );
 }
 
-/** Produces the same versioned canonical digest in browser and Node hosts. */
 export function fingerprintCanonicalJson(value: unknown): string {
   return `sha256-v1:${sha256(stringifyCanonicalJson(value))}`;
 }

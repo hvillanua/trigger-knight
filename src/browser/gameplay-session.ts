@@ -43,7 +43,6 @@ function createFrame(
   });
 }
 
-/** Owns authoritative state while exposing only public values to the browser. */
 export function createBrowserGameplaySession(
   engine: GameplayEngine,
   config: RunConfig,

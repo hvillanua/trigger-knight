@@ -25,7 +25,6 @@ const TOGGLE_PAUSE: readonly GameCommand[] = Object.freeze([
   Object.freeze({ type: "toggle-pause" }),
 ]);
 
-/** Lifecycle-only schedule: hold tutorial once, pause for three steps, then act no more. */
 export function commandsForOriginalLifecycleStep(
   step: number,
 ): readonly GameCommand[] {
@@ -61,7 +60,6 @@ export interface OriginalLifecycleScenarioOptions {
   readonly interpolationsForStep?: (step: number) => readonly number[];
 }
 
-/** Runs the milestone lifecycle through the browser session host. */
 export function runOriginalLifecycleScenario(
   engine: GameplayEngine,
   options: OriginalLifecycleScenarioOptions = {},

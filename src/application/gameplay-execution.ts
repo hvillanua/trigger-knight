@@ -85,7 +85,6 @@ function createCheckpoint(payload: CheckpointPayload): GameplayCheckpoint {
   });
 }
 
-/** Owns one serializable engine execution and its host-neutral diagnostics. */
 export function createGameplayExecution(
   engine: GameplayEngine,
   config: RunConfig,
@@ -217,7 +216,6 @@ function findDifference(
   return { path, expected, actual };
 }
 
-/** Returns the first host-independent execution field that differs. */
 export function compareGameplayTraces(
   expected: GameplayTrace,
   actual: GameplayTrace,

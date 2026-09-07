@@ -11,12 +11,10 @@ export function commandsForAdvanceActivation(): readonly GameCommand[] {
   return NO_COMMANDS;
 }
 
-/** Maps a browser activation to the shared semantic purchase command. */
 export function commandsForPurchaseActivation(): readonly GameCommand[] {
   return PURCHASE_CURRENT_ENCOUNTER_COMMANDS;
 }
 
-/** Maps a browser activation to the shared semantic item-use command. */
 export function commandsForItemUseActivation(): readonly GameCommand[] {
   return USE_CARRIED_ITEM_COMMANDS;
 }

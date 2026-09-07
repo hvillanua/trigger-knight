@@ -58,7 +58,6 @@ function interpolate(
   return previous + (current - previous) * amount;
 }
 
-/** Canvas 2D adapter for public gameplay observations and events. */
 export class CanvasPresentation implements PresentationPort {
   readonly #canvas: HTMLCanvasElement;
   #frame: PresentationFrame | undefined;

@@ -16,7 +16,6 @@ import { createPlayerState } from "./player-state.js";
 
 export const RUN_STATE_SCHEMA_VERSION = 15 as const;
 
-/** Creates a fresh minimal state value for one independent run. */
 export function createRunState(
   ruleset: RuleSetId,
   random: Readonly<RandomState>,
@@ -64,7 +63,6 @@ export interface RunCommandResult {
   readonly events: readonly GameEvent[];
 }
 
-/** Reports whether ordinary active-tick systems can advance. */
 export function isActiveGameplay(
   lifecycle: Readonly<RunLifecycleState>,
 ): boolean {
@@ -76,7 +74,6 @@ export function isActiveGameplay(
   );
 }
 
-/** Applies one lifecycle command without advancing the logical opportunity. */
 export function applyLifecycleCommand(
   state: Readonly<RunState>,
   command: Readonly<TogglePauseCommand | DismissTutorialCommand>,
@@ -117,7 +114,6 @@ export function applyLifecycleCommand(
   }
 }
 
-/** Advances one fixed logical opportunity after commands have been applied. */
 export function advanceRunState(state: Readonly<RunState>): RunStateStepResult {
   const gameplayGatesOpen =
     state.lifecycle.phase !== "ended" &&

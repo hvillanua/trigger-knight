@@ -3,12 +3,12 @@ interface EnemySnapshot {
   readonly reward: number;
 }
 
-/** @playerVisible Values deliberately included in the public contract. */
+/** @playerVisible */
 interface ObservedEnemy {
   readonly id: string;
 }
 
-/** @playerVisible Values shared with presentation and ordinary policies. */
+/** @playerVisible */
 interface PlayerObservation {
   readonly enemy: ObservedEnemy;
 }

@@ -11,7 +11,6 @@ export interface LifespanStepResult {
   readonly events: readonly GameEvent[];
 }
 
-/** Drains integer lifespan when the lifecycle consumed an active tick. */
 export function advanceLifespan(
   previous: Readonly<RunState>,
   stepped: Readonly<RunState>,

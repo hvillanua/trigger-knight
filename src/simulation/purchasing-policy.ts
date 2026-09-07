@@ -46,7 +46,6 @@ function decide(
   return NO_COMMANDS;
 }
 
-/** Uses eligible carried items and buys every eligible current shop. */
 export const purchasingPolicy: PlayerPolicy = Object.freeze({
   descriptor,
   createAgent(): PlayerAgent {

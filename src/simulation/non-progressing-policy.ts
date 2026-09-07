@@ -12,7 +12,6 @@ const descriptor: PolicyDescriptor = Object.freeze({
   config: Object.freeze({}),
 });
 
-/** Deterministic policy used to prove that finite runs cannot hang. */
 export const nonProgressingPolicy: PlayerPolicy = Object.freeze({
   descriptor,
   createAgent(): PlayerAgent {

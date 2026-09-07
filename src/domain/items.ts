@@ -18,7 +18,6 @@ export interface ItemUseStepResult {
   readonly events: readonly GameEvent[];
 }
 
-/** Returns the public reason a carried item cannot currently be used. */
 export function itemUseRejectionReason(
   state: Readonly<RunState>,
 ): ItemUseRejectionReason | null {
@@ -94,7 +93,6 @@ function useItem(
   }
 }
 
-/** Applies one valid carried-item use or reports a public rejection. */
 export function attemptUseCarriedItem(
   state: Readonly<RunState>,
   rules: Readonly<ItemUseRules>,

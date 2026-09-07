@@ -1,6 +1,5 @@
 import type { PlayerObservation, PlayerState } from "./contracts.js";
 
-/** Resolves the one-based equipment tier or rejects an invalid ruleset table. */
 export function equipmentNameAtTier<Name extends string>(
   names: readonly Name[],
   tier: number,
@@ -13,7 +12,6 @@ export function equipmentNameAtTier<Name extends string>(
   return name;
 }
 
-/** Copies authoritative player values into deeply frozen serializable state. */
 export function createPlayerState(player: Readonly<PlayerState>): PlayerState {
   return Object.freeze({
     gold: player.gold,
@@ -24,7 +22,6 @@ export function createPlayerState(player: Readonly<PlayerState>): PlayerState {
   });
 }
 
-/** Projects authoritative player state into the shared player-facing model. */
 export function observePlayerState(
   player: Readonly<PlayerState>,
 ): PlayerObservation {

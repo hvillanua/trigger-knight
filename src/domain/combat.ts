@@ -28,7 +28,6 @@ export interface CombatRules {
   readonly lethalAttackDelay: number;
 }
 
-/** Advances automatic combat once, with explicit hero-before-enemy precedence. */
 export function advanceCombat(
   previous: Readonly<RunState>,
   stepped: Readonly<RunState>,

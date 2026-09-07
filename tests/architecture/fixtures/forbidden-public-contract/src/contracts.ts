@@ -3,12 +3,12 @@ interface EnemySnapshot {
   readonly reward: number;
 }
 
-/** @playerVisible Values deliberately included in the public contract. */
+/** @playerVisible */
 interface EncounterObservation {
   readonly enemy: EnemySnapshot;
 }
 
-/** @playerVisible Values shared with presentation and ordinary policies. */
+/** @playerVisible */
 interface PlayerObservation {
   readonly encounter: EncounterObservation;
 }
@@ -17,7 +17,7 @@ interface RunState {
   readonly randomSeed: number;
 }
 
-/** @playerVisible Values that reference a project-owned declaration file. */
+/** @playerVisible */
 interface DeclarationObservation {
   readonly hidden: HiddenDeclarationState;
 }

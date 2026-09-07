@@ -19,14 +19,12 @@ export interface StepResult {
   readonly events: readonly GameEvent[];
 }
 
-/** Shared gameplay API used by browser and headless consumers. */
 export interface GameplayEngine {
   createRun(config: RunConfig): RunState;
   step(state: Readonly<RunState>, commands: readonly GameCommand[]): StepResult;
   observe(state: Readonly<RunState>): GameObservation;
 }
 
-/** Creates the shared application API over a ruleset lookup boundary. */
 export function createGameplayEngine(
   registry: RuleSetRegistry,
 ): GameplayEngine {

@@ -15,7 +15,6 @@ type PolicyConfigValue =
   | readonly PolicyConfigValue[]
   | { readonly [key: string]: PolicyConfigValue };
 
-/** Normalized serializable configuration that can affect policy decisions. */
 export type PolicyConfig = Readonly<Record<string, PolicyConfigValue>>;
 
 export interface PolicyDescriptor {
@@ -24,7 +23,7 @@ export interface PolicyDescriptor {
   readonly config: PolicyConfig;
 }
 
-/** @playerVisible Ordinary automated-player input and command boundary. */
+/** @playerVisible */
 export interface PlayerAgent {
   decide(
     observation: Readonly<GameObservation>,
