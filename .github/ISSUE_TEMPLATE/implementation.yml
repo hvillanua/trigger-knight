@@ -58,18 +58,6 @@ body:
       required: true
 
   - type: textarea
-    id: required_context
-    attributes:
-      label: Required context
-      description: Link exact product, architecture, and research sections plus relevant source and tests. Include compatibility decisions only when the task touches that research gap. Do not require duplicate implementation summaries.
-      value: |
-        - [Product requirements](https://github.com/hvillanua/trigger-knight/blob/main/clean-room/PRD.md)
-        - [Technical design](https://github.com/hvillanua/trigger-knight/blob/main/clean-room/TDD.md)
-        - Relevant behavioral research: <!-- replace with exact links, or explain why none applies -->
-    validations:
-      required: true
-
-  - type: textarea
     id: delivery_evidence
     attributes:
       label: Delivery evidence

@@ -12,8 +12,8 @@ that point in the run.
 Before changing `GameObservation`, `GameEvent`, `PresentationFrame`,
 `PlayerAgent`, or a type reachable from them:
 
-1. Read the selected issue and its required context. Use `research/README.md` to
-   locate presentation evidence when the visibility of a value depends on
+1. Read the selected issue and any context linked in it. Use
+   `research/README.md` to locate presentation evidence when visibility depends on
    original behavior. If evidence is absent and a compatibility choice is
    needed, record it in `docs/compatibility-decisions.md` rather than code
    comments. Do not call the chosen behavior confirmed.
