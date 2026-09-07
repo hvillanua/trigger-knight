@@ -72,6 +72,13 @@ engine, run configuration, policy, and finite `maxSteps`. See the
 [runner tests](tests/unit/simulation-runner.test.ts) for runnable examples.
 Supply its optional `onTrace` callback to retain a diagnostic trace.
 
+For continuous shopping and combat runs, pass
+[`createCombatPolicy()`](src/simulation/combat-policy.ts) as the policy. It buys
+eligible shops and uses battle items, saving Elixir until HP reaches the
+configured `elixirHpFraction`. The result retains the policy identity and
+normalized configuration. The [combat policy scenarios](tests/unit/combat-policy-runs.test.ts)
+show complete seeded runs and reward-funded purchases.
+
 In the development browser, call `window.triggerKnightDiagnostics.read()` in
 the console. The hook is absent from production builds. Browser hosts also
 provide [`readDiagnostics()`](src/browser/gameplay-session.ts).
