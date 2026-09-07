@@ -52,11 +52,10 @@ body:
     id: required_context
     attributes:
       label: Required context
-      description: Link exact product, architecture, roadmap, and research sections plus relevant source and tests. Include compatibility decisions only for relevant research gaps.
+      description: Link exact product, architecture, and research sections plus relevant source and tests. Include compatibility decisions only for relevant research gaps.
       value: |
         - [Product requirements](https://github.com/hvillanua/trigger-knight/blob/main/clean-room/PRD.md)
         - [Technical design](https://github.com/hvillanua/trigger-knight/blob/main/clean-room/TDD.md)
-        - [Milestone roadmap](https://github.com/hvillanua/trigger-knight/blob/main/clean-room/TODO.md)
         - Relevant behavioral research: <!-- replace with exact links, or explain why none applies -->
     validations:
       required: true

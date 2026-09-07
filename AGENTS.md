@@ -3,20 +3,19 @@
 ## Sources of truth
 
 Code, tests, and configuration are authoritative for implemented behavior,
-executable evidence, and enforcement. Read the selected issue and its **Required
-context** before changing code. Use these documents to guide intended work:
+executable evidence, and enforcement. For every ticket, read the selected issue,
+its **Required context**, and both `clean-room/PRD.md` and `clean-room/TDD.md`
+before changing code. Use these documents to guide intended work:
 
 1. [`clean-room/PRD.md`](clean-room/PRD.md) defines product scope and acceptance.
 2. [`clean-room/TDD.md`](clean-room/TDD.md) defines durable architecture and public
    boundaries.
-3. [`clean-room/TODO.md`](clean-room/TODO.md) defines milestone order, readiness,
-   and completion conditions.
-4. [`research/README.md`](research/README.md) routes to the human-authored
+3. [`research/README.md`](research/README.md) routes to the human-authored
    behavioral specification. Follow its evidence and uncertainty labels when a
    ticket concerns original-v1.3 behavior.
 
 The issue defines the ticket-sized outcome, but it cannot override the product,
-architecture, milestone, or clean-room constraints above. If researched behavior
+architecture, or clean-room constraints above. If researched behavior
 is unknown, consult the relevant entry in
 [`docs/compatibility-decisions.md`](docs/compatibility-decisions.md). Update it
 only when a research gap requires a new compatibility choice. Keep these
@@ -47,7 +46,8 @@ enforcement is in [`build/check-public-contracts.mjs`](build/check-public-contra
 
 For issue-driven implementation, work only on a ready issue whose blockers are
 complete. Keep the issue's stated
-acceptance criteria and non-goals in scope.
+acceptance criteria and non-goals in scope. If scope or requirements are
+ambiguous or conflicting, ask the user before proceeding with the affected work.
 
 For every behavior change, follow red-green-refactor:
 

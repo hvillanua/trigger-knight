@@ -14,8 +14,7 @@ Before reviewing, read:
 
 1. `AGENTS.md`;
 2. the PR and its linked issue, including the issue's required context;
-3. `clean-room/PRD.md`, `clean-room/TDD.md`, and the applicable milestone in
-   `clean-room/TODO.md`;
+3. `clean-room/PRD.md` and `clean-room/TDD.md`;
 4. relevant source, tests, and architecture enforcement in
    `dependency-cruiser.config.cjs` and `build/check-public-contracts.mjs`;
 5. `.agents/skills/protect-player-visible-contracts/SKILL.md` when observations,
@@ -23,6 +22,8 @@ Before reviewing, read:
 
 Use behavioral research only through the routing and evidence rules in
 `AGENTS.md`. Preserve stated non-goals and uncertainty labels.
+If scope or requirements are ambiguous or conflicting, ask the user before
+proceeding with the affected review.
 Consult the relevant entry in `docs/compatibility-decisions.md` when a change
 touches a research gap. Require an update only for a new choice caused by
 incomplete original evidence, not routine implementation changes.
