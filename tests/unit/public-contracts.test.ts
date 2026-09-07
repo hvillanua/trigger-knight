@@ -220,7 +220,7 @@ describe("public application contracts", () => {
       readonly initialProfile: ProfileState;
     }>();
     expectTypeOf<RunState>().toMatchTypeOf<{
-      readonly schemaVersion: 14;
+      readonly schemaVersion: 15;
       readonly ruleset: RuleSetId;
       readonly random: RandomState;
       readonly steps: number;
@@ -230,6 +230,8 @@ describe("public application contracts", () => {
       readonly distance: number;
       readonly day: number;
       readonly score: number;
+      readonly profileExpEarned: number;
+      readonly dragonKills: number;
       readonly lifespan: {
         readonly whole: number;
         readonly fraction: number;
@@ -372,6 +374,14 @@ describe("public application contracts", () => {
       };
     }>();
     expectTypeOf<GameEvent>().toEqualTypeOf<
+      | Readonly<{
+          type: "battle-reward";
+          enemy: "goblin" | "golem" | "wolf" | "dragon";
+          gold: number;
+          score: number;
+          profileExp: number;
+          dragonKilled: boolean;
+        }>
       | Readonly<{
           type: "combat-phase-changed";
           actor: "hero" | "enemy";

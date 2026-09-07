@@ -14,7 +14,7 @@ import { createEncounterQueueState } from "./encounters.js";
 import { createBattleState } from "./battle.js";
 import { createPlayerState } from "./player-state.js";
 
-export const RUN_STATE_SCHEMA_VERSION = 14 as const;
+export const RUN_STATE_SCHEMA_VERSION = 15 as const;
 
 /** Creates a fresh minimal state value for one independent run. */
 export function createRunState(
@@ -38,6 +38,8 @@ export function createRunState(
     distance: 0,
     day: 1,
     score: 0,
+    profileExpEarned: 0,
+    dragonKills: 0,
     lifespan: Object.freeze({ ...initialLifespan }),
     player: createPlayerState(initialPlayer),
     battle: null,

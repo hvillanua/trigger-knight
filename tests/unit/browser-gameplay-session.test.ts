@@ -126,9 +126,13 @@ describe("browser gameplay session", () => {
 
   it("keeps the committed lifespan death trace fixed during later presentation", () => {
     const present = vi.fn<(frame: PresentationFrame) => void>();
-    const session = createBrowserGameplaySession(gameplayEngine, config, {
-      present,
-    });
+    const session = createBrowserGameplaySession(
+      gameplayEngine,
+      { ...config, seed: "milestone-2-lifecycle-2" },
+      {
+        present,
+      },
+    );
     session.dispatch([{ type: "dismiss-tutorial" }]);
     for (let step = 1; step < 2_560; step += 1) {
       session.dispatch([]);

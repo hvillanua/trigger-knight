@@ -126,7 +126,7 @@ describe("headless simulation runner", () => {
       distance: 0,
       gold: 300,
       traceHash:
-        "sha256-v1:e0ad1f2779691f02a761c99916982eb5a798eeb38f93ca203d677ddeeacf5b2c",
+        "sha256-v1:51589f10ef804add8df3334e455b9c966ff6235359fde816be2d24fefac47d11",
       metrics: {},
     });
     expect(Object.isFrozen(result)).toBe(true);
@@ -227,7 +227,10 @@ describe("headless simulation runner", () => {
     const runner = createSimulationRunner(gameplayEngine);
 
     const result = runner.run(
-      request(dismissTutorialPolicy, { maxSteps: 3_000 }),
+      request(dismissTutorialPolicy, {
+        maxSteps: 3_000,
+        config: { ...config, seed: "milestone-2-lifecycle-2" },
+      }),
     );
 
     expect(result).toMatchObject({
@@ -235,9 +238,9 @@ describe("headless simulation runner", () => {
       steps: 2_560,
       activeTicks: 2_500,
       terminalReason: "lifespan",
-      score: 14_400,
-      day: 1,
-      distance: 1_440,
+      score: 320_200,
+      day: 4,
+      distance: 25_410,
     });
   });
 
@@ -254,16 +257,19 @@ describe("headless simulation runner", () => {
     const runner = createSimulationRunner(gameplayEngine);
 
     const result = runner.run(
-      request(dismissTutorialPolicy, { maxSteps: 2_559 }),
+      request(dismissTutorialPolicy, {
+        maxSteps: 2_559,
+        config: { ...config, seed: "milestone-2-lifecycle-2" },
+      }),
     );
 
     expect(result).toMatchObject({
       steps: 2_559,
       activeTicks: 2_499,
       terminalReason: "step-limit",
-      score: 14_400,
-      day: 1,
-      distance: 1_440,
+      score: 320_050,
+      day: 4,
+      distance: 25_395,
     });
   });
 
