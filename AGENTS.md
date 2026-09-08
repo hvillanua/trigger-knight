@@ -1,107 +1,38 @@
 # Repository instructions
 
-## Sources of truth
+## Clean-room constraints
 
-Code, tests, and configuration are authoritative for implemented behavior,
-executable evidence, and enforcement. For every ticket, read the selected issue
-and both `clean-room/PRD.md` and `clean-room/TDD.md` before changing code.
-Use these documents to guide intended work:
+- Preserve original artifacts. Never copy decompiled code or generated research
+  artifacts into the implementation.
+- Use human-authored behavioral evidence and approved runtime assets with recorded
+  provenance. Research files are not production inputs.
+- Distinguish confirmed behavior, derived evidence, and unresolved questions.
+  Never present a compatibility choice as confirmed original behavior.
+- Keep hidden gameplay state out of player-facing observations, events, and policy
+  inputs. Structural checks cannot determine whether a field reveals a secret.
 
-1. [`clean-room/PRD.md`](clean-room/PRD.md) defines product scope and acceptance.
-2. [`clean-room/TDD.md`](clean-room/TDD.md) defines durable architecture and public
-   boundaries.
-3. [`research/README.md`](research/README.md) routes to the human-authored
-   behavioral specification. Follow its evidence and uncertainty labels when a
-   ticket concerns original-v1.3 behavior.
+## Delivery
 
-The issue defines the ticket-sized outcome, but it cannot override the product,
-architecture, or clean-room constraints above. If researched behavior
-is unknown, consult the relevant entry in
-[`docs/compatibility-decisions.md`](docs/compatibility-decisions.md). Update it
-only when a research gap requires a new compatibility choice. Keep these
-explanations in that document, not code comments, and never present a choice as
-confirmed original behavior.
+Work only on ready tickets whose blockers are complete. Preserve their acceptance
+criteria and non-goals. Resolve missing context before implementing affected
+behavior; ask the user when requirements remain ambiguous or conflicting.
 
-## Repository and clean-room boundaries
+For behavior changes, follow red-green-refactor: run the smallest meaningful
+failing test, implement the passing change, then refactor while keeping the
+relevant tests green. Do not defer tests to another ticket or weaken checks to
+make a change pass. Keep behavior deterministic, runnable, and inspectable.
 
-- `original/` contains preserved original artifacts. Do not modify them.
-- `decompiled/` and `exports/` are generated research inputs. Do not copy their
-  code or generated artifacts into the implementation.
-- `research/` contains human-authored behavioral evidence, not production inputs.
-- `clean-room/` contains the product, design, and roadmap documents.
-- `src/` is the clean-room implementation. Approved runtime assets belong in
-  `src/assets/`, with provenance recorded there.
-- `tests/` contains clean-room implementation evidence.
+Update usage and design guidance when intent changes. Keep formulas, contracts,
+versions, hashes, and scenario results in code, configuration, and tests rather
+than duplicate prose inventories. Record delivery evidence in PRs.
 
-Production code must not import from `original/`, `decompiled/`, `exports/`,
-`research/`, `tooling/`, or `clean-room/`. Dependencies point inward: adapters
-may depend on application and domain contracts, while the domain must not depend
-on browser, Canvas, rendering, input devices, storage, audio, filesystem,
-workers, wall-clock APIs, or ambient randomness. Keep `src/main.ts` as the
-composition root. The enforced layer map is in
-[`dependency-cruiser.config.cjs`](dependency-cruiser.config.cjs); public-contract
-enforcement is in [`build/check-public-contracts.mjs`](build/check-public-contracts.mjs).
+## Validation policy
 
-## Required workflow
+Run only focused checks needed for the change locally. GitHub Actions is the
+complete validation gate. Run aggregate validation locally only when the user
+requests it or a CI failure needs reproduction. Markdown and plain-text-only
+changes require no code validation.
 
-For issue-driven implementation, work only on a ready issue whose blockers are
-complete. Keep the issue's stated
-acceptance criteria and non-goals in scope. If scope or requirements are
-ambiguous or conflicting, ask the user before proceeding with the affected work.
-
-For every behavior change, follow red-green-refactor:
-
-1. **Red:** add or select the smallest test or check that expresses the outcome,
-   run it, and record the meaningful failure.
-2. **Green:** implement the smallest change that makes that evidence pass.
-3. **Refactor:** improve the result while keeping the relevant suite green.
-
-Do not defer tests to another ticket. Preserve deterministic, runnable, and
-inspectable behavior at each milestone. Update README when usage changes and
-PRD/TDD when product or architecture intent changes. Keep implemented formulas,
-contracts, versions, hashes, and scenario results in code, configuration, and
-tests rather than parallel prose inventories. Record delivery evidence in PRs.
-Consult relevant source and tests for the task. Read compatibility decisions
-only when the task touches the corresponding research gap.
-
-## Validation commands
-
-Run commands from the repository root. On a fresh checkout, install locked
-dependencies and Chromium first:
-
-```sh
-npm ci
-npm run setup:browser
-```
-
-On a fresh Linux or CI host that also needs Chromium system dependencies, use
-`npm run setup:browser -- --with-deps` instead of the second command.
-
-| Purpose                                   | Command                      |
-| ----------------------------------------- | ---------------------------- |
-| Apply repository formatting               | `npm run format`             |
-| Check repository formatting               | `npm run format:check`       |
-| Lint                                      | `npm run lint`               |
-| Check architecture and clean-room imports | `npm run check:architecture` |
-| Type-check                                | `npm run typecheck`          |
-| Run unit tests                            | `npm run test:unit`          |
-| Run browser tests                         | `npm run test:browser`       |
-| Build production output                   | `npm run build`              |
-| Concise fast CI gate                      | `npm run validate:fast`      |
-| Concise complete CI gate                  | `npm run validate`           |
-
-For code changes, run only the smallest focused checks needed for the red and
-green evidence during local implementation. Do not run aggregate validation
-locally unless the user requests it or a CI failure needs reproduction. Markdown
-and plain-text-only changes require no code validation. The formatting commands
-still cover the whole repository when invoked.
-
-GitHub Actions is the sole complete validation gate and runs it only when code,
-tests, runtime assets, build scripts, or configuration change. Do not install or
-invoke repository-owned pre-commit or pre-push hooks, and do not poll a
-successful CI run. Before creating a pull request, read
-`.github/pull_request_template.md` and
-use its sections, including What and Why, even when supplying a custom body.
-Pull requests must identify the ticket, describe the observed red failure and
-green result, account for refactoring, list focused local checks,
-and record the CI result when it is available.
+Do not install or invoke repository-owned pre-commit or pre-push hooks. Do not
+poll successful CI runs. Report observed results accurately, including checks
+that were not run.

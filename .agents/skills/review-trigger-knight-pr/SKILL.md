@@ -10,23 +10,15 @@ Do not try to make its static checks resistant to deliberate or exotic evasion.
 
 ## Establish the contract
 
-Before reviewing, read:
+Start with the PR, its ticket or direct user request, and the changed source and
+tests. Inspect relevant architecture enforcement when assessing an architectural
+claim. Apply `protect-player-visible-contracts` when observations, events,
+presentation frames, policy inputs, or reachable types change.
 
-1. `AGENTS.md`;
-2. the PR and its linked issue, including any context linked in the issue;
-3. `clean-room/PRD.md` and `clean-room/TDD.md`;
-4. relevant source, tests, and architecture enforcement in
-   `dependency-cruiser.config.cjs` and `build/check-public-contracts.mjs`;
-5. `.agents/skills/protect-player-visible-contracts/SKILL.md` when observations,
-   events, presentation frames, policy inputs, or reachable types change.
-
-Use behavioral research only through the routing and evidence rules in
-`AGENTS.md`. Preserve stated non-goals and uncertainty labels.
-If scope or requirements are ambiguous or conflicting, ask the user before
-proceeding with the affected review.
-Consult the relevant entry in `docs/compatibility-decisions.md` when a change
-touches a research gap. Require an update only for a new choice caused by
-incomplete original evidence, not routine implementation changes.
+Use `resolve-trigger-knight-behavior` only when the requested feature is ambiguous
+or the ticket lacks context needed to judge original-game behavior. Do not load
+research for adequately specified changes. Preserve non-goals and uncertainty
+labels; ask the user when requirements remain ambiguous or conflicting.
 
 ## Review architecture
 

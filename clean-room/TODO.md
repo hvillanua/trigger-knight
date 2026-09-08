@@ -10,7 +10,7 @@ The product requirements in [`PRD.md`](PRD.md), architecture and contracts in [`
 
 - Complete milestones in order. A later milestone may rely only on capabilities established by completed earlier milestones.
 - Use dependency links between tickets when the tickets are created. A ticket is ready only when its actual blockers are complete.
-- Write tickets around one meaningful outcome. Tickets state **what** must exist and **why**, with observable acceptance criteria, constraints, non-goals, required evidence, and links to the relevant PRD, TDD, and research sections. They do not prescribe **how** to implement the outcome.
+- Write tickets around one meaningful outcome. Tickets state **what** must exist and **why**, with observable acceptance criteria, constraints, non-goals, and required evidence. They do not prescribe **how** to implement the outcome.
 - Follow test-driven development for every behavior change: establish a failing test for the intended behavior, implement the smallest passing change, then refactor while the suite remains green. Tests are part of the behavior ticket and are never deferred to a later ticket.
 - Run only the smallest focused red and green checks locally. GitHub Actions is the sole complete validation gate for code-affecting changes.
 - Preserve the clean-room boundary. Implementation work uses the behavioral specification and approved clean-room assets, not copied decompiled source or unapproved original artifacts.

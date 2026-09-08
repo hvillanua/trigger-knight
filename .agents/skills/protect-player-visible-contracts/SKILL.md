@@ -12,11 +12,9 @@ that point in the run.
 Before changing `GameObservation`, `GameEvent`, `PresentationFrame`,
 `PlayerAgent`, or a type reachable from them:
 
-1. Read the selected issue and any context linked in it. Use
-   `research/README.md` to locate presentation evidence when visibility depends on
-   original behavior. If evidence is absent and a compatibility choice is
-   needed, record it in `docs/compatibility-decisions.md` rather than code
-   comments. Do not call the chosen behavior confirmed.
+1. Establish what the ticket makes player-visible. If that is ambiguous or the
+   ticket lacks the original-behavior context needed to decide, use the
+   `resolve-trigger-knight-behavior` skill for that specific question.
 2. Classify every added value as player-visible or internal. Generation inputs,
    future outcomes, random state, AI decisions, unrevealed enemy statistics,
    rewards, cached calculations, and diagnostic state are internal unless the

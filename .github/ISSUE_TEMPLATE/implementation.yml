@@ -11,8 +11,10 @@ body:
     id: product_and_architecture
     attributes:
       label: Product and architecture
-      description: Keep these links so the agent implementing this issue can read the product scope and technical design.
+      description: Keep the mandatory reading instruction and both source-of-truth links in the ticket.
       value: |
+        Before implementing this ticket, you must read both documents below in full. They are the sources of truth for product scope and architecture; this ticket cannot override them.
+
         - [Product requirements](https://github.com/hvillanua/trigger-knight/blob/main/clean-room/PRD.md)
         - [Technical design](https://github.com/hvillanua/trigger-knight/blob/main/clean-room/TDD.md)
     validations:
