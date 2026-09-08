@@ -8,6 +8,17 @@ body:
         Keep one meaningful outcome per ticket. State what must exist and why without prescribing ticket-level implementation details.
 
   - type: textarea
+    id: product_and_architecture
+    attributes:
+      label: Product and architecture
+      description: Keep these links so the agent implementing this issue can read the product scope and technical design.
+      value: |
+        - [Product requirements](https://github.com/hvillanua/trigger-knight/blob/main/clean-room/PRD.md)
+        - [Technical design](https://github.com/hvillanua/trigger-knight/blob/main/clean-room/TDD.md)
+    validations:
+      required: true
+
+  - type: textarea
     id: why
     attributes:
       label: Why
