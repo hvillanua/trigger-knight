@@ -13,7 +13,7 @@ Do not try to make its static checks resistant to deliberate or exotic evasion.
 Before reviewing, read:
 
 1. `AGENTS.md`;
-2. the PR and its linked issue, including the issue's required context;
+2. the PR and its linked issue, including any context linked in the issue;
 3. `clean-room/PRD.md` and `clean-room/TDD.md`;
 4. relevant source, tests, and architecture enforcement in
    `dependency-cruiser.config.cjs` and `build/check-public-contracts.mjs`;

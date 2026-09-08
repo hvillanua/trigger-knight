@@ -3,9 +3,9 @@
 ## Sources of truth
 
 Code, tests, and configuration are authoritative for implemented behavior,
-executable evidence, and enforcement. For every ticket, read the selected issue,
-its **Required context**, and both `clean-room/PRD.md` and `clean-room/TDD.md`
-before changing code. Use these documents to guide intended work:
+executable evidence, and enforcement. For every ticket, read the selected issue
+and both `clean-room/PRD.md` and `clean-room/TDD.md` before changing code.
+Use these documents to guide intended work:
 
 1. [`clean-room/PRD.md`](clean-room/PRD.md) defines product scope and acceptance.
 2. [`clean-room/TDD.md`](clean-room/TDD.md) defines durable architecture and public
@@ -61,8 +61,8 @@ inspectable behavior at each milestone. Update README when usage changes and
 PRD/TDD when product or architecture intent changes. Keep implemented formulas,
 contracts, versions, hashes, and scenario results in code, configuration, and
 tests rather than parallel prose inventories. Record delivery evidence in PRs.
-Issues should link relevant source and tests; require compatibility-decision
-context only when the task touches the corresponding research gap.
+Consult relevant source and tests for the task. Read compatibility decisions
+only when the task touches the corresponding research gap.
 
 ## Validation commands
 
@@ -99,6 +99,9 @@ still cover the whole repository when invoked.
 GitHub Actions is the sole complete validation gate and runs it only when code,
 tests, runtime assets, build scripts, or configuration change. Do not install or
 invoke repository-owned pre-commit or pre-push hooks, and do not poll a
-successful CI run. Pull requests must identify the ticket, describe the observed
-red failure and green result, account for refactoring, list focused local checks,
+successful CI run. Before creating a pull request, read
+`.github/pull_request_template.md` and
+use its sections, including What and Why, even when supplying a custom body.
+Pull requests must identify the ticket, describe the observed red failure and
+green result, account for refactoring, list focused local checks,
 and record the CI result when it is available.
