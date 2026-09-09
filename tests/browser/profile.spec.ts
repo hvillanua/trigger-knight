@@ -3,6 +3,10 @@ import type * as EngineModule from "../../src/application/gameplay-engine.js";
 import type * as ExecutionModule from "../../src/application/gameplay-execution.js";
 import type * as RulesModule from "../../src/domain/rulesets.js";
 import { createFreshProfile } from "../../src/domain/profile.js";
+import {
+  PROFILE_STORAGE_ENVELOPE_VERSION,
+  PROFILE_STORAGE_KEY,
+} from "../../src/persistence/browser-profile-store.js";
 import { createGameplayExecution } from "../../src/application/gameplay-execution.js";
 import { createTestGameplayEngine } from "../helpers/gameplay-engine.js";
 
@@ -58,4 +62,80 @@ test("retains an explicit complete profile with identical browser and headless t
   }, config);
   expect(browserTrace).toEqual(execution.readDiagnostics());
   expect(browserTrace.config.initialProfile).toEqual(config.initialProfile);
+});
+
+test("starts a browser run from the stored complete profile", async ({
+  page,
+}) => {
+  const profile = {
+    ...createFreshProfile(),
+    level: 5,
+    xp: 42,
+    scoreMultiplier: 1.5,
+    highScore: 9_876,
+    tutorialPreference: "disabled" as const,
+  };
+  const record = {
+    schemaVersion: PROFILE_STORAGE_ENVELOPE_VERSION,
+    profile: {
+      schemaVersion: profile.schemaVersion,
+      level: profile.level,
+      xp: profile.xp,
+      scoreMultiplier: profile.scoreMultiplier,
+      highScore: profile.highScore,
+      weaponDiscoveries: profile.weaponDiscoveries,
+      armorDiscoveries: profile.armorDiscoveries,
+      achievementSlots: profile.achievementSlots,
+    },
+    settings: { tutorialPreference: profile.tutorialPreference },
+  };
+
+  await page.addInitScript(
+    ({ key, value }) => {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    },
+    { key: PROFILE_STORAGE_KEY, value: record },
+  );
+  await page.goto("/");
+
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => window.triggerKnightDiagnostics?.read().config.initialProfile,
+      ),
+    )
+    .toEqual(profile);
+});
+
+test("reports an unreadable stored profile without replacing it", async ({
+  page,
+}) => {
+  const raw = "{";
+  await page.addInitScript(
+    ({ key, value }) => {
+      window.localStorage.setItem(key, value);
+    },
+    { key: PROFILE_STORAGE_KEY, value: raw },
+  );
+  await page.goto("/");
+
+  const status = page.getByTestId("game-status");
+  await expect(status).toHaveAttribute("data-persistence-status", "failed");
+  await expect(status).toHaveAttribute(
+    "data-persistence-error",
+    "corrupt-record",
+  );
+  expect(
+    await page.evaluate(
+      (key) => localStorage.getItem(key),
+      PROFILE_STORAGE_KEY,
+    ),
+  ).toBe(raw);
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => window.triggerKnightDiagnostics?.read().config.initialProfile,
+      ),
+    )
+    .toEqual(createFreshProfile());
 });

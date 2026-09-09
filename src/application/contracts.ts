@@ -90,3 +90,10 @@ export type {
   SimulationRequest,
   SimulationRunner,
 } from "./simulation.js";
+export type {
+  ProfileLoadResult,
+  ProfileSaveResult,
+  ProfileStorageError,
+  ProfileStorageErrorCode,
+  ProfileStore,
+} from "./persistence.js";

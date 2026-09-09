@@ -64,6 +64,17 @@ the console. This hook is absent from production builds. Browser sessions also
 provide `readDiagnostics()`. `compareGameplayTraces` reports the first differing
 execution field.
 
+The browser entry point loads its initial profile through
+`createBrowserProfileStore(window.localStorage)`. An empty store returns fresh
+defaults. A valid current record or a supported older envelope returns a
+complete `ProfileState`, including the supported `tutorialPreference` setting.
+Storage errors are returned to the caller and the browser marks the status
+element instead of replacing the stored record. The adapter currently accepts
+storage-envelope versions 1 and 2, which are separate from the profile schema
+version. The minimal `schemaVersion: 1` `RunConfig` input is not a historical
+browser-save format and is rejected when it appears where a persisted complete
+profile is required.
+
 ## Original game
 
 Copyright remains with the original rights holders. The preserved material is
