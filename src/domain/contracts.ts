@@ -28,6 +28,13 @@ export interface ProfileState extends MinimalProfileInput {
   readonly achievementSlots: readonly boolean[];
 }
 
+/** Authoritative earnings and terminal state accepted by profile settlement. */
+export interface CompletedRunSettlementInput {
+  readonly lifecycle: Pick<RunLifecycleState, "phase" | "terminalReason">;
+  readonly score: number;
+  readonly profileExpEarned: number;
+}
+
 /** Versioned, serializable state for authoritative gameplay randomness. */
 export interface RandomState {
   readonly algorithm: "mulberry32-fnv1a32-v1";

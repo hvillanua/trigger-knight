@@ -1,6 +1,14 @@
-import type { ProfileState } from "./contracts.js";
+import type {
+  CompletedRunSettlementInput,
+  ProfileInput,
+  ProfileState,
+} from "./contracts.js";
 
 export const PROFILE_SCHEMA_VERSION = 2 as const;
+
+const PROFILE_EXP_PER_TRANSFER = 3;
+const PROFILE_LEVEL_THRESHOLD_BASE = 100;
+const PROFILE_LEVEL_THRESHOLD_PER_LEVEL = 30;
 
 /** Creates independent defaults without inferring any past gameplay. */
 export function createFreshProfile(): ProfileState {
@@ -116,5 +124,72 @@ export function normalizeProfile(input: unknown): ProfileState {
     ),
     armorDiscoveries: flags(profile.armorDiscoveries, "armorDiscoveries", 10),
     achievementSlots: flags(profile.achievementSlots, "achievementSlots", 6),
+  });
+}
+
+function assertCompletedRun(
+  run: Readonly<CompletedRunSettlementInput>,
+): asserts run is Readonly<CompletedRunSettlementInput> {
+  if (
+    run === null ||
+    typeof run !== "object" ||
+    run.lifecycle?.phase !== "ended" ||
+    (run.lifecycle.terminalReason !== "lifespan" &&
+      run.lifecycle.terminalReason !== "combat")
+  ) {
+    throw new TypeError(
+      "Profile settlement requires a completed run with a gameplay death",
+    );
+  }
+  if (!Number.isSafeInteger(run.profileExpEarned) || run.profileExpEarned < 0) {
+    throw new TypeError(
+      "Completed-run profile EXP must be a safe nonnegative integer",
+    );
+  }
+  if (
+    typeof run.score !== "number" ||
+    !Number.isFinite(run.score) ||
+    run.score < 0
+  ) {
+    throw new TypeError("Completed-run score must be finite and nonnegative");
+  }
+}
+
+/** Applies one completed gameplay death to a copy of the explicit profile. */
+export function settleCompletedRun(
+  initialProfile: ProfileInput,
+  run: Readonly<CompletedRunSettlementInput>,
+): ProfileState {
+  assertCompletedRun(run);
+  const profile = normalizeProfile(initialProfile);
+  let level = profile.level;
+  let xp = profile.xp;
+  let scoreMultiplier = profile.scoreMultiplier;
+  let remainingExperience = run.profileExpEarned;
+
+  while (remainingExperience > 0) {
+    const transferred = Math.min(PROFILE_EXP_PER_TRANSFER, remainingExperience);
+    xp += transferred;
+    remainingExperience -= transferred;
+
+    const threshold =
+      PROFILE_LEVEL_THRESHOLD_BASE + level * PROFILE_LEVEL_THRESHOLD_PER_LEVEL;
+    if (xp > threshold) {
+      level += 1;
+      xp = 0;
+      scoreMultiplier = 1 + level / 10;
+    }
+  }
+
+  return Object.freeze({
+    ...profile,
+    level,
+    xp,
+    scoreMultiplier,
+    highScore: Math.max(profile.highScore, run.score),
+    tutorialPreference: "disabled",
+    weaponDiscoveries: Object.freeze([...profile.weaponDiscoveries]),
+    armorDiscoveries: Object.freeze([...profile.armorDiscoveries]),
+    achievementSlots: Object.freeze([...profile.achievementSlots]),
   });
 }
