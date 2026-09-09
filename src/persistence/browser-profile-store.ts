@@ -11,6 +11,10 @@ export const PROFILE_STORAGE_KEY = "trigger-knight.profile";
 export const PROFILE_STORAGE_LEGACY_ENVELOPE_VERSION = 1 as const;
 export const PROFILE_STORAGE_ENVELOPE_VERSION = 2 as const;
 
+const PROFILE_STORAGE_BACKUP_SUFFIX = ".backup";
+const PROFILE_STORAGE_COMMIT_SUFFIX = ".commit";
+const PROFILE_STORAGE_COMMIT_MARKER_PREFIX = "trigger-knight.commit.v1:";
+
 /** Minimal browser storage surface used by the adapter and its tests. */
 export interface StorageLike {
   getItem(key: string): string | null;
@@ -47,6 +51,36 @@ interface DecodedEnvelope {
 type DecodeResult =
   | Readonly<{ ok: true; value: DecodedEnvelope }>
   | Readonly<{ ok: false; error: ProfileStorageError }>;
+
+interface RawReadSuccess {
+  readonly ok: true;
+  readonly raw: string | null;
+}
+
+type RawReadResult =
+  RawReadSuccess | Readonly<{ ok: false; error: ProfileStorageError }>;
+
+interface Candidate {
+  readonly raw: string;
+  readonly decoded: DecodeResult;
+}
+
+interface SelectedRecord {
+  readonly kind: "record";
+  readonly raw: string;
+  readonly decoded: Readonly<{ ok: true; value: DecodedEnvelope }>;
+  readonly repair: boolean;
+}
+
+type Selection =
+  | Readonly<{ kind: "empty"; repair: boolean }>
+  | SelectedRecord
+  | Readonly<{ kind: "failed"; error: ProfileStorageError }>;
+
+type CommitMarker =
+  | Readonly<{ kind: "missing" }>
+  | Readonly<{ kind: "valid"; record: string | null }>
+  | Readonly<{ kind: "invalid" }>;
 
 function error(
   code: ProfileStorageError["code"],
@@ -235,45 +269,270 @@ function currentEnvelope(profile: ProfileState): CurrentProfileEnvelope {
   };
 }
 
-function restore(
-  storage: StorageLike,
-  key: string,
-  previous: string | null,
-): void {
-  if (previous === null) {
-    storage.removeItem(key);
-  } else {
-    storage.setItem(key, previous);
+function serializeCurrent(profile: ProfileState): string | ProfileStorageError {
+  try {
+    return JSON.stringify(currentEnvelope(profile));
+  } catch {
+    return error("write-failed", "Profile could not be serialized");
   }
 }
 
-function writeAtomically(
+function readRaw(storage: StorageLike, key: string): RawReadResult {
+  try {
+    return { ok: true, raw: storage.getItem(key) };
+  } catch {
+    return {
+      ok: false,
+      error: error("storage-read-failed", "Profile storage could not be read"),
+    };
+  }
+}
+
+function writeRawAndVerify(
+  storage: StorageLike,
+  key: string,
+  value: string | null,
+): void {
+  if (value === null) {
+    storage.removeItem(key);
+  } else {
+    storage.setItem(key, value);
+  }
+  if (storage.getItem(key) !== value) {
+    throw new Error("Stored profile verification failed");
+  }
+}
+
+function encodeCommitMarker(record: string | null): string {
+  return record === null
+    ? `${PROFILE_STORAGE_COMMIT_MARKER_PREFIX}empty`
+    : `${PROFILE_STORAGE_COMMIT_MARKER_PREFIX}${record}`;
+}
+
+function decodeCommitMarker(raw: string | null): CommitMarker {
+  if (raw === null) {
+    return { kind: "missing" };
+  }
+  if (raw === `${PROFILE_STORAGE_COMMIT_MARKER_PREFIX}empty`) {
+    return { kind: "valid", record: null };
+  }
+  if (raw.startsWith(PROFILE_STORAGE_COMMIT_MARKER_PREFIX)) {
+    const record = raw.slice(PROFILE_STORAGE_COMMIT_MARKER_PREFIX.length);
+    return record === "" ? { kind: "invalid" } : { kind: "valid", record };
+  }
+  return { kind: "invalid" };
+}
+
+function candidate(
+  raw: string | null,
+  decoded: DecodeResult | undefined,
+): Candidate | undefined {
+  return raw === null || decoded === undefined ? undefined : { raw, decoded };
+}
+
+function selectCandidate(
+  record: Candidate | undefined,
+  repair: boolean,
+): SelectedRecord | undefined {
+  if (record?.decoded.ok !== true) {
+    return undefined;
+  }
+  return {
+    kind: "record",
+    raw: record.raw,
+    decoded: record.decoded,
+    repair,
+  };
+}
+
+function firstDecodeError(
+  primary: Candidate | undefined,
+  backup: Candidate | undefined,
+): ProfileStorageError {
+  if (primary?.decoded.ok === false) {
+    return primary.decoded.error;
+  }
+  if (backup?.decoded.ok === false) {
+    return backup.decoded.error;
+  }
+  return error(
+    "invalid-record",
+    "Stored profile commit state does not identify a valid record",
+  );
+}
+
+function selectCommittedRecord(
+  primaryRaw: string | null,
+  backupRaw: string | null,
+  marker: CommitMarker,
+): Selection {
+  const primary = candidate(
+    primaryRaw,
+    primaryRaw === null ? undefined : decodeEnvelope(primaryRaw),
+  );
+  const backup = candidate(
+    backupRaw,
+    backupRaw === null ? undefined : decodeEnvelope(backupRaw),
+  );
+
+  if (marker.kind === "valid") {
+    if (marker.record === null && primaryRaw === null && backupRaw === null) {
+      return { kind: "empty", repair: false };
+    }
+    if (marker.record === null && primaryRaw !== null && backupRaw === null) {
+      return { kind: "empty", repair: true };
+    }
+
+    const committedPrimary =
+      marker.record === primaryRaw && primaryRaw !== null
+        ? selectCandidate(primary, false)
+        : undefined;
+    if (committedPrimary !== undefined) {
+      return committedPrimary;
+    }
+
+    const committedBackup =
+      marker.record === backupRaw && backupRaw !== null
+        ? selectCandidate(backup, true)
+        : undefined;
+    if (committedBackup !== undefined) {
+      return committedBackup;
+    }
+
+    const recoverableBackup = selectCandidate(backup, true);
+    if (recoverableBackup !== undefined) {
+      return recoverableBackup;
+    }
+    const recoverablePrimary = selectCandidate(primary, true);
+    if (recoverablePrimary !== undefined) {
+      return recoverablePrimary;
+    }
+    return { kind: "failed", error: firstDecodeError(primary, backup) };
+  }
+
+  if (marker.kind === "missing") {
+    const directPrimary = selectCandidate(primary, backupRaw !== null);
+    if (directPrimary !== undefined) {
+      return directPrimary;
+    }
+    const recoverableBackup = selectCandidate(backup, true);
+    if (recoverableBackup !== undefined) {
+      return recoverableBackup;
+    }
+  } else {
+    const recoverableBackup = selectCandidate(backup, true);
+    if (recoverableBackup !== undefined) {
+      return recoverableBackup;
+    }
+    const recoverablePrimary = selectCandidate(primary, true);
+    if (recoverablePrimary !== undefined) {
+      return recoverablePrimary;
+    }
+  }
+
+  if (primaryRaw === null && backupRaw === null) {
+    return marker.kind === "missing"
+      ? { kind: "empty", repair: false }
+      : {
+          kind: "failed",
+          error: error(
+            "invalid-record",
+            "Stored profile commit metadata is not valid",
+          ),
+        };
+  }
+  return { kind: "failed", error: firstDecodeError(primary, backup) };
+}
+
+function clearUncommittedRecord(
+  storage: StorageLike,
+  key: string,
+): ProfileStorageError | undefined {
+  try {
+    writeRawAndVerify(storage, `${key}${PROFILE_STORAGE_BACKUP_SUFFIX}`, null);
+    writeRawAndVerify(storage, key, null);
+    writeRawAndVerify(
+      storage,
+      `${key}${PROFILE_STORAGE_COMMIT_SUFFIX}`,
+      encodeCommitMarker(null),
+    );
+    return undefined;
+  } catch {
+    return error(
+      "write-failed",
+      "Uncommitted profile data could not be cleared",
+    );
+  }
+}
+
+/** Commits one record while retaining the prior record as the recovery choice. */
+function commitSerialized(
   storage: StorageLike,
   key: string,
   serialized: string,
   previous: string | null,
 ): ProfileStorageError | undefined {
+  const backupKey = `${key}${PROFILE_STORAGE_BACKUP_SUFFIX}`;
+  const commitKey = `${key}${PROFILE_STORAGE_COMMIT_SUFFIX}`;
+  const previousMarker = encodeCommitMarker(previous);
+
   try {
-    storage.setItem(key, serialized);
-    if (storage.getItem(key) !== serialized) {
-      throw new Error("Stored profile verification failed");
-    }
+    writeRawAndVerify(storage, backupKey, previous);
+    writeRawAndVerify(storage, commitKey, previousMarker);
+    writeRawAndVerify(storage, key, serialized);
+    writeRawAndVerify(storage, commitKey, encodeCommitMarker(serialized));
     return undefined;
   } catch {
     try {
-      restore(storage, key, previous);
+      writeRawAndVerify(storage, commitKey, previousMarker);
     } catch {
-      return error(
-        "write-failed",
-        "Profile write failed and the previous record could not be restored",
-      );
+      // The primary and backup records still retain a complete candidate pair.
     }
     return error("write-failed", "Profile write failed");
   }
 }
 
-function failed(errorValue: ProfileStorageError): ProfileLoadResult {
+function failedLoad(errorValue: ProfileStorageError): ProfileLoadResult {
   return Object.freeze({ status: "failed" as const, error: errorValue });
+}
+
+function saveTargetError(
+  storage: StorageLike,
+  key: string,
+  primaryRaw: string | null,
+): ProfileStorageError | undefined {
+  const backupResult = readRaw(
+    storage,
+    `${key}${PROFILE_STORAGE_BACKUP_SUFFIX}`,
+  );
+  if (!backupResult.ok) {
+    return backupResult.error;
+  }
+  const markerResult = readRaw(
+    storage,
+    `${key}${PROFILE_STORAGE_COMMIT_SUFFIX}`,
+  );
+  if (!markerResult.ok) {
+    return markerResult.error;
+  }
+
+  if (markerResult.raw === null) {
+    return backupResult.raw === null
+      ? undefined
+      : error(
+          "invalid-record",
+          "Stored profile has recoverable data that must be loaded first",
+        );
+  }
+
+  const marker = decodeCommitMarker(markerResult.raw);
+  if (marker.kind !== "valid" || marker.record !== primaryRaw) {
+    return error(
+      "invalid-record",
+      "Stored profile commit state is incomplete or unreadable",
+    );
+  }
+  return undefined;
 }
 
 /** Browser adapter for the versioned profile envelope. */
@@ -281,49 +540,75 @@ export function createBrowserProfileStore(
   storage: StorageLike,
   key: string = PROFILE_STORAGE_KEY,
 ): ProfileStore {
-  const saveCurrent = (
-    profile: ProfileState,
-    previous: string | null,
-  ): ProfileStorageError | undefined => {
-    let serialized: string;
-    try {
-      serialized = JSON.stringify(currentEnvelope(profile));
-    } catch {
-      return error("write-failed", "Profile could not be serialized");
-    }
-    return writeAtomically(storage, key, serialized, previous);
-  };
-
   return Object.freeze({
     load(): ProfileLoadResult {
-      let raw: string | null;
-      try {
-        raw = storage.getItem(key);
-      } catch {
-        return failed(
-          error("storage-read-failed", "Profile storage could not be read"),
-        );
+      const primaryResult = readRaw(storage, key);
+      if (!primaryResult.ok) {
+        return failedLoad(primaryResult.error);
+      }
+      const backupResult = readRaw(
+        storage,
+        `${key}${PROFILE_STORAGE_BACKUP_SUFFIX}`,
+      );
+      if (!backupResult.ok) {
+        return failedLoad(backupResult.error);
+      }
+      const markerResult = readRaw(
+        storage,
+        `${key}${PROFILE_STORAGE_COMMIT_SUFFIX}`,
+      );
+      if (!markerResult.ok) {
+        return failedLoad(markerResult.error);
       }
 
-      if (raw === null) {
+      const selection = selectCommittedRecord(
+        primaryResult.raw,
+        backupResult.raw,
+        decodeCommitMarker(markerResult.raw),
+      );
+      if (selection.kind === "failed") {
+        return failedLoad(selection.error);
+      }
+      if (selection.kind === "empty") {
+        if (selection.repair) {
+          const clearError = clearUncommittedRecord(storage, key);
+          if (clearError !== undefined) {
+            return failedLoad(
+              error(
+                "migration-failed",
+                "Uncommitted profile data could not be cleared",
+              ),
+            );
+          }
+        }
         return Object.freeze({
           status: "empty" as const,
           profile: createFreshProfile(),
         });
       }
 
-      const decoded = decodeEnvelope(raw);
-      if (!decoded.ok) {
-        return failed(decoded.error);
-      }
-
-      if (decoded.value.migrated) {
-        const migrationError = saveCurrent(decoded.value.profile, raw);
-        if (migrationError !== undefined) {
-          return failed(
+      const profile = selection.decoded.value.profile;
+      if (selection.repair || selection.decoded.value.migrated) {
+        const serialized = serializeCurrent(profile);
+        if (typeof serialized !== "string") {
+          return failedLoad(
             error(
               "migration-failed",
-              "Profile migration could not be committed",
+              "Profile migration or recovery could not be serialized",
+            ),
+          );
+        }
+        const writeError = commitSerialized(
+          storage,
+          key,
+          serialized,
+          selection.raw,
+        );
+        if (writeError !== undefined) {
+          return failedLoad(
+            error(
+              "migration-failed",
+              "Profile migration or recovery could not be committed",
             ),
           );
         }
@@ -331,8 +616,8 @@ export function createBrowserProfileStore(
 
       return Object.freeze({
         status: "loaded" as const,
-        profile: decoded.value.profile,
-        migrated: decoded.value.migrated,
+        profile,
+        migrated: selection.decoded.value.migrated,
       });
     },
 
@@ -347,20 +632,44 @@ export function createBrowserProfileStore(
         });
       }
 
-      let previous: string | null;
-      try {
-        previous = storage.getItem(key);
-      } catch {
+      const primaryResult = readRaw(storage, key);
+      if (!primaryResult.ok) {
         return Object.freeze({
           status: "failed" as const,
-          error: error(
-            "storage-read-failed",
-            "Profile storage could not be read before writing",
-          ),
+          error: primaryResult.error,
+        });
+      }
+      if (primaryResult.raw !== null) {
+        const previous = decodeEnvelope(primaryResult.raw);
+        if (!previous.ok) {
+          return Object.freeze({
+            status: "failed" as const,
+            error: previous.error,
+          });
+        }
+      }
+
+      const journalError = saveTargetError(storage, key, primaryResult.raw);
+      if (journalError !== undefined) {
+        return Object.freeze({
+          status: "failed" as const,
+          error: journalError,
         });
       }
 
-      const writeError = saveCurrent(normalized, previous);
+      const serialized = serializeCurrent(normalized);
+      if (typeof serialized !== "string") {
+        return Object.freeze({
+          status: "failed" as const,
+          error: serialized,
+        });
+      }
+      const writeError = commitSerialized(
+        storage,
+        key,
+        serialized,
+        primaryResult.raw,
+      );
       if (writeError !== undefined) {
         return Object.freeze({
           status: "failed" as const,

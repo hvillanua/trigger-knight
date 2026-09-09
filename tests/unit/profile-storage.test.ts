@@ -17,16 +17,32 @@ import type { ProfileState } from "../../src/application/contracts.js";
 
 class MemoryStorage implements StorageLike {
   readonly #values = new Map<string, string>();
-  failNextWriteAfterCommit = false;
+  failNextWriteAfterCommitKey: string | undefined;
+  failNextWriteBeforeCommitKey: string | undefined;
+  failVerificationAfterWriteKey: string | undefined;
+  failNextReadKey: string | undefined;
 
   getItem(key: string): string | null {
+    if (this.failNextReadKey === key) {
+      this.failNextReadKey = undefined;
+      throw new Error("simulated read failure");
+    }
     return this.#values.get(key) ?? null;
   }
 
   setItem(key: string, value: string): void {
+    if (this.failNextWriteBeforeCommitKey === key) {
+      this.failNextWriteBeforeCommitKey = undefined;
+      throw new Error("simulated write failure");
+    }
     this.#values.set(key, value);
-    if (this.failNextWriteAfterCommit) {
-      this.failNextWriteAfterCommit = false;
+    if (this.failVerificationAfterWriteKey === key) {
+      this.failVerificationAfterWriteKey = undefined;
+      this.failNextReadKey = key;
+    }
+    if (this.failNextWriteAfterCommitKey === key) {
+      this.failNextWriteAfterCommitKey = undefined;
+      this.failNextWriteBeforeCommitKey = key;
       throw new Error("simulated write failure");
     }
   }
@@ -164,19 +180,76 @@ describe("versioned browser profile storage", () => {
     const previous = profileWith({ highScore: 200 });
     const next = profileWith({ highScore: 500 });
     store.save(previous);
-    const previousRaw = storage.getItem(PROFILE_STORAGE_KEY);
-    storage.failNextWriteAfterCommit = true;
+    storage.failNextWriteAfterCommitKey = PROFILE_STORAGE_KEY;
 
     expect(store.save(next)).toMatchObject({
       status: "failed",
       error: { code: "write-failed" },
     });
-    expect(storage.getItem(PROFILE_STORAGE_KEY)).toBe(previousRaw);
+    storage.failNextWriteBeforeCommitKey = undefined;
     expect(store.load()).toEqual({
       status: "loaded",
       profile: previous,
       migrated: false,
     });
+  });
+
+  it("keeps the prior committed profile when verification cannot read a new record", () => {
+    const storage = new MemoryStorage();
+    const store = createBrowserProfileStore(storage);
+    const previous = profileWith({ highScore: 200 });
+    const next = profileWith({ highScore: 500 });
+    store.save(previous);
+    storage.failVerificationAfterWriteKey = PROFILE_STORAGE_KEY;
+
+    expect(store.save(next)).toMatchObject({
+      status: "failed",
+      error: { code: "write-failed" },
+    });
+    expect(store.load()).toEqual({
+      status: "loaded",
+      profile: previous,
+      migrated: false,
+    });
+  });
+
+  it("returns to an empty committed state after the first write fails", () => {
+    const storage = new MemoryStorage();
+    const store = createBrowserProfileStore(storage);
+    storage.failNextWriteAfterCommitKey = PROFILE_STORAGE_KEY;
+
+    expect(store.save(createFreshProfile())).toMatchObject({
+      status: "failed",
+      error: { code: "write-failed" },
+    });
+    storage.failNextWriteBeforeCommitKey = undefined;
+    expect(store.load()).toEqual({
+      status: "empty",
+      profile: createFreshProfile(),
+    });
+    expect(storage.getItem(PROFILE_STORAGE_KEY)).toBeNull();
+    expect(store.save(profileWith({ highScore: 1 }))).toMatchObject({
+      status: "saved",
+    });
+  });
+
+  it.each([
+    { name: "corrupt JSON", raw: "{", code: "corrupt-record" },
+    {
+      name: "unsupported envelope",
+      raw: JSON.stringify({ schemaVersion: 99 }),
+      code: "unsupported-version",
+    },
+  ])("does not save over a rejected $name", ({ raw, code }) => {
+    const storage = new MemoryStorage();
+    const store = createBrowserProfileStore(storage);
+    storage.setItem(PROFILE_STORAGE_KEY, raw);
+
+    expect(store.save(createFreshProfile())).toMatchObject({
+      status: "failed",
+      error: { code },
+    });
+    expect(storage.getItem(PROFILE_STORAGE_KEY)).toBe(raw);
   });
 
   it("does not change gameplay when a complete profile crosses the storage boundary", () => {
