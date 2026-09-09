@@ -8,6 +8,7 @@ import type {
 import { createBattleState, type BattleLifecycleStepResult } from "./battle.js";
 import { createPlayerState } from "./player-state.js";
 import { nextRandomInteger } from "./random.js";
+import { unlockAchievement } from "./achievements.js";
 
 export interface CombatRules {
   readonly movementPerTick: number;
@@ -53,6 +54,7 @@ export function advanceCombat(
   let random = stepped.random;
   let heroHp = stepped.player.hp.current;
   let enemyHp = battle.enemyHp;
+  let achievementSlots = stepped.achievementSlots;
   const events: GameEvent[] = [];
   const interrupted = new Set<CombatActorId>();
   function draw(bound: number): number {
@@ -96,6 +98,16 @@ export function advanceCombat(
         remainingHp,
       }),
     );
+    if (damage >= 70_000) {
+      const unlocked = unlockAchievement(achievementSlots, 4);
+      achievementSlots = unlocked.achievementSlots;
+      events.push(...unlocked.events);
+    }
+    if (target === "enemy" && remainingHp === 0 && enemy.id === "dragon") {
+      const unlocked = unlockAchievement(achievementSlots, 0);
+      achievementSlots = unlocked.achievementSlots;
+      events.push(...unlocked.events);
+    }
     interrupted.add(target);
     if (remainingHp === 0) {
       attacker.attackDelay = rules.lethalAttackDelay;
@@ -157,6 +169,7 @@ export function advanceCombat(
     state: Object.freeze({
       ...stepped,
       random,
+      achievementSlots,
       player: createPlayerState({
         ...stepped.player,
         hp: { ...stepped.player.hp, current: heroHp },

@@ -1,14 +1,39 @@
 import type {
+  AchievementId,
   CompletedRunSettlementInput,
   ProfileInput,
   ProfileState,
+  ProfileUnlockState,
 } from "./contracts.js";
 
 export const PROFILE_SCHEMA_VERSION = 2 as const;
+export const PROFILE_EQUIPMENT_TIER_COUNT = 10 as const;
+export const PROFILE_ACHIEVEMENT_SLOT_COUNT = 6 as const;
+export const PROFILE_DEFINED_ACHIEVEMENT_COUNT = 5 as const;
+
+export const ACHIEVEMENT_IDS = Object.freeze([
+  "slay-a-dragon",
+  "stashed-3000-gold",
+  "reach-day-10",
+  "get-all-collection",
+  "perform-70000-damage",
+] as const satisfies readonly AchievementId[]);
+
+const PROFILE_COLLECTION_POINTS_PER_DISCOVERY = 3.5;
+const PROFILE_ACHIEVEMENT_POINTS_PER_UNLOCK = 6;
 
 const PROFILE_EXP_PER_TRANSFER = 3;
 const PROFILE_LEVEL_THRESHOLD_BASE = 100;
 const PROFILE_LEVEL_THRESHOLD_PER_LEVEL = 30;
+
+export interface ProfileProgress {
+  readonly weaponCount: number;
+  readonly armorCount: number;
+  readonly collectionProgress: number;
+  readonly achievementsUnlocked: number;
+  readonly achievementProgress: number;
+  readonly totalProgress: number;
+}
 
 /** Creates independent defaults without inferring any past gameplay. */
 export function createFreshProfile(): ProfileState {
@@ -58,6 +83,39 @@ function flags(
     copied.push(value[index] as boolean);
   }
   return Object.freeze(copied);
+}
+
+function normalizeUnlockState(input: unknown): ProfileUnlockState {
+  if (input === null || typeof input !== "object") {
+    throw new TypeError("Completed-run unlock state must be a plain record");
+  }
+  const unlocks = input as Record<string, unknown>;
+  return Object.freeze({
+    weaponDiscoveries: flags(
+      unlocks.weaponDiscoveries,
+      "weaponDiscoveries",
+      PROFILE_EQUIPMENT_TIER_COUNT,
+    ),
+    armorDiscoveries: flags(
+      unlocks.armorDiscoveries,
+      "armorDiscoveries",
+      PROFILE_EQUIPMENT_TIER_COUNT,
+    ),
+    achievementSlots: flags(
+      unlocks.achievementSlots,
+      "achievementSlots",
+      PROFILE_ACHIEVEMENT_SLOT_COUNT,
+    ),
+  });
+}
+
+function mergeFlags(
+  profileFlags: readonly boolean[],
+  runFlags: readonly boolean[],
+): readonly boolean[] {
+  return Object.freeze(
+    profileFlags.map((value, index) => value || runFlags[index] === true),
+  );
 }
 
 /** Validates explicit configuration inputs, not a browser storage envelope. */
@@ -120,11 +178,51 @@ export function normalizeProfile(input: unknown): ProfileState {
     weaponDiscoveries: flags(
       profile.weaponDiscoveries,
       "weaponDiscoveries",
-      10,
+      PROFILE_EQUIPMENT_TIER_COUNT,
     ),
-    armorDiscoveries: flags(profile.armorDiscoveries, "armorDiscoveries", 10),
-    achievementSlots: flags(profile.achievementSlots, "achievementSlots", 6),
+    armorDiscoveries: flags(
+      profile.armorDiscoveries,
+      "armorDiscoveries",
+      PROFILE_EQUIPMENT_TIER_COUNT,
+    ),
+    achievementSlots: flags(
+      profile.achievementSlots,
+      "achievementSlots",
+      PROFILE_ACHIEVEMENT_SLOT_COUNT,
+    ),
   });
+}
+
+/** Calculates the original achievement-screen point totals from committed flags. */
+export function calculateProfileProgress(input: ProfileInput): ProfileProgress {
+  const profile = normalizeProfile(input);
+  const weaponCount = profile.weaponDiscoveries.filter(Boolean).length;
+  const armorCount = profile.armorDiscoveries.filter(Boolean).length;
+  const achievementsUnlocked = profile.achievementSlots
+    .slice(0, PROFILE_DEFINED_ACHIEVEMENT_COUNT)
+    .filter(Boolean).length;
+  const collectionProgress =
+    (weaponCount + armorCount) * PROFILE_COLLECTION_POINTS_PER_DISCOVERY;
+  const achievementProgress =
+    achievementsUnlocked * PROFILE_ACHIEVEMENT_POINTS_PER_UNLOCK;
+
+  return Object.freeze({
+    weaponCount,
+    armorCount,
+    collectionProgress,
+    achievementsUnlocked,
+    achievementProgress,
+    totalProgress: collectionProgress + achievementProgress,
+  });
+}
+
+/** Resolves only the five researched achievement slots into public identities. */
+export function achievementIdForSlot(slot: number): AchievementId {
+  const achievement = ACHIEVEMENT_IDS[slot];
+  if (achievement === undefined) {
+    throw new RangeError(`Achievement slot ${slot} has no defined condition`);
+  }
+  return achievement;
 }
 
 function assertCompletedRun(
@@ -162,6 +260,7 @@ export function settleCompletedRun(
 ): ProfileState {
   assertCompletedRun(run);
   const profile = normalizeProfile(initialProfile);
+  const runUnlocks = normalizeUnlockState(run);
   let level = profile.level;
   let xp = profile.xp;
   let scoreMultiplier = profile.scoreMultiplier;
@@ -188,8 +287,17 @@ export function settleCompletedRun(
     scoreMultiplier,
     highScore: Math.max(profile.highScore, run.score),
     tutorialPreference: "disabled",
-    weaponDiscoveries: Object.freeze([...profile.weaponDiscoveries]),
-    armorDiscoveries: Object.freeze([...profile.armorDiscoveries]),
-    achievementSlots: Object.freeze([...profile.achievementSlots]),
+    weaponDiscoveries: mergeFlags(
+      profile.weaponDiscoveries,
+      runUnlocks.weaponDiscoveries,
+    ),
+    armorDiscoveries: mergeFlags(
+      profile.armorDiscoveries,
+      runUnlocks.armorDiscoveries,
+    ),
+    achievementSlots: mergeFlags(
+      profile.achievementSlots,
+      runUnlocks.achievementSlots,
+    ),
   });
 }

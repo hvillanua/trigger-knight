@@ -8,6 +8,7 @@ import type {
   ShopId,
   WeaponName,
 } from "./contracts.js";
+import { allEquipmentDiscovered, unlockAchievement } from "./achievements.js";
 import { createEncounterQueueState } from "./encounters.js";
 import { createPlayerState, equipmentNameAtTier } from "./player-state.js";
 import { isActiveGameplay } from "./run-state.js";
@@ -92,6 +93,13 @@ export function purchaseRejectionReason(
 function completePurchase(
   state: Readonly<RunState>,
   player: Readonly<PlayerState>,
+  patch: Partial<
+    Pick<
+      RunState,
+      "weaponDiscoveries" | "armorDiscoveries" | "achievementSlots"
+    >
+  > = {},
+  additionalEvents: readonly GameEvent[] = [],
 ): PurchaseStepResult {
   const encounter = state.encounters.current;
   if (encounter?.kind !== "shop") {
@@ -101,6 +109,7 @@ function completePurchase(
   return Object.freeze({
     state: Object.freeze({
       ...state,
+      ...patch,
       player: createPlayerState({
         ...player,
         gold: player.gold - encounter.cachedPrice,
@@ -116,8 +125,51 @@ function completePurchase(
         shop: encounter.shop,
         price: encounter.cachedPrice,
       }),
+      ...additionalEvents,
     ]),
   });
+}
+
+function completeEquipmentPurchase(
+  state: Readonly<RunState>,
+  player: Readonly<PlayerState>,
+  equipment: "weapon" | "armor",
+  tier: number,
+): PurchaseStepResult {
+  const weaponDiscoveries = [...state.weaponDiscoveries];
+  const armorDiscoveries = [...state.armorDiscoveries];
+  const discoveries =
+    equipment === "weapon" ? weaponDiscoveries : armorDiscoveries;
+  const events: GameEvent[] = [];
+
+  if (discoveries[tier - 1] !== true) {
+    discoveries[tier - 1] = true;
+    events.push(
+      Object.freeze({
+        type: "equipment-discovered" as const,
+        equipment,
+        tier,
+      }),
+    );
+  }
+
+  let achievementSlots = state.achievementSlots;
+  if (allEquipmentDiscovered(weaponDiscoveries, armorDiscoveries)) {
+    const unlocked = unlockAchievement(achievementSlots, 3);
+    achievementSlots = unlocked.achievementSlots;
+    events.push(...unlocked.events);
+  }
+
+  return completePurchase(
+    state,
+    player,
+    {
+      weaponDiscoveries: Object.freeze(weaponDiscoveries),
+      armorDiscoveries: Object.freeze(armorDiscoveries),
+      achievementSlots,
+    },
+    events,
+  );
 }
 
 /** Attempts one purchase without consulting presentation or device input. */
@@ -153,16 +205,21 @@ export function attemptPurchase(
   if (encounter.shop === "bladesmith") {
     const currentTier = state.player.weapon.tier;
     const tier = currentTier + 1;
-    return completePurchase(state, {
-      ...state.player,
-      weapon: {
-        tier,
-        name: equipmentNameAtTier(rules.equipment.weapon.names, tier),
-        attack:
-          rules.equipment.weapon.baseAttack +
-          rules.equipment.weapon.attackPerTier * tier,
+    return completeEquipmentPurchase(
+      state,
+      {
+        ...state.player,
+        weapon: {
+          tier,
+          name: equipmentNameAtTier(rules.equipment.weapon.names, tier),
+          attack:
+            rules.equipment.weapon.baseAttack +
+            rules.equipment.weapon.attackPerTier * tier,
+        },
       },
-    });
+      "weapon",
+      tier,
+    );
   }
 
   if (encounter.shop === "armorsmith") {
@@ -171,14 +228,19 @@ export function attemptPurchase(
     const maximumHp =
       rules.equipment.armor.baseMaximumHp +
       rules.equipment.armor.maximumHpPerTier * tier;
-    return completePurchase(state, {
-      ...state.player,
-      armor: {
-        tier,
-        name: equipmentNameAtTier(rules.equipment.armor.names, tier),
+    return completeEquipmentPurchase(
+      state,
+      {
+        ...state.player,
+        armor: {
+          tier,
+          name: equipmentNameAtTier(rules.equipment.armor.names, tier),
+        },
+        hp: { current: maximumHp, maximum: maximumHp },
       },
-      hp: { current: maximumHp, maximum: maximumHp },
-    });
+      "armor",
+      tier,
+    );
   }
 
   if (encounter.shop === "soul-shrine") {

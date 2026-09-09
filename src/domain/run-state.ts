@@ -4,6 +4,7 @@ import type {
   GameEvent,
   LifespanState,
   PlayerState,
+  ProfileUnlockState,
   RandomState,
   RuleSetId,
   RunLifecycleState,
@@ -13,8 +14,9 @@ import type {
 import { createEncounterQueueState } from "./encounters.js";
 import { createBattleState } from "./battle.js";
 import { createPlayerState } from "./player-state.js";
+import { createFreshProfile } from "./profile.js";
 
-export const RUN_STATE_SCHEMA_VERSION = 15 as const;
+export const RUN_STATE_SCHEMA_VERSION = 16 as const;
 
 /** Creates a fresh minimal state value for one independent run. */
 export function createRunState(
@@ -26,6 +28,7 @@ export function createRunState(
   initialLifespan: Readonly<LifespanState>,
   initialPlayer: Readonly<PlayerState>,
   initialEncounters: Readonly<EncounterQueueState>,
+  initialUnlocks: Readonly<ProfileUnlockState> = createFreshProfile(),
 ): RunState {
   return Object.freeze({
     schemaVersion: RUN_STATE_SCHEMA_VERSION,
@@ -40,6 +43,9 @@ export function createRunState(
     score: 0,
     profileExpEarned: 0,
     dragonKills: 0,
+    weaponDiscoveries: Object.freeze([...initialUnlocks.weaponDiscoveries]),
+    armorDiscoveries: Object.freeze([...initialUnlocks.armorDiscoveries]),
+    achievementSlots: Object.freeze([...initialUnlocks.achievementSlots]),
     lifespan: Object.freeze({ ...initialLifespan }),
     player: createPlayerState(initialPlayer),
     battle: null,
@@ -134,6 +140,9 @@ export function advanceRunState(state: Readonly<RunState>): RunStateStepResult {
     ...state,
     schemaVersion: RUN_STATE_SCHEMA_VERSION,
     random: Object.freeze({ ...state.random }),
+    weaponDiscoveries: Object.freeze([...state.weaponDiscoveries]),
+    armorDiscoveries: Object.freeze([...state.armorDiscoveries]),
+    achievementSlots: Object.freeze([...state.achievementSlots]),
     player: createPlayerState(state.player),
     battle: state.battle === null ? null : createBattleState(state.battle),
     encounters: createEncounterQueueState(state.encounters),

@@ -11,6 +11,8 @@ import {
 
 function describeEvent(event: GameEvent): string {
   switch (event.type) {
+    case "achievement-unlocked":
+      return `${event.type}:${event.achievement}`;
     case "combat-phase-changed":
       return `${event.type}:${event.actor}:${event.phase}`;
     case "combat-hit":
@@ -23,6 +25,8 @@ function describeEvent(event: GameEvent): string {
       return event.type;
     case "encounter-promoted":
       return `${event.type}:${event.encounter.kind}`;
+    case "equipment-discovered":
+      return `${event.type}:${event.equipment}:${event.tier}`;
     case "lifespan-death":
       return event.type;
     case "pause-toggled":

@@ -11,29 +11,43 @@ export interface MinimalProfileInput {
   readonly tutorialPreference?: "enabled" | "disabled";
 }
 
-/** Accepted explicit run configuration shapes; runtime validation checks versions. */
-export type ProfileInput = MinimalProfileInput | ProfileState;
-
-/** Complete between-run progression snapshot. */
-export interface ProfileState extends MinimalProfileInput {
-  readonly schemaVersion: 2;
-  readonly level: number;
-  readonly xp: number;
-  readonly highScore: number;
-  readonly tutorialPreference: "enabled" | "disabled";
-  /** Array indices identify equipment tiers minus one. */
+/** Between-run unlock flags shared with an in-progress run. */
+export interface ProfileUnlockState {
   readonly weaponDiscoveries: readonly boolean[];
   readonly armorDiscoveries: readonly boolean[];
   /** Research indices 0–4 are defined; index 5 is retained without assigning a condition. */
   readonly achievementSlots: readonly boolean[];
 }
 
+/** Accepted explicit run configuration shapes; runtime validation checks versions. */
+export type ProfileInput = MinimalProfileInput | ProfileState;
+
+/** Complete between-run progression snapshot. */
+export interface ProfileState extends MinimalProfileInput, ProfileUnlockState {
+  readonly schemaVersion: 2;
+  readonly level: number;
+  readonly xp: number;
+  readonly highScore: number;
+  readonly tutorialPreference: "enabled" | "disabled";
+}
+
 /** Authoritative earnings and terminal state accepted by profile settlement. */
-export interface CompletedRunSettlementInput {
+export interface CompletedRunSettlementInput extends ProfileUnlockState {
   readonly lifecycle: Pick<RunLifecycleState, "phase" | "terminalReason">;
   readonly score: number;
   readonly profileExpEarned: number;
 }
+
+/** @playerVisible Defined original achievement identity; the sixth slot has no identity. */
+export type AchievementId =
+  | "slay-a-dragon"
+  | "stashed-3000-gold"
+  | "reach-day-10"
+  | "get-all-collection"
+  | "perform-70000-damage";
+
+/** @playerVisible Equipment family used by a discovery outcome. */
+export type EquipmentKind = "weapon" | "armor";
 
 /** Versioned, serializable state for authoritative gameplay randomness. */
 export interface RandomState {
@@ -306,8 +320,8 @@ export interface EncounterObservation {
 }
 
 /** Authoritative state owned by the gameplay domain. */
-export interface RunState {
-  readonly schemaVersion: 15;
+export interface RunState extends ProfileUnlockState {
+  readonly schemaVersion: 16;
   readonly ruleset: RuleSetId;
   readonly random: RandomState;
   readonly steps: number;
@@ -440,6 +454,19 @@ export interface BattleRewardEvent {
   readonly dragonKilled: boolean;
 }
 
+/** @playerVisible A newly earned equipment discovery. */
+export interface EquipmentDiscoveredEvent {
+  readonly type: "equipment-discovered";
+  readonly equipment: EquipmentKind;
+  readonly tier: number;
+}
+
+/** @playerVisible A newly earned defined achievement. */
+export interface AchievementUnlockedEvent {
+  readonly type: "achievement-unlocked";
+  readonly achievement: AchievementId;
+}
+
 /** @playerVisible Completed purchase exposed to players. */
 export interface ShopPurchasedEvent {
   readonly type: "shop-purchased";
@@ -484,11 +511,13 @@ export interface ItemUseRejectedEvent {
  * @playerVisible
  */
 export type GameEvent =
+  | AchievementUnlockedEvent
   | BattleStartedEvent
   | BattleRewardEvent
   | CombatPhaseChangedEvent
   | CombatHitEvent
   | CombatLethalHitEvent
+  | EquipmentDiscoveredEvent
   | EncounterPromotedEvent
   | ItemUseRejectedEvent
   | ItemUsedEvent

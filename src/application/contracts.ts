@@ -1,4 +1,5 @@
 export type {
+  AchievementId,
   ActionEligibility,
   ArmorName,
   BattleObservation,
@@ -10,6 +11,7 @@ export type {
   CombatActorState,
   CurrentEncounter,
   DismissTutorialCommand,
+  EquipmentKind,
   EncounterGenerationState,
   EncounterObservation,
   EncounterPromotedEvent,
