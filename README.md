@@ -39,6 +39,18 @@ Pass a test path after `--` to run focused tests. GitHub Actions runs the comple
 Call `createSimulationRunner` with an engine, run configuration, policy, and
 finite `maxSteps`. Supply its optional `onTrace` callback to retain diagnostics.
 
+Use `createFreshProfile()` from `src/domain/profile.ts` for new run inputs.
+`normalizeProfile()` validates and copies a supplied profile into immutable
+progression state. Earlier minimal run configurations receive fresh progression
+defaults while retaining their explicit multiplier and tutorial preference.
+These configurations are not historical browser saves. Unknown versions and
+unsupported fields are rejected rather than discarded.
+
+Simulation fingerprints retain the supplied profile version and every accepted
+field. Property order does not affect identity. A minimal input and its expanded
+profile have distinct input identities, even when their gameplay is equivalent.
+Keep the original input with recorded results to reproduce their fingerprints.
+
 Use `createCombatPolicy()` for continuous shopping and combat runs. It buys
 eligible shops and uses battle items, saving Elixir until HP reaches the
 configured `elixirHpFraction`. Results retain the policy identity and normalized

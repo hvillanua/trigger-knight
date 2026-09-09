@@ -1,3 +1,4 @@
+import { normalizeProfile } from "./profile.js";
 import type {
   ArmorName,
   GameCommand,
@@ -5,7 +6,7 @@ import type {
   GameObservation,
   InventoryItemId,
   PlayerState,
-  ProfileState,
+  ProfileInput,
   RuleSetId,
   RunState,
   WorldCamera,
@@ -133,7 +134,7 @@ export interface RuleSetImplementation {
   readonly id: RuleSetId;
   readonly constants: RuleSetConstants;
   readonly compatibilityDecisions: RuleSetCompatibilityDecisions;
-  createRun(seed: string, initialProfile: Readonly<ProfileState>): RunState;
+  createRun(seed: string, initialProfile: Readonly<ProfileInput>): RunState;
   step(
     state: Readonly<RunState>,
     commands: readonly GameCommand[],
@@ -452,7 +453,8 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
   constants: originalV13Constants,
   compatibilityDecisions: originalV13CompatibilityDecisions,
 
-  createRun(seed: string, initialProfile: Readonly<ProfileState>): RunState {
+  createRun(seed: string, initialProfile: Readonly<ProfileInput>): RunState {
+    const profile = normalizeProfile(initialProfile);
     const player = createOriginalV13InitialPlayerState();
     const lifespan = Object.freeze({
       whole: originalV13Constants.lifespan.initialWhole,
@@ -470,7 +472,7 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
       ORIGINAL_V13_RULESET_ID,
       initializedEncounters.random,
       originalV13Constants.pregameDelaySteps,
-      initialProfile.scoreMultiplier,
+      profile.scoreMultiplier,
       originalV13Constants.movement.initialSpeed,
       lifespan,
       player,

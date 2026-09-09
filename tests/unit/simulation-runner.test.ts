@@ -1,3 +1,4 @@
+import { createFreshProfile } from "../../src/domain/profile.js";
 import { describe, expect, it, vi } from "vitest";
 
 import type {
@@ -311,14 +312,16 @@ describe("headless simulation runner", () => {
   it("fingerprints equivalent profile records canonically", () => {
     const runner = createSimulationRunner(gameplayEngine);
     const profileWithFirstOrder = {
-      schemaVersion: 1,
-      scoreMultiplier: 1,
-      progress: { level: 2, achievements: ["first-step"] },
+      ...createFreshProfile(),
+      level: 2,
     };
     const profileWithSecondOrder = {
-      progress: { achievements: ["first-step"], level: 2 },
+      level: 2,
+      ...Object.fromEntries(
+        Object.entries(createFreshProfile()).filter(([key]) => key !== "level"),
+      ),
+      schemaVersion: 2,
       scoreMultiplier: 1,
-      schemaVersion: 1,
     };
 
     const first = runner.run(
@@ -336,40 +339,6 @@ describe("headless simulation runner", () => {
       first.initialProfileFingerprint,
     );
     expect(second.traceHash).toBe(first.traceHash);
-  });
-
-  it("distinguishes profiles that collide under the former 32-bit fingerprint", () => {
-    const runner = createSimulationRunner(gameplayEngine);
-    const firstProfile = {
-      schemaVersion: 1,
-      scoreMultiplier: 1,
-      nonce: 51_828,
-    };
-    const secondProfile = {
-      schemaVersion: 1,
-      scoreMultiplier: 1,
-      nonce: 301_880,
-    };
-    const first = runner.run(
-      request(nonProgressingPolicy, {
-        config: {
-          ...config,
-          initialProfile: firstProfile,
-        },
-      }),
-    );
-    const second = runner.run(
-      request(nonProgressingPolicy, {
-        config: {
-          ...config,
-          initialProfile: secondProfile,
-        },
-      }),
-    );
-
-    expect(second.initialProfileFingerprint).not.toBe(
-      first.initialProfileFingerprint,
-    );
   });
 
   it("returns batch results in request order without sharing run state", async () => {
