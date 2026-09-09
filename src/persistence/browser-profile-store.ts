@@ -82,6 +82,11 @@ type CommitMarker =
   | Readonly<{ kind: "valid"; record: string | null }>
   | Readonly<{ kind: "invalid" }>;
 
+type CommitOutcome =
+  | Readonly<{ status: "saved" }>
+  | Readonly<{ status: "failed"; error: ProfileStorageError }>
+  | Readonly<{ status: "uncertain"; error: ProfileStorageError }>;
+
 function error(
   code: ProfileStorageError["code"],
   message: string,
@@ -439,11 +444,11 @@ function publishCommitMarker(
   commitKey: string,
   serialized: string,
   previousMarker: string,
-): ProfileStorageError | undefined {
+): CommitOutcome {
   const nextMarker = encodeCommitMarker(serialized);
   try {
     storage.setItem(commitKey, nextMarker);
-    return undefined;
+    return { status: "saved" };
   } catch {
     let observed: string | null | undefined;
     try {
@@ -452,18 +457,27 @@ function publishCommitMarker(
       observed = undefined;
     }
     if (observed === nextMarker) {
-      return undefined;
+      return { status: "saved" };
     }
 
     try {
       writeRawAndVerify(storage, commitKey, previousMarker);
     } catch {
-      // If publication mutated the marker, load will choose the complete record it names.
+      return {
+        status: "uncertain",
+        error: error(
+          "write-outcome-unknown",
+          "Profile commit outcome could not be reconciled; load the profile before retrying",
+        ),
+      };
     }
-    return error(
-      "write-failed",
-      "Profile commit marker could not be published",
-    );
+    return {
+      status: "failed",
+      error: error(
+        "write-failed",
+        "Profile commit marker could not be published",
+      ),
+    };
   }
 }
 
@@ -473,7 +487,7 @@ function commitSerialized(
   key: string,
   serialized: string,
   previous: string | null,
-): ProfileStorageError | undefined {
+): CommitOutcome {
   const backupKey = `${key}${PROFILE_STORAGE_BACKUP_SUFFIX}`;
   const commitKey = `${key}${PROFILE_STORAGE_COMMIT_SUFFIX}`;
   const previousMarker = encodeCommitMarker(previous);
@@ -488,7 +502,10 @@ function commitSerialized(
     } catch {
       // The primary and backup records still retain a complete candidate pair.
     }
-    return error("write-failed", "Profile write failed");
+    return {
+      status: "failed",
+      error: error("write-failed", "Profile write failed"),
+    };
   }
 
   return publishCommitMarker(storage, commitKey, serialized, previousMarker);
@@ -602,13 +619,13 @@ export function createBrowserProfileStore(
             ),
           );
         }
-        const writeError = commitSerialized(
+        const writeOutcome = commitSerialized(
           storage,
           key,
           serialized,
           selection.raw,
         );
-        if (writeError !== undefined) {
+        if (writeOutcome.status !== "saved") {
           return failedLoad(
             error(
               "migration-failed",
@@ -668,16 +685,16 @@ export function createBrowserProfileStore(
           error: serialized,
         });
       }
-      const writeError = commitSerialized(
+      const writeOutcome = commitSerialized(
         storage,
         key,
         serialized,
         primaryResult.raw,
       );
-      if (writeError !== undefined) {
+      if (writeOutcome.status !== "saved") {
         return Object.freeze({
-          status: "failed" as const,
-          error: writeError,
+          status: writeOutcome.status,
+          error: writeOutcome.error,
         });
       }
 

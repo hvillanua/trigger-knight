@@ -73,7 +73,9 @@ element instead of replacing the stored record. The adapter currently accepts
 storage-envelope versions 1 and 2, which are separate from the profile schema
 version. The minimal `schemaVersion: 1` `RunConfig` input is not a historical
 browser-save format and is rejected when it appears where a persisted complete
-profile is required.
+profile is required. A save whose final commit cannot be reconciled returns an
+uncertain result; load the profile before retrying so the journal can resolve to
+the prior or complete new record.
 
 ## Original game
 

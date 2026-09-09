@@ -21,6 +21,8 @@ class MemoryStorage implements StorageLike {
   failNextWriteAfterCommitKey: string | undefined;
   failNextWriteBeforeCommitKey: string | undefined;
   failVerificationAfterWriteKey: string | undefined;
+  failVerificationAfterWriteOnCall:
+    { readonly key: string; readonly call: number } | undefined;
   failNextReadKey: string | undefined;
   failAfterWriteOnCall:
     { readonly key: string; readonly call: number } | undefined;
@@ -43,6 +45,13 @@ class MemoryStorage implements StorageLike {
     this.#writeCalls.set(key, call);
     if (this.failVerificationAfterWriteKey === key) {
       this.failVerificationAfterWriteKey = undefined;
+      this.failNextReadKey = key;
+    }
+    if (
+      this.failVerificationAfterWriteOnCall?.key === key &&
+      this.failVerificationAfterWriteOnCall.call === call
+    ) {
+      this.failVerificationAfterWriteOnCall = undefined;
       this.failNextReadKey = key;
     }
     if (this.failNextWriteAfterCommitKey === key) {
@@ -349,6 +358,32 @@ describe("versioned browser profile storage", () => {
       status: "saved",
       profile: { highScore: 500 },
     });
+    expect(store.load()).toMatchObject({
+      status: "loaded",
+      profile: { highScore: 500 },
+      migrated: false,
+    });
+  });
+
+  it("reports an uncertain outcome when marker readback and rollback both fail", () => {
+    const storage = new MemoryStorage();
+    const store = createBrowserProfileStore(storage);
+    store.save(profileWith({ highScore: 200 }));
+    storage.resetWriteCalls();
+    storage.failAfterWriteOnCall = {
+      key: `${PROFILE_STORAGE_KEY}.commit`,
+      call: 2,
+    };
+    storage.failVerificationAfterWriteOnCall = {
+      key: `${PROFILE_STORAGE_KEY}.commit`,
+      call: 2,
+    };
+
+    expect(store.save(profileWith({ highScore: 500 }))).toMatchObject({
+      status: "uncertain",
+      error: { code: "write-outcome-unknown" },
+    });
+    storage.failNextWriteBeforeCommitKey = undefined;
     expect(store.load()).toMatchObject({
       status: "loaded",
       profile: { highScore: 500 },

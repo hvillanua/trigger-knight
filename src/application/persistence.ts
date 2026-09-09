@@ -7,6 +7,7 @@ export type ProfileStorageErrorCode =
   | "unsupported-version"
   | "invalid-record"
   | "migration-failed"
+  | "write-outcome-unknown"
   | "write-failed";
 
 export interface ProfileStorageError {
@@ -33,6 +34,10 @@ export type ProfileSaveResult =
   | Readonly<{
       status: "saved";
       profile: ProfileState;
+    }>
+  | Readonly<{
+      status: "uncertain";
+      error: ProfileStorageError;
     }>
   | Readonly<{
       status: "failed";
