@@ -477,6 +477,7 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
       lifespan,
       player,
       initializedEncounters.encounters,
+      profile,
     );
   },
 
@@ -499,14 +500,14 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
     }
 
     const result = advanceRunState(commandedState);
-    const progressed = advanceRunningProgression(
+    const progression = advanceRunningProgression(
       commandedState,
       result.state,
       originalV13RunningProgressionRules,
     );
     const encounters = advanceEncounterLifecycle(
       commandedState,
-      progressed,
+      progression.state,
       originalV13Constants.encounters,
     );
     const battle = advanceBattleLifecycle(
@@ -535,6 +536,7 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
       events: Object.freeze([
         ...commandEvents,
         ...result.events,
+        ...progression.events,
         ...encounters.events,
         ...battle.events,
         ...combat.events,

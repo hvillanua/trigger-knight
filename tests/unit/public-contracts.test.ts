@@ -220,7 +220,7 @@ describe("public application contracts", () => {
       readonly initialProfile: ProfileInput;
     }>();
     expectTypeOf<RunState>().toMatchTypeOf<{
-      readonly schemaVersion: 15;
+      readonly schemaVersion: 16;
       readonly ruleset: RuleSetId;
       readonly random: RandomState;
       readonly steps: number;
@@ -232,6 +232,9 @@ describe("public application contracts", () => {
       readonly score: number;
       readonly profileExpEarned: number;
       readonly dragonKills: number;
+      readonly weaponDiscoveries: readonly boolean[];
+      readonly armorDiscoveries: readonly boolean[];
+      readonly achievementSlots: readonly boolean[];
       readonly lifespan: {
         readonly whole: number;
         readonly fraction: number;
@@ -375,6 +378,15 @@ describe("public application contracts", () => {
     }>();
     expectTypeOf<GameEvent>().toEqualTypeOf<
       | Readonly<{
+          type: "achievement-unlocked";
+          achievement:
+            | "slay-a-dragon"
+            | "stashed-3000-gold"
+            | "reach-day-10"
+            | "get-all-collection"
+            | "perform-70000-damage";
+        }>
+      | Readonly<{
           type: "battle-reward";
           enemy: "goblin" | "golem" | "wolf" | "dragon";
           gold: number;
@@ -399,6 +411,11 @@ describe("public application contracts", () => {
           type: "combat-lethal-hit";
           attacker: "hero" | "enemy";
           target: "hero" | "enemy";
+        }>
+      | Readonly<{
+          type: "equipment-discovered";
+          equipment: "weapon" | "armor";
+          tier: number;
         }>
       | Readonly<{
           type: "battle-started";

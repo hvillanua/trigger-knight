@@ -1,7 +1,8 @@
 import { createBattleState, type BattleLifecycleStepResult } from "./battle.js";
-import type { RunState } from "./contracts.js";
+import type { GameEvent, RunState } from "./contracts.js";
 import { createEncounterQueueState } from "./encounters.js";
 import { createPlayerState } from "./player-state.js";
+import { unlockAchievement } from "./achievements.js";
 
 export interface BattleResolutionRules {
   readonly fadePerActiveTick: number;
@@ -67,12 +68,21 @@ export function advanceBattleResolution(
     enemy.maximumHp * rules.killScorePerMaximumHp +
     enemy.attack * rules.killScorePerAttack * stepped.scoreMultiplier;
   const dragonKilled = enemy.id === "dragon";
+  const nextGold = stepped.player.gold + gold;
+  let achievementSlots = stepped.achievementSlots;
+  const achievementEvents: GameEvent[] = [];
+  if (nextGold >= 3_000) {
+    const unlocked = unlockAchievement(achievementSlots, 1);
+    achievementSlots = unlocked.achievementSlots;
+    achievementEvents.push(...unlocked.events);
+  }
   return Object.freeze({
     state: Object.freeze({
       ...stepped,
       score: stepped.score + score,
       profileExpEarned: stepped.profileExpEarned + enemy.profileExp,
       dragonKills: stepped.dragonKills + (dragonKilled ? 1 : 0),
+      achievementSlots,
       player: createPlayerState({
         ...stepped.player,
         gold: stepped.player.gold + gold,
@@ -94,6 +104,7 @@ export function advanceBattleResolution(
         profileExp: enemy.profileExp,
         dragonKilled,
       }),
+      ...achievementEvents,
     ]),
   });
 }
