@@ -2,7 +2,10 @@ import { createFreshProfile } from "./domain/profile.js";
 import { createGameplayEngine } from "./application/gameplay-engine.js";
 import { CanvasPresentation } from "./browser/canvas-presentation.js";
 import { observeDevicePixelRatioChanges } from "./browser/device-pixel-ratio.js";
-import type { GameCommand } from "./application/contracts.js";
+import type {
+  GameCommand,
+  ProfileLoadResult,
+} from "./application/contracts.js";
 import type { CssDimensions } from "./browser/foundation.js";
 import { createBrowserGameplaySession } from "./browser/gameplay-session.js";
 import {
@@ -11,6 +14,7 @@ import {
   commandsForPurchaseActivation,
 } from "./browser/input.js";
 import { ORIGINAL_V13_RULESET_ID, ruleSetRegistry } from "./domain/rulesets.js";
+import { createBrowserProfileStore } from "./persistence/browser-profile-store.js";
 import "./browser/style.css";
 
 const gameplayEngine = createGameplayEngine(ruleSetRegistry);
@@ -37,13 +41,32 @@ if (
   throw new Error("Missing browser gameplay controls");
 }
 
+let profileLoad: ProfileLoadResult;
+try {
+  profileLoad = createBrowserProfileStore(window.localStorage).load();
+} catch {
+  profileLoad = {
+    status: "failed",
+    error: {
+      code: "storage-read-failed",
+      message: "Profile storage could not be opened",
+    },
+  };
+}
+const initialProfile =
+  profileLoad.status === "failed" ? createFreshProfile() : profileLoad.profile;
+gameStatus.dataset.persistenceStatus = profileLoad.status;
+if (profileLoad.status === "failed") {
+  gameStatus.dataset.persistenceError = profileLoad.error.code;
+}
+
 const presentation = new CanvasPresentation(canvas);
 const session = createBrowserGameplaySession(
   gameplayEngine,
   Object.freeze({
     ruleset: ORIGINAL_V13_RULESET_ID,
     seed: "browser-run",
-    initialProfile: createFreshProfile(),
+    initialProfile,
   }),
   presentation,
   { retainDiagnostics: import.meta.env.DEV },
