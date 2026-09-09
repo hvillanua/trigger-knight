@@ -1,0 +1,572 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Milestone 4 complete combat loop > preserves per-step invariants through 'combat' death 1`] = `
+{
+  "firstOutcomes": {
+    "battle-reward": {
+      "checkpointHash": "sha256-v1:30f6fc8bcd03c7a22e01b677328de2e2942a792df7545edaebaecf5b38752ffd",
+      "events": [
+        {
+          "step": 439,
+          "type": "step-advanced",
+        },
+        {
+          "dragonKilled": false,
+          "enemy": "wolf",
+          "gold": 92,
+          "profileExp": 13,
+          "score": 13940,
+          "type": "battle-reward",
+        },
+      ],
+      "random": {
+        "algorithm": "mulberry32-fnv1a32-v1",
+        "state": 1232336036,
+      },
+      "step": 439,
+    },
+    "battle-started": {
+      "checkpointHash": "sha256-v1:9df1b9c29c912ce8eeb2bfcd7356c1a5c451cbdcff708673097bef6f25451765",
+      "events": [
+        {
+          "step": 320,
+          "type": "step-advanced",
+        },
+        {
+          "enemy": {
+            "currentHp": 494,
+            "id": "wolf",
+            "maximumHp": 494,
+          },
+          "type": "battle-started",
+        },
+      ],
+      "random": {
+        "algorithm": "mulberry32-fnv1a32-v1",
+        "state": 728382760,
+      },
+      "step": 320,
+    },
+    "combat-hit": {
+      "checkpointHash": "sha256-v1:b1ac5ec7668e1e8fdf40e8c83c84e171b3ec31a835341cebe21afc339f404eca",
+      "events": [
+        {
+          "step": 344,
+          "type": "step-advanced",
+        },
+        {
+          "attacker": "enemy",
+          "critical": false,
+          "damage": 168,
+          "remainingHp": 1740,
+          "target": "hero",
+          "type": "combat-hit",
+        },
+        {
+          "actor": "hero",
+          "phase": "flinch",
+          "type": "combat-phase-changed",
+        },
+      ],
+      "random": {
+        "algorithm": "mulberry32-fnv1a32-v1",
+        "state": 96547090,
+      },
+      "step": 344,
+    },
+    "combat-lethal-hit": {
+      "checkpointHash": "sha256-v1:871da05f642a871e1bec002c7d2dd8cc79728b986eb23da8c67943ae3a77931e",
+      "events": [
+        {
+          "step": 429,
+          "type": "step-advanced",
+        },
+        {
+          "attacker": "hero",
+          "critical": false,
+          "damage": 312,
+          "remainingHp": 0,
+          "target": "enemy",
+          "type": "combat-hit",
+        },
+        {
+          "actor": "enemy",
+          "phase": "dead",
+          "type": "combat-phase-changed",
+        },
+        {
+          "attacker": "hero",
+          "target": "enemy",
+          "type": "combat-lethal-hit",
+        },
+      ],
+      "random": {
+        "algorithm": "mulberry32-fnv1a32-v1",
+        "state": 1232336036,
+      },
+      "step": 429,
+    },
+    "combat-phase-changed": {
+      "checkpointHash": "sha256-v1:ad180d851efb75f542cec5aa892a46b8e0d1c6cc054062f9f503b5b9729be2ca",
+      "events": [
+        {
+          "step": 321,
+          "type": "step-advanced",
+        },
+        {
+          "actor": "hero",
+          "phase": "move",
+          "type": "combat-phase-changed",
+        },
+        {
+          "actor": "enemy",
+          "phase": "move",
+          "type": "combat-phase-changed",
+        },
+      ],
+      "random": {
+        "algorithm": "mulberry32-fnv1a32-v1",
+        "state": 728382760,
+      },
+      "step": 321,
+    },
+    "encounter-promoted": {
+      "checkpointHash": "sha256-v1:9823d19ce484b76e74607ddff68a572368ce2c69b06f9f45b60aee3f072cd195",
+      "events": [
+        {
+          "step": 188,
+          "type": "step-advanced",
+        },
+        {
+          "encounter": {
+            "cachedPrice": 236,
+            "kind": "shop",
+            "shop": "bladesmith",
+            "used": false,
+            "x": 600,
+          },
+          "type": "encounter-promoted",
+        },
+      ],
+      "random": {
+        "algorithm": "mulberry32-fnv1a32-v1",
+        "state": 1992054100,
+      },
+      "step": 188,
+    },
+    "item-used": {
+      "checkpointHash": "sha256-v1:5a0b90fa960987d4bf2a3ec3965539feb787152ed3a2138a9f4ed6521510fb2b",
+      "events": [
+        {
+          "item": "elixir",
+          "type": "item-used",
+        },
+        {
+          "step": 1845,
+          "type": "step-advanced",
+        },
+      ],
+      "random": {
+        "algorithm": "mulberry32-fnv1a32-v1",
+        "state": 1288700933,
+      },
+      "step": 1845,
+    },
+    "run-ended": {
+      "checkpointHash": "sha256-v1:9dd6e88854c3c83112f0ee1c61af64a76730eb3ccacc6dbcb718bc743cb395a2",
+      "events": [
+        {
+          "step": 14800,
+          "type": "step-advanced",
+        },
+        {
+          "reason": "combat",
+          "type": "run-ended",
+        },
+      ],
+      "random": {
+        "algorithm": "mulberry32-fnv1a32-v1",
+        "state": 1028690642,
+      },
+      "step": 14800,
+    },
+    "shop-departed": {
+      "checkpointHash": "sha256-v1:ee0f69c4e75c7f60033d66a1fcfe06891c833d95f93773faa564dff3feee0d88",
+      "events": [
+        {
+          "step": 282,
+          "type": "step-advanced",
+        },
+        {
+          "shop": "bladesmith",
+          "type": "shop-departed",
+        },
+      ],
+      "random": {
+        "algorithm": "mulberry32-fnv1a32-v1",
+        "state": 1992054100,
+      },
+      "step": 282,
+    },
+    "shop-purchased": {
+      "checkpointHash": "sha256-v1:aed8f5ee8cbbcc38e12368d1c15442d3c233274ec4240e09e01729eaa04e9545",
+      "events": [
+        {
+          "price": 236,
+          "shop": "bladesmith",
+          "type": "shop-purchased",
+        },
+        {
+          "step": 214,
+          "type": "step-advanced",
+        },
+      ],
+      "random": {
+        "algorithm": "mulberry32-fnv1a32-v1",
+        "state": 1992054100,
+      },
+      "step": 214,
+    },
+    "tutorial-dismissed": {
+      "checkpointHash": "sha256-v1:823fcabec5c6469f79e8dddadbacf2f1b775e2fd978efec4781f3f0b2b1add14",
+      "events": [
+        {
+          "page": 0,
+          "type": "tutorial-dismissed",
+        },
+        {
+          "step": 1,
+          "type": "step-advanced",
+        },
+      ],
+      "random": {
+        "algorithm": "mulberry32-fnv1a32-v1",
+        "state": 2623889770,
+      },
+      "step": 1,
+    },
+  },
+  "result": {
+    "activeTicks": 14740,
+    "day": 22,
+    "distance": 152925,
+    "gold": 8152,
+    "initialProfileFingerprint": "sha256-v1:16560d87b48392edba4291a11362cae68bf8a4e7f8c60c226a6f62f37330f211",
+    "maxSteps": 30000,
+    "metrics": {},
+    "policy": {
+      "config": {
+        "elixirHpFraction": 0.5,
+      },
+      "id": "combat-shopper",
+      "version": "1",
+    },
+    "ruleset": "original-v1.3",
+    "schemaVersion": 2,
+    "score": 3088850,
+    "seed": "m4-policy-2211",
+    "steps": 14800,
+    "terminalReason": "combat",
+    "traceHash": "sha256-v1:bbb8bc6acaa5892a32fe7ada037461aca1dfc13ed4a64bf3a8721eb679b853d9",
+  },
+  "traceHash": "sha256-v1:b4fcfc1e355534eac1e4694cf6df44fbe82bbc768d3857c488e5321fb42de6b8",
+}
+`;
+
+exports[`Milestone 4 complete combat loop > preserves per-step invariants through 'lifespan' death 1`] = `
+{
+  "firstOutcomes": {
+    "battle-reward": {
+      "checkpointHash": "sha256-v1:f3f286bccac7f3b8ed33b2db940ae172c4f71c0a23f963883db72b91d72274ac",
+      "events": [
+        {
+          "step": 418,
+          "type": "step-advanced",
+        },
+        {
+          "dragonKilled": false,
+          "enemy": "golem",
+          "gold": 92,
+          "profileExp": 13,
+          "score": 13880,
+          "type": "battle-reward",
+        },
+      ],
+      "random": {
+        "algorithm": "mulberry32-fnv1a32-v1",
+        "state": 2784630249,
+      },
+      "step": 418,
+    },
+    "battle-started": {
+      "checkpointHash": "sha256-v1:9309e89b9397fe59cd5dd9f6c108dc4c2d1109ccf2f2ebe9a89cf41cb6ffa772",
+      "events": [
+        {
+          "step": 206,
+          "type": "step-advanced",
+        },
+        {
+          "enemy": {
+            "currentHp": 980,
+            "id": "golem",
+            "maximumHp": 980,
+          },
+          "type": "battle-started",
+        },
+      ],
+      "random": {
+        "algorithm": "mulberry32-fnv1a32-v1",
+        "state": 3608289510,
+      },
+      "step": 206,
+    },
+    "combat-hit": {
+      "checkpointHash": "sha256-v1:6283a4e1affc4421c7681b01189c794c8d4807cf8349fe78d35e2411e2db9538",
+      "events": [
+        {
+          "step": 230,
+          "type": "step-advanced",
+        },
+        {
+          "attacker": "enemy",
+          "critical": false,
+          "damage": 73,
+          "remainingHp": 1835,
+          "target": "hero",
+          "type": "combat-hit",
+        },
+        {
+          "actor": "hero",
+          "phase": "flinch",
+          "type": "combat-phase-changed",
+        },
+      ],
+      "random": {
+        "algorithm": "mulberry32-fnv1a32-v1",
+        "state": 2976453840,
+      },
+      "step": 230,
+    },
+    "combat-lethal-hit": {
+      "checkpointHash": "sha256-v1:4e0e5b2cd7572d8a264820e971c4b763b1e3658f0505ecd896f3fac74ae2c1ef",
+      "events": [
+        {
+          "step": 408,
+          "type": "step-advanced",
+        },
+        {
+          "attacker": "hero",
+          "critical": false,
+          "damage": 246,
+          "remainingHp": 0,
+          "target": "enemy",
+          "type": "combat-hit",
+        },
+        {
+          "actor": "enemy",
+          "phase": "dead",
+          "type": "combat-phase-changed",
+        },
+        {
+          "attacker": "hero",
+          "target": "enemy",
+          "type": "combat-lethal-hit",
+        },
+      ],
+      "random": {
+        "algorithm": "mulberry32-fnv1a32-v1",
+        "state": 2784630249,
+      },
+      "step": 408,
+    },
+    "combat-phase-changed": {
+      "checkpointHash": "sha256-v1:6a0e185f781d31f0df87871166b9c720764fdd947cffd3b24c7808bc09910358",
+      "events": [
+        {
+          "step": 207,
+          "type": "step-advanced",
+        },
+        {
+          "actor": "hero",
+          "phase": "move",
+          "type": "combat-phase-changed",
+        },
+        {
+          "actor": "enemy",
+          "phase": "move",
+          "type": "combat-phase-changed",
+        },
+      ],
+      "random": {
+        "algorithm": "mulberry32-fnv1a32-v1",
+        "state": 3608289510,
+      },
+      "step": 207,
+    },
+    "encounter-promoted": {
+      "checkpointHash": "sha256-v1:9290242ad5b755cf5a82af34a06db4841e107bbfd8efb1c1e3b406d0afc4ac60",
+      "events": [
+        {
+          "step": 193,
+          "type": "step-advanced",
+        },
+        {
+          "encounter": {
+            "enemy": {
+              "id": "golem",
+              "maximumHp": 980,
+            },
+            "kind": "battle",
+            "x": 600,
+          },
+          "type": "encounter-promoted",
+        },
+      ],
+      "random": {
+        "algorithm": "mulberry32-fnv1a32-v1",
+        "state": 3608289510,
+      },
+      "step": 193,
+    },
+    "item-used": {
+      "checkpointHash": "sha256-v1:41c774b1ed076158354a2dd55303fe945f6f37707d7ea5f9f4808e39074fdd8d",
+      "events": [
+        {
+          "item": "elixir",
+          "type": "item-used",
+        },
+        {
+          "step": 2775,
+          "type": "step-advanced",
+        },
+      ],
+      "random": {
+        "algorithm": "mulberry32-fnv1a32-v1",
+        "state": 2457347964,
+      },
+      "step": 2775,
+    },
+    "lifespan-death": {
+      "checkpointHash": "sha256-v1:23c2b2547dd37377a40f6f3d3b71d67b18b3c4d8d5f61a49b8f2cb088297256a",
+      "events": [
+        {
+          "step": 4501,
+          "type": "step-advanced",
+        },
+        {
+          "type": "lifespan-death",
+        },
+        {
+          "reason": "lifespan",
+          "type": "run-ended",
+        },
+      ],
+      "random": {
+        "algorithm": "mulberry32-fnv1a32-v1",
+        "state": 362441063,
+      },
+      "step": 4501,
+    },
+    "run-ended": {
+      "checkpointHash": "sha256-v1:23c2b2547dd37377a40f6f3d3b71d67b18b3c4d8d5f61a49b8f2cb088297256a",
+      "events": [
+        {
+          "step": 4501,
+          "type": "step-advanced",
+        },
+        {
+          "type": "lifespan-death",
+        },
+        {
+          "reason": "lifespan",
+          "type": "run-ended",
+        },
+      ],
+      "random": {
+        "algorithm": "mulberry32-fnv1a32-v1",
+        "state": 362441063,
+      },
+      "step": 4501,
+    },
+    "shop-departed": {
+      "checkpointHash": "sha256-v1:e7017482a22465027ab952d652af201bcaa72c1ee23866fbfa94b056a238db17",
+      "events": [
+        {
+          "step": 610,
+          "type": "step-advanced",
+        },
+        {
+          "shop": "bladesmith",
+          "type": "shop-departed",
+        },
+      ],
+      "random": {
+        "algorithm": "mulberry32-fnv1a32-v1",
+        "state": 3984360392,
+      },
+      "step": 610,
+    },
+    "shop-purchased": {
+      "checkpointHash": "sha256-v1:44da57fc2416fafedcdb07966dff819af735388ae3a9a89e5dab8d7bc2040346",
+      "events": [
+        {
+          "price": 236,
+          "shop": "bladesmith",
+          "type": "shop-purchased",
+        },
+        {
+          "step": 542,
+          "type": "step-advanced",
+        },
+      ],
+      "random": {
+        "algorithm": "mulberry32-fnv1a32-v1",
+        "state": 3984360392,
+      },
+      "step": 542,
+    },
+    "tutorial-dismissed": {
+      "checkpointHash": "sha256-v1:7071a85cf1cb64c52c6ba5d3e99bae047e3d60270aa8691604f9fd99ab4a6f84",
+      "events": [
+        {
+          "page": 0,
+          "type": "tutorial-dismissed",
+        },
+        {
+          "step": 1,
+          "type": "step-advanced",
+        },
+      ],
+      "random": {
+        "algorithm": "mulberry32-fnv1a32-v1",
+        "state": 4240125180,
+      },
+      "step": 1,
+    },
+  },
+  "result": {
+    "activeTicks": 4441,
+    "day": 7,
+    "distance": 43770,
+    "gold": 156,
+    "initialProfileFingerprint": "sha256-v1:16560d87b48392edba4291a11362cae68bf8a4e7f8c60c226a6f62f37330f211",
+    "maxSteps": 30000,
+    "metrics": {},
+    "policy": {
+      "config": {
+        "elixirHpFraction": 0.5,
+      },
+      "id": "combat-shopper",
+      "version": "1",
+    },
+    "ruleset": "original-v1.3",
+    "schemaVersion": 2,
+    "score": 650940,
+    "seed": "m4-policy-3",
+    "steps": 4501,
+    "terminalReason": "lifespan",
+    "traceHash": "sha256-v1:e64867a7403c8b426d80172d35b0f127301cab466faa22a1585282e64cddc8e2",
+  },
+  "traceHash": "sha256-v1:e66a902d10af48bda7595ac8a095ad0fa0a4d8b96dcd2b8d0261b38713272114",
+}
+`;
