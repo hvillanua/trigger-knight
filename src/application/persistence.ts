@@ -7,6 +7,8 @@ export type ProfileStorageErrorCode =
   | "unsupported-version"
   | "invalid-record"
   | "migration-failed"
+  | "completion-conflict"
+  | "profile-conflict"
   | "write-outcome-unknown"
   | "write-failed";
 
@@ -44,8 +46,36 @@ export type ProfileSaveResult =
       error: ProfileStorageError;
     }>;
 
+export interface CompletedRunCommitRequest {
+  readonly completionId: string;
+  readonly completionFingerprint: string;
+  readonly expectedProfile: ProfileState;
+  readonly nextProfile: ProfileState;
+}
+
+export type CompletedRunCommitResult =
+  | Readonly<{
+      status: "saved";
+      profile: ProfileState;
+    }>
+  | Readonly<{
+      status: "already-committed";
+      profile: ProfileState;
+    }>
+  | Readonly<{
+      status: "uncertain";
+      error: ProfileStorageError;
+    }>
+  | Readonly<{
+      status: "failed";
+      error: ProfileStorageError;
+    }>;
+
 /** Application boundary for between-run profile and supported settings data. */
 export interface ProfileStore {
   load(): ProfileLoadResult;
   save(profile: ProfileState): ProfileSaveResult;
+  commitCompletedRun(
+    request: CompletedRunCommitRequest,
+  ): CompletedRunCommitResult;
 }

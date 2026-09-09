@@ -88,6 +88,7 @@ test("starts a browser run from the stored complete profile", async ({
       achievementSlots: profile.achievementSlots,
     },
     settings: { tutorialPreference: profile.tutorialPreference },
+    completedRuns: [],
   };
 
   await page.addInitScript(

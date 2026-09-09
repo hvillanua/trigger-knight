@@ -1,4 +1,5 @@
 import { createFreshProfile } from "./domain/profile.js";
+import { createCompletedRunCoordinator } from "./application/completed-run.js";
 import { createGameplayEngine } from "./application/gameplay-engine.js";
 import { CanvasPresentation } from "./browser/canvas-presentation.js";
 import { observeDevicePixelRatioChanges } from "./browser/device-pixel-ratio.js";
@@ -41,9 +42,10 @@ if (
   throw new Error("Missing browser gameplay controls");
 }
 
+const profileStore = createBrowserProfileStore(window.localStorage);
 let profileLoad: ProfileLoadResult;
 try {
-  profileLoad = createBrowserProfileStore(window.localStorage).load();
+  profileLoad = profileStore.load();
 } catch {
   profileLoad = {
     status: "failed",
@@ -55,6 +57,8 @@ try {
 }
 const initialProfile =
   profileLoad.status === "failed" ? createFreshProfile() : profileLoad.profile;
+const completedRunCoordinator = createCompletedRunCoordinator(profileStore);
+const completionId = window.crypto.randomUUID();
 gameStatus.dataset.persistenceStatus = profileLoad.status;
 if (profileLoad.status === "failed") {
   gameStatus.dataset.persistenceError = profileLoad.error.code;
@@ -69,7 +73,22 @@ const session = createBrowserGameplaySession(
     initialProfile,
   }),
   presentation,
-  { retainDiagnostics: import.meta.env.DEV },
+  {
+    retainDiagnostics: import.meta.env.DEV,
+    onCompletedRun: (run) => {
+      const result = completedRunCoordinator.commit({
+        completionId,
+        initialProfile,
+        run,
+      });
+      gameStatus.dataset.completionStatus = result.status;
+      if (result.status === "failed" || result.status === "uncertain") {
+        gameStatus.dataset.completionError = result.error.code;
+      } else {
+        delete gameStatus.dataset.completionError;
+      }
+    },
+  },
 );
 
 if (import.meta.env.DEV) {

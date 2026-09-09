@@ -11,6 +11,7 @@ import {
   PROFILE_STORAGE_ENVELOPE_VERSION,
   PROFILE_STORAGE_KEY,
   PROFILE_STORAGE_LEGACY_ENVELOPE_VERSION,
+  PROFILE_STORAGE_PREVIOUS_ENVELOPE_VERSION,
   type StorageLike,
 } from "../../src/persistence/browser-profile-store.js";
 import type { ProfileState } from "../../src/application/contracts.js";
@@ -156,6 +157,41 @@ describe("versioned browser profile storage", () => {
     ).toMatchObject({
       schemaVersion: PROFILE_STORAGE_ENVELOPE_VERSION,
       settings: { tutorialPreference: "disabled" },
+    });
+  });
+
+  it("migrates the previous current envelope before a completed-run commit", () => {
+    const storage = new MemoryStorage();
+    const store = createBrowserProfileStore(storage);
+    const profile = profileWith({ xp: 27, tutorialPreference: "disabled" });
+    storage.setItem(
+      PROFILE_STORAGE_KEY,
+      JSON.stringify({
+        schemaVersion: PROFILE_STORAGE_PREVIOUS_ENVELOPE_VERSION,
+        profile: {
+          schemaVersion: profile.schemaVersion,
+          level: profile.level,
+          xp: profile.xp,
+          scoreMultiplier: profile.scoreMultiplier,
+          highScore: profile.highScore,
+          weaponDiscoveries: profile.weaponDiscoveries,
+          armorDiscoveries: profile.armorDiscoveries,
+          achievementSlots: profile.achievementSlots,
+        },
+        settings: { tutorialPreference: profile.tutorialPreference },
+      }),
+    );
+
+    expect(store.load()).toEqual({
+      status: "loaded",
+      profile,
+      migrated: true,
+    });
+    expect(
+      JSON.parse(storage.getItem(PROFILE_STORAGE_KEY) as string),
+    ).toMatchObject({
+      schemaVersion: PROFILE_STORAGE_ENVELOPE_VERSION,
+      completedRuns: [],
     });
   });
 
@@ -422,5 +458,147 @@ describe("versioned browser profile storage", () => {
     expect(engine.step(roundTripped, [{ type: "dismiss-tutorial" }])).toEqual(
       engine.step(direct, [{ type: "dismiss-tutorial" }]),
     );
+  });
+
+  it("atomically records completed-run identity and ignores an exact retry", () => {
+    const storage = new MemoryStorage();
+    const store = createBrowserProfileStore(storage);
+    const previous = profileWith({ xp: 12 });
+    const next = profileWith({
+      level: 2,
+      xp: 4,
+      tutorialPreference: "disabled",
+    });
+    store.save(previous);
+    const request = {
+      completionId: "completed-run-1",
+      completionFingerprint: "sha256-v1:completed-run-1",
+      expectedProfile: previous,
+      nextProfile: next,
+    } as const;
+
+    expect(store.commitCompletedRun(request)).toEqual({
+      status: "saved",
+      profile: next,
+    });
+    expect(store.commitCompletedRun(request)).toEqual({
+      status: "already-committed",
+      profile: next,
+    });
+    expect(
+      JSON.parse(storage.getItem(PROFILE_STORAGE_KEY) as string),
+    ).toMatchObject({
+      schemaVersion: PROFILE_STORAGE_ENVELOPE_VERSION,
+      completedRuns: [
+        {
+          completionId: "completed-run-1",
+          fingerprint: "sha256-v1:completed-run-1",
+        },
+      ],
+    });
+  });
+
+  it("keeps distinct completion identities distinct for identical next profiles", () => {
+    const storage = new MemoryStorage();
+    const store = createBrowserProfileStore(storage);
+    const previous = profileWith({ xp: 12 });
+    const next = profileWith({
+      level: 2,
+      xp: 4,
+      tutorialPreference: "disabled",
+    });
+    store.save(previous);
+
+    expect(
+      store.commitCompletedRun({
+        completionId: "completed-run-1",
+        completionFingerprint: "sha256-v1:first",
+        expectedProfile: previous,
+        nextProfile: next,
+      }),
+    ).toMatchObject({ status: "saved" });
+    expect(
+      store.commitCompletedRun({
+        completionId: "completed-run-2",
+        completionFingerprint: "sha256-v1:second",
+        expectedProfile: next,
+        nextProfile: next,
+      }),
+    ).toMatchObject({ status: "saved" });
+    const envelope = JSON.parse(
+      storage.getItem(PROFILE_STORAGE_KEY) as string,
+    ) as { completedRuns: readonly unknown[] };
+    expect(envelope.completedRuns).toHaveLength(2);
+  });
+
+  it("preserves the committed profile through an interrupted write and deduplicates its retry", () => {
+    const storage = new MemoryStorage();
+    const store = createBrowserProfileStore(storage);
+    const previous = profileWith({ xp: 12 });
+    const next = profileWith({
+      level: 2,
+      xp: 4,
+      tutorialPreference: "disabled",
+    });
+    store.save(previous);
+    storage.failNextWriteAfterCommitKey = PROFILE_STORAGE_KEY;
+    const request = {
+      completionId: "retry-after-failure",
+      completionFingerprint: "sha256-v1:retry-after-failure",
+      expectedProfile: previous,
+      nextProfile: next,
+    } as const;
+
+    expect(store.commitCompletedRun(request)).toMatchObject({
+      status: "failed",
+      error: { code: "write-failed" },
+    });
+    storage.failNextWriteBeforeCommitKey = undefined;
+    expect(store.load()).toEqual({
+      status: "loaded",
+      profile: previous,
+      migrated: false,
+    });
+    expect(store.commitCompletedRun(request)).toEqual({
+      status: "saved",
+      profile: next,
+    });
+  });
+
+  it("returns already-committed after an uncertain acknowledgement when the record won", () => {
+    const storage = new MemoryStorage();
+    const store = createBrowserProfileStore(storage);
+    const previous = profileWith({ xp: 12 });
+    const next = profileWith({
+      level: 2,
+      xp: 4,
+      tutorialPreference: "disabled",
+    });
+    store.save(previous);
+    storage.resetWriteCalls();
+    storage.failAfterWriteOnCall = {
+      key: `${PROFILE_STORAGE_KEY}.commit`,
+      call: 2,
+    };
+    storage.failVerificationAfterWriteOnCall = {
+      key: `${PROFILE_STORAGE_KEY}.commit`,
+      call: 2,
+    };
+    const request = {
+      completionId: "uncertain-retry",
+      completionFingerprint: "sha256-v1:uncertain-retry",
+      expectedProfile: previous,
+      nextProfile: next,
+    } as const;
+
+    expect(store.commitCompletedRun(request)).toMatchObject({
+      status: "uncertain",
+      error: { code: "write-outcome-unknown" },
+    });
+    storage.failNextWriteBeforeCommitKey = undefined;
+    expect(store.commitCompletedRun(request)).toEqual({
+      status: "already-committed",
+      profile: next,
+    });
   });
 });

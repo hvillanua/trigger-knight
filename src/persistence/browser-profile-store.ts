@@ -1,6 +1,8 @@
 import type { ProfileState } from "../domain/contracts.js";
 import { createFreshProfile, normalizeProfile } from "../domain/profile.js";
 import type {
+  CompletedRunCommitRequest,
+  CompletedRunCommitResult,
   ProfileLoadResult,
   ProfileSaveResult,
   ProfileStorageError,
@@ -9,7 +11,8 @@ import type {
 
 export const PROFILE_STORAGE_KEY = "trigger-knight.profile";
 export const PROFILE_STORAGE_LEGACY_ENVELOPE_VERSION = 1 as const;
-export const PROFILE_STORAGE_ENVELOPE_VERSION = 2 as const;
+export const PROFILE_STORAGE_PREVIOUS_ENVELOPE_VERSION = 2 as const;
+export const PROFILE_STORAGE_ENVELOPE_VERSION = 3 as const;
 
 const PROFILE_STORAGE_BACKUP_SUFFIX = ".backup";
 const PROFILE_STORAGE_COMMIT_SUFFIX = ".commit";
@@ -41,10 +44,17 @@ interface CurrentProfileEnvelope {
   readonly schemaVersion: typeof PROFILE_STORAGE_ENVELOPE_VERSION;
   readonly profile: CurrentProfileProgress;
   readonly settings: CurrentProfileSettings;
+  readonly completedRuns: readonly StoredCompletedRun[];
+}
+
+interface StoredCompletedRun {
+  readonly completionId: string;
+  readonly fingerprint: string;
 }
 
 interface DecodedEnvelope {
   readonly profile: ProfileState;
+  readonly completedRuns: readonly StoredCompletedRun[];
   readonly migrated: boolean;
 }
 
@@ -113,7 +123,121 @@ function hasExactKeys(
   );
 }
 
+function decodeCompletedRuns(
+  value: unknown,
+): readonly StoredCompletedRun[] | undefined {
+  if (!Array.isArray(value)) {
+    return undefined;
+  }
+
+  const seen = new Set<string>();
+  const completedRuns: StoredCompletedRun[] = [];
+  for (const entry of value) {
+    if (!isPlainRecord(entry)) {
+      return undefined;
+    }
+    if (!hasExactKeys(entry, ["completionId", "fingerprint"])) {
+      return undefined;
+    }
+    if (
+      typeof entry.completionId !== "string" ||
+      entry.completionId.trim() === "" ||
+      typeof entry.fingerprint !== "string" ||
+      entry.fingerprint.trim() === "" ||
+      seen.has(entry.completionId)
+    ) {
+      return undefined;
+    }
+    seen.add(entry.completionId);
+    completedRuns.push({
+      completionId: entry.completionId,
+      fingerprint: entry.fingerprint,
+    });
+  }
+
+  return Object.freeze(completedRuns);
+}
+
 function decodeCurrentEnvelope(
+  envelope: Record<string, unknown>,
+): DecodeResult {
+  if (
+    !hasExactKeys(envelope, [
+      "schemaVersion",
+      "profile",
+      "settings",
+      "completedRuns",
+    ]) ||
+    !isPlainRecord(envelope.profile) ||
+    !isPlainRecord(envelope.settings)
+  ) {
+    return {
+      ok: false,
+      error: error(
+        "invalid-record",
+        "Stored profile record has an unsupported current shape",
+      ),
+    };
+  }
+
+  const progress = envelope.profile;
+  const settings = envelope.settings;
+  const completedRuns = decodeCompletedRuns(envelope.completedRuns);
+  if (
+    !hasExactKeys(progress, [
+      "schemaVersion",
+      "level",
+      "xp",
+      "scoreMultiplier",
+      "highScore",
+      "weaponDiscoveries",
+      "armorDiscoveries",
+      "achievementSlots",
+    ]) ||
+    !hasExactKeys(settings, ["tutorialPreference"])
+  ) {
+    return {
+      ok: false,
+      error: error(
+        "invalid-record",
+        "Stored profile record has unsupported fields",
+      ),
+    };
+  }
+  if (completedRuns === undefined) {
+    return {
+      ok: false,
+      error: error(
+        "invalid-record",
+        "Stored profile record has invalid completion metadata",
+      ),
+    };
+  }
+
+  try {
+    return {
+      ok: true,
+      value: {
+        profile: normalizeProfile({
+          ...progress,
+          tutorialPreference: settings.tutorialPreference,
+        }),
+        completedRuns,
+        migrated: false,
+      },
+    };
+  } catch {
+    return {
+      ok: false,
+      error: error(
+        "invalid-record",
+        "Stored profile record contains invalid profile or setting values",
+      ),
+    };
+  }
+}
+
+function decodePreviousEnvelope(
   envelope: Record<string, unknown>,
 ): DecodeResult {
   if (
@@ -125,7 +249,7 @@ function decodeCurrentEnvelope(
       ok: false,
       error: error(
         "invalid-record",
-        "Stored profile record has an unsupported current shape",
+        "Previous stored profile record has an unsupported shape",
       ),
     };
   }
@@ -149,7 +273,7 @@ function decodeCurrentEnvelope(
       ok: false,
       error: error(
         "invalid-record",
-        "Stored profile record has unsupported fields",
+        "Previous stored profile record has unsupported fields",
       ),
     };
   }
@@ -162,7 +286,8 @@ function decodeCurrentEnvelope(
           ...progress,
           tutorialPreference: settings.tutorialPreference,
         }),
-        migrated: false,
+        completedRuns: Object.freeze([]),
+        migrated: true,
       },
     };
   } catch {
@@ -170,7 +295,7 @@ function decodeCurrentEnvelope(
       ok: false,
       error: error(
         "invalid-record",
-        "Stored profile record contains invalid profile or setting values",
+        "Previous stored profile record contains invalid profile or setting values",
       ),
     };
   }
@@ -205,6 +330,7 @@ function decodeLegacyEnvelope(envelope: Record<string, unknown>): DecodeResult {
       ok: true,
       value: {
         profile: normalizeProfile(envelope.profile),
+        completedRuns: Object.freeze([]),
         migrated: true,
       },
     };
@@ -239,6 +365,7 @@ function decodeEnvelope(raw: string): DecodeResult {
 
   if (
     parsed.schemaVersion !== PROFILE_STORAGE_ENVELOPE_VERSION &&
+    parsed.schemaVersion !== PROFILE_STORAGE_PREVIOUS_ENVELOPE_VERSION &&
     parsed.schemaVersion !== PROFILE_STORAGE_LEGACY_ENVELOPE_VERSION
   ) {
     return {
@@ -250,12 +377,19 @@ function decodeEnvelope(raw: string): DecodeResult {
     };
   }
 
-  return parsed.schemaVersion === PROFILE_STORAGE_ENVELOPE_VERSION
-    ? decodeCurrentEnvelope(parsed)
-    : decodeLegacyEnvelope(parsed);
+  if (parsed.schemaVersion === PROFILE_STORAGE_ENVELOPE_VERSION) {
+    return decodeCurrentEnvelope(parsed);
+  }
+  if (parsed.schemaVersion === PROFILE_STORAGE_PREVIOUS_ENVELOPE_VERSION) {
+    return decodePreviousEnvelope(parsed);
+  }
+  return decodeLegacyEnvelope(parsed);
 }
 
-function currentEnvelope(profile: ProfileState): CurrentProfileEnvelope {
+function currentEnvelope(
+  profile: ProfileState,
+  completedRuns: readonly StoredCompletedRun[],
+): CurrentProfileEnvelope {
   return {
     schemaVersion: PROFILE_STORAGE_ENVELOPE_VERSION,
     profile: {
@@ -271,12 +405,16 @@ function currentEnvelope(profile: ProfileState): CurrentProfileEnvelope {
     settings: {
       tutorialPreference: profile.tutorialPreference,
     },
+    completedRuns,
   };
 }
 
-function serializeCurrent(profile: ProfileState): string | ProfileStorageError {
+function serializeCurrent(
+  profile: ProfileState,
+  completedRuns: readonly StoredCompletedRun[],
+): string | ProfileStorageError {
   try {
-    return JSON.stringify(currentEnvelope(profile));
+    return JSON.stringify(currentEnvelope(profile, completedRuns));
   } catch {
     return error("write-failed", "Profile could not be serialized");
   }
@@ -515,6 +653,54 @@ function failedLoad(errorValue: ProfileStorageError): ProfileLoadResult {
   return Object.freeze({ status: "failed" as const, error: errorValue });
 }
 
+type SelectionReadResult =
+  | Readonly<{
+      ok: true;
+      selection: Selection;
+    }>
+  | Readonly<{ ok: false; error: ProfileStorageError }>;
+
+function readSelection(storage: StorageLike, key: string): SelectionReadResult {
+  const primaryResult = readRaw(storage, key);
+  if (!primaryResult.ok) {
+    return { ok: false, error: primaryResult.error };
+  }
+  const backupResult = readRaw(
+    storage,
+    `${key}${PROFILE_STORAGE_BACKUP_SUFFIX}`,
+  );
+  if (!backupResult.ok) {
+    return { ok: false, error: backupResult.error };
+  }
+  const markerResult = readRaw(
+    storage,
+    `${key}${PROFILE_STORAGE_COMMIT_SUFFIX}`,
+  );
+  if (!markerResult.ok) {
+    return { ok: false, error: markerResult.error };
+  }
+
+  return {
+    ok: true,
+    selection: selectCommittedRecord(
+      primaryResult.raw,
+      backupResult.raw,
+      decodeCommitMarker(markerResult.raw),
+    ),
+  };
+}
+
+function profilesEqual(left: ProfileState, right: ProfileState): boolean {
+  return JSON.stringify(left) === JSON.stringify(right);
+}
+
+function invalidCommitResult(message: string): CompletedRunCommitResult {
+  return Object.freeze({
+    status: "failed" as const,
+    error: error("invalid-record", message),
+  });
+}
+
 function saveTargetError(
   storage: StorageLike,
   key: string,
@@ -574,30 +760,11 @@ export function createBrowserProfileStore(
 ): ProfileStore {
   return Object.freeze({
     load(): ProfileLoadResult {
-      const primaryResult = readRaw(storage, key);
-      if (!primaryResult.ok) {
-        return failedLoad(primaryResult.error);
+      const selectionResult = readSelection(storage, key);
+      if (!selectionResult.ok) {
+        return failedLoad(selectionResult.error);
       }
-      const backupResult = readRaw(
-        storage,
-        `${key}${PROFILE_STORAGE_BACKUP_SUFFIX}`,
-      );
-      if (!backupResult.ok) {
-        return failedLoad(backupResult.error);
-      }
-      const markerResult = readRaw(
-        storage,
-        `${key}${PROFILE_STORAGE_COMMIT_SUFFIX}`,
-      );
-      if (!markerResult.ok) {
-        return failedLoad(markerResult.error);
-      }
-
-      const selection = selectCommittedRecord(
-        primaryResult.raw,
-        backupResult.raw,
-        decodeCommitMarker(markerResult.raw),
-      );
+      const selection = selectionResult.selection;
       if (selection.kind === "failed") {
         return failedLoad(selection.error);
       }
@@ -610,7 +777,10 @@ export function createBrowserProfileStore(
 
       const profile = selection.decoded.value.profile;
       if (selection.repair || selection.decoded.value.migrated) {
-        const serialized = serializeCurrent(profile);
+        const serialized = serializeCurrent(
+          profile,
+          selection.decoded.value.completedRuns,
+        );
         if (typeof serialized !== "string") {
           return failedLoad(
             error(
@@ -660,6 +830,7 @@ export function createBrowserProfileStore(
           error: primaryResult.error,
         });
       }
+      let completedRuns: readonly StoredCompletedRun[] = Object.freeze([]);
       if (primaryResult.raw !== null) {
         const previous = decodeEnvelope(primaryResult.raw);
         if (!previous.ok) {
@@ -668,6 +839,7 @@ export function createBrowserProfileStore(
             error: previous.error,
           });
         }
+        completedRuns = previous.value.completedRuns;
       }
 
       const journalError = saveTargetError(storage, key, primaryResult.raw);
@@ -678,7 +850,7 @@ export function createBrowserProfileStore(
         });
       }
 
-      const serialized = serializeCurrent(normalized);
+      const serialized = serializeCurrent(normalized, completedRuns);
       if (typeof serialized !== "string") {
         return Object.freeze({
           status: "failed" as const,
@@ -699,6 +871,111 @@ export function createBrowserProfileStore(
       }
 
       return Object.freeze({ status: "saved" as const, profile: normalized });
+    },
+
+    commitCompletedRun(
+      request: CompletedRunCommitRequest,
+    ): CompletedRunCommitResult {
+      if (
+        typeof request.completionId !== "string" ||
+        request.completionId.trim() === "" ||
+        typeof request.completionFingerprint !== "string" ||
+        request.completionFingerprint.trim() === ""
+      ) {
+        return invalidCommitResult(
+          "Completed-run commit identity must contain non-empty strings",
+        );
+      }
+
+      let expectedProfile: ProfileState;
+      let nextProfile: ProfileState;
+      try {
+        expectedProfile = normalizeProfile(request.expectedProfile);
+        nextProfile = normalizeProfile(request.nextProfile);
+      } catch {
+        return invalidCommitResult(
+          "Completed-run commit contains an invalid profile",
+        );
+      }
+
+      const selectionResult = readSelection(storage, key);
+      if (!selectionResult.ok) {
+        return Object.freeze({
+          status: "failed" as const,
+          error: selectionResult.error,
+        });
+      }
+      const selection = selectionResult.selection;
+      if (selection.kind === "failed") {
+        return Object.freeze({
+          status: "failed" as const,
+          error: selection.error,
+        });
+      }
+
+      let previousRaw: string | null = null;
+      let completedRuns: readonly StoredCompletedRun[] = Object.freeze([]);
+      if (selection.kind === "record") {
+        const current = selection.decoded.value;
+        const existing = current.completedRuns.find(
+          (entry) => entry.completionId === request.completionId,
+        );
+        if (existing !== undefined) {
+          if (existing.fingerprint !== request.completionFingerprint) {
+            return Object.freeze({
+              status: "failed" as const,
+              error: error(
+                "completion-conflict",
+                "Completion identity was reused for different inputs",
+              ),
+            });
+          }
+          return Object.freeze({
+            status: "already-committed" as const,
+            profile: current.profile,
+          });
+        }
+        if (!profilesEqual(current.profile, expectedProfile)) {
+          return Object.freeze({
+            status: "failed" as const,
+            error: error(
+              "profile-conflict",
+              "Committed profile changed before the completed run was stored",
+            ),
+          });
+        }
+        previousRaw = selection.raw;
+        completedRuns = current.completedRuns;
+      }
+
+      const serialized = serializeCurrent(nextProfile, [
+        ...completedRuns,
+        {
+          completionId: request.completionId,
+          fingerprint: request.completionFingerprint,
+        },
+      ]);
+      if (typeof serialized !== "string") {
+        return Object.freeze({
+          status: "failed" as const,
+          error: serialized,
+        });
+      }
+
+      const writeOutcome = commitSerialized(
+        storage,
+        key,
+        serialized,
+        previousRaw,
+      );
+      if (writeOutcome.status !== "saved") {
+        return Object.freeze({
+          status: writeOutcome.status,
+          error: writeOutcome.error,
+        });
+      }
+
+      return Object.freeze({ status: "saved" as const, profile: nextProfile });
     },
   });
 }
