@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { RunConfig, RunState } from "../../src/application/contracts.js";
+import { createFreshProfile } from "../../src/domain/profile.js";
 import { ORIGINAL_V13_RULESET_ID } from "../../src/domain/rulesets.js";
 import { createTestGameplayEngine } from "../helpers/gameplay-engine.js";
 
@@ -8,8 +9,7 @@ const gameplayEngine = createTestGameplayEngine();
 
 function createRun(scoreMultiplier = 1): RunState {
   const initialLevelOneProfile = {
-    schemaVersion: 1,
-    level: 1,
+    ...createFreshProfile(),
     scoreMultiplier,
   };
   const config: RunConfig = {
