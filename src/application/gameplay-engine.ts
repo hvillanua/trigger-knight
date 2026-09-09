@@ -1,8 +1,9 @@
+import { normalizeProfile } from "../domain/profile.js";
 import type {
   GameCommand,
   GameEvent,
   GameObservation,
-  ProfileState,
+  ProfileInput,
   RuleSetId,
   RunState,
 } from "../domain/contracts.js";
@@ -11,7 +12,7 @@ import type { RuleSetRegistry } from "../domain/rulesets.js";
 export interface RunConfig {
   readonly ruleset: RuleSetId;
   readonly seed: string;
-  readonly initialProfile: ProfileState;
+  readonly initialProfile: ProfileInput;
 }
 
 export interface StepResult {
@@ -34,7 +35,7 @@ export function createGameplayEngine(
     createRun(config: RunConfig): RunState {
       return registry
         .resolve(config.ruleset)
-        .createRun(config.seed, config.initialProfile);
+        .createRun(config.seed, normalizeProfile(config.initialProfile));
     },
 
     step(

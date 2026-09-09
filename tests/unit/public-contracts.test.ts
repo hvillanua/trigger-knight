@@ -21,7 +21,7 @@ import type {
   PolicyDescriptor,
   PresentationFrame,
   PresentationPort,
-  ProfileState,
+  ProfileInput,
   RandomState,
   RuleSetId,
   RunConfig,
@@ -217,7 +217,7 @@ describe("public application contracts", () => {
     expectTypeOf<RunConfig>().toMatchTypeOf<{
       readonly ruleset: RuleSetId;
       readonly seed: string;
-      readonly initialProfile: ProfileState;
+      readonly initialProfile: ProfileInput;
     }>();
     expectTypeOf<RunState>().toMatchTypeOf<{
       readonly schemaVersion: 15;

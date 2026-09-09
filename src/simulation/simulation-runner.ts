@@ -1,3 +1,4 @@
+import { normalizeProfile } from "../domain/profile.js";
 import type {
   GameEvent,
   GameplayTrace,
@@ -5,7 +6,7 @@ import type {
   PlayerPolicy,
   PolicyConfig,
   PolicyDescriptor,
-  ProfileState,
+  ProfileInput,
   RunConfig,
   RunResult,
   SimulationRequest,
@@ -46,18 +47,12 @@ function normalizePolicy(policy: PlayerPolicy): PolicyDescriptor {
   });
 }
 
-function normalizeProfile(profile: ProfileState): ProfileState {
+function snapshotProfile(profile: ProfileInput): ProfileInput {
   const normalized = normalizeCanonicalJson(profile);
 
-  if (
-    normalized === null ||
-    Array.isArray(normalized) ||
-    typeof normalized !== "object"
-  ) {
-    throw new TypeError("Initial profile must be a plain record");
-  }
+  normalizeProfile(normalized);
 
-  return normalized as unknown as ProfileState;
+  return normalized as unknown as ProfileInput;
 }
 
 function runSimulation(
@@ -69,7 +64,7 @@ function runSimulation(
   assertStepLimit(maxSteps);
 
   const policy = normalizePolicy(request.policy);
-  const initialProfile = normalizeProfile(request.config.initialProfile);
+  const initialProfile = snapshotProfile(request.config.initialProfile);
   const config: RunConfig = Object.freeze({
     ruleset: request.config.ruleset,
     seed: request.config.seed,

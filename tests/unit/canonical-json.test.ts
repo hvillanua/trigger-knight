@@ -6,6 +6,21 @@ import {
 } from "../../src/simulation/canonical-json.js";
 
 describe("canonical JSON", () => {
+  it("distinguishes records that collide under the former 32-bit fingerprint", () => {
+    expect(
+      fingerprintCanonicalJson({
+        schemaVersion: 1,
+        scoreMultiplier: 1,
+        nonce: 51_828,
+      }),
+    ).not.toBe(
+      fingerprintCanonicalJson({
+        schemaVersion: 1,
+        scoreMultiplier: 1,
+        nonce: 301_880,
+      }),
+    );
+  });
   it.each(["retained", { nested: true }])(
     "preserves an own __proto__ key with value %j",
     (protoValue) => {

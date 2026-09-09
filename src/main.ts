@@ -1,3 +1,4 @@
+import { createFreshProfile } from "./domain/profile.js";
 import { createGameplayEngine } from "./application/gameplay-engine.js";
 import { CanvasPresentation } from "./browser/canvas-presentation.js";
 import { observeDevicePixelRatioChanges } from "./browser/device-pixel-ratio.js";
@@ -42,7 +43,7 @@ const session = createBrowserGameplaySession(
   Object.freeze({
     ruleset: ORIGINAL_V13_RULESET_ID,
     seed: "browser-run",
-    initialProfile: Object.freeze({ schemaVersion: 1, scoreMultiplier: 1 }),
+    initialProfile: createFreshProfile(),
   }),
   presentation,
   { retainDiagnostics: import.meta.env.DEV },

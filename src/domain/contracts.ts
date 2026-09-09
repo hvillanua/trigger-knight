@@ -4,11 +4,28 @@
  */
 export type RuleSetId = string;
 
-/** Profile snapshot supplied explicitly when a run is created. */
-export interface ProfileState {
+/** Explicit run input, including the earlier minimal configuration shape. */
+export interface MinimalProfileInput {
   readonly schemaVersion: number;
   readonly scoreMultiplier: number;
   readonly tutorialPreference?: "enabled" | "disabled";
+}
+
+/** Accepted explicit run configuration shapes; runtime validation checks versions. */
+export type ProfileInput = MinimalProfileInput | ProfileState;
+
+/** Complete between-run progression snapshot. */
+export interface ProfileState extends MinimalProfileInput {
+  readonly schemaVersion: 2;
+  readonly level: number;
+  readonly xp: number;
+  readonly highScore: number;
+  readonly tutorialPreference: "enabled" | "disabled";
+  /** Array indices identify equipment tiers minus one. */
+  readonly weaponDiscoveries: readonly boolean[];
+  readonly armorDiscoveries: readonly boolean[];
+  /** Research indices 0–4 are defined; index 5 is retained without assigning a condition. */
+  readonly achievementSlots: readonly boolean[];
 }
 
 /** Versioned, serializable state for authoritative gameplay randomness. */

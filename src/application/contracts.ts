@@ -40,6 +40,7 @@ export type {
   PositionedShopEncounter,
   PlayerObservation,
   PlayerState,
+  ProfileInput,
   ProfileState,
   PurchaseCurrentEncounterCommand,
   PurchaseRejectedEvent,
