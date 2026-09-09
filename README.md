@@ -31,8 +31,11 @@ Run commands from the repository root:
 | Run browser tests              | `npm run test:browser`       |
 | Build production output        | `npm run build`              |
 
-Pass a test path after `--` to run focused tests. GitHub Actions runs the complete
-`npm run validate` gate for code-affecting changes.
+Pass a test path after `--` to run focused tests. `npm ci` activates one
+repository-owned Git hook: `.githooks/pre-push`, which runs `npm run validate`
+before pushing. There is no repository-owned commit hook or other validation
+hook. Re-run `npm run setup:hooks` if local Git configuration is replaced after
+installation. GitHub Actions runs the complete gate for code-affecting changes.
 
 ## Simulation and diagnostics
 
