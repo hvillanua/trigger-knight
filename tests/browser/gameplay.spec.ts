@@ -2,6 +2,7 @@ import { expect, test } from "@playwright/test";
 
 import type { PlayerPolicy } from "../../src/application/contracts.js";
 import type { GameplayTrace } from "../../src/application/gameplay-execution.js";
+import { createFreshProfile } from "../../src/domain/profile.js";
 import { ORIGINAL_V13_RULESET_ID } from "../../src/domain/rulesets.js";
 import { createSimulationRunner } from "../../src/simulation/simulation-runner.js";
 import { createTestGameplayEngine } from "../helpers/gameplay-engine.js";
@@ -115,7 +116,7 @@ test("matches browser and headless diagnostic traces", async ({ page }) => {
     config: {
       ruleset: ORIGINAL_V13_RULESET_ID,
       seed: "browser-run",
-      initialProfile: { schemaVersion: 1, scoreMultiplier: 1 },
+      initialProfile: createFreshProfile(),
     },
     policy,
     maxSteps: 3,
