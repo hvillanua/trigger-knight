@@ -73,7 +73,7 @@ interface SelectedRecord {
 }
 
 type Selection =
-  | Readonly<{ kind: "empty"; repair: boolean }>
+  | Readonly<{ kind: "empty" }>
   | SelectedRecord
   | Readonly<{ kind: "failed"; error: ProfileStorageError }>;
 
@@ -375,92 +375,94 @@ function selectCommittedRecord(
     backupRaw === null ? undefined : decodeEnvelope(backupRaw),
   );
 
-  if (marker.kind === "valid") {
-    if (marker.record === null && primaryRaw === null && backupRaw === null) {
-      return { kind: "empty", repair: false };
+  if (marker.kind === "missing") {
+    if (primaryRaw === null && backupRaw === null) {
+      return { kind: "empty" };
     }
-    if (marker.record === null && primaryRaw !== null && backupRaw === null) {
-      return { kind: "empty", repair: true };
+    if (backupRaw !== null) {
+      return {
+        kind: "failed",
+        error: error(
+          "invalid-record",
+          "Stored profile has an incomplete commit journal",
+        ),
+      };
     }
-
-    const committedPrimary =
-      marker.record === primaryRaw && primaryRaw !== null
-        ? selectCandidate(primary, false)
-        : undefined;
-    if (committedPrimary !== undefined) {
-      return committedPrimary;
-    }
-
-    const committedBackup =
-      marker.record === backupRaw && backupRaw !== null
-        ? selectCandidate(backup, true)
-        : undefined;
-    if (committedBackup !== undefined) {
-      return committedBackup;
-    }
-
-    const recoverableBackup = selectCandidate(backup, true);
-    if (recoverableBackup !== undefined) {
-      return recoverableBackup;
-    }
-    const recoverablePrimary = selectCandidate(primary, true);
-    if (recoverablePrimary !== undefined) {
-      return recoverablePrimary;
+    const directPrimary = selectCandidate(primary, false);
+    if (directPrimary !== undefined) {
+      return directPrimary;
     }
     return { kind: "failed", error: firstDecodeError(primary, backup) };
   }
 
-  if (marker.kind === "missing") {
-    const directPrimary = selectCandidate(primary, backupRaw !== null);
-    if (directPrimary !== undefined) {
-      return directPrimary;
-    }
-    const recoverableBackup = selectCandidate(backup, true);
-    if (recoverableBackup !== undefined) {
-      return recoverableBackup;
-    }
-  } else {
-    const recoverableBackup = selectCandidate(backup, true);
-    if (recoverableBackup !== undefined) {
-      return recoverableBackup;
-    }
-    const recoverablePrimary = selectCandidate(primary, true);
-    if (recoverablePrimary !== undefined) {
-      return recoverablePrimary;
-    }
+  if (marker.kind === "invalid") {
+    return {
+      kind: "failed",
+      error: error(
+        "invalid-record",
+        "Stored profile commit metadata is not valid",
+      ),
+    };
   }
 
-  if (primaryRaw === null && backupRaw === null) {
-    return marker.kind === "missing"
-      ? { kind: "empty", repair: false }
+  if (marker.record === null) {
+    return primaryRaw === null && backupRaw === null
+      ? { kind: "empty" }
       : {
           kind: "failed",
           error: error(
             "invalid-record",
-            "Stored profile commit metadata is not valid",
+            "Stored profile commit journal points to an empty record",
           ),
         };
+  }
+
+  if (marker.record === primaryRaw && primaryRaw !== null) {
+    const committedPrimary = selectCandidate(primary, false);
+    if (committedPrimary !== undefined) {
+      return committedPrimary;
+    }
+    return { kind: "failed", error: firstDecodeError(primary, backup) };
+  }
+
+  if (marker.record === backupRaw && backupRaw !== null) {
+    const committedBackup = selectCandidate(backup, true);
+    if (committedBackup !== undefined) {
+      return committedBackup;
+    }
   }
   return { kind: "failed", error: firstDecodeError(primary, backup) };
 }
 
-function clearUncommittedRecord(
+function publishCommitMarker(
   storage: StorageLike,
-  key: string,
+  commitKey: string,
+  serialized: string,
+  previousMarker: string,
 ): ProfileStorageError | undefined {
+  const nextMarker = encodeCommitMarker(serialized);
   try {
-    writeRawAndVerify(storage, `${key}${PROFILE_STORAGE_BACKUP_SUFFIX}`, null);
-    writeRawAndVerify(storage, key, null);
-    writeRawAndVerify(
-      storage,
-      `${key}${PROFILE_STORAGE_COMMIT_SUFFIX}`,
-      encodeCommitMarker(null),
-    );
+    storage.setItem(commitKey, nextMarker);
     return undefined;
   } catch {
+    let observed: string | null | undefined;
+    try {
+      observed = storage.getItem(commitKey);
+    } catch {
+      observed = undefined;
+    }
+    if (observed === nextMarker) {
+      return undefined;
+    }
+
+    try {
+      writeRawAndVerify(storage, commitKey, previousMarker);
+    } catch {
+      // If publication mutated the marker, load will choose the complete record it names.
+    }
     return error(
       "write-failed",
-      "Uncommitted profile data could not be cleared",
+      "Profile commit marker could not be published",
     );
   }
 }
@@ -480,8 +482,6 @@ function commitSerialized(
     writeRawAndVerify(storage, backupKey, previous);
     writeRawAndVerify(storage, commitKey, previousMarker);
     writeRawAndVerify(storage, key, serialized);
-    writeRawAndVerify(storage, commitKey, encodeCommitMarker(serialized));
-    return undefined;
   } catch {
     try {
       writeRawAndVerify(storage, commitKey, previousMarker);
@@ -490,6 +490,8 @@ function commitSerialized(
     }
     return error("write-failed", "Profile write failed");
   }
+
+  return publishCommitMarker(storage, commitKey, serialized, previousMarker);
 }
 
 function failedLoad(errorValue: ProfileStorageError): ProfileLoadResult {
@@ -526,6 +528,19 @@ function saveTargetError(
   }
 
   const marker = decodeCommitMarker(markerResult.raw);
+  if (marker.kind === "valid" && marker.record === null) {
+    return backupResult.raw === null
+      ? primaryRaw === null
+        ? undefined
+        : error(
+            "invalid-record",
+            "Stored profile commit journal points to an empty record",
+          )
+      : error(
+          "invalid-record",
+          "Stored profile has recoverable data that must be loaded first",
+        );
+  }
   if (marker.kind !== "valid" || marker.record !== primaryRaw) {
     return error(
       "invalid-record",
@@ -570,17 +585,6 @@ export function createBrowserProfileStore(
         return failedLoad(selection.error);
       }
       if (selection.kind === "empty") {
-        if (selection.repair) {
-          const clearError = clearUncommittedRecord(storage, key);
-          if (clearError !== undefined) {
-            return failedLoad(
-              error(
-                "migration-failed",
-                "Uncommitted profile data could not be cleared",
-              ),
-            );
-          }
-        }
         return Object.freeze({
           status: "empty" as const,
           profile: createFreshProfile(),

@@ -17,10 +17,13 @@ import type { ProfileState } from "../../src/application/contracts.js";
 
 class MemoryStorage implements StorageLike {
   readonly #values = new Map<string, string>();
+  readonly #writeCalls = new Map<string, number>();
   failNextWriteAfterCommitKey: string | undefined;
   failNextWriteBeforeCommitKey: string | undefined;
   failVerificationAfterWriteKey: string | undefined;
   failNextReadKey: string | undefined;
+  failAfterWriteOnCall:
+    { readonly key: string; readonly call: number } | undefined;
 
   getItem(key: string): string | null {
     if (this.failNextReadKey === key) {
@@ -36,6 +39,8 @@ class MemoryStorage implements StorageLike {
       throw new Error("simulated write failure");
     }
     this.#values.set(key, value);
+    const call = (this.#writeCalls.get(key) ?? 0) + 1;
+    this.#writeCalls.set(key, call);
     if (this.failVerificationAfterWriteKey === key) {
       this.failVerificationAfterWriteKey = undefined;
       this.failNextReadKey = key;
@@ -45,6 +50,18 @@ class MemoryStorage implements StorageLike {
       this.failNextWriteBeforeCommitKey = key;
       throw new Error("simulated write failure");
     }
+    if (
+      this.failAfterWriteOnCall?.key === key &&
+      this.failAfterWriteOnCall.call === call
+    ) {
+      this.failAfterWriteOnCall = undefined;
+      this.failNextWriteBeforeCommitKey = key;
+      throw new Error("simulated write failure");
+    }
+  }
+
+  resetWriteCalls(): void {
+    this.#writeCalls.clear();
   }
 
   removeItem(key: string): void {
@@ -213,7 +230,7 @@ describe("versioned browser profile storage", () => {
     });
   });
 
-  it("returns to an empty committed state after the first write fails", () => {
+  it("does not treat an uncommitted first write as committed data", () => {
     const storage = new MemoryStorage();
     const store = createBrowserProfileStore(storage);
     storage.failNextWriteAfterCommitKey = PROFILE_STORAGE_KEY;
@@ -223,14 +240,20 @@ describe("versioned browser profile storage", () => {
       error: { code: "write-failed" },
     });
     storage.failNextWriteBeforeCommitKey = undefined;
-    expect(store.load()).toEqual({
-      status: "empty",
-      profile: createFreshProfile(),
+    const primaryRaw = storage.getItem(PROFILE_STORAGE_KEY);
+    const backupRaw = storage.getItem(`${PROFILE_STORAGE_KEY}.backup`);
+    const markerRaw = storage.getItem(`${PROFILE_STORAGE_KEY}.commit`);
+    expect(store.load()).toMatchObject({
+      status: "failed",
+      error: { code: "invalid-record" },
     });
-    expect(storage.getItem(PROFILE_STORAGE_KEY)).toBeNull();
     expect(store.save(profileWith({ highScore: 1 }))).toMatchObject({
-      status: "saved",
+      status: "failed",
+      error: { code: "invalid-record" },
     });
+    expect(storage.getItem(PROFILE_STORAGE_KEY)).toBe(primaryRaw);
+    expect(storage.getItem(`${PROFILE_STORAGE_KEY}.backup`)).toBe(backupRaw);
+    expect(storage.getItem(`${PROFILE_STORAGE_KEY}.commit`)).toBe(markerRaw);
   });
 
   it.each([
@@ -250,6 +273,87 @@ describe("versioned browser profile storage", () => {
       error: { code },
     });
     expect(storage.getItem(PROFILE_STORAGE_KEY)).toBe(raw);
+  });
+
+  it.each([
+    { name: "corrupt JSON", raw: "{", code: "corrupt-record" },
+    {
+      name: "unsupported envelope",
+      raw: JSON.stringify({ schemaVersion: 99 }),
+      code: "unsupported-version",
+    },
+    {
+      name: "incomplete envelope",
+      raw: JSON.stringify({
+        schemaVersion: PROFILE_STORAGE_ENVELOPE_VERSION,
+        profile: {},
+        settings: { tutorialPreference: "enabled" },
+      }),
+      code: "invalid-record",
+    },
+  ])(
+    "does not recover over rejected $name when a backup exists",
+    ({ raw, code }) => {
+      const storage = new MemoryStorage();
+      const store = createBrowserProfileStore(storage);
+      store.save(profileWith({ highScore: 200 }));
+      store.save(profileWith({ highScore: 500 }));
+      const backupRaw = storage.getItem(`${PROFILE_STORAGE_KEY}.backup`);
+      const markerRaw = storage.getItem(`${PROFILE_STORAGE_KEY}.commit`);
+      storage.setItem(PROFILE_STORAGE_KEY, raw);
+
+      expect(store.load()).toMatchObject({
+        status: "failed",
+        error: { code },
+      });
+      expect(storage.getItem(PROFILE_STORAGE_KEY)).toBe(raw);
+      expect(storage.getItem(`${PROFILE_STORAGE_KEY}.backup`)).toBe(backupRaw);
+      expect(storage.getItem(`${PROFILE_STORAGE_KEY}.commit`)).toBe(markerRaw);
+    },
+  );
+
+  it("does not erase a surviving backup from an empty journal", () => {
+    const storage = new MemoryStorage();
+    const store = createBrowserProfileStore(storage);
+    store.save(profileWith({ highScore: 200 }));
+    store.save(profileWith({ highScore: 300 }));
+    const backupRaw = storage.getItem(`${PROFILE_STORAGE_KEY}.backup`);
+    storage.removeItem(PROFILE_STORAGE_KEY);
+    storage.setItem(
+      `${PROFILE_STORAGE_KEY}.commit`,
+      "trigger-knight.commit.v1:empty",
+    );
+
+    expect(store.save(profileWith({ highScore: 500 }))).toMatchObject({
+      status: "failed",
+      error: { code: "invalid-record" },
+    });
+    expect(storage.getItem(PROFILE_STORAGE_KEY)).toBeNull();
+    expect(storage.getItem(`${PROFILE_STORAGE_KEY}.backup`)).toBe(backupRaw);
+    expect(storage.getItem(`${PROFILE_STORAGE_KEY}.commit`)).toBe(
+      "trigger-knight.commit.v1:empty",
+    );
+  });
+
+  it("reports a final marker failure as saved when the new marker is durable", () => {
+    const storage = new MemoryStorage();
+    const store = createBrowserProfileStore(storage);
+    store.save(profileWith({ highScore: 200 }));
+    storage.resetWriteCalls();
+    storage.failAfterWriteOnCall = {
+      key: `${PROFILE_STORAGE_KEY}.commit`,
+      call: 2,
+    };
+
+    expect(store.save(profileWith({ highScore: 500 }))).toMatchObject({
+      status: "saved",
+      profile: { highScore: 500 },
+    });
+    expect(store.load()).toMatchObject({
+      status: "loaded",
+      profile: { highScore: 500 },
+      migrated: false,
+    });
   });
 
   it("does not change gameplay when a complete profile crosses the storage boundary", () => {
