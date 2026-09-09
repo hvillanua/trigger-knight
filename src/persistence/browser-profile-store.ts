@@ -17,6 +17,7 @@ export const PROFILE_STORAGE_ENVELOPE_VERSION = 3 as const;
 const PROFILE_STORAGE_BACKUP_SUFFIX = ".backup";
 const PROFILE_STORAGE_COMMIT_SUFFIX = ".commit";
 const PROFILE_STORAGE_COMMIT_MARKER_PREFIX = "trigger-knight.commit.v1:";
+const PROFILE_STORAGE_READY_MARKER_PREFIX = `${PROFILE_STORAGE_COMMIT_MARKER_PREFIX}ready:`;
 
 /** Minimal browser storage surface used by the adapter and its tests. */
 export interface StorageLike {
@@ -90,6 +91,7 @@ type Selection =
 type CommitMarker =
   | Readonly<{ kind: "missing" }>
   | Readonly<{ kind: "valid"; record: string | null }>
+  | Readonly<{ kind: "ready"; record: string }>
   | Readonly<{ kind: "invalid" }>;
 
 type CommitOutcome =
@@ -452,12 +454,20 @@ function encodeCommitMarker(record: string | null): string {
     : `${PROFILE_STORAGE_COMMIT_MARKER_PREFIX}${record}`;
 }
 
+function encodeReadyMarker(record: string): string {
+  return `${PROFILE_STORAGE_READY_MARKER_PREFIX}${record}`;
+}
+
 function decodeCommitMarker(raw: string | null): CommitMarker {
   if (raw === null) {
     return { kind: "missing" };
   }
   if (raw === `${PROFILE_STORAGE_COMMIT_MARKER_PREFIX}empty`) {
     return { kind: "valid", record: null };
+  }
+  if (raw.startsWith(PROFILE_STORAGE_READY_MARKER_PREFIX)) {
+    const record = raw.slice(PROFILE_STORAGE_READY_MARKER_PREFIX.length);
+    return record === "" ? { kind: "invalid" } : { kind: "ready", record };
   }
   if (raw.startsWith(PROFILE_STORAGE_COMMIT_MARKER_PREFIX)) {
     const record = raw.slice(PROFILE_STORAGE_COMMIT_MARKER_PREFIX.length);
@@ -548,6 +558,16 @@ function selectCommittedRecord(
     };
   }
 
+  if (marker.kind === "ready") {
+    if (marker.record === primaryRaw && primaryRaw !== null) {
+      const readyPrimary = selectCandidate(primary, true);
+      if (readyPrimary !== undefined) {
+        return readyPrimary;
+      }
+    }
+    return { kind: "failed", error: firstDecodeError(primary, backup) };
+  }
+
   if (marker.record === null) {
     return primaryRaw === null && backupRaw === null
       ? { kind: "empty" }
@@ -584,6 +604,7 @@ function publishCommitMarker(
   previousMarker: string,
 ): CommitOutcome {
   const nextMarker = encodeCommitMarker(serialized);
+  const readyMarker = encodeReadyMarker(serialized);
   try {
     storage.setItem(commitKey, nextMarker);
     return { status: "saved" };
@@ -596,6 +617,15 @@ function publishCommitMarker(
     }
     if (observed === nextMarker) {
       return { status: "saved" };
+    }
+    if (observed === readyMarker) {
+      return {
+        status: "uncertain",
+        error: error(
+          "write-outcome-unknown",
+          "Profile commit marker is staged; load the profile before retrying",
+        ),
+      };
     }
 
     try {
@@ -615,6 +645,45 @@ function publishCommitMarker(
         "write-failed",
         "Profile commit marker could not be published",
       ),
+    };
+  }
+}
+
+function publishReadyMarker(
+  storage: StorageLike,
+  commitKey: string,
+  serialized: string,
+  previousMarker: string,
+): CommitOutcome {
+  const readyMarker = encodeReadyMarker(serialized);
+  try {
+    writeRawAndVerify(storage, commitKey, readyMarker);
+    return { status: "saved" };
+  } catch {
+    let observed: string | null | undefined;
+    try {
+      observed = storage.getItem(commitKey);
+    } catch {
+      observed = undefined;
+    }
+    if (observed === readyMarker) {
+      return { status: "saved" };
+    }
+
+    try {
+      writeRawAndVerify(storage, commitKey, previousMarker);
+    } catch {
+      return {
+        status: "uncertain",
+        error: error(
+          "write-outcome-unknown",
+          "Profile commit staging could not be reconciled; load the profile before retrying",
+        ),
+      };
+    }
+    return {
+      status: "failed",
+      error: error("write-failed", "Profile commit staging failed"),
     };
   }
 }
@@ -644,6 +713,16 @@ function commitSerialized(
       status: "failed",
       error: error("write-failed", "Profile write failed"),
     };
+  }
+
+  const readyOutcome = publishReadyMarker(
+    storage,
+    commitKey,
+    serialized,
+    previousMarker,
+  );
+  if (readyOutcome.status !== "saved") {
+    return readyOutcome;
   }
 
   return publishCommitMarker(storage, commitKey, serialized, previousMarker);

@@ -27,6 +27,8 @@ class MemoryStorage implements StorageLike {
   failNextReadKey: string | undefined;
   failAfterWriteOnCall:
     { readonly key: string; readonly call: number } | undefined;
+  failBeforeWriteOnCall:
+    { readonly key: string; readonly call: number } | undefined;
 
   getItem(key: string): string | null {
     if (this.failNextReadKey === key) {
@@ -41,8 +43,16 @@ class MemoryStorage implements StorageLike {
       this.failNextWriteBeforeCommitKey = undefined;
       throw new Error("simulated write failure");
     }
+    const nextCall = (this.#writeCalls.get(key) ?? 0) + 1;
+    if (
+      this.failBeforeWriteOnCall?.key === key &&
+      this.failBeforeWriteOnCall.call === nextCall
+    ) {
+      this.failBeforeWriteOnCall = undefined;
+      throw new Error("simulated write failure");
+    }
     this.#values.set(key, value);
-    const call = (this.#writeCalls.get(key) ?? 0) + 1;
+    const call = nextCall;
     this.#writeCalls.set(key, call);
     if (this.failVerificationAfterWriteKey === key) {
       this.failVerificationAfterWriteKey = undefined;
@@ -387,7 +397,7 @@ describe("versioned browser profile storage", () => {
     storage.resetWriteCalls();
     storage.failAfterWriteOnCall = {
       key: `${PROFILE_STORAGE_KEY}.commit`,
-      call: 2,
+      call: 3,
     };
 
     expect(store.save(profileWith({ highScore: 500 }))).toMatchObject({
@@ -408,11 +418,11 @@ describe("versioned browser profile storage", () => {
     storage.resetWriteCalls();
     storage.failAfterWriteOnCall = {
       key: `${PROFILE_STORAGE_KEY}.commit`,
-      call: 2,
+      call: 3,
     };
     storage.failVerificationAfterWriteOnCall = {
       key: `${PROFILE_STORAGE_KEY}.commit`,
-      call: 2,
+      call: 3,
     };
 
     expect(store.save(profileWith({ highScore: 500 }))).toMatchObject({
@@ -578,11 +588,11 @@ describe("versioned browser profile storage", () => {
     storage.resetWriteCalls();
     storage.failAfterWriteOnCall = {
       key: `${PROFILE_STORAGE_KEY}.commit`,
-      call: 2,
+      call: 3,
     };
     storage.failVerificationAfterWriteOnCall = {
       key: `${PROFILE_STORAGE_KEY}.commit`,
-      call: 2,
+      call: 3,
     };
     const request = {
       completionId: "uncertain-retry",
@@ -599,6 +609,37 @@ describe("versioned browser profile storage", () => {
     expect(store.commitCompletedRun(request)).toEqual({
       status: "already-committed",
       profile: next,
+    });
+  });
+
+  it("recovers an interrupted first completion without accepting an uncommitted primary write", () => {
+    const storage = new MemoryStorage();
+    const store = createBrowserProfileStore(storage);
+    const previous = createFreshProfile();
+    const next = profileWith({ level: 2, tutorialPreference: "disabled" });
+    storage.failBeforeWriteOnCall = {
+      key: `${PROFILE_STORAGE_KEY}.commit`,
+      call: 3,
+    };
+    const request = {
+      completionId: "first-completion-retry",
+      completionFingerprint: "sha256-v1:first-completion-retry",
+      expectedProfile: previous,
+      nextProfile: next,
+    } as const;
+
+    expect(store.commitCompletedRun(request)).toMatchObject({
+      status: "uncertain",
+      error: { code: "write-outcome-unknown" },
+    });
+    expect(store.commitCompletedRun(request)).toEqual({
+      status: "already-committed",
+      profile: next,
+    });
+    expect(store.load()).toEqual({
+      status: "loaded",
+      profile: next,
+      migrated: false,
     });
   });
 });

@@ -6,6 +6,7 @@ import { observeDevicePixelRatioChanges } from "./browser/device-pixel-ratio.js"
 import type {
   GameCommand,
   ProfileLoadResult,
+  ProfileStore,
 } from "./application/contracts.js";
 import type { CssDimensions } from "./browser/foundation.js";
 import { createBrowserGameplaySession } from "./browser/gameplay-session.js";
@@ -42,18 +43,34 @@ if (
   throw new Error("Missing browser gameplay controls");
 }
 
-const profileStore = createBrowserProfileStore(window.localStorage);
+const storageUnavailableError = Object.freeze({
+  code: "storage-read-failed" as const,
+  message: "Profile storage could not be opened",
+});
+const unavailableProfileStore: ProfileStore = Object.freeze({
+  load: () =>
+    Object.freeze({
+      status: "failed" as const,
+      error: storageUnavailableError,
+    }),
+  save: () =>
+    Object.freeze({
+      status: "failed" as const,
+      error: storageUnavailableError,
+    }),
+  commitCompletedRun: () =>
+    Object.freeze({
+      status: "failed" as const,
+      error: storageUnavailableError,
+    }),
+});
+let profileStore: ProfileStore = unavailableProfileStore;
 let profileLoad: ProfileLoadResult;
 try {
+  profileStore = createBrowserProfileStore(window.localStorage);
   profileLoad = profileStore.load();
 } catch {
-  profileLoad = {
-    status: "failed",
-    error: {
-      code: "storage-read-failed",
-      message: "Profile storage could not be opened",
-    },
-  };
+  profileLoad = unavailableProfileStore.load();
 }
 const initialProfile =
   profileLoad.status === "failed" ? createFreshProfile() : profileLoad.profile;
