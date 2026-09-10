@@ -605,6 +605,7 @@ function selectCommittedRecord(
       return { kind: "empty" };
     }
     if (backupRaw === null && primary?.decoded.ok === true) {
+      // The empty marker and absent backup prove that this first primary was never committed.
       return { kind: "empty" };
     }
     return {
@@ -854,58 +855,6 @@ function invalidCommitResult(message: string): CompletedRunCommitResult {
   });
 }
 
-function saveTargetError(
-  storage: StorageLike,
-  key: string,
-  primaryRaw: string | null,
-): ProfileStorageError | undefined {
-  const backupResult = readRaw(
-    storage,
-    `${key}${PROFILE_STORAGE_BACKUP_SUFFIX}`,
-  );
-  if (!backupResult.ok) {
-    return backupResult.error;
-  }
-  const markerResult = readRaw(
-    storage,
-    `${key}${PROFILE_STORAGE_COMMIT_SUFFIX}`,
-  );
-  if (!markerResult.ok) {
-    return markerResult.error;
-  }
-
-  if (markerResult.raw === null) {
-    return backupResult.raw === null
-      ? undefined
-      : error(
-          "invalid-record",
-          "Stored profile has recoverable data that must be loaded first",
-        );
-  }
-
-  const marker = decodeCommitMarker(markerResult.raw);
-  if (marker.kind === "valid" && marker.record === null) {
-    return backupResult.raw === null
-      ? primaryRaw === null
-        ? undefined
-        : error(
-            "invalid-record",
-            "Stored profile commit journal points to an empty record",
-          )
-      : error(
-          "invalid-record",
-          "Stored profile has recoverable data that must be loaded first",
-        );
-  }
-  if (marker.kind !== "valid" || marker.record !== primaryRaw) {
-    return error(
-      "invalid-record",
-      "Stored profile commit state is incomplete or unreadable",
-    );
-  }
-  return undefined;
-}
-
 /** Browser adapter for the versioned profile envelope. */
 export function createBrowserProfileStore(
   storage: StorageLike,
@@ -976,31 +925,27 @@ export function createBrowserProfileStore(
         });
       }
 
-      const primaryResult = readRaw(storage, key);
-      if (!primaryResult.ok) {
+      const selectionResult = readSelection(storage, key);
+      if (!selectionResult.ok) {
         return Object.freeze({
           status: "failed" as const,
-          error: primaryResult.error,
+          error: selectionResult.error,
         });
-      }
-      let completedRuns: readonly StoredCompletedRun[] = Object.freeze([]);
-      if (primaryResult.raw !== null) {
-        const previous = decodeEnvelope(primaryResult.raw);
-        if (!previous.ok) {
-          return Object.freeze({
-            status: "failed" as const,
-            error: previous.error,
-          });
-        }
-        completedRuns = previous.value.completedRuns;
       }
 
-      const journalError = saveTargetError(storage, key, primaryResult.raw);
-      if (journalError !== undefined) {
+      const selection = selectionResult.selection;
+      if (selection.kind === "failed") {
         return Object.freeze({
           status: "failed" as const,
-          error: journalError,
+          error: selection.error,
         });
+      }
+
+      let previousRaw: string | null = null;
+      let completedRuns: readonly StoredCompletedRun[] = Object.freeze([]);
+      if (selection.kind === "record") {
+        previousRaw = selection.raw;
+        completedRuns = selection.decoded.value.completedRuns;
       }
 
       const serialized = serializeCurrent(normalized, completedRuns);
@@ -1014,7 +959,7 @@ export function createBrowserProfileStore(
         storage,
         key,
         serialized,
-        primaryResult.raw,
+        previousRaw,
       );
       if (writeOutcome.status !== "saved") {
         return Object.freeze({

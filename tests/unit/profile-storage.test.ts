@@ -867,6 +867,10 @@ describe("versioned browser profile storage", () => {
       status: "empty",
       profile: previous,
     });
+    expect(store.save(previous)).toEqual({
+      status: "saved",
+      profile: previous,
+    });
     expect(store.commitCompletedRun(request)).toEqual({
       status: "saved",
       profile: next,
