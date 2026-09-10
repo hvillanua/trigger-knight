@@ -229,7 +229,7 @@ export const originalV13Traceability = Object.freeze([
     evidence: [
       evidence(
         "tests/unit/gameplay-encounter-queue.test.ts",
-        "original-v1.3 encounter queue > creates three queued entries through the confirmed initial draw order",
+        "original-v1.3 encounter queue > creates three queued entries through the selected initial draw order",
       ),
       evidence(
         "tests/unit/gameplay-encounter-queue.test.ts",
@@ -289,7 +289,7 @@ export const originalV13Traceability = Object.freeze([
     evidence: [
       evidence(
         "tests/unit/gameplay-enemy-generation.test.ts",
-        "original-v1.3 enemy generation > uses the confirmed Dragon day boundary and draw order",
+        "original-v1.3 enemy generation > uses the confirmed Dragon day boundary and selected draw order",
       ),
       evidence(
         "tests/unit/milestone-4-combat-loop.test.ts",
@@ -638,9 +638,9 @@ export const originalV13Traceability = Object.freeze([
     classification: "confirmed",
     disposition: "blocked",
     rationale:
-      "Pages 1 through 5 are researched gameplay gates but are absent from the public lifecycle model and executable scenarios.",
+      "Pages 1 through 5 are confirmed gameplay gates. Their clean-room trigger choices are recorded in docs/compatibility-decisions.md#contextual-tutorial-gates, but runtime coverage remains assigned to the dependency-linked implementation ticket.",
     evidence: [],
-    blocker: { issue: 96, dependency: 90 },
+    blocker: { issue: 92, dependency: 91 },
   },
   {
     id: "presentation.post-death-delay",
@@ -777,7 +777,7 @@ export const originalV13Traceability = Object.freeze([
     evidence: [
       evidence(
         "tests/unit/gameplay-enemy-generation.test.ts",
-        "original-v1.3 enemy generation > uses the confirmed Dragon day boundary and draw order",
+        "original-v1.3 enemy generation > uses the confirmed Dragon day boundary and selected draw order",
       ),
     ],
   },
@@ -828,7 +828,7 @@ export const originalV13Traceability = Object.freeze([
     evidence: [
       evidence(
         "tests/unit/gameplay-encounter-queue.test.ts",
-        "original-v1.3 encounter queue > creates three queued entries through the confirmed initial draw order",
+        "original-v1.3 encounter queue > creates three queued entries through the selected initial draw order",
       ),
       evidence(
         "tests/unit/gameplay-encounter-queue.test.ts",
@@ -924,7 +924,7 @@ export const originalV13Traceability = Object.freeze([
   },
   {
     id: "decision.max-tier-availability",
-    source: "clean-room/PRD.md#1-reproduce-the-original-gameplay-loop",
+    source: "docs/compatibility-decisions.md#max-tier-equipment-availability",
     classification: "compatibility-decision",
     disposition: "covered",
     rationale:
@@ -1128,7 +1128,7 @@ export const originalV13Traceability = Object.freeze([
     classification: "unresolved",
     disposition: "tracked-unknown",
     rationale:
-      "The missing exported definition has no observed effect on the tested damage and AI paths, so its purpose is not invented.",
+      "The missing exported definition remains a tracked unknown with no compatibility choice. Existing combat scenarios cover the observed damage and AI paths, so it is not invented as a gameplay requirement.",
     evidence: [
       evidence(
         "tests/unit/milestone-4-combat-loop.test.ts",

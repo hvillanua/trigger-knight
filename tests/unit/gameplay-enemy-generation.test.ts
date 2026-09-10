@@ -97,7 +97,7 @@ describe("original-v1.3 enemy generation", () => {
     },
   );
 
-  it("uses the confirmed Dragon day boundary and draw order", () => {
+  it("uses the confirmed Dragon day boundary and selected draw order", () => {
     const beforeRolls = generateEncounter(
       randomAt(5),
       battleGeneration(),
