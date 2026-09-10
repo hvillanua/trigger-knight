@@ -136,13 +136,29 @@ test("shows a committed result and starts the next run from its profile", async 
     page.getByRole("button", { name: "Start next run" }),
   ).toBeEnabled();
 
+  const savedRecord = await page.evaluate((key) => {
+    const raw = localStorage.getItem(key);
+    if (raw === null) {
+      throw new Error("Expected a committed profile record");
+    }
+    return raw;
+  }, PROFILE_STORAGE_KEY);
   const savedProfile = await page.evaluate((key) => {
     const raw = localStorage.getItem(key);
     if (raw === null) {
       throw new Error("Expected a committed profile record");
     }
     const envelope = JSON.parse(raw) as {
-      profile: Record<string, unknown>;
+      profile: {
+        schemaVersion: 2;
+        level: number;
+        xp: number;
+        scoreMultiplier: number;
+        highScore: number;
+        weaponDiscoveries: readonly boolean[];
+        armorDiscoveries: readonly boolean[];
+        achievementSlots: readonly boolean[];
+      };
       settings: { tutorialPreference: "enabled" | "disabled" };
     };
     return {
@@ -151,7 +167,30 @@ test("shows a committed result and starts the next run from its profile", async 
     };
   }, PROFILE_STORAGE_KEY);
 
+  const reloadedPage = await page.context().newPage();
+  try {
+    await reloadedPage.goto("/");
+    await expect(reloadedPage.getByTestId("profile-summary")).toContainText(
+      `High score ${savedProfile.highScore}`,
+    );
+    await expect
+      .poll(() =>
+        reloadedPage.evaluate(
+          () => window.triggerKnightDiagnostics?.read().config.initialProfile,
+        ),
+      )
+      .toEqual(savedProfile);
+  } finally {
+    await reloadedPage.close();
+  }
+
   await page.getByRole("button", { name: "Skip score count" }).click();
+  expect(
+    await page.evaluate(
+      (key) => localStorage.getItem(key),
+      PROFILE_STORAGE_KEY,
+    ),
+  ).toBe(savedRecord);
   await page.getByRole("button", { name: "Start next run" }).click();
 
   await expect(result).toBeHidden();
