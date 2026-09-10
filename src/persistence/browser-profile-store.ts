@@ -109,6 +109,28 @@ function uncertainCommitOutcome(): CommitOutcome {
   };
 }
 
+function stageReadyMarkerIfPrimaryExists(
+  storage: StorageLike,
+  key: string,
+  commitKey: string,
+  serialized: string,
+): void {
+  let primary: string | null | undefined;
+  try {
+    primary = storage.getItem(key);
+  } catch {
+    primary = undefined;
+  }
+  if (primary !== serialized) {
+    return;
+  }
+  try {
+    writeRawAndVerify(storage, commitKey, encodeReadyMarker(serialized));
+  } catch {
+    // The outcome remains unknown when the recovery marker cannot be staged.
+  }
+}
+
 function error(
   code: ProfileStorageError["code"],
   message: string,
@@ -621,23 +643,7 @@ function restorePreviousPrimary(
       writeRawAndVerify(storage, key, previous);
     } catch {
       if (previous === null) {
-        let primary: string | null | undefined;
-        try {
-          primary = storage.getItem(key);
-        } catch {
-          primary = undefined;
-        }
-        if (primary === serialized) {
-          try {
-            writeRawAndVerify(
-              storage,
-              commitKey,
-              encodeReadyMarker(serialized),
-            );
-          } catch {
-            // The outcome remains unknown when the recovery marker cannot be staged.
-          }
-        }
+        stageReadyMarkerIfPrimaryExists(storage, key, commitKey, serialized);
         return uncertainCommitOutcome();
       }
       return {
@@ -683,11 +689,7 @@ function publishCommitMarker(
       writeRawAndVerify(storage, commitKey, previousMarker);
     } catch {
       if (previous === null) {
-        try {
-          writeRawAndVerify(storage, commitKey, readyMarker);
-        } catch {
-          // The outcome remains unknown when the recovery marker cannot be staged.
-        }
+        stageReadyMarkerIfPrimaryExists(storage, key, commitKey, serialized);
       }
       return uncertainCommitOutcome();
     }
@@ -726,11 +728,7 @@ function publishReadyMarker(
 
     if (observed !== previousMarker) {
       if (previous === null) {
-        try {
-          writeRawAndVerify(storage, commitKey, readyMarker);
-        } catch {
-          // The outcome remains unknown when the recovery marker cannot be staged.
-        }
+        stageReadyMarkerIfPrimaryExists(storage, key, commitKey, serialized);
       }
       return uncertainCommitOutcome();
     }
@@ -765,11 +763,7 @@ function commitSerialized(
       writeRawAndVerify(storage, commitKey, previousMarker);
     } catch {
       if (previous === null) {
-        try {
-          writeRawAndVerify(storage, commitKey, encodeReadyMarker(serialized));
-        } catch {
-          // The outcome remains unknown when the recovery marker cannot be staged.
-        }
+        stageReadyMarkerIfPrimaryExists(storage, key, commitKey, serialized);
       }
       return uncertainCommitOutcome();
     }

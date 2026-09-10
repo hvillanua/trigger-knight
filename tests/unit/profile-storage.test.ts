@@ -30,6 +30,8 @@ class MemoryStorage implements StorageLike {
     { readonly key: string; readonly call: number } | undefined;
   failAfterWriteWithoutBlockingOnCall:
     { readonly key: string; readonly call: number } | undefined;
+  failBeforeWriteCount:
+    { readonly key: string; readonly count: number } | undefined;
   failBeforeWriteOnCall:
     { readonly key: string; readonly call: number } | undefined;
 
@@ -44,6 +46,15 @@ class MemoryStorage implements StorageLike {
   setItem(key: string, value: string): void {
     if (this.failNextWriteBeforeCommitKey === key) {
       this.failNextWriteBeforeCommitKey = undefined;
+      throw new Error("simulated write failure");
+    }
+    if (
+      this.failBeforeWriteCount?.key === key &&
+      this.failBeforeWriteCount.count > 0
+    ) {
+      const remainingCount = this.failBeforeWriteCount.count - 1;
+      this.failBeforeWriteCount =
+        remainingCount === 0 ? undefined : { key, count: remainingCount };
       throw new Error("simulated write failure");
     }
     const nextCall = (this.#writeCalls.get(key) ?? 0) + 1;
@@ -770,6 +781,40 @@ describe("versioned browser profile storage", () => {
     expect(store.commitCompletedRun(request)).toMatchObject({
       status: "failed",
       error: { code: "write-failed" },
+    });
+    expect(store.load()).toEqual({
+      status: "empty",
+      profile: previous,
+    });
+    expect(store.commitCompletedRun(request)).toEqual({
+      status: "saved",
+      profile: next,
+    });
+    expect(store.commitCompletedRun(request)).toEqual({
+      status: "already-committed",
+      profile: next,
+    });
+  });
+
+  it("keeps a first completion retryable when marker setup stops before the primary write", () => {
+    const storage = new MemoryStorage();
+    const store = createBrowserProfileStore(storage);
+    const previous = createFreshProfile();
+    const next = profileWith({ level: 2, tutorialPreference: "disabled" });
+    storage.failBeforeWriteCount = {
+      key: `${PROFILE_STORAGE_KEY}.commit`,
+      count: 2,
+    };
+    const request = {
+      completionId: "marker-setup-retry",
+      completionFingerprint: "sha256-v1:marker-setup-retry",
+      expectedProfile: previous,
+      nextProfile: next,
+    } as const;
+
+    expect(store.commitCompletedRun(request)).toMatchObject({
+      status: "uncertain",
+      error: { code: "write-outcome-unknown" },
     });
     expect(store.load()).toEqual({
       status: "empty",
