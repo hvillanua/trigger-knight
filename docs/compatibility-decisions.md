@@ -36,6 +36,47 @@ Implementation and evidence: [encounters.ts](../src/domain/encounters.ts),
 [queue tests](../tests/unit/gameplay-encounter-queue.test.ts),
 [enemy-generation tests](../tests/unit/gameplay-enemy-generation.test.ts).
 
+## Contextual tutorial gates
+
+The tutorial research confirms six pages, the subjects of pages 1 through 5,
+the unconditional page 0 call at run initialization, and preference gating for
+the contextual calls. It does not settle the contextual thresholds, whether a
+page repeats, overlap priority, or exact ordering around a logical tick. The
+following choices make those gaps implementable without presenting them as
+recovered Flash behavior.
+
+| Page | Trigger boundary                                                                   | Threshold or scope                                      | Repetition   |
+| ---: | ---------------------------------------------------------------------------------- | ------------------------------------------------------- | ------------ |
+|    0 | Run initialization                                                                 | Always, regardless of the saved preference              | Every run    |
+|    1 | The first unused shop enters the strict public purchase window                     | Any building, including a Soul Shrine                   | Once per run |
+|    2 | The first unused Soul Shrine enters the strict public purchase window              | The Shrine-specific restoration lesson                  | Once per run |
+|    3 | The first battle is promoted to the current encounter                              | Open before the next active combat tick                 | Once per run |
+|    4 | The first active update leaves the run at or below 25.00% lifespan                 | Applies in running or battle while the run is not ended | Once per run |
+|    5 | The first nonlethal active combat update leaves the living hero at or below 25% HP | Applies only in battle                                  | Once per run |
+
+Unshown contextual pages retain their eligibility after a different page opens.
+When multiple pages qualify at one boundary, the lowest page index wins. Only
+one contextual page opens for an opportunity. After dismissal, the remaining
+pages are checked against the current public boundary on the next opportunity,
+so a persistent shop, battle, or threshold can show its next lesson after the
+current page is dismissed. The once-per-run markers are gameplay state and are
+not part of the player-facing observation.
+
+Commands are applied before an opportunity is judged. An open tutorial or pause
+freezes active ticks, lifespan drain, encounter movement and countdowns, combat
+progression, and gameplay random draws. Dismissing a tutorial clears only the
+current page. If pause is still active, gameplay remains paused; otherwise the
+next active opportunity starts from the gated state without replaying the
+trigger. A disabled saved preference skips pages 1 through 5 without consuming
+an active tick or changing domain randomness. Page 0 remains unconditional. If
+page 1 and page 2 qualify on the same Shrine, page 1 is shown first and page 2
+remains eligible after dismissal.
+
+Implementation and evidence: [tutorial research](../research/presentation.md#tutorials),
+[tutorial gate selection](../src/domain/tutorials.ts),
+[tutorial gate tests](../tests/unit/gameplay-tutorials.test.ts), and
+[browser parity](../tests/browser/milestone-6-tutorial-gates.spec.ts).
+
 ## Pregame gates
 
 The [timing research](../research/presentation.md#swf-and-frame-timing) confirms
