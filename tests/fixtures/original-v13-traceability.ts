@@ -518,6 +518,10 @@ export const originalV13Traceability = Object.freeze([
       ),
       evidence(
         "tests/unit/profile-achievements.test.ts",
+        "profile collections and achievements > checks computed damage at the 70000 boundary for $weaponAttack attack",
+      ),
+      evidence(
+        "tests/unit/profile-achievements.test.ts",
         "profile collections and achievements > unlocks complete collection only when the last tier is discovered",
       ),
       evidence(
