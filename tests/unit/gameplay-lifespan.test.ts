@@ -9,7 +9,11 @@ const gameplayEngine = createTestGameplayEngine();
 const config: RunConfig = Object.freeze({
   ruleset: ORIGINAL_V13_RULESET_ID,
   seed: "lifespan-seed",
-  initialProfile: Object.freeze({ schemaVersion: 1, scoreMultiplier: 1 }),
+  initialProfile: Object.freeze({
+    schemaVersion: 1,
+    scoreMultiplier: 1,
+    tutorialPreference: "disabled" as const,
+  }),
 });
 
 function stepMany(state: RunState, count: number): RunState {

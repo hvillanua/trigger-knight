@@ -220,7 +220,7 @@ describe("public application contracts", () => {
       readonly initialProfile: ProfileInput;
     }>();
     expectTypeOf<RunState>().toMatchTypeOf<{
-      readonly schemaVersion: 16;
+      readonly schemaVersion: 17;
       readonly ruleset: RuleSetId;
       readonly random: RandomState;
       readonly steps: number;
@@ -235,6 +235,14 @@ describe("public application contracts", () => {
       readonly weaponDiscoveries: readonly boolean[];
       readonly armorDiscoveries: readonly boolean[];
       readonly achievementSlots: readonly boolean[];
+      readonly tutorials: {
+        readonly preference: "enabled" | "disabled";
+        readonly page1Shown: boolean;
+        readonly page2Shown: boolean;
+        readonly page3Shown: boolean;
+        readonly page4Shown: boolean;
+        readonly page5Shown: boolean;
+      };
       readonly lifespan: {
         readonly whole: number;
         readonly fraction: number;
@@ -308,7 +316,7 @@ describe("public application contracts", () => {
         readonly phase: "running" | "battling" | "ended";
         readonly terminalReason: "lifespan" | "combat" | null;
         readonly paused: boolean;
-        readonly tutorialPage: 0 | null;
+        readonly tutorialPage: 0 | 1 | 2 | 3 | 4 | 5 | null;
         readonly pregameStepsRemaining: number;
       };
     }>();
@@ -365,7 +373,7 @@ describe("public application contracts", () => {
         readonly phase: "running" | "battling" | "ended";
         readonly terminalReason: "lifespan" | "combat" | null;
         readonly paused: boolean;
-        readonly tutorialPage: 0 | null;
+        readonly tutorialPage: 0 | 1 | 2 | 3 | 4 | 5 | null;
         readonly pregameStepsRemaining: number;
         readonly activeGameplay: boolean;
       };
@@ -466,7 +474,10 @@ describe("public application contracts", () => {
         }>
       | Readonly<{ type: "step-advanced"; step: number }>
       | Readonly<{ type: "shop-departed"; shop: ShopId }>
-      | Readonly<{ type: "tutorial-dismissed"; page: 0 }>
+      | Readonly<{
+          type: "tutorial-dismissed";
+          page: 0 | 1 | 2 | 3 | 4 | 5;
+        }>
     >();
   });
 });

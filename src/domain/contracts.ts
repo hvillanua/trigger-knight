@@ -4,11 +4,17 @@
  */
 export type RuleSetId = string;
 
+/** Saved player preference for contextual tutorial gates. */
+export type TutorialPreference = "enabled" | "disabled";
+
+/** @playerVisible Tutorial page identity exposed to players. */
+export type TutorialPage = 0 | 1 | 2 | 3 | 4 | 5;
+
 /** Explicit run input, including the earlier minimal configuration shape. */
 export interface MinimalProfileInput {
   readonly schemaVersion: number;
   readonly scoreMultiplier: number;
-  readonly tutorialPreference?: "enabled" | "disabled";
+  readonly tutorialPreference?: TutorialPreference;
 }
 
 /** Between-run unlock flags shared with an in-progress run. */
@@ -28,7 +34,7 @@ export interface ProfileState extends MinimalProfileInput, ProfileUnlockState {
   readonly level: number;
   readonly xp: number;
   readonly highScore: number;
-  readonly tutorialPreference: "enabled" | "disabled";
+  readonly tutorialPreference: TutorialPreference;
 }
 
 /** Authoritative earnings and terminal state accepted by profile settlement. */
@@ -55,6 +61,16 @@ export interface RandomState {
   readonly state: number;
 }
 
+/** Authoritative once-per-run progress for contextual tutorial pages. */
+export interface TutorialState {
+  readonly preference: TutorialPreference;
+  readonly page1Shown: boolean;
+  readonly page2Shown: boolean;
+  readonly page3Shown: boolean;
+  readonly page4Shown: boolean;
+  readonly page5Shown: boolean;
+}
+
 /** @playerVisible Current phase exposed to players. */
 export type RunPhase = "running" | "battling" | "ended";
 
@@ -66,7 +82,7 @@ export interface RunLifecycleState {
   readonly phase: RunPhase;
   readonly terminalReason: RunTerminalReason | null;
   readonly paused: boolean;
-  readonly tutorialPage: 0 | null;
+  readonly tutorialPage: TutorialPage | null;
   readonly pregameStepsRemaining: number;
 }
 
@@ -321,7 +337,7 @@ export interface EncounterObservation {
 
 /** Authoritative state owned by the gameplay domain. */
 export interface RunState extends ProfileUnlockState {
-  readonly schemaVersion: 16;
+  readonly schemaVersion: 17;
   readonly ruleset: RuleSetId;
   readonly random: RandomState;
   readonly steps: number;
@@ -333,6 +349,7 @@ export interface RunState extends ProfileUnlockState {
   readonly score: number;
   readonly profileExpEarned: number;
   readonly dragonKills: number;
+  readonly tutorials: TutorialState;
   readonly lifespan: LifespanState;
   readonly player: PlayerState;
   readonly battle: BattleState | null;
@@ -385,7 +402,7 @@ export interface PauseToggledEvent {
 /** @playerVisible Tutorial dismissal exposed to players. */
 export interface TutorialDismissedEvent {
   readonly type: "tutorial-dismissed";
-  readonly page: 0;
+  readonly page: TutorialPage;
 }
 
 /** @playerVisible Lifespan death exposed to players. */
@@ -535,7 +552,7 @@ export interface LifecycleObservation {
   readonly phase: RunPhase;
   readonly terminalReason: RunTerminalReason | null;
   readonly paused: boolean;
-  readonly tutorialPage: 0 | null;
+  readonly tutorialPage: TutorialPage | null;
   readonly pregameStepsRemaining: number;
   readonly activeGameplay: boolean;
 }

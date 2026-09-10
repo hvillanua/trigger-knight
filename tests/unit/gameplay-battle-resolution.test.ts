@@ -26,7 +26,11 @@ function lethal(
   const initial = engine.createRun({
     ruleset: "original-v1.3",
     seed: "resolution",
-    initialProfile: { schemaVersion: 1, scoreMultiplier: 1.5 },
+    initialProfile: {
+      schemaVersion: 1,
+      scoreMultiplier: 1.5,
+      tutorialPreference: "disabled",
+    },
   });
   const enemy = {
     goblin: { maximumHp: 660, attack: 122, goldReward: 82, profileExp: 13 },

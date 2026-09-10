@@ -20,7 +20,11 @@ export function combatLoopConfig(seed: string): RunConfig {
   return {
     ruleset: "original-v1.3",
     seed,
-    initialProfile: { schemaVersion: 1, scoreMultiplier: 1 },
+    initialProfile: {
+      schemaVersion: 1,
+      scoreMultiplier: 1,
+      tutorialPreference: "disabled",
+    },
   };
 }
 

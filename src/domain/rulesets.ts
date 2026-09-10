@@ -54,6 +54,7 @@ import {
   createRunState,
   isActiveGameplay,
 } from "./run-state.js";
+import { advanceTutorialGates } from "./tutorials.js";
 
 export const ORIGINAL_V13_RULESET_ID = "original-v1.3" as const;
 
@@ -99,6 +100,16 @@ export interface RuleSetConstants {
     readonly drainPerActiveTick: number;
     readonly fractionReset: number;
     readonly deathBelowWhole: number;
+  };
+  readonly tutorials: {
+    readonly shopActionMinimumX: number;
+    readonly shopActionMaximumX: number;
+    readonly lifespanThreshold: {
+      readonly whole: number;
+      readonly fraction: number;
+    };
+    readonly hpThresholdNumerator: number;
+    readonly hpThresholdDenominator: number;
   };
   readonly world: {
     readonly originalStageUnitsPerWorldUnit: number;
@@ -344,6 +355,13 @@ const originalV13Constants: RuleSetConstants = Object.freeze({
     fractionReset: 99,
     deathBelowWhole: 0,
   }),
+  tutorials: Object.freeze({
+    shopActionMinimumX: 0,
+    shopActionMaximumX: 420,
+    lifespanThreshold: Object.freeze({ whole: 25, fraction: 0 }),
+    hpThresholdNumerator: 1,
+    hpThresholdDenominator: 4,
+  }),
   world: Object.freeze({
     originalStageUnitsPerWorldUnit: 1,
     initialCamera: Object.freeze({
@@ -478,6 +496,7 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
       player,
       initializedEncounters.encounters,
       profile,
+      profile.tutorialPreference,
     );
   },
 
@@ -530,19 +549,25 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
       resolution.state,
       originalV13LifespanRules,
     );
+    const events = [
+      ...result.events,
+      ...progression.events,
+      ...encounters.events,
+      ...battle.events,
+      ...combat.events,
+      ...resolution.events,
+      ...lifespan.events,
+    ];
+    const tutorials = advanceTutorialGates(
+      commandedState,
+      lifespan.state,
+      events,
+      originalV13Constants.tutorials,
+    );
 
     return Object.freeze({
-      state: lifespan.state,
-      events: Object.freeze([
-        ...commandEvents,
-        ...result.events,
-        ...progression.events,
-        ...encounters.events,
-        ...battle.events,
-        ...combat.events,
-        ...resolution.events,
-        ...lifespan.events,
-      ]),
+      state: tutorials.state,
+      events: Object.freeze([...commandEvents, ...events]),
     });
   },
 

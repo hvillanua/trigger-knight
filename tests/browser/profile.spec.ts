@@ -121,10 +121,13 @@ test("shows a committed result and starts the next run from its profile", async 
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
   await page.evaluate(() => {
     const advance = document.querySelector<HTMLButtonElement>("#advance-run");
-    if (advance === null) {
-      throw new Error("Missing advance control");
+    const dismiss =
+      document.querySelector<HTMLButtonElement>("#dismiss-tutorial");
+    if (advance === null || dismiss === null) {
+      throw new Error("Missing run control");
     }
     for (let step = 0; step < 2_600; step += 1) {
+      if (!dismiss.disabled) dismiss.click();
       advance.click();
     }
   });
@@ -232,10 +235,13 @@ test("keeps a failed completed-run save visible until retry succeeds", async ({
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
   await page.evaluate(() => {
     const advance = document.querySelector<HTMLButtonElement>("#advance-run");
-    if (advance === null) {
-      throw new Error("Missing advance control");
+    const dismiss =
+      document.querySelector<HTMLButtonElement>("#dismiss-tutorial");
+    if (advance === null || dismiss === null) {
+      throw new Error("Missing run control");
     }
     for (let step = 0; step < 2_600; step += 1) {
+      if (!dismiss.disabled) dismiss.click();
       advance.click();
     }
   });

@@ -14,7 +14,11 @@ const gameplayEngine = createTestGameplayEngine();
 const config: RunConfig = Object.freeze({
   ruleset: ORIGINAL_V13_RULESET_ID,
   seed: "browser-session-seed",
-  initialProfile: Object.freeze({ schemaVersion: 1, scoreMultiplier: 1 }),
+  initialProfile: Object.freeze({
+    schemaVersion: 1,
+    scoreMultiplier: 1,
+    tutorialPreference: "disabled" as const,
+  }),
 });
 
 const initialPlayer = {

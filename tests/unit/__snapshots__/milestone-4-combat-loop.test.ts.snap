@@ -4,7 +4,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
 {
   "firstOutcomes": {
     "achievement-unlocked": {
-      "checkpointHash": "sha256-v1:ea206b40198b804d03ab7b8e32a5fd71a5c0bd7f44d992bf8169fa96064d8d85",
+      "checkpointHash": "sha256-v1:10e602d37f409b4841a13f2e1cf62ad7c69fc9a02916036357b05b5bccc0cea6",
       "events": [
         {
           "step": 6144,
@@ -22,7 +22,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 6144,
     },
     "battle-reward": {
-      "checkpointHash": "sha256-v1:66f24b0084dcd1abfd2359fb840d610b7021f81968d8b6df33fb28e188d8d00c",
+      "checkpointHash": "sha256-v1:e9b9c890c08f417ff025f8e7947cc2a788dbc0f1f706eb8d3cba59dd5b3a99fc",
       "events": [
         {
           "step": 439,
@@ -44,7 +44,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 439,
     },
     "battle-started": {
-      "checkpointHash": "sha256-v1:56c1ec1addf4a82d21947d7813b3c6865149fe4176f27ba69319231d8da3be8d",
+      "checkpointHash": "sha256-v1:63cb5f771da5ccea891e57f58e5e46fe67d5275f4f0b0376a03ce5474ac3d073",
       "events": [
         {
           "step": 320,
@@ -66,7 +66,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 320,
     },
     "combat-hit": {
-      "checkpointHash": "sha256-v1:d197d541725e569d191c5c49f877caa1ec8075c546fb9b4835d0b75b8e7b7dec",
+      "checkpointHash": "sha256-v1:fe93c30e55ab2dddd0291a94d1024c7b184f7c8a386a6c3332e5161ed8a9c2cc",
       "events": [
         {
           "step": 344,
@@ -93,7 +93,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 344,
     },
     "combat-lethal-hit": {
-      "checkpointHash": "sha256-v1:c36c1a7831a1049b5caf58b1f7a035425ef5b16a183775f91798740be045c58c",
+      "checkpointHash": "sha256-v1:791b21d98bd677351009eff42363278f1c593d176eca954b05fcf969cd50c221",
       "events": [
         {
           "step": 429,
@@ -125,7 +125,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 429,
     },
     "combat-phase-changed": {
-      "checkpointHash": "sha256-v1:e43364fd531fcc6098a401e5a73143df89f7871a88264008a29bd643ffba5843",
+      "checkpointHash": "sha256-v1:b6d20413dadfbcbe6e0addf3a3cb329eab98893bf5e58987f5734da53d635346",
       "events": [
         {
           "step": 321,
@@ -149,7 +149,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 321,
     },
     "encounter-promoted": {
-      "checkpointHash": "sha256-v1:63a0f4ec4d351757655205e698d70e4bbd235642a8a8f61893422c15e40f2871",
+      "checkpointHash": "sha256-v1:468f4d4fdb6e08da5e9430f71b1e65faaf168927ee20c69229424e896d3c39e7",
       "events": [
         {
           "step": 188,
@@ -173,7 +173,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 188,
     },
     "equipment-discovered": {
-      "checkpointHash": "sha256-v1:56a1562cbf9ac7b32f2b5f5337b145e2611d69398602456f6390c8ac09175b51",
+      "checkpointHash": "sha256-v1:4f25df996b1991229e336122178405a0124727b7529419c9f502d4f0e279a468",
       "events": [
         {
           "price": 236,
@@ -197,7 +197,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 214,
     },
     "item-used": {
-      "checkpointHash": "sha256-v1:a90195df337e2420194403761680280214aa4eb27da0cabcc39a4551fe892d11",
+      "checkpointHash": "sha256-v1:2af5574abee4c0b527a85caf274a6009e8e720ca0f5f26abc1737e04d470185b",
       "events": [
         {
           "item": "elixir",
@@ -215,7 +215,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 1845,
     },
     "run-ended": {
-      "checkpointHash": "sha256-v1:4e88262a3381b9dffe0b15697045c1d929c3e4399c3005f68f4f7a0880da9db5",
+      "checkpointHash": "sha256-v1:db52479251c08cf1e7e5388ec353ddb7026c2d0bb0e2b7c4902a5f3e34defe0c",
       "events": [
         {
           "step": 14800,
@@ -233,7 +233,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 14800,
     },
     "shop-departed": {
-      "checkpointHash": "sha256-v1:5115da7e0da7bfb1bd1b1215bdc97aff42daa8b81a8debee535e251bd040acf0",
+      "checkpointHash": "sha256-v1:1d9dd3dcbd3d7812833292a10c6715c76f09919fa8c4432db2e6db5e878d035b",
       "events": [
         {
           "step": 282,
@@ -251,7 +251,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 282,
     },
     "shop-purchased": {
-      "checkpointHash": "sha256-v1:56a1562cbf9ac7b32f2b5f5337b145e2611d69398602456f6390c8ac09175b51",
+      "checkpointHash": "sha256-v1:4f25df996b1991229e336122178405a0124727b7529419c9f502d4f0e279a468",
       "events": [
         {
           "price": 236,
@@ -275,7 +275,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 214,
     },
     "tutorial-dismissed": {
-      "checkpointHash": "sha256-v1:493301f84d593526dfd3c34ad0c59cfa1df0c60c1d75e29feb43fb8553af7a0b",
+      "checkpointHash": "sha256-v1:0378f838ae2f2bff5159cdf8dea3b631f9f278bceb832818f535fc6bb26889bb",
       "events": [
         {
           "page": 0,
@@ -298,7 +298,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
     "day": 22,
     "distance": 152925,
     "gold": 8152,
-    "initialProfileFingerprint": "sha256-v1:16560d87b48392edba4291a11362cae68bf8a4e7f8c60c226a6f62f37330f211",
+    "initialProfileFingerprint": "sha256-v1:70e9e848fd1e2cb5add6f527a071ebadbc71f826eee019ad845f3d27c3a9051c",
     "maxSteps": 30000,
     "metrics": {},
     "policy": {
@@ -314,9 +314,9 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
     "seed": "m4-policy-2211",
     "steps": 14800,
     "terminalReason": "combat",
-    "traceHash": "sha256-v1:84e6c6b4bc9f9f6f8403870c538fa73e5b518cfb3f47bd9628c3efc10063ad7f",
+    "traceHash": "sha256-v1:4c6866696842ebe67f8998112f3511a71de62a498871624bb26c2b3c618cd6d1",
   },
-  "traceHash": "sha256-v1:28590e1844b3632c19bfd2b0a876f466bc1c82d2e47e40cb2b4bac3686d801bd",
+  "traceHash": "sha256-v1:e324e06154aac73eff2bfff4d4fd6eff04a59ac9678c8407373311adf000bd0c",
 }
 `;
 
@@ -324,7 +324,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
 {
   "firstOutcomes": {
     "battle-reward": {
-      "checkpointHash": "sha256-v1:792d6f60c7896a42f9dd79a5b4b29d6fceaf040680e5ffc47efacf0429d1b5c0",
+      "checkpointHash": "sha256-v1:d33a39d7062da55365bd0447a6edc096c44c2c9b136bd06fae93a0c42ebb38e0",
       "events": [
         {
           "step": 418,
@@ -346,7 +346,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 418,
     },
     "battle-started": {
-      "checkpointHash": "sha256-v1:89d52ead613af367f4637e64baa7601f7f598e19cded9a41717524be832f1534",
+      "checkpointHash": "sha256-v1:7c603235fe86b4f404c644496a4139dc9fbd7ea6e9d7e9052e82312a6d8975b8",
       "events": [
         {
           "step": 206,
@@ -368,7 +368,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 206,
     },
     "combat-hit": {
-      "checkpointHash": "sha256-v1:ae803e53a60e48387a745907cb90c395af788f46f077fd187424b46949ef2f92",
+      "checkpointHash": "sha256-v1:4592d25d8d92fc7aa651fedf9bba2b44c376884a8d766f224928132bee18fe2b",
       "events": [
         {
           "step": 230,
@@ -395,7 +395,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 230,
     },
     "combat-lethal-hit": {
-      "checkpointHash": "sha256-v1:11e1c4b0a1452a6e3e6ab73cbd3402adc085c8e51f8e779cf7657f79afb3df52",
+      "checkpointHash": "sha256-v1:983b19318e1fca1cfc1b4f125da9dfa6d93b97aa411f4a8033dc690ebbe28ad7",
       "events": [
         {
           "step": 408,
@@ -427,7 +427,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 408,
     },
     "combat-phase-changed": {
-      "checkpointHash": "sha256-v1:ad35aacee7721d0bbad3f144fe99942a878d9fe18aa6fcf6e24b37c0fb00f326",
+      "checkpointHash": "sha256-v1:c7b3a86c11a4ff449c4afdfc5960449ccb3ceed7061893833a1fe4e1bec7b172",
       "events": [
         {
           "step": 207,
@@ -451,7 +451,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 207,
     },
     "encounter-promoted": {
-      "checkpointHash": "sha256-v1:674685274dcbb393b280ee4bbd811e8a1842951cf4c6e0d64052aa8d2f971161",
+      "checkpointHash": "sha256-v1:71328b6e69f2c16d071b1e9317dbad831dab1a47e576d7d684c055f301ac334d",
       "events": [
         {
           "step": 193,
@@ -476,7 +476,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 193,
     },
     "equipment-discovered": {
-      "checkpointHash": "sha256-v1:1ae478620ec31dd411d67c348eabd49d942588882c32e1bfaaba7824f37ed50f",
+      "checkpointHash": "sha256-v1:35ad92135efb8735008c6a6dd0b2366785f75243f8815276418ce16db4844029",
       "events": [
         {
           "price": 236,
@@ -500,7 +500,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 542,
     },
     "item-used": {
-      "checkpointHash": "sha256-v1:8b79878e2a491689d4ece5bb8fd06fe0542e4402e211cfe3ad9c4cf6fdff3a00",
+      "checkpointHash": "sha256-v1:ba01ac06f62285762333bf40f1f4ff6c342409e6ae2e66474f88bf785dfab6cf",
       "events": [
         {
           "item": "elixir",
@@ -518,7 +518,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 2775,
     },
     "lifespan-death": {
-      "checkpointHash": "sha256-v1:97473dfeb96eb472f15f7a02361b7bbae890104121639aa567d83426a1a211ad",
+      "checkpointHash": "sha256-v1:4716cfe850797feb2f9fc55ec71ea729216cd92ef9ab398c0f4d59257bfcefbf",
       "events": [
         {
           "step": 4501,
@@ -539,7 +539,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 4501,
     },
     "run-ended": {
-      "checkpointHash": "sha256-v1:97473dfeb96eb472f15f7a02361b7bbae890104121639aa567d83426a1a211ad",
+      "checkpointHash": "sha256-v1:4716cfe850797feb2f9fc55ec71ea729216cd92ef9ab398c0f4d59257bfcefbf",
       "events": [
         {
           "step": 4501,
@@ -560,7 +560,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 4501,
     },
     "shop-departed": {
-      "checkpointHash": "sha256-v1:88bedc254e5b090a21a92d19b22c888053bb340254fbfa5f8cb95409b9b0b35c",
+      "checkpointHash": "sha256-v1:fb593a6dd1c1f81b7cf0ea896f25e9d3600d3d2d841825631597d631e3bfbef0",
       "events": [
         {
           "step": 610,
@@ -578,7 +578,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 610,
     },
     "shop-purchased": {
-      "checkpointHash": "sha256-v1:1ae478620ec31dd411d67c348eabd49d942588882c32e1bfaaba7824f37ed50f",
+      "checkpointHash": "sha256-v1:35ad92135efb8735008c6a6dd0b2366785f75243f8815276418ce16db4844029",
       "events": [
         {
           "price": 236,
@@ -602,7 +602,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
       "step": 542,
     },
     "tutorial-dismissed": {
-      "checkpointHash": "sha256-v1:e1d6faea281fb1127a8f04b9c34286ea72aa22db5ef9629ae2f9cbaab81b343f",
+      "checkpointHash": "sha256-v1:a6d4cb44f5704df2a402429bc8e169a8ff045e9344f29011edff01e8fddb4eb2",
       "events": [
         {
           "page": 0,
@@ -625,7 +625,7 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
     "day": 7,
     "distance": 43770,
     "gold": 156,
-    "initialProfileFingerprint": "sha256-v1:16560d87b48392edba4291a11362cae68bf8a4e7f8c60c226a6f62f37330f211",
+    "initialProfileFingerprint": "sha256-v1:70e9e848fd1e2cb5add6f527a071ebadbc71f826eee019ad845f3d27c3a9051c",
     "maxSteps": 30000,
     "metrics": {},
     "policy": {
@@ -641,8 +641,8 @@ exports[`Milestone 4 complete combat loop > preserves per-step invariants throug
     "seed": "m4-policy-3",
     "steps": 4501,
     "terminalReason": "lifespan",
-    "traceHash": "sha256-v1:b3d06c3806dce78b74eb65f345f2f1ff7ba2fc3c58efbef5fce01e27c2e02916",
+    "traceHash": "sha256-v1:309f8cfe1ad8e39f72996359326026422a5b032c853c7c45d2166f3231ab01df",
   },
-  "traceHash": "sha256-v1:77640520ef44f048b346dafdec1f856fe271c535cd149338c779c186ca02597d",
+  "traceHash": "sha256-v1:6ced96453d65fbdebe9eef4c5ab72c80ebca26f4143eebd1167a10e541abb47f",
 }
 `;

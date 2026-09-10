@@ -9,14 +9,16 @@ import type {
   RuleSetId,
   RunLifecycleState,
   RunState,
+  TutorialPreference,
   TogglePauseCommand,
 } from "./contracts.js";
 import { createEncounterQueueState } from "./encounters.js";
 import { createBattleState } from "./battle.js";
 import { createPlayerState } from "./player-state.js";
 import { createFreshProfile } from "./profile.js";
+import { createTutorialState } from "./tutorials.js";
 
-export const RUN_STATE_SCHEMA_VERSION = 16 as const;
+export const RUN_STATE_SCHEMA_VERSION = 17 as const;
 
 /** Creates a fresh minimal state value for one independent run. */
 export function createRunState(
@@ -29,6 +31,7 @@ export function createRunState(
   initialPlayer: Readonly<PlayerState>,
   initialEncounters: Readonly<EncounterQueueState>,
   initialUnlocks: Readonly<ProfileUnlockState> = createFreshProfile(),
+  tutorialPreference: TutorialPreference = "enabled",
 ): RunState {
   return Object.freeze({
     schemaVersion: RUN_STATE_SCHEMA_VERSION,
@@ -46,6 +49,7 @@ export function createRunState(
     weaponDiscoveries: Object.freeze([...initialUnlocks.weaponDiscoveries]),
     armorDiscoveries: Object.freeze([...initialUnlocks.armorDiscoveries]),
     achievementSlots: Object.freeze([...initialUnlocks.achievementSlots]),
+    tutorials: createTutorialState(tutorialPreference),
     lifespan: Object.freeze({ ...initialLifespan }),
     player: createPlayerState(initialPlayer),
     battle: null,
@@ -143,6 +147,7 @@ export function advanceRunState(state: Readonly<RunState>): RunStateStepResult {
     weaponDiscoveries: Object.freeze([...state.weaponDiscoveries]),
     armorDiscoveries: Object.freeze([...state.armorDiscoveries]),
     achievementSlots: Object.freeze([...state.achievementSlots]),
+    tutorials: Object.freeze({ ...state.tutorials }),
     player: createPlayerState(state.player),
     battle: state.battle === null ? null : createBattleState(state.battle),
     encounters: createEncounterQueueState(state.encounters),

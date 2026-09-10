@@ -54,6 +54,25 @@ function formatProjectionValue(value: number): string {
   return String(Math.round(value * 1_000_000) / 1_000_000);
 }
 
+function tutorialLabel(page: number): string {
+  switch (page) {
+    case 0:
+      return "Basic survival";
+    case 1:
+      return "Building interaction";
+    case 2:
+      return "Soul Shrine";
+    case 3:
+      return "Automatic battle and item use";
+    case 4:
+      return "Low lifespan";
+    case 5:
+      return "Low HP";
+    default:
+      return `Page ${page}`;
+  }
+}
+
 function interpolate(
   previous: number,
   current: number,
@@ -81,6 +100,12 @@ export class CanvasPresentation implements PresentationPort {
     this.#canvas.dataset.day = String(frame.current.day);
     this.#canvas.dataset.score = String(frame.current.score);
     this.#canvas.dataset.phase = frame.current.lifecycle.phase;
+    const tutorialPage = frame.current.lifecycle.tutorialPage;
+    if (tutorialPage === null) {
+      delete this.#canvas.dataset.tutorialPage;
+    } else {
+      this.#canvas.dataset.tutorialPage = String(tutorialPage);
+    }
     const battle = frame.current.battle;
     if (battle === null) {
       delete this.#canvas.dataset.battleEnemy;
@@ -191,6 +216,16 @@ export class CanvasPresentation implements PresentationPort {
       centerX,
       centerY + titleSize * 1.5,
     );
+
+    const tutorialPage = this.#frame.current.lifecycle.tutorialPage;
+    if (tutorialPage !== null) {
+      context.fillStyle = "#f4d58d";
+      context.fillText(
+        `Tutorial ${tutorialPage}: ${tutorialLabel(tutorialPage)}`,
+        centerX,
+        centerY + titleSize * 2.5,
+      );
+    }
 
     const markerOffset =
       ((interpolatedDistance % camera.width) + camera.width) % camera.width;
