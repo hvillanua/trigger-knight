@@ -36,3 +36,16 @@ evidence of a changed implementation, not proof that the clean-room seed
 matches an unrecovered Flash seed. Inspect the first failing checkpoint and the
 research or compatibility decision that covers its behavior before changing an
 expected value.
+
+The original-v1.3 evidence is frozen by a separate, versioned corpus fingerprint
+in [`tests/fixtures/original-v13-baseline.ts`](../tests/fixtures/original-v13-baseline.ts).
+Run the baseline and corpus guards together with:
+
+```sh
+npm exec -- vitest run tests/unit/milestone-6-compatibility-baseline.test.ts tests/unit/milestone-6-compatibility-corpus.test.ts
+```
+
+Changing expected results or traces without intentionally updating the baseline
+version fails the fingerprint check. A gameplay change needs a new ruleset
+identity. A result or trace representation change needs a new schema/baseline
+version while retaining the prior evidence.

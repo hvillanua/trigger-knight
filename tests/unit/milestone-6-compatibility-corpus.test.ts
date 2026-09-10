@@ -12,6 +12,7 @@ import { purchasingPolicy } from "../../src/simulation/purchasing-policy.js";
 import { createSimulationRunner } from "../../src/simulation/simulation-runner.js";
 import { originalLifecyclePolicy } from "../helpers/original-lifecycle.js";
 import { createTestGameplayEngine } from "../helpers/gameplay-engine.js";
+import { assertOriginalV13CompatibilityBaseline } from "../fixtures/original-v13-baseline.js";
 import { originalV13Traceability } from "../fixtures/original-v13-traceability.js";
 import {
   ORIGINAL_V13_GAMEPLAY_TRACE_SCHEMA_VERSION,
@@ -63,6 +64,7 @@ function runFixture(fixture: (typeof originalV13CompatibilityRuns)[number]): {
 
 describe("original-v1.3 compatibility corpus", () => {
   it("labels every retained run and leaves no traceability blocker behind", () => {
+    assertOriginalV13CompatibilityBaseline();
     expect(originalV13CompatibilityRuns.length).toBeGreaterThanOrEqual(5);
     expect(
       originalV13CompatibilityRuns.every(

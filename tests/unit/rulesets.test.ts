@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
 
+import { createGameplayEngine } from "../../src/application/gameplay-engine.js";
+import type {
+  GameCommand,
+  ProfileInput,
+  RunState,
+} from "../../src/domain/contracts.js";
+import type { RuleSetImplementation } from "../../src/domain/rulesets.js";
 import {
   createRuleSetRegistry,
   ORIGINAL_V13_RULESET_ID,
@@ -201,5 +208,56 @@ describe("ruleset registry", () => {
     expect(registry.supportedIds).toEqual(["original-v1.3", "future-v1"]);
     expect(registry.resolve(ORIGINAL_V13_RULESET_ID)).toBe(originalV13RuleSet);
     expect(registry.resolve("future-v1")).toBe(futureRuleSet);
+  });
+
+  it("dispatches genuinely different test-only behavior by ruleset identity", () => {
+    const futureRuleSet: RuleSetImplementation = Object.freeze({
+      ...originalV13RuleSet,
+      id: "future-v1",
+      createRun(seed: string, initialProfile: Readonly<ProfileInput>) {
+        const state = originalV13RuleSet.createRun(seed, initialProfile);
+
+        return Object.freeze({ ...state, ruleset: "future-v1" });
+      },
+      step(state: Readonly<RunState>, commands: readonly GameCommand[]) {
+        const result = originalV13RuleSet.step(state, commands);
+
+        return Object.freeze({
+          ...result,
+          state: Object.freeze({
+            ...result.state,
+            score: result.state.score + 1,
+          }),
+        });
+      },
+    });
+    const engine = createGameplayEngine(
+      createRuleSetRegistry([originalV13RuleSet, futureRuleSet]),
+    );
+    const profile = Object.freeze({ schemaVersion: 1, scoreMultiplier: 1 });
+
+    const original = engine.step(
+      engine.createRun({
+        ruleset: ORIGINAL_V13_RULESET_ID,
+        seed: "ruleset-dispatch",
+        initialProfile: profile,
+      }),
+      [],
+    );
+    const future = engine.step(
+      engine.createRun({
+        ruleset: "future-v1",
+        seed: "ruleset-dispatch",
+        initialProfile: profile,
+      }),
+      [],
+    );
+
+    expect(original.state.ruleset).toBe(ORIGINAL_V13_RULESET_ID);
+    expect(future.state.ruleset).toBe("future-v1");
+    expect(future.state.score).toBe(original.state.score + 1);
+    expect(engine.observe(future.state).score).toBe(
+      engine.observe(original.state).score + 1,
+    );
   });
 });
