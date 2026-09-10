@@ -13,6 +13,7 @@ export interface PendingCompletedRunView {
 export type CompletionPresentationStatus =
   "committed" | "already-committed" | "failed" | "uncertain";
 
+/** @playerVisible Browser result presentation boundary options. */
 export interface CompletedRunPresentationOptions {
   readonly onRetry: () => void;
   readonly onNextRun: () => void;
@@ -37,7 +38,7 @@ function numberLabel(value: number): string {
   return String(value);
 }
 
-/** Renders only the committed public result; score counting is presentation-only. */
+/** @playerVisible Renders only the committed public result. */
 export class CompletedRunPresentation {
   readonly #root: HTMLElement;
   readonly #saveStatus: HTMLElement;

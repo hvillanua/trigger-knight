@@ -116,6 +116,7 @@ test("shows a committed result and starts the next run from its profile", async 
   page,
 }) => {
   await page.goto("/");
+  await page.clock.install();
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
   await page.evaluate(() => {
     const advance = document.querySelector<HTMLButtonElement>("#advance-run");
@@ -135,6 +136,10 @@ test("shows a committed result and starts the next run from its profile", async 
   await expect(
     page.getByRole("button", { name: "Start next run" }),
   ).toBeEnabled();
+  await expect(page.locator("#result-score-count")).toHaveAttribute(
+    "data-state",
+    "counting",
+  );
 
   const savedRecord = await page.evaluate((key) => {
     const raw = localStorage.getItem(key);
