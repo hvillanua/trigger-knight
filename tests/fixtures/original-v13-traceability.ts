@@ -79,6 +79,14 @@ export const originalV13Traceability = Object.freeze([
         "tests/unit/gameplay-diagnostics.test.ts",
         "gameplay diagnostics > records equal browser and headless checkpoints for one command schedule",
       ),
+      evidence(
+        "tests/unit/gameplay-diagnostics.test.ts",
+        "gameplay diagnostics > reports a late checkpoint field before a deferred trace hash",
+      ),
+      evidence(
+        "tests/browser/milestone-6-compatibility-corpus.spec.ts",
+        "replays the retained compatibility corpus in Node and Chromium",
+      ),
     ],
   },
   {
@@ -109,6 +117,10 @@ export const originalV13Traceability = Object.freeze([
         "tests/unit/milestone-6-compatibility-corpus.test.ts",
         "original-v1.3 compatibility corpus > replays the retained $id result, trace, and representative checkpoints",
       ),
+      evidence(
+        "tests/browser/milestone-6-compatibility-corpus.spec.ts",
+        "replays the retained compatibility corpus in Node and Chromium",
+      ),
     ],
   },
   {
@@ -126,6 +138,10 @@ export const originalV13Traceability = Object.freeze([
       evidence(
         "tests/unit/architecture-boundaries.test.ts",
         "architecture boundaries > rejects a transitive reference to an unapproved project type",
+      ),
+      evidence(
+        "tests/browser/milestone-6-compatibility-corpus.spec.ts",
+        "replays the retained compatibility corpus in Node and Chromium",
       ),
     ],
   },
@@ -580,6 +596,10 @@ export const originalV13Traceability = Object.freeze([
         "tests/unit/public-contracts.test.ts",
         "public application contracts > gives presentation the shared read-only game observation",
       ),
+      evidence(
+        "tests/browser/milestone-6-compatibility-corpus.spec.ts",
+        "replays the retained compatibility corpus in Node and Chromium",
+      ),
     ],
   },
   {
@@ -667,6 +687,10 @@ export const originalV13Traceability = Object.freeze([
       evidence(
         "tests/unit/milestone-6-compatibility-corpus.test.ts",
         "original-v1.3 compatibility corpus > replays the retained $id result, trace, and representative checkpoints",
+      ),
+      evidence(
+        "tests/browser/milestone-6-compatibility-corpus.spec.ts",
+        "replays the retained compatibility corpus in Node and Chromium",
       ),
     ],
   },
