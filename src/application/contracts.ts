@@ -70,9 +70,12 @@ export type {
 } from "../domain/contracts.js";
 export {
   createCompletedRunCoordinator,
+  createCommittedRunResultView,
   completedRunSettlementFromState,
 } from "./completed-run.js";
 export type {
+  CommittedProfileView,
+  CommittedRunResultView,
   CompletedRunCoordinator,
   CompletedRunRequest,
   CompletedRunResult,

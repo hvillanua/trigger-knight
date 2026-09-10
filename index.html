@@ -16,7 +16,14 @@
         Trigger Knight requires a browser with Canvas 2D support.
       </canvas>
       <p class="status" id="game-status" data-testid="game-status">Step 0</p>
+      <section class="profile-summary" aria-labelledby="profile-heading">
+        <h2 id="profile-heading">Committed profile</h2>
+        <p id="profile-summary" data-testid="profile-summary">
+          Loading profile…
+        </p>
+      </section>
       <div class="controls">
+        <button id="dismiss-tutorial" type="button">Dismiss tutorial</button>
         <button id="advance-run" type="button">Advance run</button>
         <button id="purchase-current-encounter" type="button" disabled>
           Purchase current shop
@@ -25,6 +32,83 @@
           Use carried item
         </button>
       </div>
+      <section
+        id="run-result"
+        class="run-result"
+        aria-labelledby="result-heading"
+        aria-live="polite"
+        hidden
+      >
+        <h2 id="result-heading">Run result</h2>
+        <p id="result-save-status"></p>
+        <p id="result-save-error" class="error" hidden></p>
+        <dl class="result-summary">
+          <div>
+            <dt>Ended by</dt>
+            <dd id="result-terminal-reason">—</dd>
+          </div>
+          <div>
+            <dt>Final score</dt>
+            <dd id="result-score">—</dd>
+          </div>
+          <div>
+            <dt>Optional score count</dt>
+            <dd id="result-score-count" data-state="not-counted">—</dd>
+          </div>
+        </dl>
+        <button id="skip-score-count" type="button" hidden>
+          Skip score count
+        </button>
+        <dl class="result-summary progression-summary">
+          <div>
+            <dt>Committed level</dt>
+            <dd id="result-profile-level">—</dd>
+          </div>
+          <div>
+            <dt>Committed XP</dt>
+            <dd id="result-profile-xp">—</dd>
+          </div>
+          <div>
+            <dt>Committed multiplier</dt>
+            <dd id="result-profile-multiplier">—</dd>
+          </div>
+          <div>
+            <dt>Committed high score</dt>
+            <dd id="result-profile-high-score">—</dd>
+          </div>
+          <div>
+            <dt>Level change</dt>
+            <dd id="result-level-change">—</dd>
+          </div>
+          <div>
+            <dt>XP change</dt>
+            <dd id="result-xp-change">—</dd>
+          </div>
+          <div>
+            <dt>Multiplier change</dt>
+            <dd id="result-multiplier-change">—</dd>
+          </div>
+          <div>
+            <dt>High-score change</dt>
+            <dd id="result-high-score-change">—</dd>
+          </div>
+        </dl>
+        <p>
+          <strong>Collections:</strong> <span id="result-collections">—</span>
+        </p>
+        <p><strong>Progress:</strong> <span id="result-progress">—</span></p>
+        <p>
+          <strong>Achievements:</strong>
+          <span id="result-achievement-count">—</span>
+        </p>
+        <ul id="result-achievements"></ul>
+        <div class="controls">
+          <button id="retry-completed-run" type="button" hidden>
+            Retry save
+          </button>
+          <button id="next-run" type="button" disabled>Start next run</button>
+        </div>
+      </section>
     </main>
     <script type="module" src="/src/main.ts"></script>
   </body>

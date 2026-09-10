@@ -99,6 +99,10 @@ test("starts a browser run from the stored complete profile", async ({
   );
   await page.goto("/");
 
+  await expect(page.getByTestId("profile-summary")).toContainText(
+    "Level 5 · XP 42",
+  );
+
   await expect
     .poll(() =>
       page.evaluate(
@@ -106,6 +110,151 @@ test("starts a browser run from the stored complete profile", async ({
       ),
     )
     .toEqual(profile);
+});
+
+test("shows a committed result and starts the next run from its profile", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now() + 1_000));
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+  await page.evaluate(() => {
+    const advance = document.querySelector<HTMLButtonElement>("#advance-run");
+    if (advance === null) {
+      throw new Error("Missing advance control");
+    }
+    for (let step = 0; step < 2_600; step += 1) {
+      advance.click();
+    }
+  });
+
+  const result = page.locator("#run-result");
+  await expect(result).toHaveAttribute("data-result-state", "committed");
+  await expect(page.locator("#result-save-status")).toHaveText(
+    "Progress saved.",
+  );
+  await expect(
+    page.getByRole("button", { name: "Start next run" }),
+  ).toBeEnabled();
+  await expect(page.locator("#result-score-count")).toHaveAttribute(
+    "data-state",
+    "counting",
+  );
+
+  const savedRecord = await page.evaluate((key) => {
+    const raw = localStorage.getItem(key);
+    if (raw === null) {
+      throw new Error("Expected a committed profile record");
+    }
+    return raw;
+  }, PROFILE_STORAGE_KEY);
+  const savedProfile = await page.evaluate((key) => {
+    const raw = localStorage.getItem(key);
+    if (raw === null) {
+      throw new Error("Expected a committed profile record");
+    }
+    const envelope = JSON.parse(raw) as {
+      profile: {
+        schemaVersion: 2;
+        level: number;
+        xp: number;
+        scoreMultiplier: number;
+        highScore: number;
+        weaponDiscoveries: readonly boolean[];
+        armorDiscoveries: readonly boolean[];
+        achievementSlots: readonly boolean[];
+      };
+      settings: { tutorialPreference: "enabled" | "disabled" };
+    };
+    return {
+      ...envelope.profile,
+      tutorialPreference: envelope.settings.tutorialPreference,
+    };
+  }, PROFILE_STORAGE_KEY);
+
+  const reloadedPage = await page.context().newPage();
+  try {
+    await reloadedPage.goto("/");
+    await expect(reloadedPage.getByTestId("profile-summary")).toContainText(
+      `High score ${savedProfile.highScore}`,
+    );
+    await expect
+      .poll(() =>
+        reloadedPage.evaluate(
+          () => window.triggerKnightDiagnostics?.read().config.initialProfile,
+        ),
+      )
+      .toEqual(savedProfile);
+  } finally {
+    await reloadedPage.close();
+  }
+
+  await page.getByRole("button", { name: "Skip score count" }).click();
+  expect(
+    await page.evaluate(
+      (key) => localStorage.getItem(key),
+      PROFILE_STORAGE_KEY,
+    ),
+  ).toBe(savedRecord);
+  await page.getByRole("button", { name: "Start next run" }).click();
+
+  await expect(result).toBeHidden();
+  await expect(page.getByTestId("game-status")).toHaveText("Step 0");
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => window.triggerKnightDiagnostics?.read().config.initialProfile,
+      ),
+    )
+    .toEqual(savedProfile);
+});
+
+test("keeps a failed completed-run save visible until retry succeeds", async ({
+  page,
+}) => {
+  await page.addInitScript((key) => {
+    const storage = window.localStorage;
+    const originalSetItem = storage.setItem.bind(storage);
+    let failed = false;
+    Object.defineProperty(storage, "setItem", {
+      configurable: true,
+      value: (storageKey: string, value: string): void => {
+        if (storageKey === key && !failed) {
+          failed = true;
+          throw new Error("Simulated completed-run write failure");
+        }
+        originalSetItem(storageKey, value);
+      },
+    });
+  }, PROFILE_STORAGE_KEY);
+  await page.goto("/");
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+  await page.evaluate(() => {
+    const advance = document.querySelector<HTMLButtonElement>("#advance-run");
+    if (advance === null) {
+      throw new Error("Missing advance control");
+    }
+    for (let step = 0; step < 2_600; step += 1) {
+      advance.click();
+    }
+  });
+
+  const result = page.locator("#run-result");
+  await expect(result).toHaveAttribute("data-result-state", "failed");
+  await expect(page.locator("#result-save-status")).toContainText(
+    "Progress was not saved",
+  );
+  await expect(
+    page.getByRole("button", { name: "Start next run" }),
+  ).toBeDisabled();
+
+  await page.getByRole("button", { name: "Retry save" }).click();
+
+  await expect(result).toHaveAttribute("data-result-state", "committed");
+  await expect(page.locator("#result-save-status")).toHaveText(
+    "Progress saved.",
+  );
 });
 
 test("reports an unreadable stored profile without replacing it", async ({

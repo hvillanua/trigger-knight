@@ -166,6 +166,7 @@ describe("completed-run coordination", () => {
     expect(retry).toEqual({
       status: "already-committed",
       profile: first.profile,
+      result: first.result,
     });
   });
 
