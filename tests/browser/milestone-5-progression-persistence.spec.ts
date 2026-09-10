@@ -231,6 +231,8 @@ test("a migrated profile is committed before result presentation and survives na
     { key: "trigger-knight.profile", value: migratedEnvelope },
   );
   await page.goto("/");
+  await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now() + 1_000));
   await expect(page.getByTestId("profile-summary")).toContainText(
     "Level 2 · XP 159",
   );
