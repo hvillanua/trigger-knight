@@ -642,4 +642,38 @@ describe("versioned browser profile storage", () => {
       migrated: false,
     });
   });
+
+  it("rolls back a first completion when staging the ready marker fails", () => {
+    const storage = new MemoryStorage();
+    const store = createBrowserProfileStore(storage);
+    const previous = createFreshProfile();
+    const next = profileWith({ level: 2, tutorialPreference: "disabled" });
+    storage.failBeforeWriteOnCall = {
+      key: `${PROFILE_STORAGE_KEY}.commit`,
+      call: 2,
+    };
+    const request = {
+      completionId: "ready-marker-retry",
+      completionFingerprint: "sha256-v1:ready-marker-retry",
+      expectedProfile: previous,
+      nextProfile: next,
+    } as const;
+
+    expect(store.commitCompletedRun(request)).toMatchObject({
+      status: "failed",
+      error: { code: "write-failed" },
+    });
+    expect(store.load()).toEqual({
+      status: "empty",
+      profile: previous,
+    });
+    expect(store.commitCompletedRun(request)).toEqual({
+      status: "saved",
+      profile: next,
+    });
+    expect(store.commitCompletedRun(request)).toEqual({
+      status: "already-committed",
+      profile: next,
+    });
+  });
 });

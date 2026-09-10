@@ -651,8 +651,10 @@ function publishCommitMarker(
 
 function publishReadyMarker(
   storage: StorageLike,
+  key: string,
   commitKey: string,
   serialized: string,
+  previous: string | null,
   previousMarker: string,
 ): CommitOutcome {
   const readyMarker = encodeReadyMarker(serialized);
@@ -670,8 +672,18 @@ function publishReadyMarker(
       return { status: "saved" };
     }
 
+    if (observed !== previousMarker) {
+      return {
+        status: "uncertain",
+        error: error(
+          "write-outcome-unknown",
+          "Profile commit staging could not be reconciled; load the profile before retrying",
+        ),
+      };
+    }
+
     try {
-      writeRawAndVerify(storage, commitKey, previousMarker);
+      writeRawAndVerify(storage, key, previous);
     } catch {
       return {
         status: "uncertain",
@@ -717,8 +729,10 @@ function commitSerialized(
 
   const readyOutcome = publishReadyMarker(
     storage,
+    key,
     commitKey,
     serialized,
+    previous,
     previousMarker,
   );
   if (readyOutcome.status !== "saved") {
