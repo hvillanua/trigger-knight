@@ -117,6 +117,7 @@ test("shows a committed result and starts the next run from its profile", async 
 }) => {
   await page.goto("/");
   await page.clock.install();
+  await page.clock.pauseAt(new Date(Date.now() + 1_000));
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
   await page.evaluate(() => {
     const advance = document.querySelector<HTMLButtonElement>("#advance-run");
