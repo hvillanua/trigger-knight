@@ -53,7 +53,7 @@ function requireShop(encounter: unknown): ShopEncounter {
 }
 
 describe("original-v1.3 encounter queue", () => {
-  it("creates three queued entries through the confirmed initial draw order", () => {
+  it("creates three queued entries through the selected initial draw order", () => {
     const initialized = initializeEncounterQueue(
       randomAt(0),
       1,

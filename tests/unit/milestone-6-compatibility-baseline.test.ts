@@ -48,7 +48,7 @@ describe("Milestone 6 original-v1.3 traceability", () => {
     expect(blockers).toEqual([
       {
         id: "presentation.contextual-tutorial-gates",
-        blocker: { issue: 96, dependency: 90 },
+        blocker: { issue: 92, dependency: 91 },
       },
     ]);
   });
