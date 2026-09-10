@@ -95,7 +95,11 @@ export const originalV13Traceability = Object.freeze([
       ),
       evidence(
         "tests/unit/simulation-runner.test.ts",
-        "simulation runner > repeats complete results and records configuration as experiment input",
+        "headless simulation runner > repeats normalized results and isolates mutable agent memory by run",
+      ),
+      evidence(
+        "tests/unit/simulation-runner.test.ts",
+        "headless simulation runner > fingerprints equivalent profile records canonically",
       ),
     ],
   },
@@ -229,6 +233,14 @@ export const originalV13Traceability = Object.freeze([
       ),
       evidence(
         "tests/unit/gameplay-encounter-queue.test.ts",
+        "original-v1.3 encounter queue > maps roll state %i to boundary %i as %s",
+      ),
+      evidence(
+        "tests/unit/gameplay-encounter-queue.test.ts",
+        "original-v1.3 encounter queue > rerolls an early-day Voucher candidate without accepting it",
+      ),
+      evidence(
+        "tests/unit/gameplay-encounter-queue.test.ts",
         "original-v1.3 encounter queue > rerolls duplicate equipment and Shrine candidates within a battle cycle",
       ),
       evidence(
@@ -238,6 +250,10 @@ export const originalV13Traceability = Object.freeze([
       evidence(
         "tests/unit/gameplay-encounter-queue.test.ts",
         "original-v1.3 encounter queue > keeps generation-time equipment prices on already queued entries",
+      ),
+      evidence(
+        "tests/unit/gameplay-encounter-queue.test.ts",
+        "original-v1.3 encounter queue > queues a scaled enemy after the next-cycle shop-count draw",
       ),
     ],
   },
@@ -483,6 +499,26 @@ export const originalV13Traceability = Object.freeze([
       evidence(
         "tests/unit/profile-achievements.test.ts",
         "profile collections and achievements > computes fresh and complete researched progress without counting slot five",
+      ),
+      evidence(
+        "tests/unit/profile-achievements.test.ts",
+        "profile collections and achievements > unlocks the Dragon achievement at the lethal hit and only once",
+      ),
+      evidence(
+        "tests/unit/profile-achievements.test.ts",
+        "profile collections and achievements > checks the post-reward gold threshold at $gold",
+      ),
+      evidence(
+        "tests/unit/profile-achievements.test.ts",
+        "profile collections and achievements > checks the day achievement at distance $distance",
+      ),
+      evidence(
+        "tests/unit/profile-achievements.test.ts",
+        "profile collections and achievements > unlocks computed-hit damage from raw overkill damage",
+      ),
+      evidence(
+        "tests/unit/profile-achievements.test.ts",
+        "profile collections and achievements > unlocks complete collection only when the last tier is discovered",
       ),
       evidence(
         "tests/unit/profile-achievements.test.ts",
