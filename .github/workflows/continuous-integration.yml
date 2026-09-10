@@ -1,92 +1,95 @@
-name: Continuous integration
-
-on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
-
-permissions:
-  contents: read
-
-concurrency:
-  group: continuous-integration-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-jobs:
-  validate:
-    name: Validate
-    runs-on: ubuntu-24.04
-    timeout-minutes: 20
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-
-      - name: Detect code-affecting changes
-        id: code_changes
-        shell: bash
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          BEFORE_SHA: ${{ github.event.before }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
-        run: |
-          set -euo pipefail
-
-          if [[ "$EVENT_NAME" == "pull_request" ]]; then
-            changed_files="$(git diff --name-only "$BASE_SHA...$HEAD_SHA")"
-          elif [[ "$BEFORE_SHA" =~ ^0+$ ]]; then
-            changed_files="$(git ls-tree -r --name-only "$HEAD_SHA")"
-          else
-            changed_files="$(git diff --name-only "$BEFORE_SHA" "$HEAD_SHA")"
-          fi
-
-          code=false
-
-          while IFS= read -r file; do
-            case "$file" in
-              *.md | *.mdx | *.rst)
-                continue
-                ;;
-              src/*.txt | tests/*.txt | build/*.txt)
-                code=true
-                break
-                ;;
-              *.txt)
-                continue
-                ;;
-              *)
-                code=true
-                break
-                ;;
-            esac
-          done <<< "$changed_files"
-
-          echo "code=$code" >> "$GITHUB_OUTPUT"
-
-      - name: Set up Node.js
-        if: steps.code_changes.outputs.code == 'true'
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version-file: .node-version
-          cache: npm
-          cache-dependency-path: package-lock.json
-
-      - name: Activate pinned npm version
-        if: steps.code_changes.outputs.code == 'true'
-        run: corepack enable npm
-
-      - name: Restore locked dependencies
-        if: steps.code_changes.outputs.code == 'true'
-        run: npm ci
-
-      - name: Install Chromium and system dependencies
-        if: steps.code_changes.outputs.code == 'true'
-        run: npm run setup:browser -- --with-deps
-
-      - name: Run complete repository validation
-        if: steps.code_changes.outputs.code == 'true'
-        run: npm run validate
+# Disabled intentionally for this personal project. The local pre-push hook runs
+# the same complete validation before every push.
+#
+# name: Continuous integration
+#
+# on:
+#   push:
+#     branches: [main]
+#   pull_request:
+#     branches: [main]
+#
+# permissions:
+#   contents: read
+#
+# concurrency:
+#   group: continuous-integration-${{ github.workflow }}-${{ github.ref }}
+#   cancel-in-progress: true
+#
+# jobs:
+#   validate:
+#     name: Validate
+#     runs-on: ubuntu-24.04
+#     timeout-minutes: 20
+#
+#     steps:
+#       - name: Check out repository
+#         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+#         with:
+#           fetch-depth: 0
+#
+#       - name: Detect code-affecting changes
+#         id: code_changes
+#         shell: bash
+#         env:
+#           EVENT_NAME: ${{ github.event_name }}
+#           BEFORE_SHA: ${{ github.event.before }}
+#           BASE_SHA: ${{ github.event.pull_request.base.sha }}
+#           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+#         run: |
+#           set -euo pipefail
+#
+#           if [[ "$EVENT_NAME" == "pull_request" ]]; then
+#             changed_files="$(git diff --name-only "$BASE_SHA...$HEAD_SHA")"
+#           elif [[ "$BEFORE_SHA" =~ ^0+$ ]]; then
+#             changed_files="$(git ls-tree -r --name-only "$HEAD_SHA")"
+#           else
+#             changed_files="$(git diff --name-only "$BEFORE_SHA" "$HEAD_SHA")"
+#           fi
+#
+#           code=false
+#
+#           while IFS= read -r file; do
+#             case "$file" in
+#               *.md | *.mdx | *.rst)
+#                 continue
+#                 ;;
+#               src/*.txt | tests/*.txt | build/*.txt)
+#                 code=true
+#                 break
+#                 ;;
+#               *.txt)
+#                 continue
+#                 ;;
+#               *)
+#                 code=true
+#                 break
+#                 ;;
+#             esac
+#           done <<< "$changed_files"
+#
+#           echo "code=$code" >> "$GITHUB_OUTPUT"
+#
+#       - name: Set up Node.js
+#         if: steps.code_changes.outputs.code == 'true'
+#         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+#         with:
+#           node-version-file: .node-version
+#           cache: npm
+#           cache-dependency-path: package-lock.json
+#
+#       - name: Activate pinned npm version
+#         if: steps.code_changes.outputs.code == 'true'
+#         run: corepack enable npm
+#
+#       - name: Restore locked dependencies
+#         if: steps.code_changes.outputs.code == 'true'
+#         run: npm ci
+#
+#       - name: Install Chromium and system dependencies
+#         if: steps.code_changes.outputs.code == 'true'
+#         run: npm run setup:browser -- --with-deps
+#
+#       - name: Run complete repository validation
+#         if: steps.code_changes.outputs.code == 'true'
+#         run: npm run validate
