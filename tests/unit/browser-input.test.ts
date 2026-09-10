@@ -2,6 +2,7 @@ import { expect, it } from "vitest";
 
 import {
   commandsForAdvanceActivation,
+  commandsForDismissTutorialActivation,
   commandsForItemUseActivation,
   commandsForPurchaseActivation,
 } from "../../src/browser/input.js";
@@ -15,6 +16,14 @@ it("does not represent a manual engine step as gameplay intent", () => {
 
   expect(commands).toEqual([]);
   expect(Object.isFrozen(commands)).toBe(true);
+});
+
+it("maps the tutorial control to the shared dismissal command", () => {
+  const commands = commandsForDismissTutorialActivation();
+
+  expect(commands).toEqual([{ type: "dismiss-tutorial" }]);
+  expect(Object.isFrozen(commands)).toBe(true);
+  expect(Object.isFrozen(commands[0])).toBe(true);
 });
 
 it("maps browser purchase activation to device-independent gameplay intent", () => {

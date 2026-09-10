@@ -99,6 +99,10 @@ test("starts a browser run from the stored complete profile", async ({
   );
   await page.goto("/");
 
+  await expect(page.getByTestId("profile-summary")).toContainText(
+    "Level 5 · XP 42",
+  );
+
   await expect
     .poll(() =>
       page.evaluate(
@@ -106,6 +110,106 @@ test("starts a browser run from the stored complete profile", async ({
       ),
     )
     .toEqual(profile);
+});
+
+test("shows a committed result and starts the next run from its profile", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+  await page.evaluate(() => {
+    const advance = document.querySelector<HTMLButtonElement>("#advance-run");
+    if (advance === null) {
+      throw new Error("Missing advance control");
+    }
+    for (let step = 0; step < 2_600; step += 1) {
+      advance.click();
+    }
+  });
+
+  const result = page.locator("#run-result");
+  await expect(result).toHaveAttribute("data-result-state", "committed");
+  await expect(page.locator("#result-save-status")).toHaveText(
+    "Progress saved.",
+  );
+  await expect(
+    page.getByRole("button", { name: "Start next run" }),
+  ).toBeEnabled();
+
+  const savedProfile = await page.evaluate((key) => {
+    const raw = localStorage.getItem(key);
+    if (raw === null) {
+      throw new Error("Expected a committed profile record");
+    }
+    const envelope = JSON.parse(raw) as {
+      profile: Record<string, unknown>;
+      settings: { tutorialPreference: "enabled" | "disabled" };
+    };
+    return {
+      ...envelope.profile,
+      tutorialPreference: envelope.settings.tutorialPreference,
+    };
+  }, PROFILE_STORAGE_KEY);
+
+  await page.getByRole("button", { name: "Skip score count" }).click();
+  await page.getByRole("button", { name: "Start next run" }).click();
+
+  await expect(result).toBeHidden();
+  await expect(page.getByTestId("game-status")).toHaveText("Step 0");
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => window.triggerKnightDiagnostics?.read().config.initialProfile,
+      ),
+    )
+    .toEqual(savedProfile);
+});
+
+test("keeps a failed completed-run save visible until retry succeeds", async ({
+  page,
+}) => {
+  await page.addInitScript((key) => {
+    const storage = window.localStorage;
+    const originalSetItem = storage.setItem.bind(storage);
+    let failed = false;
+    Object.defineProperty(storage, "setItem", {
+      configurable: true,
+      value: (storageKey: string, value: string): void => {
+        if (storageKey === key && !failed) {
+          failed = true;
+          throw new Error("Simulated completed-run write failure");
+        }
+        originalSetItem(storageKey, value);
+      },
+    });
+  }, PROFILE_STORAGE_KEY);
+  await page.goto("/");
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+  await page.evaluate(() => {
+    const advance = document.querySelector<HTMLButtonElement>("#advance-run");
+    if (advance === null) {
+      throw new Error("Missing advance control");
+    }
+    for (let step = 0; step < 2_600; step += 1) {
+      advance.click();
+    }
+  });
+
+  const result = page.locator("#run-result");
+  await expect(result).toHaveAttribute("data-result-state", "failed");
+  await expect(page.locator("#result-save-status")).toContainText(
+    "Progress was not saved",
+  );
+  await expect(
+    page.getByRole("button", { name: "Start next run" }),
+  ).toBeDisabled();
+
+  await page.getByRole("button", { name: "Retry save" }).click();
+
+  await expect(result).toHaveAttribute("data-result-state", "committed");
+  await expect(page.locator("#result-save-status")).toHaveText(
+    "Progress saved.",
+  );
 });
 
 test("reports an unreadable stored profile without replacing it", async ({

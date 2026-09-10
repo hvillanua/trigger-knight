@@ -5,10 +5,21 @@ import {
 } from "../application/commands.js";
 
 const NO_COMMANDS: readonly GameCommand[] = Object.freeze([]);
+const DISMISS_TUTORIAL_COMMAND = Object.freeze({
+  type: "dismiss-tutorial" as const,
+});
+const DISMISS_TUTORIAL_COMMANDS: readonly GameCommand[] = Object.freeze([
+  DISMISS_TUTORIAL_COMMAND,
+]);
 
 /** Keeps the temporary manual clock control outside gameplay intent. */
 export function commandsForAdvanceActivation(): readonly GameCommand[] {
   return NO_COMMANDS;
+}
+
+/** Maps the browser tutorial control to the shared semantic command. */
+export function commandsForDismissTutorialActivation(): readonly GameCommand[] {
+  return DISMISS_TUTORIAL_COMMANDS;
 }
 
 /** Maps a browser activation to the shared semantic purchase command. */
