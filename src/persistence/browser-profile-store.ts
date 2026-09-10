@@ -617,18 +617,34 @@ function restorePreviousPrimary(
   try {
     writeRawAndVerify(storage, key, previous);
   } catch {
-    if (previous === null) {
-      try {
-        writeRawAndVerify(storage, commitKey, encodeReadyMarker(serialized));
-      } catch {
-        // The outcome remains unknown when the recovery marker cannot be staged.
+    try {
+      writeRawAndVerify(storage, key, previous);
+    } catch {
+      if (previous === null) {
+        let primary: string | null | undefined;
+        try {
+          primary = storage.getItem(key);
+        } catch {
+          primary = undefined;
+        }
+        if (primary === serialized) {
+          try {
+            writeRawAndVerify(
+              storage,
+              commitKey,
+              encodeReadyMarker(serialized),
+            );
+          } catch {
+            // The outcome remains unknown when the recovery marker cannot be staged.
+          }
+        }
+        return uncertainCommitOutcome();
       }
-      return uncertainCommitOutcome();
+      return {
+        status: "failed",
+        error: error("write-failed", "Profile write failed"),
+      };
     }
-    return {
-      status: "failed",
-      error: error("write-failed", "Profile write failed"),
-    };
   }
   return {
     status: "failed",

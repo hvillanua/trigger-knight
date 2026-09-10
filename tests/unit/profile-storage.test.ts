@@ -25,6 +25,7 @@ class MemoryStorage implements StorageLike {
   failVerificationAfterWriteOnCall:
     { readonly key: string; readonly call: number } | undefined;
   failNextReadKey: string | undefined;
+  failVerificationAfterRemoveKey: string | undefined;
   failAfterWriteOnCall:
     { readonly key: string; readonly call: number } | undefined;
   failAfterWriteWithoutBlockingOnCall:
@@ -95,6 +96,10 @@ class MemoryStorage implements StorageLike {
 
   removeItem(key: string): void {
     this.#values.delete(key);
+    if (this.failVerificationAfterRemoveKey === key) {
+      this.failVerificationAfterRemoveKey = undefined;
+      this.failNextReadKey = key;
+    }
   }
 }
 
@@ -654,6 +659,38 @@ describe("versioned browser profile storage", () => {
     const request = {
       completionId: "primary-verification-retry",
       completionFingerprint: "sha256-v1:primary-verification-retry",
+      expectedProfile: previous,
+      nextProfile: next,
+    } as const;
+
+    expect(store.commitCompletedRun(request)).toMatchObject({
+      status: "failed",
+      error: { code: "write-failed" },
+    });
+    expect(store.load()).toEqual({
+      status: "empty",
+      profile: previous,
+    });
+    expect(store.commitCompletedRun(request)).toEqual({
+      status: "saved",
+      profile: next,
+    });
+    expect(store.commitCompletedRun(request)).toEqual({
+      status: "already-committed",
+      profile: next,
+    });
+  });
+
+  it("reconciles a deleted first primary when rollback acknowledgement fails", () => {
+    const storage = new MemoryStorage();
+    const store = createBrowserProfileStore(storage);
+    const previous = createFreshProfile();
+    const next = profileWith({ level: 2, tutorialPreference: "disabled" });
+    storage.failVerificationAfterWriteKey = PROFILE_STORAGE_KEY;
+    storage.failVerificationAfterRemoveKey = PROFILE_STORAGE_KEY;
+    const request = {
+      completionId: "rollback-acknowledgement-retry",
+      completionFingerprint: "sha256-v1:rollback-acknowledgement-retry",
       expectedProfile: previous,
       nextProfile: next,
     } as const;
