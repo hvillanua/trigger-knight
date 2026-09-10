@@ -30,10 +30,10 @@ Closes #<!-- ticket number -->
 
 ## Validation
 
-<!-- Record focused local checks. GitHub Actions is the sole complete gate. -->
+<!-- Record focused local checks. The repository-owned pre-push hook is the complete gate for code-affecting changes; GitHub Actions is disabled and is not a merge gate. -->
 
 - [ ] Focused red and green checks are recorded below.
-- [ ] GitHub Actions `Validate` passes, or its current status is noted below.
+- [ ] The repository-owned pre-push validation result is recorded below, or this change is docs/plain text only.
 
 Additional focused checks and results:
 
@@ -43,5 +43,5 @@ Additional focused checks and results:
 
 - [ ] The implementation uses human-authored behavioral research and approved clean-room assets; it does not copy decompiled code or unapproved original/generated artifacts.
 - [ ] Dependencies still point inward and authoritative domain code has no ambient browser, Node, time, or randomness inputs.
-- [ ] Usage or design guidance is updated only if it changed. Any new choice required by missing original research is recorded in docs/compatibility-decisions.md. Implemented behavior and fixtures remain in code and tests.
+- [ ] The PRD, TDD, and implementation are treated as sources of truth. Usage or design guidance is updated only if intent changed. If the PRD and TDD leave behavior unspecified but code is specific, the implementation is preserved. If code conflicts with the PRD or TDD, the gap and appropriate source update are identified. Implemented behavior and fixtures remain in code and tests.
 - [ ] Non-goals and intentional deferrals remain outside this pull request and are linked to a later milestone when required.

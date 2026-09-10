@@ -15,11 +15,12 @@ human-authored specification. Read only the sections needed to answer the
 question. Follow their CONFIRMED, DERIVED, and UNKNOWN labels; do not turn an
 inference into a claim about confirmed original behavior.
 
-If the relevant research leaves a gap, consult the corresponding entry in
-`docs/compatibility-decisions.md`. Reuse an existing decision when applicable.
-If a new compatibility choice is needed, make the uncertainty explicit and
-resolve any remaining requirements ambiguity with the user before implementing
-it. Record the agreed choice in that document, not code comments.
+If the relevant research leaves a gap, inspect the PRD, TDD, and existing
+implementation and tests. When the documents are silent but code already
+selects a specific behavior, preserve that implementation as the selected
+choice. If code conflicts with the PRD or TDD, identify the gap and determine
+which source needs to be updated. Do not create a compatibility-decision entry
+merely to document an implementation choice.
 
 Do not copy decompiled code or generated research artifacts into implementation.
 Stop reading once the question is resolved, and use the answer to guide the

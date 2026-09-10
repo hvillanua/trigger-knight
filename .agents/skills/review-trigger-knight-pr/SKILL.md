@@ -34,8 +34,10 @@ Check the changed runtime paths, not just imports and type declarations:
 - the change stays within the selected issue and does not silently implement or
   constrain later milestones;
 - focused tests prove the changed behavior, usage and design guidance reflect
-  any changed intent, and the current CI result is accounted for. Do not require
-  prose copies of implemented contracts, formulas, versions, or test fixtures.
+  any changed intent, and the repository-owned pre-push validation result is
+  accounted for. GitHub Actions is disabled and is not a merge gate. Do not
+  require prose copies of implemented contracts, formulas, versions, or test
+  fixtures.
 
 Report concrete correctness, determinism, compatibility, or maintainability
 failures. Do not report a preference merely because another design is possible.

@@ -35,7 +35,9 @@ Pass a test path after `--` to run focused tests. `npm ci` activates one
 repository-owned Git hook: `.githooks/pre-push`, which runs `npm run validate`
 before pushing. There is no repository-owned commit hook or other validation
 hook. Re-run `npm run setup:hooks` if local Git configuration is replaced after
-installation. GitHub Actions runs the complete gate for code-affecting changes.
+installation. The repository-owned pre-push hook is the complete validation gate
+for code-affecting changes. GitHub Actions is intentionally disabled and is not a
+merge gate.
 
 ## Simulation and diagnostics
 
