@@ -4,7 +4,7 @@
 
 This document orders the capability milestones for the clean-room browser reimplementation. It describes what each milestone must establish and why it must precede the next one. Individual tickets will be created later.
 
-The product requirements in [`PRD.md`](PRD.md), architecture and contracts in [`TDD.md`](TDD.md), and behavioral evidence in [`../research/`](../research/README.md) remain authoritative. This roadmap does not replace them or prescribe ticket-level implementation details.
+The product requirements in [`PRD.md`](PRD.md), architecture and contracts in [`TDD.md`](TDD.md), and selected behavior in the existing implementation and tests are authoritative. Behavioral evidence in [`../research/`](../research/README.md) provides provenance and can identify gaps, but does not override a specific implementation absent a PRD or TDD conflict. This roadmap does not replace those sources or prescribe ticket-level implementation details.
 
 ## Delivery rules
 
@@ -12,7 +12,7 @@ The product requirements in [`PRD.md`](PRD.md), architecture and contracts in [`
 - Use dependency links between tickets when the tickets are created. A ticket is ready only when its actual blockers are complete.
 - Write tickets around one meaningful outcome. Tickets state **what** must exist and **why**, with observable acceptance criteria, constraints, non-goals, and required evidence. They do not prescribe **how** to implement the outcome.
 - Follow test-driven development for every behavior change: establish a failing test for the intended behavior, implement the smallest passing change, then refactor while the suite remains green. Tests are part of the behavior ticket and are never deferred to a later ticket.
-- Run only the smallest focused red and green checks locally. GitHub Actions is the sole complete validation gate for code-affecting changes.
+- Run only the smallest focused red and green checks locally. The repository-owned pre-push hook is the complete validation gate for code-affecting changes. GitHub Actions is disabled and is not a merge gate.
 - Preserve the clean-room boundary. Implementation work uses the behavioral specification and approved clean-room assets, not copied decompiled source or unapproved original artifacts.
 - Keep the repository runnable, deterministic, and inspectable at the end of every milestone.
 
@@ -29,8 +29,8 @@ This milestone establishes:
 - the latest stable, mutually compatible dependency versions available when installation begins, followed by pinned runtime/tool versions and a committed lockfile;
 - stable install, development, formatting, linting, type-checking, unit-test, browser-test, build, and aggregate validation commands;
 - mandatory red-green-refactor expectations and pull-request evidence for test-driven work;
-- focused local validation and a complete CI validation gate;
-- CI that performs a clean install and invokes the same repository validation commands used locally;
+- focused local validation and a complete pre-push validation gate;
+- a repository-owned pre-push hook that invokes the same repository validation commands used locally;
 - mechanically enforced clean-room, dependency-direction, deterministic-randomness, and generated-file boundaries;
 - milestone, issue, and pull-request templates suitable for the later ticket workflow.
 
@@ -38,7 +38,7 @@ This milestone establishes:
 
 - a fresh checkout can be installed and fully validated using only documented commands;
 - focused local checks provide red-green evidence without repeating the complete gate;
-- CI passes from the committed lockfile and rejects representative formatting, type, test, and architectural failures;
+- the repository-owned pre-push hook runs from the committed lockfile and rejects representative formatting, type, test, and architectural failures;
 - dependency and runtime versions used by the scaffold are recorded and reproducible;
 - the repository contains a minimal passing test and production build without claiming that gameplay has been implemented.
 
@@ -175,7 +175,7 @@ An auditable executable contract for the complete researched gameplay model befo
 This milestone establishes:
 
 - traceability from every confirmed gameplay requirement and known gameplay-affecting quirk to executable evidence;
-- explicit documented decisions for unknown or ambiguous behavior used by the implementation;
+- implementation choices for unknown or ambiguous behavior are visible in code and tests;
 - stable ruleset, seed, profile, result, and trace fixtures for representative runs;
 - a frozen `original-v1.3` compatibility baseline;
 - clear separation between compatibility behavior and presentation/platform modernization.
@@ -259,11 +259,11 @@ This milestone establishes:
 ### Complete when
 
 - every PRD acceptance criterion has reproducible evidence;
-- focused local evidence and the complete CI gate pass from a clean checkout;
+- focused local evidence and the complete pre-push validation gate pass from a clean checkout;
 - a release build can be produced and exercised using documented commands;
 - no unresolved issue blocks the declared compatibility scope;
 - deferred work, including background music and any enhanced rulesets, remains clearly outside the initial release.
 
 ## Milestone completion rule
 
-A milestone is complete only when all of its eventual tickets and blockers are complete, its exit conditions have executable evidence, and focused local checks and the complete CI validation gate pass. Record results in tests and PRs; do not create a parallel milestone verification document. Update usage or design guidance only when it changes, and record new research-gap choices in the compatibility-decisions document. A milestone may not pass known failures or architectural decisions forward implicitly; any intentional deferral must be visible and assigned to a later milestone before completion.
+A milestone is complete only when all of its eventual tickets and blockers are complete, its exit conditions have executable evidence, and focused local checks and the complete pre-push validation gate pass. Record results in tests and PRs; do not create a parallel milestone verification document. Update usage or design guidance only when it changes. Treat the PRD, TDD, and existing implementation as sources of truth: preserve a specific implementation when the documents are silent, and identify the gap and update the appropriate source when code conflicts with the PRD or TDD. A milestone may not pass known failures or architectural decisions forward implicitly; any intentional deferral must be visible and assigned to a later milestone before completion.

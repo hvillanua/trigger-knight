@@ -62,7 +62,7 @@ body:
     attributes:
       label: Milestone completion rule
       options:
-        - label: All tickets and blockers must be complete, exit conditions must have executable evidence, and focused local checks and the complete CI gate must pass. Record delivery evidence in tests and PRs rather than a separate verification document.
+        - label: All tickets and blockers must be complete, exit conditions must have executable evidence, and focused local checks and the complete pre-push validation gate must pass. Record delivery evidence in tests and PRs rather than a separate verification document.
           required: true
         - label: Any intentional deferral must be visible and assigned to a later milestone before completion.
           required: true

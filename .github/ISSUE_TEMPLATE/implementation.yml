@@ -79,6 +79,6 @@ body:
         - [ ] Follow red-green-refactor for every behavior change.
         - [ ] Record the failing test or check used to establish the change, when applicable.
         - [ ] Run only the smallest focused local checks needed for red-green evidence and record the results in the pull request.
-        - [ ] Record the complete GitHub Actions validation result for code-affecting changes when it is available.
+        - [ ] Record the repository-owned pre-push validation result for code-affecting changes in the delivery pull request.
     validations:
       required: true

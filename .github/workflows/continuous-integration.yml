@@ -1,5 +1,6 @@
 # Disabled intentionally for this personal project. The local pre-push hook runs
 # the same complete validation before every push.
+# GitHub Actions is not a merge gate for this repository.
 #
 # name: Continuous integration
 #

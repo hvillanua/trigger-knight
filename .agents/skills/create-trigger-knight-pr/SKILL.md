@@ -15,10 +15,13 @@ what changed and why separately. Map acceptance criteria to executable evidence,
 record observed red and green results, and account for refactoring. If no runtime
 behavior changed, explain why a failing test was not applicable.
 
-Record focused local checks and the available CI result. Leave pending checks
-unchecked; do not claim validation or review that did not happen. Keep detail
-proportional to the change. Remove template placeholders and instructional
-comments from the finished body.
+Record focused local checks and the repository-owned pre-push validation result.
+Leave pending checks unchecked; do not claim validation or review that did not
+happen. GitHub Actions is intentionally disabled for this repository, so do not
+wait for a CI check or describe it as a merge gate. If an unexpected Actions run
+exists, report its observed result accurately. Keep detail proportional to the
+change. Remove template placeholders and instructional comments from the
+finished body.
 
 When using `gh`, write the body to a file and pass `--body-file` to preserve its
 Markdown structure. This skill does not authorize publishing, merging, or

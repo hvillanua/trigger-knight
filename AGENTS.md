@@ -10,6 +10,10 @@
   Never present a compatibility choice as confirmed original behavior.
 - Keep hidden gameplay state out of player-facing observations, events, and policy
   inputs. Structural checks cannot determine whether a field reveals a secret.
+- Treat the PRD, TDD, and existing implementation as sources of truth. If the PRD
+  and TDD leave behavior unspecified but the implementation is specific, preserve
+  that implementation. If code conflicts with either document, identify the gap
+  and update the appropriate source and its tests.
 
 ## Delivery
 
@@ -28,9 +32,11 @@ than duplicate prose inventories. Record delivery evidence in PRs.
 
 ## Validation policy
 
-Run only focused checks needed for the change locally. GitHub Actions is the
-complete validation gate. Do not manually run aggregate validation locally.
+Run only focused checks needed for the change locally. The repository-owned
+pre-push hook runs the complete validation and is the validation gate for
+code-affecting changes. GitHub Actions is disabled and is not a merge gate. Do
+not manually run aggregate validation locally.
 Markdown and plain-text-only changes require no code validation.
 
-Do not poll successful CI runs. Report observed results accurately, including
-checks that were not run.
+Do not wait for or poll GitHub Actions. Report observed results accurately,
+including checks that were not run.
