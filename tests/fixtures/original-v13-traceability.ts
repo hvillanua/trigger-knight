@@ -638,7 +638,7 @@ export const originalV13Traceability = Object.freeze([
     classification: "confirmed",
     disposition: "blocked",
     rationale:
-      "Pages 1 through 5 are confirmed gameplay gates. Their clean-room trigger choices are recorded in docs/compatibility-decisions.md#contextual-tutorial-gates, but runtime coverage remains assigned to the dependency-linked implementation ticket.",
+      "Pages 1 through 5 are confirmed gameplay gates, but runtime coverage remains assigned to the dependency-linked implementation ticket.",
     evidence: [],
     blocker: { issue: 92, dependency: 91 },
   },
@@ -924,7 +924,7 @@ export const originalV13Traceability = Object.freeze([
   },
   {
     id: "decision.max-tier-availability",
-    source: "docs/compatibility-decisions.md#max-tier-equipment-availability",
+    source: "clean-room/PRD.md#1-reproduce-the-original-gameplay-loop",
     classification: "compatibility-decision",
     disposition: "covered",
     rationale:
