@@ -9,6 +9,7 @@ export type {
   BattleState,
   CombatActorPhase,
   CombatActorState,
+  CompletedRunSettlementInput,
   CurrentEncounter,
   DismissTutorialCommand,
   EquipmentKind,
@@ -67,6 +68,15 @@ export type {
   WorldCamera,
   WeaponName,
 } from "../domain/contracts.js";
+export {
+  createCompletedRunCoordinator,
+  completedRunSettlementFromState,
+} from "./completed-run.js";
+export type {
+  CompletedRunCoordinator,
+  CompletedRunRequest,
+  CompletedRunResult,
+} from "./completed-run.js";
 export type {
   GameplayEngine,
   RunConfig,
@@ -91,6 +101,8 @@ export type {
   SimulationRunner,
 } from "./simulation.js";
 export type {
+  CompletedRunCommitRequest,
+  CompletedRunCommitResult,
   ProfileLoadResult,
   ProfileSaveResult,
   ProfileStorageError,

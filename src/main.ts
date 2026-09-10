@@ -1,10 +1,12 @@
 import { createFreshProfile } from "./domain/profile.js";
+import { createCompletedRunCoordinator } from "./application/completed-run.js";
 import { createGameplayEngine } from "./application/gameplay-engine.js";
 import { CanvasPresentation } from "./browser/canvas-presentation.js";
 import { observeDevicePixelRatioChanges } from "./browser/device-pixel-ratio.js";
 import type {
   GameCommand,
   ProfileLoadResult,
+  ProfileStore,
 } from "./application/contracts.js";
 import type { CssDimensions } from "./browser/foundation.js";
 import { createBrowserGameplaySession } from "./browser/gameplay-session.js";
@@ -41,20 +43,39 @@ if (
   throw new Error("Missing browser gameplay controls");
 }
 
+const storageUnavailableError = Object.freeze({
+  code: "storage-read-failed" as const,
+  message: "Profile storage could not be opened",
+});
+const unavailableProfileStore: ProfileStore = Object.freeze({
+  load: () =>
+    Object.freeze({
+      status: "failed" as const,
+      error: storageUnavailableError,
+    }),
+  save: () =>
+    Object.freeze({
+      status: "failed" as const,
+      error: storageUnavailableError,
+    }),
+  commitCompletedRun: () =>
+    Object.freeze({
+      status: "failed" as const,
+      error: storageUnavailableError,
+    }),
+});
+let profileStore: ProfileStore = unavailableProfileStore;
 let profileLoad: ProfileLoadResult;
 try {
-  profileLoad = createBrowserProfileStore(window.localStorage).load();
+  profileStore = createBrowserProfileStore(window.localStorage);
+  profileLoad = profileStore.load();
 } catch {
-  profileLoad = {
-    status: "failed",
-    error: {
-      code: "storage-read-failed",
-      message: "Profile storage could not be opened",
-    },
-  };
+  profileLoad = unavailableProfileStore.load();
 }
 const initialProfile =
   profileLoad.status === "failed" ? createFreshProfile() : profileLoad.profile;
+const completedRunCoordinator = createCompletedRunCoordinator(profileStore);
+const completionId = window.crypto.randomUUID();
 gameStatus.dataset.persistenceStatus = profileLoad.status;
 if (profileLoad.status === "failed") {
   gameStatus.dataset.persistenceError = profileLoad.error.code;
@@ -69,7 +90,22 @@ const session = createBrowserGameplaySession(
     initialProfile,
   }),
   presentation,
-  { retainDiagnostics: import.meta.env.DEV },
+  {
+    retainDiagnostics: import.meta.env.DEV,
+    onCompletedRun: (run) => {
+      const result = completedRunCoordinator.commit({
+        completionId,
+        initialProfile,
+        run,
+      });
+      gameStatus.dataset.completionStatus = result.status;
+      if (result.status === "failed" || result.status === "uncertain") {
+        gameStatus.dataset.completionError = result.error.code;
+      } else {
+        delete gameStatus.dataset.completionError;
+      }
+    },
+  },
 );
 
 if (import.meta.env.DEV) {

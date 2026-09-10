@@ -1,4 +1,5 @@
 import type {
+  CompletedRunSettlementInput,
   GameCommand,
   GameEvent,
   GameObservation,
@@ -8,6 +9,7 @@ import type {
   PresentationPort,
   RunConfig,
 } from "../application/contracts.js";
+import { completedRunSettlementFromState } from "../application/completed-run.js";
 import { createGameplayExecution } from "../application/gameplay-execution.js";
 
 export interface BrowserDispatchResult {
@@ -23,6 +25,10 @@ export interface BrowserGameplaySession {
 
 export interface BrowserGameplaySessionOptions {
   readonly retainDiagnostics?: boolean;
+  /** Runs before the terminal checkpoint is presented. */
+  readonly onCompletedRun?: (
+    run: Readonly<CompletedRunSettlementInput>,
+  ) => void;
 }
 
 function createFrame(
@@ -69,6 +75,10 @@ export function createBrowserGameplaySession(
       const checkpoint = execution.dispatch(commands);
       observation = checkpoint.observation;
       events = checkpoint.events;
+      const completedRun = completedRunSettlementFromState(checkpoint.state);
+      if (completedRun !== undefined) {
+        options.onCompletedRun?.(completedRun);
+      }
       render(0);
 
       return Object.freeze({

@@ -88,6 +88,7 @@ test("starts a browser run from the stored complete profile", async ({
       achievementSlots: profile.achievementSlots,
     },
     settings: { tutorialPreference: profile.tutorialPreference },
+    completedRuns: [],
   };
 
   await page.addInitScript(
@@ -138,4 +139,29 @@ test("reports an unreadable stored profile without replacing it", async ({
       ),
     )
     .toEqual(createFreshProfile());
+});
+
+test("starts gameplay when browser storage access is denied", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(window, "localStorage", {
+      configurable: true,
+      get: () => {
+        throw new DOMException("Access denied", "SecurityError");
+      },
+    });
+  });
+  await page.goto("/");
+
+  const status = page.getByTestId("game-status");
+  await expect(status).toHaveAttribute("data-persistence-status", "failed");
+  await expect(status).toHaveAttribute(
+    "data-persistence-error",
+    "storage-read-failed",
+  );
+  await expect(status).toHaveText("Step 0");
+
+  await page.getByRole("button", { name: "Advance run" }).click();
+  await expect(status).toHaveText("Step 1");
 });

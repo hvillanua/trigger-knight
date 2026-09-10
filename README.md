@@ -70,12 +70,16 @@ defaults. A valid current record or a supported older envelope returns a
 complete `ProfileState`, including the supported `tutorialPreference` setting.
 Storage errors are returned to the caller and the browser marks the status
 element instead of replacing the stored record. The adapter currently accepts
-storage-envelope versions 1 and 2, which are separate from the profile schema
-version. The minimal `schemaVersion: 1` `RunConfig` input is not a historical
-browser-save format and is rejected when it appears where a persisted complete
-profile is required. A save whose final commit cannot be reconciled returns an
-uncertain result; load the profile before retrying so the journal can resolve to
-the prior or complete new record.
+storage-envelope versions 1, 2, and 3, which are separate from the profile
+schema version. Version 3 also retains completed-run identities so a repeated
+terminal notification or retry cannot settle one run twice. The minimal
+`schemaVersion: 1` `RunConfig` input is not a historical browser-save format
+and is rejected when it appears where a persisted complete profile is required.
+Completed runs go through the application coordinator, which settles both
+gameplay death paths and commits the profile before the terminal checkpoint is
+presented. A save whose final commit cannot be reconciled returns an uncertain
+result; load the profile before retrying so the journal can resolve to the prior
+or complete new record.
 
 ## Original game
 
