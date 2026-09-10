@@ -23,6 +23,12 @@ Run the focused corpus check with:
 npm exec -- vitest run tests/unit/milestone-6-compatibility-corpus.test.ts
 ```
 
+Run the host-parity check with:
+
+```sh
+npm exec -- playwright test tests/browser/milestone-6-compatibility-corpus.spec.ts --project=chromium
+```
+
 The check replays seeded clean-room runs and applies constructed settlement
 scenarios. It compares complete run results, trace hashes, selected checkpoint
 hashes, public summaries, event types, and settled profiles. A hash mismatch is
