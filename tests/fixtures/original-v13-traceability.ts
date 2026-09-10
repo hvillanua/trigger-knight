@@ -57,6 +57,10 @@ export const originalV13Traceability = Object.freeze([
         "tests/unit/milestone-5-progression-persistence.test.ts",
         "Milestone 5 progression and persistence scenarios > settles a deterministic $name",
       ),
+      evidence(
+        "tests/unit/milestone-6-compatibility-corpus.test.ts",
+        "original-v1.3 compatibility corpus > replays the retained $id result, trace, and representative checkpoints",
+      ),
     ],
   },
   {
@@ -100,6 +104,10 @@ export const originalV13Traceability = Object.freeze([
       evidence(
         "tests/unit/simulation-runner.test.ts",
         "headless simulation runner > fingerprints equivalent profile records canonically",
+      ),
+      evidence(
+        "tests/unit/milestone-6-compatibility-corpus.test.ts",
+        "original-v1.3 compatibility corpus > replays the retained $id result, trace, and representative checkpoints",
       ),
     ],
   },
@@ -655,6 +663,10 @@ export const originalV13Traceability = Object.freeze([
       evidence(
         "tests/browser/milestone-6-tutorial-gates.spec.ts",
         "keeps contextual tutorial gates equivalent in Node and Chromium",
+      ),
+      evidence(
+        "tests/unit/milestone-6-compatibility-corpus.test.ts",
+        "original-v1.3 compatibility corpus > replays the retained $id result, trace, and representative checkpoints",
       ),
     ],
   },
