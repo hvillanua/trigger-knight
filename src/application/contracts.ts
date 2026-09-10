@@ -98,6 +98,12 @@ export type {
 } from "./gameplay-execution.js";
 export type { PresentationFrame, PresentationPort } from "./presentation.js";
 export type {
+  SimulationBatchExport,
+  SimulationExperiment,
+  SimulationManifest,
+  SimulationPolicyRegistry,
+  SimulationRequestInput,
+  SimulationResultRecord,
   PlayerAgent,
   PlayerPolicy,
   PolicyConfig,
@@ -105,6 +111,10 @@ export type {
   RunResult,
   SimulationRequest,
   SimulationRunner,
+} from "./simulation.js";
+export {
+  SIMULATION_BATCH_EXPORT_SCHEMA_VERSION,
+  SIMULATION_MANIFEST_SCHEMA_VERSION,
 } from "./simulation.js";
 export type {
   CompletedRunCommitRequest,

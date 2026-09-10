@@ -31,6 +31,10 @@ import type {
   ShopEncounter,
   ShopId,
   SimulationRequest,
+  SimulationRequestInput,
+  SimulationBatchExport,
+  SimulationManifest,
+  SimulationResultRecord,
   SimulationRunner,
   StepResult,
   UseCarriedItemCommand,
@@ -149,6 +153,25 @@ describe("public application contracts", () => {
     expectTypeOf<SimulationRunner["runBatch"]>().toEqualTypeOf<
       (requests: readonly SimulationRequest[]) => Promise<readonly RunResult[]>
     >();
+    expectTypeOf<SimulationRequestInput>().toMatchTypeOf<{
+      readonly config: RunConfig;
+      readonly policy: PolicyDescriptor;
+      readonly maxSteps: number;
+    }>();
+    expectTypeOf<SimulationManifest>().toMatchTypeOf<{
+      readonly schemaVersion: 1;
+      readonly requests: readonly SimulationRequestInput[];
+    }>();
+    expectTypeOf<SimulationResultRecord>().toMatchTypeOf<{
+      readonly requestIndex: number;
+      readonly requestFingerprint: string;
+      readonly result: RunResult;
+    }>();
+    expectTypeOf<SimulationBatchExport>().toMatchTypeOf<{
+      readonly schemaVersion: 1;
+      readonly manifest: SimulationManifest;
+      readonly results: readonly SimulationResultRecord[];
+    }>();
   });
 
   it("identifies normalized run results with their reproducibility inputs", () => {

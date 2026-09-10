@@ -61,6 +61,29 @@ eligible shops and uses battle items, saving Elixir until HP reaches the
 configured `elixirHpFraction`. Results retain the policy identity and normalized
 configuration.
 
+### Run retained simulations
+
+The headless command accepts JSON files or `-` for standard input:
+
+```sh
+npm run simulate -- single tests/fixtures/simulation/minimal-request.json
+npm run simulate -- batch tests/fixtures/simulation/manifest.json
+```
+
+A single request contains `config`, a policy descriptor, and a positive
+`maxSteps`. A batch manifest has `schemaVersion: 1` and a `requests` array. The
+config keeps the exact minimal or expanded `initialProfile` input. The existing
+manifest policy identities are `non-progressing@1`,
+`purchase-reachable-shops@2`, and `combat-shopper@1` with an explicit
+`elixirHpFraction` configuration.
+
+Batch output retains the manifest and links each result to its request with
+`requestIndex` and a canonical request fingerprint. Results are sorted by that
+fingerprint, so completion order cannot change the export. The command writes
+one canonical JSON document to standard output and sends failures to standard
+error. It does not include timings, progress messages, or full diagnostic
+traces.
+
 In the development browser, call `window.triggerKnightDiagnostics.read()` in
 the console. This hook is absent from production builds. Browser sessions also
 provide `readDiagnostics()`. `compareGameplayTraces` reports the first differing

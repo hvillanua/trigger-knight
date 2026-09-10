@@ -37,6 +37,50 @@ export interface PlayerPolicy {
   createAgent(): PlayerAgent;
 }
 
+/** Version for the serializable experiment input envelope. */
+export const SIMULATION_MANIFEST_SCHEMA_VERSION = 1 as const;
+
+/** Version for the normalized batch export envelope. */
+export const SIMULATION_BATCH_EXPORT_SCHEMA_VERSION = 1 as const;
+
+/** Serializable request input with no live policy or agent object. */
+export interface SimulationRequestInput {
+  readonly config: RunConfig;
+  readonly policy: PolicyDescriptor;
+  readonly maxSteps: number;
+}
+
+/** Versioned, JSON-compatible collection of retained simulation inputs. */
+export interface SimulationManifest {
+  readonly schemaVersion: typeof SIMULATION_MANIFEST_SCHEMA_VERSION;
+  readonly requests: readonly SimulationRequestInput[];
+}
+
+/** One result linked back to the retained request that produced it. */
+export interface SimulationResultRecord {
+  readonly requestIndex: number;
+  readonly requestFingerprint: string;
+  readonly result: RunResult;
+}
+
+/** Canonical batch output containing all inputs needed for later reproduction. */
+export interface SimulationBatchExport {
+  readonly schemaVersion: typeof SIMULATION_BATCH_EXPORT_SCHEMA_VERSION;
+  readonly manifest: SimulationManifest;
+  readonly results: readonly SimulationResultRecord[];
+}
+
+/** Lookup boundary for versioned, serializable policy descriptors. */
+export interface SimulationPolicyRegistry {
+  readonly supported: readonly PolicyDescriptor[];
+  resolve(descriptor: PolicyDescriptor): PlayerPolicy;
+}
+
+/** Application service for executing retained simulation inputs. */
+export interface SimulationExperiment {
+  run(manifest: SimulationManifest): Promise<SimulationBatchExport>;
+}
+
 export interface SimulationRequest {
   readonly config: RunConfig;
   readonly policy: PlayerPolicy;
