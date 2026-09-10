@@ -19,6 +19,7 @@ import type { ProfileState } from "../../src/application/contracts.js";
 class MemoryStorage implements StorageLike {
   readonly #values = new Map<string, string>();
   readonly #writeCalls = new Map<string, number>();
+  storageUnavailable = false;
   failNextWriteAfterCommitKey: string | undefined;
   failNextWriteBeforeCommitKey: string | undefined;
   failVerificationAfterWriteKey: string | undefined;
@@ -30,12 +31,16 @@ class MemoryStorage implements StorageLike {
     { readonly key: string; readonly call: number } | undefined;
   failAfterWriteWithoutBlockingOnCall:
     { readonly key: string; readonly call: number } | undefined;
+  failAfterWriteAndBlockKey: string | undefined;
   failBeforeWriteCount:
     { readonly key: string; readonly count: number } | undefined;
   failBeforeWriteOnCall:
     { readonly key: string; readonly call: number } | undefined;
 
   getItem(key: string): string | null {
+    if (this.storageUnavailable) {
+      throw new Error("simulated storage outage");
+    }
     if (this.failNextReadKey === key) {
       this.failNextReadKey = undefined;
       throw new Error("simulated read failure");
@@ -44,6 +49,9 @@ class MemoryStorage implements StorageLike {
   }
 
   setItem(key: string, value: string): void {
+    if (this.storageUnavailable) {
+      throw new Error("simulated storage outage");
+    }
     if (this.failNextWriteBeforeCommitKey === key) {
       this.failNextWriteBeforeCommitKey = undefined;
       throw new Error("simulated write failure");
@@ -68,6 +76,10 @@ class MemoryStorage implements StorageLike {
     this.#values.set(key, value);
     const call = nextCall;
     this.#writeCalls.set(key, call);
+    if (this.failAfterWriteAndBlockKey === key) {
+      this.failAfterWriteAndBlockKey = undefined;
+      this.storageUnavailable = true;
+    }
     if (this.failVerificationAfterWriteKey === key) {
       this.failVerificationAfterWriteKey = undefined;
       this.failNextReadKey = key;
@@ -106,6 +118,9 @@ class MemoryStorage implements StorageLike {
   }
 
   removeItem(key: string): void {
+    if (this.storageUnavailable) {
+      throw new Error("simulated storage outage");
+    }
     this.#values.delete(key);
     if (this.failVerificationAfterRemoveKey === key) {
       this.failVerificationAfterRemoveKey = undefined;
@@ -816,6 +831,38 @@ describe("versioned browser profile storage", () => {
       status: "uncertain",
       error: { code: "write-outcome-unknown" },
     });
+    expect(store.load()).toEqual({
+      status: "empty",
+      profile: previous,
+    });
+    expect(store.commitCompletedRun(request)).toEqual({
+      status: "saved",
+      profile: next,
+    });
+    expect(store.commitCompletedRun(request)).toEqual({
+      status: "already-committed",
+      profile: next,
+    });
+  });
+
+  it("recovers a first completion after storage returns from a post-primary outage", () => {
+    const storage = new MemoryStorage();
+    const store = createBrowserProfileStore(storage);
+    const previous = createFreshProfile();
+    const next = profileWith({ level: 2, tutorialPreference: "disabled" });
+    storage.failAfterWriteAndBlockKey = PROFILE_STORAGE_KEY;
+    const request = {
+      completionId: "post-primary-outage-retry",
+      completionFingerprint: "sha256-v1:post-primary-outage-retry",
+      expectedProfile: previous,
+      nextProfile: next,
+    } as const;
+
+    expect(store.commitCompletedRun(request)).toMatchObject({
+      status: "uncertain",
+      error: { code: "write-outcome-unknown" },
+    });
+    storage.storageUnavailable = false;
     expect(store.load()).toEqual({
       status: "empty",
       profile: previous,

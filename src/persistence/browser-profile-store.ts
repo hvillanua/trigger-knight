@@ -601,15 +601,19 @@ function selectCommittedRecord(
   }
 
   if (marker.record === null) {
-    return primaryRaw === null && backupRaw === null
-      ? { kind: "empty" }
-      : {
-          kind: "failed",
-          error: error(
-            "invalid-record",
-            "Stored profile commit journal points to an empty record",
-          ),
-        };
+    if (primaryRaw === null && backupRaw === null) {
+      return { kind: "empty" };
+    }
+    if (backupRaw === null && primary?.decoded.ok === true) {
+      return { kind: "empty" };
+    }
+    return {
+      kind: "failed",
+      error: error(
+        "invalid-record",
+        "Stored profile commit journal points to an empty record",
+      ),
+    };
   }
 
   if (marker.record === primaryRaw && primaryRaw !== null) {
