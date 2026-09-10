@@ -29,10 +29,8 @@ than duplicate prose inventories. Record delivery evidence in PRs.
 ## Validation policy
 
 Run only focused checks needed for the change locally. GitHub Actions is the
-complete validation gate. Run aggregate validation locally only when the user
-requests it or a CI failure needs reproduction. Markdown and plain-text-only
-changes require no code validation.
+complete validation gate. Do not manually run aggregate validation locally.
+Markdown and plain-text-only changes require no code validation.
 
-Do not install or invoke repository-owned pre-commit or pre-push hooks. Do not
-poll successful CI runs. Report observed results accurately, including checks
-that were not run.
+Do not poll successful CI runs. Report observed results accurately, including
+checks that were not run.
