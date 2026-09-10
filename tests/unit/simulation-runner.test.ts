@@ -127,7 +127,7 @@ describe("headless simulation runner", () => {
       distance: 0,
       gold: 300,
       traceHash:
-        "sha256-v1:349aa382fc66e9df992f8f930f41902c6625f89048c4de8a0e3b35496c294254",
+        "sha256-v1:16be9712c86a342c7cd75b534b24c2d6a4424ceaea13c784b5df25e00cef7ddb",
       metrics: {},
     });
     expect(Object.isFrozen(result)).toBe(true);
@@ -230,7 +230,14 @@ describe("headless simulation runner", () => {
     const result = runner.run(
       request(dismissTutorialPolicy, {
         maxSteps: 3_000,
-        config: { ...config, seed: "milestone-2-lifecycle-2" },
+        config: {
+          ...config,
+          seed: "milestone-2-lifecycle-2",
+          initialProfile: {
+            ...config.initialProfile,
+            tutorialPreference: "disabled",
+          },
+        },
       }),
     );
 
@@ -260,7 +267,14 @@ describe("headless simulation runner", () => {
     const result = runner.run(
       request(dismissTutorialPolicy, {
         maxSteps: 2_559,
-        config: { ...config, seed: "milestone-2-lifecycle-2" },
+        config: {
+          ...config,
+          seed: "milestone-2-lifecycle-2",
+          initialProfile: {
+            ...config.initialProfile,
+            tutorialPreference: "disabled",
+          },
+        },
       }),
     );
 

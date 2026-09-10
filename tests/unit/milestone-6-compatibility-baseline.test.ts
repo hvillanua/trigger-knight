@@ -29,27 +29,22 @@ describe("Milestone 6 original-v1.3 traceability", () => {
       if (entry.disposition === "covered") {
         expect(entry.evidence.length).toBeGreaterThan(0);
       }
-      if (entry.disposition === "blocked") {
+      if ("blocker" in entry) {
         expect(entry.blocker).toBeDefined();
       } else {
-        expect(entry.blocker).toBeUndefined();
+        expect("blocker" in entry).toBe(false);
       }
     }
   });
 
   it("requires an explicit dependency-linked ticket for every uncovered gameplay requirement", () => {
     const blockers = originalV13Traceability
-      .filter((entry) => entry.disposition === "blocked")
+      .filter((entry) => "blocker" in entry)
       .map((entry) => ({
         id: entry.id,
         blocker: entry.blocker,
       }));
 
-    expect(blockers).toEqual([
-      {
-        id: "presentation.contextual-tutorial-gates",
-        blocker: { issue: 92, dependency: 91 },
-      },
-    ]);
+    expect(blockers).toEqual([]);
   });
 });

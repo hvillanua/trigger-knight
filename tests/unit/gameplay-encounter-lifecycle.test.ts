@@ -27,7 +27,11 @@ function createRun(): RunState {
   return gameplayEngine.createRun({
     ruleset: ORIGINAL_V13_RULESET_ID,
     seed: "encounter-lifecycle-seed",
-    initialProfile: { schemaVersion: 1, scoreMultiplier: 1 },
+    initialProfile: {
+      schemaVersion: 1,
+      scoreMultiplier: 1,
+      tutorialPreference: "disabled",
+    },
   });
 }
 

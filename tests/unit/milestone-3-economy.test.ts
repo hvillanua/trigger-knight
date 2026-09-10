@@ -444,7 +444,7 @@ describe("Milestone 3 economy verification", () => {
       equal: true,
     });
     expect(headless.trace.traceHash).toBe(
-      "sha256-v1:bcd191d99e863ab03da03bde0c4604d776be5423b13b2648a212ce7b95640014",
+      "sha256-v1:a3fe9595fad4876f05bbe5112bb8cfcf31d2c2f06ff8f33174769056b37cfdcb",
     );
     expect(browser.readDiagnostics().traceHash).toBe(headless.trace.traceHash);
   });

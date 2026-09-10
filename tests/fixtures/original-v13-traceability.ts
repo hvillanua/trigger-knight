@@ -636,11 +636,27 @@ export const originalV13Traceability = Object.freeze([
     id: "presentation.contextual-tutorial-gates",
     source: "research/presentation.md#tutorials",
     classification: "confirmed",
-    disposition: "blocked",
+    disposition: "covered",
     rationale:
-      "Pages 1 through 5 are confirmed gameplay gates, but runtime coverage remains assigned to the dependency-linked implementation ticket.",
-    evidence: [],
-    blocker: { issue: 92, dependency: 91 },
+      "Pages 1 through 5 are confirmed gameplay gates. Their clean-room trigger choices, thresholds, priority, repetition, and ordering are implemented behind the public lifecycle boundary and exercised in focused unit and browser/headless parity scenarios.",
+    evidence: [
+      evidence(
+        "tests/unit/gameplay-tutorials.test.ts",
+        "original-v1.3 contextual tutorial gates > opens page 1 when an unused shop enters the strict purchase window",
+      ),
+      evidence(
+        "tests/unit/gameplay-tutorials.test.ts",
+        "original-v1.3 contextual tutorial gates > shows the Shrine lesson after the general building lesson on the same persistent shop",
+      ),
+      evidence(
+        "tests/unit/gameplay-tutorials.test.ts",
+        "original-v1.3 contextual tutorial gates > keeps all active systems and randomness frozen while a contextual page is open",
+      ),
+      evidence(
+        "tests/browser/milestone-6-tutorial-gates.spec.ts",
+        "keeps contextual tutorial gates equivalent in Node and Chromium",
+      ),
+    ],
   },
   {
     id: "presentation.post-death-delay",

@@ -12,7 +12,11 @@ import { ORIGINAL_V13_RULESET_ID } from "../../src/domain/rulesets.js";
 export const originalLifecycleConfig: RunConfig = Object.freeze({
   ruleset: ORIGINAL_V13_RULESET_ID,
   seed: "milestone-2-lifecycle-2",
-  initialProfile: Object.freeze({ schemaVersion: 1, scoreMultiplier: 1 }),
+  initialProfile: Object.freeze({
+    schemaVersion: 1,
+    scoreMultiplier: 1,
+    tutorialPreference: "disabled" as const,
+  }),
 });
 
 export const ORIGINAL_LIFECYCLE_TERMINAL_STEP = 2_564;

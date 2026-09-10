@@ -20,7 +20,11 @@ function config(seed: string): RunConfig {
   return {
     ruleset: ORIGINAL_V13_RULESET_ID,
     seed,
-    initialProfile: { schemaVersion: 1, scoreMultiplier: 1 },
+    initialProfile: {
+      schemaVersion: 1,
+      scoreMultiplier: 1,
+      tutorialPreference: "disabled",
+    },
   };
 }
 

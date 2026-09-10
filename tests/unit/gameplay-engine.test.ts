@@ -59,7 +59,7 @@ describe("gameplay engine", () => {
     expect(repeated).toEqual(state);
     expect(repeated).not.toBe(state);
     expect(state).toMatchObject({
-      schemaVersion: 16,
+      schemaVersion: 17,
       ruleset: "original-v1.3",
       steps: 0,
       activeTicks: 0,
