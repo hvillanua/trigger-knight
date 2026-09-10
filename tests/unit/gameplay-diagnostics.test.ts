@@ -12,6 +12,10 @@ import {
 import { createBrowserGameplaySession } from "../../src/browser/gameplay-session.js";
 import { ORIGINAL_V13_RULESET_ID } from "../../src/domain/rulesets.js";
 import { createSimulationRunner } from "../../src/simulation/simulation-runner.js";
+import {
+  compareGameplayTraceBlock,
+  COMPATIBILITY_CHECKPOINT_BLOCK_SIZE,
+} from "../helpers/compatibility-corpus.js";
 import { createTestGameplayEngine } from "../helpers/gameplay-engine.js";
 
 const gameplayEngine = createTestGameplayEngine();
@@ -154,6 +158,66 @@ describe("gameplay diagnostics", () => {
       difference: {
         path: "checkpoints[1].state.steps",
         expected: 1,
+        actual: 99,
+      },
+    });
+  });
+
+  it("reports a late checkpoint field before a deferred trace hash", () => {
+    const session = createBrowserGameplaySession(gameplayEngine, config);
+    for (let step = 0; step <= COMPATIBILITY_CHECKPOINT_BLOCK_SIZE; step += 1) {
+      session.dispatch(noCommands);
+    }
+
+    const expected = session.readDiagnostics();
+    const changedCheckpoint =
+      expected.checkpoints[COMPATIBILITY_CHECKPOINT_BLOCK_SIZE];
+    if (changedCheckpoint === undefined) {
+      throw new Error("Expected a late checkpoint");
+    }
+
+    const actual = {
+      schemaVersion: expected.schemaVersion,
+      config: expected.config,
+      checkpoints: [
+        ...expected.checkpoints.slice(0, COMPATIBILITY_CHECKPOINT_BLOCK_SIZE),
+        {
+          ...changedCheckpoint,
+          state: { ...changedCheckpoint.state, steps: 99 },
+        },
+        ...expected.checkpoints.slice(COMPATIBILITY_CHECKPOINT_BLOCK_SIZE + 1),
+      ],
+    };
+
+    expect(
+      compareGameplayTraceBlock(
+        expected,
+        {
+          ...actual,
+          checkpoints: actual.checkpoints.slice(
+            0,
+            COMPATIBILITY_CHECKPOINT_BLOCK_SIZE,
+          ),
+        },
+        0,
+      ),
+    ).toEqual({ equal: true });
+    expect(
+      compareGameplayTraceBlock(
+        expected,
+        {
+          ...actual,
+          checkpoints: actual.checkpoints.slice(
+            COMPATIBILITY_CHECKPOINT_BLOCK_SIZE,
+          ),
+        },
+        COMPATIBILITY_CHECKPOINT_BLOCK_SIZE,
+      ),
+    ).toEqual({
+      equal: false,
+      difference: {
+        path: "checkpoints[0].state.steps",
+        expected: COMPATIBILITY_CHECKPOINT_BLOCK_SIZE,
         actual: 99,
       },
     });

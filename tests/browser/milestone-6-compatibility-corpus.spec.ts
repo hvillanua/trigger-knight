@@ -15,7 +15,6 @@ import type * as GameplayEngineModule from "../../src/application/gameplay-engin
 import type * as BrowserGameplaySessionModule from "../../src/browser/gameplay-session.js";
 import type * as CanvasPresentationModule from "../../src/browser/canvas-presentation.js";
 import { createGameplayEngine } from "../../src/application/gameplay-engine.js";
-import { compareGameplayTraces } from "../../src/application/gameplay-execution.js";
 import { completedRunSettlementFromState } from "../../src/application/completed-run.js";
 import { settleCompletedRun } from "../../src/domain/profile.js";
 import type * as ProfileModule from "../../src/domain/profile.js";
@@ -26,6 +25,10 @@ import { nonProgressingPolicy } from "../../src/simulation/non-progressing-polic
 import { purchasingPolicy } from "../../src/simulation/purchasing-policy.js";
 import { createSimulationRunner } from "../../src/simulation/simulation-runner.js";
 import { originalLifecyclePolicy } from "../helpers/original-lifecycle.js";
+import {
+  compareGameplayTraceBlock,
+  COMPATIBILITY_CHECKPOINT_BLOCK_SIZE,
+} from "../helpers/compatibility-corpus.js";
 import type * as OriginalLifecycleModule from "../helpers/original-lifecycle.js";
 import type * as CombatPolicyModule from "../../src/simulation/combat-policy.js";
 import type * as NonProgressingPolicyModule from "../../src/simulation/non-progressing-policy.js";
@@ -213,7 +216,7 @@ function toStorageEnvelope(
 const nodeGameplayEngine = createGameplayEngine(ruleSetRegistry);
 
 interface BrowserCorpusSummary {
-  readonly schemaVersion: number;
+  readonly schemaVersion: GameplayTrace["schemaVersion"];
   readonly config: RunConfig;
   readonly traceHash: string;
   readonly length: number;
@@ -535,6 +538,36 @@ test("replays the retained compatibility corpus in Node and Chromium", async ({
           }),
         )) as BrowserCorpusSummary;
 
+        expect(summary.schemaVersion).toBe(node.trace.schemaVersion);
+        expect(summary.length).toBe(node.trace.checkpoints.length);
+        for (
+          let start = 0;
+          start < summary.length;
+          start += COMPATIBILITY_CHECKPOINT_BLOCK_SIZE
+        ) {
+          const checkpoints = await diagnostics.evaluate(
+            ({ trace }, range: { start: number; end: number }) =>
+              trace.checkpoints.slice(range.start, range.end),
+            { start, end: start + COMPATIBILITY_CHECKPOINT_BLOCK_SIZE },
+          );
+          const comparison = compareGameplayTraceBlock(
+            node.trace,
+            {
+              schemaVersion: summary.schemaVersion,
+              config: summary.config,
+              checkpoints,
+            },
+            start,
+          );
+          expect(
+            comparison,
+            `${fixture.id} ${variant.name} checkpoint block ${start}`,
+          ).toEqual({ equal: true });
+        }
+
+        expect(summary.traceHash, `${fixture.id} ${variant.name} trace`).toBe(
+          node.trace.traceHash,
+        );
         expect(summary.result, `${fixture.id} ${variant.name} result`).toEqual(
           fixture.expected.result,
         );
@@ -546,28 +579,6 @@ test("replays the retained compatibility corpus in Node and Chromium", async ({
         expect(summary.hiddenObservationKeys).toEqual([]);
         expect(summary.hiddenEventKeys).toEqual([]);
         expect(summary.presentation.presentationKeys).toEqual([]);
-
-        for (let start = 0; start < summary.length; start += 250) {
-          const checkpoints = await diagnostics.evaluate(
-            ({ trace }, range: { start: number; end: number }) =>
-              trace.checkpoints.slice(range.start, range.end),
-            { start, end: start + 250 },
-          );
-          const expected = {
-            ...node.trace,
-            checkpoints: node.trace.checkpoints.slice(start, start + 250),
-          };
-          const actual: GameplayTrace = {
-            schemaVersion: node.trace.schemaVersion,
-            config: summary.config,
-            traceHash: summary.traceHash,
-            checkpoints,
-          };
-          expect(
-            compareGameplayTraces(expected, actual),
-            `${fixture.id} ${variant.name} checkpoint block ${start}`,
-          ).toEqual({ equal: true });
-        }
 
         variantSummaries.push(summary);
         await diagnostics.dispose();

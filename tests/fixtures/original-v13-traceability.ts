@@ -80,6 +80,10 @@ export const originalV13Traceability = Object.freeze([
         "gameplay diagnostics > records equal browser and headless checkpoints for one command schedule",
       ),
       evidence(
+        "tests/unit/gameplay-diagnostics.test.ts",
+        "gameplay diagnostics > reports a late checkpoint field before a deferred trace hash",
+      ),
+      evidence(
         "tests/browser/milestone-6-compatibility-corpus.spec.ts",
         "replays the retained compatibility corpus in Node and Chromium",
       ),
