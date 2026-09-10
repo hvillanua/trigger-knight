@@ -1,0 +1,16 @@
+{
+  "config": {
+    "ruleset": "original-v1.3",
+    "seed": "cli-minimal",
+    "initialProfile": {
+      "schemaVersion": 1,
+      "scoreMultiplier": 1
+    }
+  },
+  "policy": {
+    "id": "non-progressing",
+    "version": "1",
+    "config": {}
+  },
+  "maxSteps": 3
+}

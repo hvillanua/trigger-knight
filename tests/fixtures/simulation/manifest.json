@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "requests": [
+    {
+      "config": {
+        "ruleset": "original-v1.3",
+        "seed": "cli-progressing",
+        "initialProfile": {
+          "schemaVersion": 1,
+          "scoreMultiplier": 1
+        }
+      },
+      "policy": {
+        "id": "purchase-reachable-shops",
+        "version": "2",
+        "config": {}
+      },
+      "maxSteps": 62
+    },
+    {
+      "config": {
+        "ruleset": "original-v1.3",
+        "seed": "cli-expanded",
+        "initialProfile": {
+          "schemaVersion": 2,
+          "level": 1,
+          "xp": 0,
+          "scoreMultiplier": 1,
+          "highScore": 0,
+          "tutorialPreference": "enabled",
+          "weaponDiscoveries": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "armorDiscoveries": [
+            true,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false,
+            false
+          ],
+          "achievementSlots": [false, false, false, false, false, false]
+        }
+      },
+      "policy": {
+        "id": "non-progressing",
+        "version": "1",
+        "config": {}
+      },
+      "maxSteps": 4
+    }
+  ]
+}

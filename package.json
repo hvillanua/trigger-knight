@@ -18,6 +18,7 @@
     "prepare": "npm run setup:hooks",
     "setup:browser": "playwright install chromium",
     "setup:hooks": "node build/install-git-hooks.mjs",
+    "simulate": "node build/run-simulation.mjs",
     "test": "npm run test:unit && npm run test:browser",
     "test:unit": "vitest run",
     "test:browser": "playwright test",

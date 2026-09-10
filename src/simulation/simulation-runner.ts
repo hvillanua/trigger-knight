@@ -3,9 +3,6 @@ import type {
   GameEvent,
   GameplayTrace,
   GameplayEngine,
-  PlayerPolicy,
-  PolicyConfig,
-  PolicyDescriptor,
   ProfileInput,
   RunConfig,
   RunResult,
@@ -18,6 +15,7 @@ import {
   fingerprintCanonicalJson,
   normalizeCanonicalJson,
 } from "./canonical-json.js";
+import { normalizePolicyDescriptor } from "./policy-descriptor.js";
 
 const RUN_RESULT_SCHEMA_VERSION = 2;
 const NO_EVENTS: readonly GameEvent[] = Object.freeze([]);
@@ -31,20 +29,6 @@ function assertStepLimit(maxSteps: number): void {
   if (!Number.isSafeInteger(maxSteps) || maxSteps <= 0) {
     throw new RangeError("maxSteps must be a positive safe integer");
   }
-}
-
-function normalizePolicy(policy: PlayerPolicy): PolicyDescriptor {
-  const config = normalizeCanonicalJson(policy.descriptor.config);
-
-  if (config === null || Array.isArray(config) || typeof config !== "object") {
-    throw new TypeError("Policy config must be a plain record");
-  }
-
-  return Object.freeze({
-    id: policy.descriptor.id,
-    version: policy.descriptor.version,
-    config: config as PolicyConfig,
-  });
 }
 
 function snapshotProfile(profile: ProfileInput): ProfileInput {
@@ -63,7 +47,7 @@ function runSimulation(
   const maxSteps = request.maxSteps;
   assertStepLimit(maxSteps);
 
-  const policy = normalizePolicy(request.policy);
+  const policy = normalizePolicyDescriptor(request.policy.descriptor);
   const initialProfile = snapshotProfile(request.config.initialProfile);
   const config: RunConfig = Object.freeze({
     ruleset: request.config.ruleset,
