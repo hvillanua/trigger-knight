@@ -27,6 +27,8 @@ class MemoryStorage implements StorageLike {
   failNextReadKey: string | undefined;
   failAfterWriteOnCall:
     { readonly key: string; readonly call: number } | undefined;
+  failAfterWriteWithoutBlockingOnCall:
+    { readonly key: string; readonly call: number } | undefined;
   failBeforeWriteOnCall:
     { readonly key: string; readonly call: number } | undefined;
 
@@ -76,6 +78,13 @@ class MemoryStorage implements StorageLike {
     ) {
       this.failAfterWriteOnCall = undefined;
       this.failNextWriteBeforeCommitKey = key;
+      throw new Error("simulated write failure");
+    }
+    if (
+      this.failAfterWriteWithoutBlockingOnCall?.key === key &&
+      this.failAfterWriteWithoutBlockingOnCall.call === call
+    ) {
+      this.failAfterWriteWithoutBlockingOnCall = undefined;
       throw new Error("simulated write failure");
     }
   }
@@ -295,20 +304,13 @@ describe("versioned browser profile storage", () => {
       error: { code: "write-failed" },
     });
     storage.failNextWriteBeforeCommitKey = undefined;
-    const primaryRaw = storage.getItem(PROFILE_STORAGE_KEY);
-    const backupRaw = storage.getItem(`${PROFILE_STORAGE_KEY}.backup`);
-    const markerRaw = storage.getItem(`${PROFILE_STORAGE_KEY}.commit`);
-    expect(store.load()).toMatchObject({
-      status: "failed",
-      error: { code: "invalid-record" },
+    expect(store.load()).toEqual({
+      status: "empty",
+      profile: createFreshProfile(),
     });
     expect(store.save(profileWith({ highScore: 1 }))).toMatchObject({
-      status: "failed",
-      error: { code: "invalid-record" },
+      status: "saved",
     });
-    expect(storage.getItem(PROFILE_STORAGE_KEY)).toBe(primaryRaw);
-    expect(storage.getItem(`${PROFILE_STORAGE_KEY}.backup`)).toBe(backupRaw);
-    expect(storage.getItem(`${PROFILE_STORAGE_KEY}.commit`)).toBe(markerRaw);
   });
 
   it.each([
@@ -640,6 +642,75 @@ describe("versioned browser profile storage", () => {
       status: "loaded",
       profile: next,
       migrated: false,
+    });
+  });
+
+  it("rolls back a first completion when primary verification fails", () => {
+    const storage = new MemoryStorage();
+    const store = createBrowserProfileStore(storage);
+    const previous = createFreshProfile();
+    const next = profileWith({ level: 2, tutorialPreference: "disabled" });
+    storage.failVerificationAfterWriteKey = PROFILE_STORAGE_KEY;
+    const request = {
+      completionId: "primary-verification-retry",
+      completionFingerprint: "sha256-v1:primary-verification-retry",
+      expectedProfile: previous,
+      nextProfile: next,
+    } as const;
+
+    expect(store.commitCompletedRun(request)).toMatchObject({
+      status: "failed",
+      error: { code: "write-failed" },
+    });
+    expect(store.load()).toEqual({
+      status: "empty",
+      profile: previous,
+    });
+    expect(store.commitCompletedRun(request)).toEqual({
+      status: "saved",
+      profile: next,
+    });
+    expect(store.commitCompletedRun(request)).toEqual({
+      status: "already-committed",
+      profile: next,
+    });
+  });
+
+  it("rolls back a first completion when final-marker acknowledgement is unreadable", () => {
+    const storage = new MemoryStorage();
+    const store = createBrowserProfileStore(storage);
+    const previous = createFreshProfile();
+    const next = profileWith({ level: 2, tutorialPreference: "disabled" });
+    storage.failAfterWriteWithoutBlockingOnCall = {
+      key: `${PROFILE_STORAGE_KEY}.commit`,
+      call: 3,
+    };
+    storage.failVerificationAfterWriteOnCall = {
+      key: `${PROFILE_STORAGE_KEY}.commit`,
+      call: 3,
+    };
+    const request = {
+      completionId: "final-marker-retry",
+      completionFingerprint: "sha256-v1:final-marker-retry",
+      expectedProfile: previous,
+      nextProfile: next,
+    } as const;
+
+    expect(store.commitCompletedRun(request)).toMatchObject({
+      status: "failed",
+      error: { code: "write-failed" },
+    });
+    expect(store.load()).toEqual({
+      status: "empty",
+      profile: previous,
+    });
+    expect(store.commitCompletedRun(request)).toEqual({
+      status: "saved",
+      profile: next,
+    });
+    expect(store.commitCompletedRun(request)).toEqual({
+      status: "already-committed",
+      profile: next,
     });
   });
 

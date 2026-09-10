@@ -99,6 +99,16 @@ type CommitOutcome =
   | Readonly<{ status: "failed"; error: ProfileStorageError }>
   | Readonly<{ status: "uncertain"; error: ProfileStorageError }>;
 
+function uncertainCommitOutcome(): CommitOutcome {
+  return {
+    status: "uncertain",
+    error: error(
+      "write-outcome-unknown",
+      "Profile commit outcome could not be reconciled; load the profile before retrying",
+    ),
+  };
+}
+
 function error(
   code: ProfileStorageError["code"],
   message: string,
@@ -597,10 +607,41 @@ function selectCommittedRecord(
   return { kind: "failed", error: firstDecodeError(primary, backup) };
 }
 
-function publishCommitMarker(
+function restorePreviousPrimary(
   storage: StorageLike,
+  key: string,
   commitKey: string,
   serialized: string,
+  previous: string | null,
+): CommitOutcome {
+  try {
+    writeRawAndVerify(storage, key, previous);
+  } catch {
+    if (previous === null) {
+      try {
+        writeRawAndVerify(storage, commitKey, encodeReadyMarker(serialized));
+      } catch {
+        // The outcome remains unknown when the recovery marker cannot be staged.
+      }
+      return uncertainCommitOutcome();
+    }
+    return {
+      status: "failed",
+      error: error("write-failed", "Profile write failed"),
+    };
+  }
+  return {
+    status: "failed",
+    error: error("write-failed", "Profile write failed"),
+  };
+}
+
+function publishCommitMarker(
+  storage: StorageLike,
+  key: string,
+  commitKey: string,
+  serialized: string,
+  previous: string | null,
   previousMarker: string,
 ): CommitOutcome {
   const nextMarker = encodeCommitMarker(serialized);
@@ -619,33 +660,28 @@ function publishCommitMarker(
       return { status: "saved" };
     }
     if (observed === readyMarker) {
-      return {
-        status: "uncertain",
-        error: error(
-          "write-outcome-unknown",
-          "Profile commit marker is staged; load the profile before retrying",
-        ),
-      };
+      return uncertainCommitOutcome();
     }
 
     try {
       writeRawAndVerify(storage, commitKey, previousMarker);
     } catch {
-      return {
-        status: "uncertain",
-        error: error(
-          "write-outcome-unknown",
-          "Profile commit outcome could not be reconciled; load the profile before retrying",
-        ),
-      };
+      if (previous === null) {
+        try {
+          writeRawAndVerify(storage, commitKey, readyMarker);
+        } catch {
+          // The outcome remains unknown when the recovery marker cannot be staged.
+        }
+      }
+      return uncertainCommitOutcome();
     }
-    return {
-      status: "failed",
-      error: error(
-        "write-failed",
-        "Profile commit marker could not be published",
-      ),
-    };
+    return restorePreviousPrimary(
+      storage,
+      key,
+      commitKey,
+      serialized,
+      previous,
+    );
   }
 }
 
@@ -673,30 +709,23 @@ function publishReadyMarker(
     }
 
     if (observed !== previousMarker) {
-      return {
-        status: "uncertain",
-        error: error(
-          "write-outcome-unknown",
-          "Profile commit staging could not be reconciled; load the profile before retrying",
-        ),
-      };
+      if (previous === null) {
+        try {
+          writeRawAndVerify(storage, commitKey, readyMarker);
+        } catch {
+          // The outcome remains unknown when the recovery marker cannot be staged.
+        }
+      }
+      return uncertainCommitOutcome();
     }
 
-    try {
-      writeRawAndVerify(storage, key, previous);
-    } catch {
-      return {
-        status: "uncertain",
-        error: error(
-          "write-outcome-unknown",
-          "Profile commit staging could not be reconciled; load the profile before retrying",
-        ),
-      };
-    }
-    return {
-      status: "failed",
-      error: error("write-failed", "Profile commit staging failed"),
-    };
+    return restorePreviousPrimary(
+      storage,
+      key,
+      commitKey,
+      serialized,
+      previous,
+    );
   }
 }
 
@@ -719,12 +748,22 @@ function commitSerialized(
     try {
       writeRawAndVerify(storage, commitKey, previousMarker);
     } catch {
-      // The primary and backup records still retain a complete candidate pair.
+      if (previous === null) {
+        try {
+          writeRawAndVerify(storage, commitKey, encodeReadyMarker(serialized));
+        } catch {
+          // The outcome remains unknown when the recovery marker cannot be staged.
+        }
+      }
+      return uncertainCommitOutcome();
     }
-    return {
-      status: "failed",
-      error: error("write-failed", "Profile write failed"),
-    };
+    return restorePreviousPrimary(
+      storage,
+      key,
+      commitKey,
+      serialized,
+      previous,
+    );
   }
 
   const readyOutcome = publishReadyMarker(
@@ -739,7 +778,14 @@ function commitSerialized(
     return readyOutcome;
   }
 
-  return publishCommitMarker(storage, commitKey, serialized, previousMarker);
+  return publishCommitMarker(
+    storage,
+    key,
+    commitKey,
+    serialized,
+    previous,
+    previousMarker,
+  );
 }
 
 function failedLoad(errorValue: ProfileStorageError): ProfileLoadResult {
