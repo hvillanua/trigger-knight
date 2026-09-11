@@ -34,17 +34,21 @@ const comparison = path.join(
   repositoryRoot,
   "tests/fixtures/simulation/comparison.json",
 );
+const benchmark = path.join(
+  repositoryRoot,
+  "tests/fixtures/simulation/benchmark.json",
+);
 
 interface SimulationCommandModule {
   runSimulationCommand(
-    mode: "batch" | "compare" | "replay",
+    mode: "batch" | "benchmark" | "compare" | "replay",
     input: unknown,
     options?: { ruleSetRegistry?: RuleSetRegistry },
   ): Promise<string>;
 }
 
 function runCommand(...arguments_: string[]) {
-  return spawnSync(process.execPath, [command, ...arguments_], {
+  return spawnSync(process.execPath, ["--expose-gc", command, ...arguments_], {
     cwd: repositoryRoot,
     encoding: "utf8",
     env: { ...process.env },
@@ -58,7 +62,7 @@ describe("simulation command", () => {
 
     expect(result.status).toBe(0);
     expect(result.stderr).toBe("");
-    const output = JSON.parse(result.stdout) as {
+    const output = JSON.parse(result.stdout) as unknown as {
       seed: string;
       terminalReason: string;
       steps: number;
@@ -167,6 +171,47 @@ describe("simulation command", () => {
       mode: "pair",
       comparison: { behavioralDifference: null },
     });
+  });
+
+  it("executes the configured benchmark and separates operational metadata", () => {
+    const result = runCommand("benchmark", benchmark);
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toBe("");
+    const output = JSON.parse(result.stdout) as {
+      schemaVersion: number;
+      deterministic: {
+        stable: boolean;
+        resultCases: Array<{
+          progressingRunCount: number;
+          terminalReasons: { "step-limit": number };
+        }>;
+        comparisons: unknown[];
+      };
+      measurements: unknown[];
+      host: { nodeVersion: string };
+      targets: { met: boolean };
+    };
+    expect(output).toMatchObject({
+      schemaVersion: 1,
+      deterministic: { stable: true },
+      targets: { met: true },
+    });
+    expect(typeof output.host.nodeVersion).toBe("string");
+    expect(output.deterministic.resultCases.length).toBeGreaterThan(0);
+    expect(
+      output.deterministic.resultCases.some(
+        ({ progressingRunCount }) => progressingRunCount > 0,
+      ),
+    ).toBe(true);
+    expect(
+      output.deterministic.resultCases.some(
+        ({ terminalReasons }) => terminalReasons["step-limit"] > 0,
+      ),
+    ).toBe(true);
+    expect(output.deterministic.comparisons.length).toBeGreaterThan(0);
+    expect(output.measurements.length).toBeGreaterThan(0);
+    expect(result.stdout).toBe(`${result.stdout.trim()}\n`);
   });
 
   it("serializes missing fields in a shop-versus-battle divergence", async () => {
