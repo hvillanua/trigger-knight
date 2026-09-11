@@ -11,6 +11,7 @@ import {
 import type { GameplayEngine, RunConfig } from "./gameplay-engine.js";
 
 const GAMEPLAY_TRACE_SCHEMA_VERSION = 2 as const;
+const MISSING_TRACE_VALUE = Object.freeze({ kind: "missing" as const });
 
 export interface GameplayCheckpoint {
   readonly index: number;
@@ -319,7 +320,17 @@ function divergence(
   kind: GameplayDivergenceKind,
   difference: GameplayTraceDifference,
 ): GameplayTraceDivergence {
-  return Object.freeze({ step, kind, ...difference });
+  return Object.freeze({
+    step,
+    kind,
+    path: difference.path,
+    expected:
+      difference.expected === undefined
+        ? MISSING_TRACE_VALUE
+        : difference.expected,
+    actual:
+      difference.actual === undefined ? MISSING_TRACE_VALUE : difference.actual,
+  });
 }
 
 function checkpointDivergence(

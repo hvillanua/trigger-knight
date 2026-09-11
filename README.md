@@ -142,7 +142,9 @@ checkpoint prefix and report the first command, authoritative state, public
 observation or event, RNG, or termination difference. Ruleset labels are
 reported as identity differences and do not count as behavioral differences by
 themselves. Full state and randomness values exist only in this host diagnostic
-path; ordinary batch execution does not retain replay histories.
+path. A missing field is represented as `{ "kind": "missing" }` so the
+diagnostic remains canonical JSON. Ordinary batch execution does not retain
+replay histories.
 
 The browser entry point loads its initial profile through
 `createBrowserProfileStore(window.localStorage)`. An empty store returns fresh
