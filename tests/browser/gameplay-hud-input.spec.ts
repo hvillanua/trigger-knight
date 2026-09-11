@@ -49,6 +49,43 @@ test("routes keyboard bindings once and ignores held-key repeats", async ({
   ]);
 });
 
+test("keeps shortcuts active from focused gameplay buttons", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+
+  const pauseButton = page.getByRole("button", {
+    name: "Pause",
+    exact: true,
+  });
+  await pauseButton.click();
+  await expect(
+    page.getByRole("button", { name: "Resume", exact: true }),
+  ).toBeVisible();
+
+  await page.keyboard.press("p");
+  await expect(
+    page.getByRole("button", { name: "Pause", exact: true }),
+  ).toBeVisible();
+});
+
+test("prevents held Enter from repeating a focused gameplay button", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+
+  await page.getByRole("button", { name: "Pause", exact: true }).focus();
+  await page.keyboard.down("Enter");
+  await page.keyboard.down("Enter");
+  await page.keyboard.up("Enter");
+
+  await expect(
+    page.getByRole("button", { name: "Resume", exact: true }),
+  ).toBeVisible();
+});
+
 test("captures, cancels, and rejects conflicting keyboard remaps", async ({
   page,
 }) => {

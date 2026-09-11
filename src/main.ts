@@ -886,12 +886,19 @@ const dispatch = (commands: readonly GameCommand[]): void => {
   }
 };
 
-function interactiveEventTarget(target: EventTarget | null): boolean {
+function editableEventTarget(target: EventTarget | null): boolean {
   return (
     target instanceof HTMLElement &&
-    (target.matches("button, input, textarea, select, a") ||
-      target.isContentEditable)
+    (target.matches("input, textarea, select") || target.isContentEditable)
   );
+}
+
+function nativeActivationTarget(target: EventTarget | null): boolean {
+  return target instanceof HTMLButtonElement && !target.disabled;
+}
+
+function nativeActivationCode(code: string): boolean {
+  return code === "Enter" || code === "Space";
 }
 
 document.addEventListener("keydown", (event) => {
@@ -907,11 +914,22 @@ document.addEventListener("keydown", (event) => {
     return;
   }
 
+  if (event.isComposing || currentScreen !== "gameplay") {
+    return;
+  }
+  if (editableEventTarget(event.target)) return;
+  if (event.repeat) {
+    if (
+      nativeActivationTarget(event.target) &&
+      nativeActivationCode(event.code)
+    ) {
+      event.preventDefault();
+    }
+    return;
+  }
   if (
-    event.repeat ||
-    event.isComposing ||
-    currentScreen !== "gameplay" ||
-    interactiveEventTarget(event.target)
+    nativeActivationTarget(event.target) &&
+    nativeActivationCode(event.code)
   ) {
     return;
   }
