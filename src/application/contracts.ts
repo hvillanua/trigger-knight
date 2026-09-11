@@ -76,6 +76,7 @@ export {
   createCommittedRunResultView,
   completedRunSettlementFromState,
 } from "./completed-run.js";
+export { createProfileOverviewView } from "./profile.js";
 export type {
   CommittedProfileView,
   CommittedRunResultView,
@@ -83,6 +84,12 @@ export type {
   CompletedRunRequest,
   CompletedRunResult,
 } from "./completed-run.js";
+export type {
+  ProfileAchievementView,
+  ProfileCollectionsView,
+  ProfileEquipmentView,
+  ProfileOverviewView,
+} from "./profile.js";
 export type {
   GameplayEngine,
   RunConfig,
@@ -154,3 +161,17 @@ export type {
   ProfileStorageErrorCode,
   ProfileStore,
 } from "./persistence.js";
+export {
+  createDefaultSettings,
+  DEFAULT_INPUT_BINDINGS,
+  normalizeSettings,
+  SETTINGS_SCHEMA_VERSION,
+} from "./settings.js";
+export type {
+  BrowserSettings,
+  InputBindings,
+  SettingsLoadResult,
+  SettingsSaveResult,
+  SettingsStore,
+  SoundPreferences,
+} from "./settings.js";

@@ -215,6 +215,14 @@ presented. A save whose final commit cannot be reconciled returns an uncertain
 result; load the profile before retrying so the journal can resolve to the prior
 or complete new record.
 
+Browser menu preferences are stored separately under
+`trigger-knight.settings`, using settings schema version 1. They contain the
+keyboard binding codes and sound mute/volume settings; volume is normalized to
+the range 0 through 1. The tutorial preference remains part of the progression
+record. An absent settings record uses defaults. Invalid, unsupported, or
+failing settings storage is reported in the browser and never replaces the
+progression record under `trigger-knight.profile`.
+
 ## Original game
 
 Copyright remains with the original rights holders. The preserved material is
