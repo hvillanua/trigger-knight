@@ -8,6 +8,7 @@ import type {
   SimulationComparisonInput,
   SimulationManifest,
   SimulationPolicyRegistry,
+  SimulationRequest,
   SimulationRequestInput,
   SimulationResultRecord,
   SimulationRunner,
@@ -84,6 +85,7 @@ export interface SimulationBenchmarkEnvironment {
   readonly host: SimulationBenchmarkHost;
   readonly now: () => number;
   readonly readHeapUsedBytes: () => number;
+  readonly collectGarbage?: () => void;
 }
 
 export interface SimulationBenchmarkMeasurement {
@@ -125,6 +127,7 @@ export interface SimulationBenchmarkResultCase {
 export interface SimulationBenchmarkComparisonCase {
   readonly caseId: string;
   readonly strategy: SimulationBenchmarkStrategy;
+  readonly batchSize: number;
   readonly comparisonFingerprint: string;
   readonly pairCount: number;
   readonly behavioralDifferenceCount: number;
@@ -177,6 +180,12 @@ interface MeasuredExecution extends BatchExecution {
   readonly heapUsedBeforeBytes: number;
   readonly heapDeltaBytes: number;
   readonly runsPerSecond: number;
+}
+
+interface HeapTracker {
+  sample(): number;
+  collectAndSample(): number;
+  delta(): number;
 }
 
 function record(value: unknown, label: string): NormalizedRecord {
@@ -525,6 +534,33 @@ function checkClockValue(value: number, label: string): number {
   return value;
 }
 
+function createHeapTracker(
+  readHeapUsedBytes: () => number,
+  collectGarbage: () => void = () => {},
+): HeapTracker {
+  collectGarbage();
+  const baselineHeapUsedBytes = checkHeapValue(
+    readHeapUsedBytes(),
+    "Heap usage",
+  );
+  let peakHeapUsedBytes = baselineHeapUsedBytes;
+
+  return {
+    sample(): number {
+      const heapUsedBytes = checkHeapValue(readHeapUsedBytes(), "Heap usage");
+      peakHeapUsedBytes = Math.max(peakHeapUsedBytes, heapUsedBytes);
+      return heapUsedBytes;
+    },
+    collectAndSample(): number {
+      collectGarbage();
+      return this.sample();
+    },
+    delta(): number {
+      return peakHeapUsedBytes - baselineHeapUsedBytes;
+    },
+  };
+}
+
 function roundMeasurement(value: number): number {
   const rounded = Math.round(value * 1_000) / 1_000;
   return Object.is(rounded, -0) ? 0 : rounded;
@@ -625,6 +661,31 @@ async function runSequential(
   });
 }
 
+function createBatchedRunner(
+  runner: SimulationRunner,
+  batchSize: number,
+): SimulationRunner {
+  return Object.freeze({
+    run: (request: SimulationRequest) => runner.run(request),
+    async runBatch(
+      requests: readonly SimulationRequest[],
+    ): Promise<readonly RunResult[]> {
+      const results: RunResult[] = [];
+      for (let start = 0; start < requests.length; start += batchSize) {
+        const end = Math.min(start + batchSize, requests.length);
+        const batchResults = await runner.runBatch(requests.slice(start, end));
+        if (batchResults.length !== end - start) {
+          throw new Error(
+            `Simulation benchmark comparison runner returned ${batchResults.length} results for batch size ${end - start}`,
+          );
+        }
+        results.push(...batchResults);
+      }
+      return Object.freeze(results);
+    },
+  });
+}
+
 async function execute(
   strategy: SimulationBenchmarkStrategy,
   runner: SimulationRunner,
@@ -632,18 +693,16 @@ async function execute(
   manifest: SimulationManifest,
   batchSize: number,
   environment: SimulationBenchmarkEnvironment,
+  heapTracker: HeapTracker,
 ): Promise<MeasuredExecution> {
-  const heapUsedBeforeBytes = checkHeapValue(
-    environment.readHeapUsedBytes(),
-    "Heap usage",
-  );
+  const heapUsedBeforeBytes = heapTracker.sample();
   const start = checkClockValue(environment.now(), "Benchmark clock");
   const result = await runSequential(
     runner,
     policies,
     manifest,
     batchSize,
-    environment.readHeapUsedBytes,
+    () => heapTracker.sample(),
   );
   const end = checkClockValue(environment.now(), "Benchmark clock");
   const elapsedMilliseconds = end - start;
@@ -652,7 +711,7 @@ async function execute(
   }
   const peakHeapUsedBytes = Math.max(
     result.peakHeapUsedBytes,
-    checkHeapValue(environment.readHeapUsedBytes(), "Heap usage"),
+    heapTracker.collectAndSample(),
     heapUsedBeforeBytes,
   );
   const heapDeltaBytes = peakHeapUsedBytes - heapUsedBeforeBytes;
@@ -699,8 +758,12 @@ export function createSimulationBenchmark(
       const resultCases: SimulationBenchmarkResultCase[] = [];
       const comparisons: SimulationBenchmarkComparisonCase[] = [];
       const resultCanonicalByCase = new Map<string, string>();
+      const comparisonCanonicalByCase = new Map<string, string>();
+      const heapTracker = createHeapTracker(
+        environment.readHeapUsedBytes,
+        environment.collectGarbage,
+      );
       let stable = true;
-      const comparison = createSimulationComparison(runner, policies);
 
       for (const benchmarkCase of cases) {
         const scenario = config.scenarios.find(
@@ -726,6 +789,7 @@ export function createSimulationBenchmark(
                 benchmarkCase.manifest,
                 batchSize,
                 environment,
+                heapTracker,
               );
             }
 
@@ -743,6 +807,7 @@ export function createSimulationBenchmark(
                 benchmarkCase.manifest,
                 batchSize,
                 environment,
+                heapTracker,
               );
               firstExecution ??= execution;
               if (
@@ -806,50 +871,79 @@ export function createSimulationBenchmark(
                 progressingRunCount: summary.progressingRunCount,
               }),
             );
-          }
-
-          let firstComparison: string | undefined;
-          let firstComparisonReport: SimulationComparisonReport | undefined;
-          let stableComparison = true;
-          let pairCount = 0;
-          let behavioralDifferenceCount = 0;
-          for (
-            let repetition = 0;
-            repetition < config.repetitions;
-            repetition += 1
-          ) {
-            const comparisonReport = await comparison.run(
-              comparisonInput(benchmarkCase.manifest),
+            const comparison = createSimulationComparison(
+              createBatchedRunner(runner, batchSize),
+              policies,
             );
-            const serialized = stringifyCanonicalJson(comparisonReport);
-            firstComparison ??= serialized;
-            firstComparisonReport ??= comparisonReport;
-            if (serialized !== firstComparison) {
-              stableComparison = false;
+            let firstComparison: string | undefined;
+            let firstComparisonReport: SimulationComparisonReport | undefined;
+            let stableComparison = true;
+            let pairCount = 0;
+            let behavioralDifferenceCount = 0;
+            for (
+              let repetition = 0;
+              repetition < config.repetitions;
+              repetition += 1
+            ) {
+              const comparisonReport = await comparison.run(
+                comparisonInput(benchmarkCase.manifest),
+              );
+              const serialized = stringifyCanonicalJson(comparisonReport);
+              firstComparison ??= serialized;
+              firstComparisonReport ??= comparisonReport;
+              if (serialized !== firstComparison) {
+                stableComparison = false;
+                stable = false;
+              }
+              if (
+                behavioralDifferenceCount === 0 &&
+                comparisonReport.aggregateDifferences
+                  .behavioralDifferenceCount > 0
+              ) {
+                behavioralDifferenceCount =
+                  comparisonReport.aggregateDifferences
+                    .behavioralDifferenceCount;
+              }
+              if (
+                comparisonReport.aggregateDifferences
+                  .behavioralDifferenceCount > 0
+              ) {
+                stable = false;
+              }
+              pairCount = comparisonReport.aggregateDifferences.pairCount;
+              heapTracker.collectAndSample();
+            }
+            if (
+              firstComparison === undefined ||
+              firstComparisonReport === undefined
+            ) {
+              throw new Error("Simulation benchmark produced no comparison");
+            }
+            if (
+              comparisonCanonicalByCase.has(benchmarkCase.caseId) &&
+              comparisonCanonicalByCase.get(benchmarkCase.caseId) !==
+                firstComparison
+            ) {
               stable = false;
             }
-            pairCount = comparisonReport.aggregateDifferences.pairCount;
-            behavioralDifferenceCount =
-              comparisonReport.aggregateDifferences.behavioralDifferenceCount;
+            comparisonCanonicalByCase.set(
+              benchmarkCase.caseId,
+              firstComparison,
+            );
+            comparisons.push(
+              Object.freeze({
+                caseId: benchmarkCase.caseId,
+                strategy,
+                batchSize,
+                comparisonFingerprint: comparisonFingerprint(
+                  firstComparisonReport,
+                ),
+                pairCount,
+                behavioralDifferenceCount,
+                stable: stableComparison,
+              }),
+            );
           }
-          if (
-            firstComparison === undefined ||
-            firstComparisonReport === undefined
-          ) {
-            throw new Error("Simulation benchmark produced no comparison");
-          }
-          comparisons.push(
-            Object.freeze({
-              caseId: benchmarkCase.caseId,
-              strategy,
-              comparisonFingerprint: comparisonFingerprint(
-                firstComparisonReport,
-              ),
-              pairCount,
-              behavioralDifferenceCount,
-              stable: stableComparison,
-            }),
-          );
         }
       }
 
@@ -870,9 +964,7 @@ export function createSimulationBenchmark(
       const minimumMeasuredRunsPerSecond = Math.min(
         ...measurements.map((measurement) => measurement.runsPerSecond),
       );
-      const maximumMeasuredHeapDeltaBytes = Math.max(
-        ...measurements.map((measurement) => measurement.heapDeltaBytes),
-      );
+      const maximumMeasuredHeapDeltaBytes = heapTracker.delta();
       const targets = Object.freeze({
         ...config.targets,
         minimumMeasuredRunsPerSecond: roundMeasurement(

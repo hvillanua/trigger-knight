@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "strategies": ["sequential"],
   "warmupRepetitions": 1,
-  "repetitions": 1,
+  "repetitions": 2,
   "targets": {
     "minimumRunsPerSecond": 10,
-    "maximumHeapDeltaBytes": 64000000,
-    "basis": "The throughput floor is one third of the observed 512-step sequential baseline; the 64 MiB heap ceiling leaves room for host allocation noise while rejecting retained per-step traces."
+    "maximumHeapDeltaBytes": 80000000,
+    "basis": "The throughput floor is one third of the observed 512-step sequential baseline; the 80 MB heap ceiling covers the measured workload with explicit garbage collection between samples while rejecting retained per-step traces."
   },
   "scenarios": [
     {

@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import type {
   PlayerPolicy,
+  SimulationRunner,
   SimulationPolicyRegistry,
 } from "../../src/application/contracts.js";
 import { ORIGINAL_V13_RULESET_ID } from "../../src/domain/rulesets.js";
@@ -101,8 +102,17 @@ describe("simulation benchmark", () => {
         ),
       ).size,
     ).toBe(1);
-    expect(report.deterministic.comparisons).toHaveLength(1);
-    expect(report.deterministic.comparisons[0]?.stable).toBe(true);
+    expect(report.deterministic.comparisons).toHaveLength(2);
+    expect(
+      new Set(
+        report.deterministic.comparisons.map(
+          ({ comparisonFingerprint }) => comparisonFingerprint,
+        ),
+      ).size,
+    ).toBe(1);
+    expect(report.deterministic.comparisons.every(({ stable }) => stable)).toBe(
+      true,
+    );
     expect(report.measurements).toHaveLength(4);
     expect(report.targets.met).toBe(true);
     expect(report.host.platform).toBe("test");
@@ -174,6 +184,45 @@ describe("simulation benchmark", () => {
     expect(report.deterministic.stable).toBe(true);
   });
 
+  it("fails the benchmark when its identical-input comparison diverges", async () => {
+    const actualRunner = createSimulationRunner(engine);
+    let batchCalls = 0;
+    const divergentRunner: SimulationRunner = {
+      run: (request) => actualRunner.run(request),
+      async runBatch(requests) {
+        const results = await actualRunner.runBatch(requests);
+        batchCalls += 1;
+        if (batchCalls !== 2) return results;
+        return Object.freeze(
+          results.map((result) =>
+            Object.freeze({ ...result, score: result.score + 1 }),
+          ),
+        );
+      },
+    };
+    const report = await createSimulationBenchmark(
+      divergentRunner,
+      simulationPolicyRegistry,
+      environment(),
+    ).run({
+      ...baseConfig,
+      repetitions: 1,
+      warmupRepetitions: 0,
+      scenarios: [
+        {
+          ...baseConfig.scenarios[0],
+          batchSizes: [2],
+        },
+      ],
+    });
+
+    expect(report.deterministic.comparisons[0]?.behavioralDifferenceCount).toBe(
+      2,
+    );
+    expect(report.deterministic.stable).toBe(false);
+    expect(report.targets.met).toBe(false);
+  });
+
   it("rejects unsupported strategies and invalid targets", () => {
     expect(() =>
       normalizeSimulationBenchmark({
@@ -190,7 +239,7 @@ describe("simulation benchmark", () => {
   });
 
   it("reports a target miss without changing the deterministic result", async () => {
-    let now = -10_000;
+    let now = 0;
     const report = await createSimulationBenchmark(
       createSimulationRunner(engine),
       simulationPolicyRegistry,
@@ -213,5 +262,49 @@ describe("simulation benchmark", () => {
 
     expect(report.targets.met).toBe(false);
     expect(report.deterministic.inputFingerprint).toMatch(/^sha256-v1:/);
+  });
+
+  it("fails the memory target for a retained-trace control", async () => {
+    const retainedTraces: unknown[] = [];
+    const runner = createSimulationRunner(engine, {
+      onTrace: (trace) => retainedTraces.push(trace),
+    });
+    let now = 0;
+    const report = await createSimulationBenchmark(
+      runner,
+      simulationPolicyRegistry,
+      {
+        host: {
+          nodeVersion: "v24.19.0",
+          platform: "test",
+          architecture: "test",
+          cpuCount: 1,
+        },
+        now: () => {
+          now += 10;
+          return now;
+        },
+        readHeapUsedBytes: () => 1_000 + retainedTraces.length * 1_000,
+      },
+    ).run({
+      ...baseConfig,
+      repetitions: 1,
+      warmupRepetitions: 0,
+      targets: {
+        ...baseConfig.targets,
+        minimumRunsPerSecond: 1,
+        maximumHeapDeltaBytes: 1_000,
+      },
+      scenarios: [
+        {
+          ...baseConfig.scenarios[0],
+          batchSizes: [2],
+        },
+      ],
+    });
+
+    expect(retainedTraces.length).toBeGreaterThan(0);
+    expect(report.targets.maximumMeasuredHeapDeltaBytes).toBeGreaterThan(1_000);
+    expect(report.targets.met).toBe(false);
   });
 });

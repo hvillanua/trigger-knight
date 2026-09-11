@@ -125,15 +125,18 @@ npm run simulate -- benchmark tests/fixtures/simulation/benchmark.json
 
 The benchmark config declares two seed sets, minimal and expanded profiles,
 the purchase, combat, and non-progressing policies, 512-step progressing runs,
-128-step finite runs, and batch sizes of 1 and 2. It currently supports the
-sequential strategy only. Parallel workers remain optional because the
-declared sequential target is the supported workload contract.
+128-step finite runs, two checked repetitions, comparisons, and batch sizes of
+1 and 2. It currently supports the sequential strategy only. Parallel workers
+remain optional because the declared sequential target is the supported
+workload contract.
 
-The config requires at least 10 runs per second and at most 64 MiB of observed
-heap growth. The throughput floor is one third of the initial 512-step
-sequential measurement. The heap ceiling allows host allocation noise while
-rejecting accidental retention of per-step traces. A missed target makes the
-command exit nonzero.
+The config requires at least 10 runs per second and at most 80 MB of observed
+heap growth across the complete workload, including comparisons. The command
+uses explicit garbage collection between memory samples when the host exposes
+it. The throughput floor is one third of the initial 512-step sequential
+measurement. The heap ceiling covers the measured workload while rejecting
+accidental retention of per-step traces. A missed target makes the command exit
+nonzero.
 
 Benchmark output keeps deterministic result and comparison fingerprints under
 `deterministic`. Timing samples and the Node host description are separate

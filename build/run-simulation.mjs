@@ -102,6 +102,7 @@ export async function runSimulationCommand(mode, input, options = {}) {
           .createSimulationBenchmark(runner, options.policyRegistry, {
             now: () => performance.now(),
             readHeapUsedBytes: () => process.memoryUsage().heapUsed,
+            collectGarbage: () => globalThis.gc?.(),
             host: {
               nodeVersion: process.version,
               platform: process.platform,

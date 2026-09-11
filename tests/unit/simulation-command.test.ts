@@ -48,7 +48,7 @@ interface SimulationCommandModule {
 }
 
 function runCommand(...arguments_: string[]) {
-  return spawnSync(process.execPath, [command, ...arguments_], {
+  return spawnSync(process.execPath, ["--expose-gc", command, ...arguments_], {
     cwd: repositoryRoot,
     encoding: "utf8",
     env: { ...process.env },
