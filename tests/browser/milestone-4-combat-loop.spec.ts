@@ -10,6 +10,7 @@ import type * as CanvasModule from "../../src/browser/canvas-presentation.js";
 import type * as RulesModule from "../../src/domain/rulesets.js";
 import type * as PolicyModule from "../../src/simulation/combat-policy.js";
 import type * as CanonicalModule from "../../src/application/canonical-json.js";
+import type * as SimulationReportModule from "../../src/simulation/simulation-report.js";
 import {
   combatLoopMaxSteps,
   combatLoopScenarios,
@@ -51,6 +52,7 @@ for (const scenario of combatLoopScenarios) {
             const rulesPath = "/src/domain/rulesets.ts";
             const policyPath = "/src/simulation/combat-policy.ts";
             const canonicalPath = "/src/application/canonical-json.ts";
+            const reportPath = "/src/simulation/simulation-report.ts";
             const { createGameplayEngine } = (await import(
               enginePath
             )) as typeof EngineModule;
@@ -68,6 +70,9 @@ for (const scenario of combatLoopScenarios) {
             )) as typeof PolicyModule;
             const { stringifyCanonicalJson, fingerprintCanonicalJson } =
               (await import(canonicalPath)) as typeof CanonicalModule;
+            const { collectRunMetrics } = (await import(
+              reportPath
+            )) as typeof SimulationReportModule;
             const canvas = document.createElement("canvas");
             canvas.style.width = "100vw";
             canvas.style.height = "100vh";
@@ -141,7 +146,7 @@ for (const scenario of combatLoopScenarios) {
                 byte.toString(16).padStart(2, "0"),
               ).join("");
             const result = {
-              schemaVersion: 2,
+              schemaVersion: 3,
               ruleset: config.ruleset,
               seed: config.seed,
               initialProfileFingerprint: fingerprintCanonicalJson(
@@ -157,7 +162,10 @@ for (const scenario of combatLoopScenarios) {
               distance: terminal.distance,
               gold: terminal.player.gold,
               traceHash,
-              metrics: {},
+              metrics: collectRunMetrics(
+                trace.checkpoints.flatMap(({ events }) => events),
+                terminal,
+              ),
             };
             return {
               trace,

@@ -112,6 +112,9 @@ function runScenario(seed: string) {
     items: [...items].sort(),
     weaponTiers: [...weaponTiers].sort((a, b) => a - b),
     armorTiers: [...armorTiers].sort((a, b) => a - b),
+    battles,
+    earned,
+    spent,
     rewards,
   };
 }
@@ -132,6 +135,14 @@ describe("continuous combat policy runs", () => {
     expect(run.weaponTiers).toEqual(tiers);
     expect(run.armorTiers).toEqual(tiers);
     expect(run.rewards).toBe(29);
+    expect(run.result.metrics).toMatchObject({
+      "combat.battles-started": run.battles,
+      "combat.rewards": run.rewards,
+      "combat.reward-gold": run.earned,
+      "purchases.gold-spent": run.spent,
+      "progression.profile-exp-earned":
+        run.result.metrics["combat.reward-profile-exp"],
+    });
     expect(run.result).toMatchObject({
       terminalReason: "combat",
       steps: 14800,

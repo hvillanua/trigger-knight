@@ -26,6 +26,7 @@ import type {
   RuleSetId,
   RunConfig,
   RunResult,
+  RunMetrics,
   RunState,
   QueuedBattleEncounter,
   ShopEncounter,
@@ -33,7 +34,14 @@ import type {
   SimulationRequest,
   SimulationRequestInput,
   SimulationBatchExport,
+  SimulationComparisonInput,
+  SimulationComparison,
+  SimulationComparisonReport,
+  SimulationNumericSummary,
+  SimulationReport,
   SimulationManifest,
+  SimulationPolicyComparison,
+  SimulationAggregateDifferences,
   SimulationResultRecord,
   SimulationRunner,
   StepResult,
@@ -235,7 +243,7 @@ describe("public application contracts", () => {
       readonly distance: number;
       readonly gold: number;
       readonly traceHash: string;
-      readonly metrics: Readonly<Record<string, number>>;
+      readonly metrics: RunMetrics;
     }>();
     expectTypeOf<RunConfig>().toMatchTypeOf<{
       readonly ruleset: RuleSetId;
@@ -501,6 +509,38 @@ describe("public application contracts", () => {
           type: "tutorial-dismissed";
           page: 0 | 1 | 2 | 3 | 4 | 5;
         }>
+    >();
+  });
+
+  it("exposes versioned reporting and comparison contracts", () => {
+    expectTypeOf<SimulationNumericSummary>().toMatchTypeOf<{
+      readonly count: number;
+      readonly sum: number;
+      readonly mean: number;
+      readonly minimum: number | null;
+      readonly maximum: number | null;
+    }>();
+    expectTypeOf<SimulationReport>().toMatchTypeOf<{
+      readonly schemaVersion: 1;
+      readonly inputFingerprint: string;
+      readonly runCount: number;
+      readonly completedRunCount: number;
+      readonly truncatedRunCount: number;
+      readonly groups: readonly unknown[];
+    }>();
+    expectTypeOf<SimulationComparisonInput>().toMatchTypeOf<{
+      readonly schemaVersion: 1;
+      readonly baseline: SimulationManifest;
+      readonly candidate: SimulationManifest;
+      readonly policyComparison: SimulationPolicyComparison;
+    }>();
+    expectTypeOf<SimulationComparisonReport>().toMatchTypeOf<{
+      readonly schemaVersion: 1;
+      readonly pairs: readonly unknown[];
+      readonly aggregateDifferences: SimulationAggregateDifferences;
+    }>();
+    expectTypeOf<SimulationComparison["run"]>().toEqualTypeOf<
+      (input: SimulationComparisonInput) => Promise<SimulationComparisonReport>
     >();
   });
 });

@@ -17,6 +17,10 @@ const manifest = path.join(
   repositoryRoot,
   "tests/fixtures/simulation/manifest.json",
 );
+const comparison = path.join(
+  repositoryRoot,
+  "tests/fixtures/simulation/comparison.json",
+);
 
 function runCommand(...arguments_: string[]) {
   return spawnSync(process.execPath, [command, ...arguments_], {
@@ -79,5 +83,22 @@ describe("simulation command", () => {
     expect(result.status).toBe(1);
     expect(result.stdout).toBe("");
     expect(result.stderr).toContain("Simulation command failed");
+  });
+
+  it("compares retained baseline and candidate manifests", () => {
+    const result = runCommand("compare", comparison);
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toBe("");
+    const output = JSON.parse(result.stdout) as {
+      schemaVersion: number;
+      pairs: Array<{ behavioralDifference: boolean }>;
+      aggregateDifferences: { behavioralDifferenceCount: number };
+    };
+    expect(output.schemaVersion).toBe(1);
+    expect(output.pairs).toHaveLength(1);
+    expect(output.pairs[0]?.behavioralDifference).toBe(false);
+    expect(output.aggregateDifferences.behavioralDifferenceCount).toBe(0);
+    expect(result.stdout).toBe(`${result.stdout.trim()}\n`);
   });
 });

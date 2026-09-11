@@ -17,6 +17,14 @@ export const ORIGINAL_V13_RUN_RESULT_SCHEMA_VERSION = 2 as const;
 export const ORIGINAL_V13_GAMEPLAY_TRACE_SCHEMA_VERSION = 2 as const;
 export const ORIGINAL_V13_RUN_STATE_SCHEMA_VERSION = 17 as const;
 
+export type OriginalV13BaselineRunResult = Omit<
+  RunResult,
+  "metrics" | "schemaVersion"
+> & {
+  readonly schemaVersion: typeof ORIGINAL_V13_RUN_RESULT_SCHEMA_VERSION;
+  readonly metrics: Readonly<Record<string, number>>;
+};
+
 export type CompatibilityPolicyKey =
   "original-lifecycle" | "combat-shopper" | "non-progressing" | "purchasing";
 
@@ -63,7 +71,7 @@ export interface CompatibilityCheckpointExpectation {
 }
 
 export interface CompatibilityRunExpectation {
-  readonly result: RunResult;
+  readonly result: OriginalV13BaselineRunResult;
   readonly traceHash: string;
   readonly checkpoints: readonly CompatibilityCheckpointExpectation[];
   readonly tutorialPages: readonly TutorialPage[];
@@ -92,6 +100,21 @@ export interface CompatibilitySettlementFixture {
     CompletedRunSettlementInput,
   ];
   readonly expectedProfiles: readonly [ProfileState, ProfileState];
+}
+
+/**
+ * Projects the retained v2 result envelope for baseline comparison. The
+ * compatibility corpus remains frozen while current simulation results carry
+ * the separately versioned metrics extension.
+ */
+export function toOriginalV13BaselineResult(
+  result: RunResult,
+): OriginalV13BaselineRunResult {
+  return Object.freeze({
+    ...result,
+    schemaVersion: ORIGINAL_V13_RUN_RESULT_SCHEMA_VERSION,
+    metrics: Object.freeze({}),
+  });
 }
 
 function checkpoint(
@@ -174,7 +197,7 @@ const namedPolicies = Object.freeze({
   }),
 });
 
-const lifecycleResult: RunResult = Object.freeze({
+const lifecycleResult: OriginalV13BaselineRunResult = Object.freeze({
   schemaVersion: ORIGINAL_V13_RUN_RESULT_SCHEMA_VERSION,
   ruleset: "original-v1.3",
   seed: "milestone-2-lifecycle-2",
@@ -194,7 +217,7 @@ const lifecycleResult: RunResult = Object.freeze({
   metrics: Object.freeze({}),
 });
 
-const combatResult: RunResult = Object.freeze({
+const combatResult: OriginalV13BaselineRunResult = Object.freeze({
   schemaVersion: ORIGINAL_V13_RUN_RESULT_SCHEMA_VERSION,
   ruleset: "original-v1.3",
   seed: "m4-policy-2211",
@@ -214,7 +237,7 @@ const combatResult: RunResult = Object.freeze({
   metrics: Object.freeze({}),
 });
 
-const stepLimitResult: RunResult = Object.freeze({
+const stepLimitResult: OriginalV13BaselineRunResult = Object.freeze({
   schemaVersion: ORIGINAL_V13_RUN_RESULT_SCHEMA_VERSION,
   ruleset: "original-v1.3",
   seed: "m6-04-step-limit",
@@ -234,7 +257,7 @@ const stepLimitResult: RunResult = Object.freeze({
   metrics: Object.freeze({}),
 });
 
-const tutorialEnabledResult: RunResult = Object.freeze({
+const tutorialEnabledResult: OriginalV13BaselineRunResult = Object.freeze({
   schemaVersion: ORIGINAL_V13_RUN_RESULT_SCHEMA_VERSION,
   ruleset: "original-v1.3",
   seed: "m6-04-tutorial-preference",
@@ -254,7 +277,7 @@ const tutorialEnabledResult: RunResult = Object.freeze({
   metrics: Object.freeze({}),
 });
 
-const tutorialDisabledResult: RunResult = Object.freeze({
+const tutorialDisabledResult: OriginalV13BaselineRunResult = Object.freeze({
   schemaVersion: ORIGINAL_V13_RUN_RESULT_SCHEMA_VERSION,
   ruleset: "original-v1.3",
   seed: "m6-04-tutorial-preference",

@@ -5,7 +5,7 @@ import type {
 import {
   normalizeCanonicalJson,
   stringifyCanonicalJson,
-} from "./canonical-json.js";
+} from "../application/canonical-json.js";
 
 type NormalizedRecord = Readonly<Record<string, unknown>>;
 

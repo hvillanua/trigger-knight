@@ -12,9 +12,10 @@ const repositoryRoot = path.resolve(
 
 function usage() {
   return [
-    "Usage: npm run simulate -- <single|batch> <input.json|->",
+    "Usage: npm run simulate -- <single|batch|compare> <input.json|->",
     "  single  execute one serializable simulation request",
     "  batch   execute a versioned simulation manifest",
+    "  compare execute two retained manifests and report paired differences",
     "  -       read JSON input from stdin",
   ].join("\n");
 }
@@ -48,6 +49,9 @@ async function runCommand(mode, input) {
     const experiment = await server.ssrLoadModule(
       "/src/simulation/simulation-experiment.ts",
     );
+    const comparison = await server.ssrLoadModule(
+      "/src/simulation/simulation-comparison.ts",
+    );
     const canonical = await server.ssrLoadModule(
       "/src/simulation/canonical-json.ts",
     );
@@ -58,6 +62,12 @@ async function runCommand(mode, input) {
       const request = experiment.normalizeSimulationRequestInput(input);
       const resolved = experiment.resolveSimulationRequest(request);
       return canonical.stringifyCanonicalJson(runner.run(resolved));
+    }
+
+    if (mode === "compare") {
+      return canonical.stringifyCanonicalJson(
+        await comparison.createSimulationComparison(runner).run(input),
+      );
     }
 
     const report = await experiment
@@ -71,7 +81,10 @@ async function runCommand(mode, input) {
 
 async function main() {
   const [mode, inputPath] = process.argv.slice(2);
-  if ((mode !== "single" && mode !== "batch") || inputPath === undefined) {
+  if (
+    (mode !== "single" && mode !== "batch" && mode !== "compare") ||
+    inputPath === undefined
+  ) {
     process.stderr.write(`${usage()}\n`);
     process.exitCode = 2;
     return;
