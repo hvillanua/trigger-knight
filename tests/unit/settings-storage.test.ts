@@ -124,6 +124,20 @@ describe("versioned browser settings storage", () => {
     expect(store.load()).toEqual({ status: "loaded", settings: existing });
   });
 
+  it("rejects conflicting bindings before they can be saved", () => {
+    const defaults = createDefaultSettings();
+
+    expect(() =>
+      normalizeSettings({
+        ...defaults,
+        bindings: {
+          ...defaults.bindings,
+          purchaseCurrentEncounter: defaults.bindings.togglePause,
+        },
+      }),
+    ).toThrow("Settings bindings must not conflict");
+  });
+
   it("reports read and write failures while leaving defaults available", () => {
     const storage = new MemoryStorage();
     const store = createBrowserSettingsStore(storage);

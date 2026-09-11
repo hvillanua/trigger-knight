@@ -20,6 +20,7 @@ export interface BrowserDispatchResult {
 
 export interface BrowserGameplaySession {
   dispatch(commands: readonly GameCommand[]): BrowserDispatchResult;
+  readObservation(): Readonly<GameObservation>;
   render(interpolation: number): void;
   readDiagnostics(): GameplayTrace;
 }
@@ -74,6 +75,7 @@ export function createBrowserGameplaySession(
   render(1);
 
   return Object.freeze({
+    readObservation: () => observation,
     dispatch(commands: readonly GameCommand[]): BrowserDispatchResult {
       previousObservation = observation;
       const checkpoint = execution.dispatch(commands);

@@ -223,6 +223,13 @@ record. An absent settings record uses defaults. Invalid, unsupported, or
 failing settings storage is reported in the browser and never replaces the
 progression record under `trigger-knight.profile`.
 
+The gameplay screen exposes the current player status, current and queued
+encounters, contextual shop or item information, and battle HP as accessible
+text alongside the Canvas scene. Keyboard bindings use `KeyboardEvent.code`;
+open Settings to capture a new binding, press Escape to cancel, and save only
+after resolving conflicts. Pointer and touch activation on the Canvas use the
+same public shop eligibility as the buttons and ignore letterboxed space.
+
 ## Original game
 
 Copyright remains with the original rights holders. The preserved material is
