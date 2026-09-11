@@ -115,6 +115,33 @@ needed for replay. The frozen original-v1.3 corpus retains its v2 result and
 trace evidence; current result schema 3 adds metrics without changing those
 gameplay identities.
 
+### Run the simulation benchmark
+
+Run the checked-in workload with:
+
+```sh
+npm run simulate -- benchmark tests/fixtures/simulation/benchmark.json
+```
+
+The benchmark config declares two seed sets, minimal and expanded profiles,
+the purchase, combat, and non-progressing policies, 512-step progressing runs,
+128-step finite runs, and batch sizes of 1 and 2. It currently supports the
+sequential strategy only. Parallel workers remain optional because the
+declared sequential target is the supported workload contract.
+
+The config requires at least 10 runs per second and at most 64 MiB of observed
+heap growth. The throughput floor is one third of the initial 512-step
+sequential measurement. The heap ceiling allows host allocation noise while
+rejecting accidental retention of per-step traces. A missed target makes the
+command exit nonzero.
+
+Benchmark output keeps deterministic result and comparison fingerprints under
+`deterministic`. Timing samples and the Node host description are separate
+fields, so changing machines cannot change the identities of the simulation
+results. Ordinary benchmark batches do not retain diagnostic checkpoints. To
+inspect a selected case, retain its batch export and use the `replay` command
+described above.
+
 In the development browser, call `window.triggerKnightDiagnostics.read()` in
 the console. This hook is absent from production builds. Browser sessions also
 provide `readDiagnostics()`. `compareGameplayTraces` reports the first differing

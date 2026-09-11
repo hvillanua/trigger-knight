@@ -1,0 +1,100 @@
+{
+  "schemaVersion": 1,
+  "strategies": ["sequential"],
+  "warmupRepetitions": 1,
+  "repetitions": 1,
+  "targets": {
+    "minimumRunsPerSecond": 10,
+    "maximumHeapDeltaBytes": 64000000,
+    "basis": "The throughput floor is one third of the observed 512-step sequential baseline; the 64 MiB heap ceiling leaves room for host allocation noise while rejecting retained per-step traces."
+  },
+  "scenarios": [
+    {
+      "id": "progressing",
+      "ruleset": "original-v1.3",
+      "seeds": ["benchmark-progress-1", "benchmark-progress-2"],
+      "profiles": [
+        {
+          "id": "minimal",
+          "initialProfile": {
+            "schemaVersion": 1,
+            "scoreMultiplier": 1
+          }
+        }
+      ],
+      "policies": [
+        {
+          "id": "purchase-reachable-shops",
+          "version": "2",
+          "config": {}
+        },
+        {
+          "id": "combat-shopper",
+          "version": "1",
+          "config": { "elixirHpFraction": 0.5 }
+        }
+      ],
+      "batchSizes": [1, 2],
+      "stepLimits": [512]
+    },
+    {
+      "id": "finite-non-progressing",
+      "ruleset": "original-v1.3",
+      "seeds": ["benchmark-finite-1", "benchmark-finite-2"],
+      "profiles": [
+        {
+          "id": "minimal",
+          "initialProfile": {
+            "schemaVersion": 1,
+            "scoreMultiplier": 1
+          }
+        },
+        {
+          "id": "expanded",
+          "initialProfile": {
+            "schemaVersion": 2,
+            "level": 3,
+            "xp": 17,
+            "scoreMultiplier": 1,
+            "highScore": 1200,
+            "tutorialPreference": "disabled",
+            "weaponDiscoveries": [
+              true,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "armorDiscoveries": [
+              true,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "achievementSlots": [false, false, false, false, false, false]
+          }
+        }
+      ],
+      "policies": [
+        {
+          "id": "non-progressing",
+          "version": "1",
+          "config": {}
+        }
+      ],
+      "batchSizes": [1, 2],
+      "stepLimits": [128]
+    }
+  ]
+}
