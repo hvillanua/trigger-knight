@@ -12,6 +12,7 @@ import type {
 import { completedRunSettlementFromState } from "../application/completed-run.js";
 import { createGameplayExecution } from "../application/gameplay-execution.js";
 
+/** @playerVisible One completed logical transition, identified by observation.steps. */
 export interface BrowserDispatchResult {
   readonly observation: Readonly<GameObservation>;
   readonly events: readonly GameEvent[];
@@ -25,6 +26,9 @@ export interface BrowserGameplaySession {
 
 export interface BrowserGameplaySessionOptions {
   readonly retainDiagnostics?: boolean;
+  readonly renderOnDispatch?: boolean;
+  /** Each logical transition, once and in order. Render calls never repeat it. */
+  readonly onTransition?: (result: BrowserDispatchResult) => void;
   /** Runs before the terminal checkpoint is presented. */
   readonly onCompletedRun?: (
     run: Readonly<CompletedRunSettlementInput>,
@@ -79,12 +83,10 @@ export function createBrowserGameplaySession(
       if (completedRun !== undefined) {
         options.onCompletedRun?.(completedRun);
       }
-      render(0);
-
-      return Object.freeze({
-        observation,
-        events: checkpoint.events,
-      });
+      const result = Object.freeze({ observation, events: checkpoint.events });
+      options.onTransition?.(result);
+      if (options.renderOnDispatch ?? true) render(0);
+      return result;
     },
     render,
     readDiagnostics: () => execution.readDiagnostics(),

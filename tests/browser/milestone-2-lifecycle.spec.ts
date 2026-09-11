@@ -33,7 +33,7 @@ test("proves the complete lifecycle across Node, Chromium, and Canvas variants",
     throw new Error("Expected a headless lifecycle trace");
   }
 
-  await page.goto("/");
+  await page.goto("/?manual=1");
   const chromium = await page.evaluate(async () => {
     const enginePath = "/src/application/gameplay-engine.ts";
     const rulesPath = "/src/domain/rulesets.ts";

@@ -16,6 +16,10 @@ import {
   calculateProfileProgress,
 } from "./domain/profile.js";
 import { CanvasPresentation } from "./browser/canvas-presentation.js";
+import {
+  createBrowserGameplayClock,
+  type BrowserGameplayClock,
+} from "./browser/gameplay-clock.js";
 import { observeDevicePixelRatioChanges } from "./browser/device-pixel-ratio.js";
 import type { CssDimensions } from "./browser/foundation.js";
 import {
@@ -49,7 +53,19 @@ function requiredElement<T extends HTMLElement>(selector: string): T {
 const canvas = requiredElement<HTMLCanvasElement>("#game-canvas");
 const dismissTutorialButton =
   requiredElement<HTMLButtonElement>("#dismiss-tutorial");
-const advanceButton = requiredElement<HTMLButtonElement>("#advance-run");
+const manualClock =
+  import.meta.env.DEV &&
+  new URLSearchParams(window.location.search).get("manual") === "1";
+const advanceButton = manualClock
+  ? document.createElement("button")
+  : undefined;
+if (advanceButton !== undefined) {
+  advanceButton.id = "advance-run";
+  advanceButton.type = "button";
+  advanceButton.textContent = "Advance run";
+  requiredElement<HTMLElement>(".controls").append(advanceButton);
+}
+const pauseButton = requiredElement<HTMLButtonElement>("#toggle-pause");
 const purchaseButton = requiredElement<HTMLButtonElement>(
   "#purchase-current-encounter",
 );
@@ -97,6 +113,7 @@ interface ActiveRun {
   readonly completionId: string;
   readonly initialProfile: ProfileState;
   session: BrowserGameplaySession | undefined;
+  clock: BrowserGameplayClock | undefined;
   settlement: Readonly<CompletedRunSettlementInput> | undefined;
   commit: CompletedRunResult | undefined;
 }
@@ -187,18 +204,22 @@ function syncControls(observation: Readonly<GameObservation>): void {
   const ended = observation.lifecycle.phase === "ended";
   dismissTutorialButton.disabled =
     ended || !observation.actions.canDismissTutorial;
-  advanceButton.disabled = ended;
+  if (advanceButton !== undefined) advanceButton.disabled = ended;
+  pauseButton.disabled = !observation.actions.canTogglePause;
+  pauseButton.textContent = observation.lifecycle.paused ? "Resume" : "Pause";
   purchaseButton.disabled =
     ended || !observation.actions.canPurchaseCurrentEncounter;
   useItemButton.disabled = ended || !observation.actions.canUseCarriedItem;
 }
 
 function startRun(profile: ProfileState): void {
+  activeRun?.clock?.stop();
   runNumber += 1;
   const record: ActiveRun = {
     completionId: window.crypto.randomUUID(),
     initialProfile: profile,
     session: undefined,
+    clock: undefined,
     settlement: undefined,
     commit: undefined,
   };
@@ -209,7 +230,9 @@ function startRun(profile: ProfileState): void {
   delete gameStatus.dataset.completionError;
   gameStatus.textContent = "Step 0";
   dismissTutorialButton.disabled = false;
-  advanceButton.disabled = false;
+  if (advanceButton !== undefined) advanceButton.disabled = false;
+  pauseButton.disabled = false;
+  pauseButton.textContent = "Pause";
   purchaseButton.disabled = true;
   useItemButton.disabled = true;
 
@@ -223,12 +246,25 @@ function startRun(profile: ProfileState): void {
     presentation,
     {
       retainDiagnostics: import.meta.env.DEV,
+      renderOnDispatch: manualClock,
+      onTransition: ({ observation }) => {
+        gameStatus.textContent = `Step ${observation.steps}`;
+        syncControls(observation);
+      },
       onCompletedRun: (run) => {
         record.settlement = run;
         commitCompletedRun(record);
       },
     },
   );
+  if (!manualClock) {
+    record.clock = createBrowserGameplayClock(record.session, {
+      requestFrame: (callback) => window.requestAnimationFrame(callback),
+      cancelFrame: (id) => window.cancelAnimationFrame(id),
+    });
+    record.clock.setVisible(document.visibilityState === "visible");
+    record.clock.start();
+  }
 }
 
 if (import.meta.env.DEV) {
@@ -259,17 +295,19 @@ const dispatch = (commands: readonly GameCommand[]): void => {
     return;
   }
 
-  const result = session.dispatch(commands);
-  session.render(1);
-  gameStatus.textContent = `Step ${result.observation.steps}`;
-  syncControls(result.observation);
+  if (manualClock) {
+    session.dispatch(commands);
+    session.render(1);
+  } else {
+    activeRun?.clock?.enqueue(commands);
+  }
 };
 
 dismissTutorialButton.addEventListener("click", () => {
   dispatch(commandsForDismissTutorialActivation());
 });
 
-advanceButton.addEventListener("click", () => {
+advanceButton?.addEventListener("click", () => {
   dispatch(commandsForAdvanceActivation());
 });
 
@@ -279,6 +317,19 @@ purchaseButton.addEventListener("click", () => {
 
 useItemButton.addEventListener("click", () => {
   dispatch(commandsForItemUseActivation());
+});
+
+pauseButton.addEventListener("click", () => {
+  dispatch([{ type: "toggle-pause" }]);
+});
+
+document.addEventListener("visibilitychange", () => {
+  activeRun?.clock?.setVisible(document.visibilityState === "visible");
+});
+window.addEventListener("pagehide", () => activeRun?.clock?.stop());
+window.addEventListener("pageshow", () => {
+  activeRun?.clock?.setVisible(document.visibilityState === "visible");
+  activeRun?.clock?.start();
 });
 
 observeDevicePixelRatioChanges(window, render);

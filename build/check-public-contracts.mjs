@@ -8,6 +8,7 @@ const PLAYER_VISIBLE_BOUNDARY_ROOTS = Object.freeze([
   ["src/application/presentation.ts", "PresentationFrame"],
   ["src/application/presentation.ts", "PresentationPort"],
   ["src/browser/completed-run-presentation.ts", "CompletedRunPresentation"],
+  ["src/browser/gameplay-session.ts", "BrowserDispatchResult"],
   ["src/application/simulation.ts", "PlayerAgent"],
   ["src/domain/contracts.ts", "GameEvent"],
   ["src/domain/contracts.ts", "GameObservation"],

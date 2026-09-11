@@ -40,7 +40,7 @@ test("retains an explicit complete profile with identical browser and headless t
   const execution = createGameplayExecution(createTestGameplayEngine(), config);
   execution.dispatch([{ type: "dismiss-tutorial" }]);
   for (let i = 0; i < 100; i += 1) execution.dispatch([]);
-  await page.goto("/");
+  await page.goto("/?manual=1");
   const browserTrace = await page.evaluate(async (input) => {
     const enginePath = "/src/application/gameplay-engine.ts";
     const executionPath = "/src/application/gameplay-execution.ts";
@@ -97,7 +97,7 @@ test("starts a browser run from the stored complete profile", async ({
     },
     { key: PROFILE_STORAGE_KEY, value: record },
   );
-  await page.goto("/");
+  await page.goto("/?manual=1");
 
   await expect(page.getByTestId("profile-summary")).toContainText(
     "Level 5 · XP 42",
@@ -115,7 +115,7 @@ test("starts a browser run from the stored complete profile", async ({
 test("shows a committed result and starts the next run from its profile", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?manual=1");
   await page.clock.install();
   await page.clock.pauseAt(new Date(Date.now() + 1_000));
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
@@ -178,7 +178,7 @@ test("shows a committed result and starts the next run from its profile", async 
 
   const reloadedPage = await page.context().newPage();
   try {
-    await reloadedPage.goto("/");
+    await reloadedPage.goto("/?manual=1");
     await expect(reloadedPage.getByTestId("profile-summary")).toContainText(
       `High score ${savedProfile.highScore}`,
     );
@@ -231,7 +231,7 @@ test("keeps a failed completed-run save visible until retry succeeds", async ({
       },
     });
   }, PROFILE_STORAGE_KEY);
-  await page.goto("/");
+  await page.goto("/?manual=1");
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
   await page.evaluate(() => {
     const advance = document.querySelector<HTMLButtonElement>("#advance-run");
@@ -273,7 +273,7 @@ test("reports an unreadable stored profile without replacing it", async ({
     },
     { key: PROFILE_STORAGE_KEY, value: raw },
   );
-  await page.goto("/");
+  await page.goto("/?manual=1");
 
   const status = page.getByTestId("game-status");
   await expect(status).toHaveAttribute("data-persistence-status", "failed");
@@ -307,7 +307,7 @@ test("starts gameplay when browser storage access is denied", async ({
       },
     });
   });
-  await page.goto("/");
+  await page.goto("/?manual=1");
 
   const status = page.getByTestId("game-status");
   await expect(status).toHaveAttribute("data-persistence-status", "failed");

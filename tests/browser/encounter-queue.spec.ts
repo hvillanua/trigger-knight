@@ -24,7 +24,7 @@ test("reproduces encounter generation state and hashes in Node and Chromium", as
     stateHash: fingerprintCanonicalJson(nodeState),
   };
 
-  await page.goto("/");
+  await page.goto("/?manual=1");
   const chromiumSnapshot = await page.evaluate(async (runConfig) => {
     const enginePath = "/src/application/gameplay-engine.ts";
     const rulesPath = "/src/domain/rulesets.ts";

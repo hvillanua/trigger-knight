@@ -11,7 +11,7 @@ test("keeps contextual tutorial gates equivalent in Node and Chromium", async ({
 }) => {
   const nodeResult = runTutorialGateScenario(createTestGameplayEngine());
 
-  await page.goto("/");
+  await page.goto("/?manual=1");
   const chromiumResult = await page.evaluate(async () => {
     const enginePath = "/src/application/gameplay-engine.ts";
     const rulesPath = "/src/domain/rulesets.ts";
@@ -39,7 +39,7 @@ test("keeps contextual tutorial gates equivalent in Node and Chromium", async ({
 test("displays and dismisses the initial public tutorial gate", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?manual=1");
 
   const canvas = page.getByRole("img", { name: "Trigger Knight game view" });
   await expect(canvas).toHaveAttribute("data-tutorial-page", "0");

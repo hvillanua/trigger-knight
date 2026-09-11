@@ -57,7 +57,7 @@ test("browser item-use input shares the domain command and outcome", async ({
   const nodeResult = nodeEngine.step(state, nodeCommands);
   const nodeObservation = nodeEngine.observe(nodeResult.state);
 
-  await page.goto("/");
+  await page.goto("/?manual=1");
   const chromium = await page.evaluate(async (inputState) => {
     const enginePath = "/src/application/gameplay-engine.ts";
     const inputPath = "/src/browser/input.ts";

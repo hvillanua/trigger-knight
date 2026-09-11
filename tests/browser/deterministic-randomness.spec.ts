@@ -5,7 +5,7 @@ import type * as RandomModule from "../../src/domain/random.js";
 test("produces unit and bounded integer sequences in Chromium", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?manual=1");
 
   const sequences = await page.evaluate(async () => {
     const modulePath = "/src/domain/random.ts";

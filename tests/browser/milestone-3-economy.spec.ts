@@ -51,7 +51,7 @@ function runPolicy(seed: string): {
 test("exposes a disabled purchase activation until public eligibility allows it", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?manual=1");
 
   await expect(
     page.getByRole("button", { name: "Purchase current shop" }),
@@ -75,7 +75,7 @@ test("matches Node and Chromium traces for a purchasing policy schedule", async 
     ),
   ).toBe(true);
 
-  await page.goto("/");
+  await page.goto("/?manual=1");
   const chromiumTrace = await page.evaluate(
     async ({ runConfig, schedule }) => {
       const enginePath = "/src/application/gameplay-engine.ts";
@@ -131,7 +131,7 @@ test("keeps policy outcomes fixed across Canvas size, DPR, and redraw cadence", 
       const page = await context.newPage();
 
       try {
-        await page.goto("/");
+        await page.goto("/?manual=1");
         return await page.evaluate(
           async ({ runConfig, schedule, redraws }) => {
             const enginePath = "/src/application/gameplay-engine.ts";

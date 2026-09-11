@@ -147,6 +147,26 @@ Ordinary benchmark batches do not retain diagnostic checkpoints. To inspect a
 selected case, retain its batch export and use the `replay` command described
 above.
 
+Normal browser play advances automatically. Controls queue commands in activation
+order for the next logical opportunity; rendering never adds gameplay steps.
+Pause and tutorial gates keep receiving logical opportunities so their controls
+can resume the run. Hiding the page or leaving gameplay clears queued input and
+elapsed host time. Returning starts a fresh timing interval. Long frame gaps also
+discard elapsed time and queued input; see `src/browser/gameplay-clock.ts` for the
+host limits. These are browser presentation decisions, not original Flash behavior.
+
+For deterministic manual browser tests, open `/?manual=1` on the development
+server. This enables the Advance run control and immediate single-step command
+dispatch. Production builds always use automatic scheduling.
+
+`BrowserGameplaySessionOptions.onTransition` receives every step's public
+observation and ordered events once, including steps between displayed frames.
+Use it for event-driven consumers. Repeated `PresentationFrame` renders retain
+the latest transition's events; they are not new event notifications. The existing
+`observation.steps` identifies transitions within a session. Each new session
+starts a fresh sequence. Automatic hosts disable dispatch-time rendering and
+call `render` at display cadence.
+
 In the development browser, call `window.triggerKnightDiagnostics.read()` in
 the console. This hook is absent from production builds. Browser sessions also
 provide `readDiagnostics()`. `compareGameplayTraces` reports the first differing
