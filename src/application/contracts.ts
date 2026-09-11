@@ -90,11 +90,15 @@ export type {
 } from "./gameplay-engine.js";
 export type {
   GameplayCheckpoint,
+  GameplayDivergenceKind,
   GameplayExecution,
   GameplayExecutionOptions,
   GameplayTrace,
   GameplayTraceComparison,
+  GameplayTraceDivergence,
+  GameplayTraceDivergenceComparison,
   GameplayTraceDifference,
+  GameplayTraceIdentityDifference,
 } from "./gameplay-execution.js";
 export type { PresentationFrame, PresentationPort } from "./presentation.js";
 export type {
@@ -119,6 +123,12 @@ export type {
   SimulationPolicyRegistry,
   SimulationRequestInput,
   SimulationResultRecord,
+  SimulationReplay,
+  SimulationReplayCaseReport,
+  SimulationReplayInput,
+  SimulationReplayPairReport,
+  SimulationReplayReport,
+  SimulationReplayRunReport,
   PlayerAgent,
   PlayerPolicy,
   PolicyConfig,
@@ -132,6 +142,7 @@ export {
   SIMULATION_COMPARISON_SCHEMA_VERSION,
   SIMULATION_MANIFEST_SCHEMA_VERSION,
   SIMULATION_REPORT_SCHEMA_VERSION,
+  SIMULATION_REPLAY_SCHEMA_VERSION,
   SIMULATION_RUN_RESULT_SCHEMA_VERSION,
 } from "./simulation.js";
 export type {

@@ -34,6 +34,36 @@ export interface GameplayTraceDifference {
   readonly actual: unknown;
 }
 
+export type GameplayDivergenceKind =
+  | "command"
+  | "state"
+  | "random"
+  | "observation"
+  | "event"
+  | "termination"
+  | "input";
+
+export interface GameplayTraceDivergence {
+  readonly step: number;
+  readonly kind: GameplayDivergenceKind;
+  readonly path: string;
+  readonly expected: unknown;
+  readonly actual: unknown;
+}
+
+export interface GameplayTraceIdentityDifference {
+  readonly path: string;
+  readonly expected: unknown;
+  readonly actual: unknown;
+}
+
+/** Prefix-aware host diagnostics for comparing two complete executions. */
+export interface GameplayTraceDivergenceComparison {
+  readonly identityDifferences: readonly GameplayTraceIdentityDifference[];
+  readonly incompatibleDifference: GameplayTraceDivergence | null;
+  readonly behavioralDifference: GameplayTraceDivergence | null;
+}
+
 export type GameplayTraceComparison =
   | Readonly<{ equal: true }>
   | Readonly<{
@@ -215,6 +245,243 @@ function findDifference(
   }
 
   return { path, expected, actual };
+}
+
+/** Finds a difference while treating ruleset labels as execution identity. */
+function findDifferenceIgnoringRuleset(
+  expected: unknown,
+  actual: unknown,
+  path: string,
+): GameplayTraceDifference | undefined {
+  if (Object.is(expected, actual)) {
+    return undefined;
+  }
+
+  if (Array.isArray(expected) && Array.isArray(actual)) {
+    const sharedLength = Math.min(expected.length, actual.length);
+    for (let index = 0; index < sharedLength; index += 1) {
+      const difference = findDifferenceIgnoringRuleset(
+        expected[index],
+        actual[index],
+        `${path}[${index}]`,
+      );
+      if (difference !== undefined) {
+        return difference;
+      }
+    }
+
+    if (expected.length !== actual.length) {
+      return {
+        path: `${path}.length`,
+        expected: expected.length,
+        actual: actual.length,
+      };
+    }
+
+    return undefined;
+  }
+
+  if (
+    expected !== null &&
+    actual !== null &&
+    typeof expected === "object" &&
+    typeof actual === "object" &&
+    !Array.isArray(expected) &&
+    !Array.isArray(actual)
+  ) {
+    const expectedRecord = expected as Record<string, unknown>;
+    const actualRecord = actual as Record<string, unknown>;
+    const keys = [
+      ...new Set([...Object.keys(expected), ...Object.keys(actual)]),
+    ]
+      .filter((key) => key !== "ruleset")
+      .sort();
+
+    for (const key of keys) {
+      const difference = findDifferenceIgnoringRuleset(
+        expectedRecord[key],
+        actualRecord[key],
+        joinPath(path, key),
+      );
+      if (difference !== undefined) {
+        return difference;
+      }
+    }
+
+    return undefined;
+  }
+
+  return { path, expected, actual };
+}
+
+function divergence(
+  step: number,
+  kind: GameplayDivergenceKind,
+  difference: GameplayTraceDifference,
+): GameplayTraceDivergence {
+  return Object.freeze({ step, kind, ...difference });
+}
+
+function checkpointDivergence(
+  expected: GameplayCheckpoint,
+  actual: GameplayCheckpoint,
+  checkpointIndex: number,
+): GameplayTraceDivergence | undefined {
+  const step = Math.min(expected.index, actual.index);
+  if (expected.index !== actual.index) {
+    return divergence(step, "state", {
+      path: `checkpoints[${checkpointIndex}].index`,
+      expected: expected.index,
+      actual: actual.index,
+    });
+  }
+
+  const commandDifference = findDifference(
+    expected.commands,
+    actual.commands,
+    `checkpoints[${checkpointIndex}].commands`,
+  );
+  if (commandDifference !== undefined) {
+    return divergence(step, "command", commandDifference);
+  }
+
+  const stateDifference = findDifferenceIgnoringRuleset(
+    expected.state,
+    actual.state,
+    `checkpoints[${checkpointIndex}].state`,
+  );
+  if (stateDifference !== undefined) {
+    return divergence(
+      step,
+      stateDifference.path.includes(".random") ? "random" : "state",
+      stateDifference,
+    );
+  }
+
+  const observationDifference = findDifferenceIgnoringRuleset(
+    expected.observation,
+    actual.observation,
+    `checkpoints[${checkpointIndex}].observation`,
+  );
+  if (observationDifference !== undefined) {
+    return divergence(step, "observation", observationDifference);
+  }
+
+  const eventDifference = findDifference(
+    expected.events,
+    actual.events,
+    `checkpoints[${checkpointIndex}].events`,
+  );
+  if (eventDifference !== undefined) {
+    return divergence(step, "event", eventDifference);
+  }
+
+  return undefined;
+}
+
+function traceIdentityDifference(
+  expected: GameplayTrace,
+  actual: GameplayTrace,
+): GameplayTraceIdentityDifference[] {
+  if (expected.config.ruleset === actual.config.ruleset) {
+    return [];
+  }
+
+  return [
+    Object.freeze({
+      path: "config.ruleset",
+      expected: expected.config.ruleset,
+      actual: actual.config.ruleset,
+    }),
+  ];
+}
+
+/**
+ * Compares executions in chronological order while separating ruleset labels
+ * from gameplay behavior and retaining full state diagnostics for the host.
+ */
+export function compareGameplayTracesForDivergence(
+  expected: GameplayTrace,
+  actual: GameplayTrace,
+): GameplayTraceDivergenceComparison {
+  const identityDifferences = traceIdentityDifference(expected, actual);
+
+  if (expected.schemaVersion !== actual.schemaVersion) {
+    return Object.freeze({
+      identityDifferences: Object.freeze(identityDifferences),
+      incompatibleDifference: divergence(0, "input", {
+        path: "schemaVersion",
+        expected: expected.schemaVersion,
+        actual: actual.schemaVersion,
+      }),
+      behavioralDifference: null,
+    });
+  }
+
+  const inputDifference = findDifferenceIgnoringRuleset(
+    expected.config,
+    actual.config,
+    "config",
+  );
+  if (inputDifference !== undefined) {
+    return Object.freeze({
+      identityDifferences: Object.freeze(identityDifferences),
+      incompatibleDifference: divergence(0, "input", inputDifference),
+      behavioralDifference: null,
+    });
+  }
+
+  const sharedLength = Math.min(
+    expected.checkpoints.length,
+    actual.checkpoints.length,
+  );
+  for (let index = 0; index < sharedLength; index += 1) {
+    const difference = checkpointDivergence(
+      expected.checkpoints[index]!,
+      actual.checkpoints[index]!,
+      index,
+    );
+    if (difference !== undefined) {
+      return Object.freeze({
+        identityDifferences: Object.freeze(identityDifferences),
+        incompatibleDifference: null,
+        behavioralDifference: difference,
+      });
+    }
+  }
+
+  if (expected.checkpoints.length !== actual.checkpoints.length) {
+    return Object.freeze({
+      identityDifferences: Object.freeze(identityDifferences),
+      incompatibleDifference: null,
+      behavioralDifference: divergence(sharedLength, "termination", {
+        path: "checkpoints.length",
+        expected: expected.checkpoints.length,
+        actual: actual.checkpoints.length,
+      }),
+    });
+  }
+
+  if (
+    expected.traceHash !== actual.traceHash &&
+    identityDifferences.length === 0
+  ) {
+    return Object.freeze({
+      identityDifferences: Object.freeze(identityDifferences),
+      incompatibleDifference: null,
+      behavioralDifference: divergence(Math.max(0, sharedLength - 1), "state", {
+        path: "traceHash",
+        expected: expected.traceHash,
+        actual: actual.traceHash,
+      }),
+    });
+  }
+
+  return Object.freeze({
+    identityDifferences: Object.freeze(identityDifferences),
+    incompatibleDifference: null,
+    behavioralDifference: null,
+  });
 }
 
 /** Returns the first host-independent execution field that differs. */

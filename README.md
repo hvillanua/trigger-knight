@@ -120,6 +120,30 @@ the console. This hook is absent from production builds. Browser sessions also
 provide `readDiagnostics()`. `compareGameplayTraces` reports the first differing
 execution field.
 
+### Replay retained simulations
+
+Replay a selected case from a retained batch export with:
+
+```sh
+npm run simulate -- replay tests/fixtures/simulation/replay-case.json
+```
+
+A replay input has `schemaVersion: 1`, `mode: "case"`, an `experiment` batch
+export, and its `requestIndex`. The command reruns that request from its
+retained initial profile and creates a fresh policy agent. It reports the
+recorded and replayed results, whether their result and trace identities match,
+and the hash of the newly retained host diagnostic trace.
+
+Use `mode: "pair"` with `baseline`, `candidate`, their selected request indices,
+and `policyComparison` set to `"same-policy"` or the explicit
+`"allow-different"`. The selected requests must have the same seed, exact
+initial-profile input, and step limit. Pair diagnostics compare their shared
+checkpoint prefix and report the first command, authoritative state, public
+observation or event, RNG, or termination difference. Ruleset labels are
+reported as identity differences and do not count as behavioral differences by
+themselves. Full state and randomness values exist only in this host diagnostic
+path; ordinary batch execution does not retain replay histories.
+
 The browser entry point loads its initial profile through
 `createBrowserProfileStore(window.localStorage)`. An empty store returns fresh
 defaults. A valid current record or a supported older envelope returns a

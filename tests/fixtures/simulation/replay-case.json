@@ -1,0 +1,73 @@
+{
+  "schemaVersion": 1,
+  "mode": "case",
+  "experiment": {
+    "schemaVersion": 1,
+    "manifest": {
+      "schemaVersion": 1,
+      "requests": [
+        {
+          "config": {
+            "initialProfile": { "schemaVersion": 1, "scoreMultiplier": 1 },
+            "ruleset": "original-v1.3",
+            "seed": "cli-progressing"
+          },
+          "maxSteps": 62,
+          "policy": {
+            "config": {},
+            "id": "purchase-reachable-shops",
+            "version": "2"
+          }
+        }
+      ]
+    },
+    "results": [
+      {
+        "requestFingerprint": "sha256-v1:83cf6814ea4f098fb6a17909422be15671c71279b8205f2b77f5365938fa2eef",
+        "requestIndex": 0,
+        "result": {
+          "activeTicks": 2,
+          "day": 1,
+          "distance": 3,
+          "gold": 300,
+          "initialProfileFingerprint": "sha256-v1:16560d87b48392edba4291a11362cae68bf8a4e7f8c60c226a6f62f37330f211",
+          "maxSteps": 62,
+          "metrics": {
+            "combat.battles-started": 0,
+            "combat.critical-hits": 0,
+            "combat.damage": 0,
+            "combat.hits": 0,
+            "combat.lethal-hits": 0,
+            "combat.reward-gold": 0,
+            "combat.reward-profile-exp": 0,
+            "combat.reward-score": 0,
+            "combat.rewards": 0,
+            "encounters.battles": 0,
+            "encounters.promoted": 0,
+            "encounters.shop-departures": 0,
+            "encounters.shops": 0,
+            "progression.achievements-unlocked": 0,
+            "progression.dragon-kills": 0,
+            "progression.equipment-discoveries": 0,
+            "progression.profile-exp-earned": 0,
+            "purchases.completed": 0,
+            "purchases.gold-spent": 0
+          },
+          "policy": {
+            "config": {},
+            "id": "purchase-reachable-shops",
+            "version": "2"
+          },
+          "ruleset": "original-v1.3",
+          "schemaVersion": 3,
+          "score": 30,
+          "seed": "cli-progressing",
+          "steps": 62,
+          "terminalReason": "step-limit",
+          "traceHash": "sha256-v1:fcaef09709271e249c1c61a980eea2f54869d8763717abcd772babf0cc9b1222"
+        }
+      }
+    ]
+  },
+  "requestIndex": 0
+}

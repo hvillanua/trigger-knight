@@ -36,9 +36,9 @@ const comparison = path.join(
 
 interface SimulationCommandModule {
   runSimulationCommand(
-    mode: "compare",
+    mode: "batch" | "compare" | "replay",
     input: unknown,
-    options: { ruleSetRegistry: RuleSetRegistry },
+    options?: { ruleSetRegistry?: RuleSetRegistry },
   ): Promise<string>;
 }
 
@@ -120,6 +120,52 @@ describe("simulation command", () => {
     expect(output.pairs[0]?.behavioralDifference).toBe(false);
     expect(output.aggregateDifferences.behavioralDifferenceCount).toBe(0);
     expect(result.stdout).toBe(`${result.stdout.trim()}\n`);
+  });
+
+  it("replays a retained case and emits host diagnostics", async () => {
+    const batch = runCommand("batch", manifest);
+    expect(batch.status).toBe(0);
+
+    const commandModule = (await import(
+      pathToFileURL(command).href
+    )) as unknown as SimulationCommandModule;
+    const retained = JSON.parse(batch.stdout) as unknown;
+    const output = await commandModule.runSimulationCommand("replay", {
+      schemaVersion: 1,
+      mode: "case",
+      experiment: retained,
+      requestIndex: 0,
+    });
+    const parsed = JSON.parse(output) as {
+      mode: string;
+      run: {
+        resultMatches: boolean;
+        traceIdentityMatches: boolean;
+      };
+    };
+
+    expect(parsed).toMatchObject({
+      mode: "case",
+      run: { resultMatches: true, traceIdentityMatches: true },
+    });
+
+    const pairOutput = await commandModule.runSimulationCommand("replay", {
+      schemaVersion: 1,
+      mode: "pair",
+      policyComparison: "same-policy",
+      baseline: retained,
+      candidate: retained,
+      baselineRequestIndex: 0,
+      candidateRequestIndex: 0,
+    });
+    const pair = JSON.parse(pairOutput) as {
+      mode: string;
+      comparison: { behavioralDifference: unknown };
+    };
+    expect(pair).toMatchObject({
+      mode: "pair",
+      comparison: { behavioralDifference: null },
+    });
   });
 
   it("dispatches a test-only candidate through the command integration", async () => {

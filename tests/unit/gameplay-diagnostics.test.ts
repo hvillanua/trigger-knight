@@ -7,6 +7,7 @@ import type {
 } from "../../src/application/contracts.js";
 import {
   compareGameplayTraces,
+  compareGameplayTracesForDivergence,
   type GameplayTrace,
 } from "../../src/application/gameplay-execution.js";
 import { createBrowserGameplaySession } from "../../src/browser/gameplay-session.js";
@@ -218,6 +219,207 @@ describe("gameplay diagnostics", () => {
       difference: {
         path: "checkpoints[0].state.steps",
         expected: COMPATIBILITY_CHECKPOINT_BLOCK_SIZE,
+        actual: 99,
+      },
+    });
+  });
+
+  it("reports the first command, state, observation, event, or RNG difference", () => {
+    const session = createBrowserGameplaySession(gameplayEngine, config);
+    session.dispatch(noCommands);
+    const expected = session.readDiagnostics();
+
+    const cases = [
+      {
+        label: "command",
+        actual: {
+          ...expected,
+          checkpoints: [
+            expected.checkpoints[0]!,
+            {
+              ...expected.checkpoints[1]!,
+              commands: [{ type: "dismiss-tutorial" }],
+            },
+          ],
+        },
+        expectedDifference: {
+          step: 1,
+          kind: "command",
+          path: "checkpoints[1].commands.length",
+          expected: 0,
+          actual: 1,
+        },
+      },
+      {
+        label: "state",
+        actual: {
+          ...expected,
+          checkpoints: [
+            expected.checkpoints[0]!,
+            {
+              ...expected.checkpoints[1]!,
+              state: { ...expected.checkpoints[1]!.state, score: 99 },
+            },
+          ],
+        },
+        expectedDifference: {
+          step: 1,
+          kind: "state",
+          path: "checkpoints[1].state.score",
+          expected: 0,
+          actual: 99,
+        },
+      },
+      {
+        label: "observation",
+        actual: {
+          ...expected,
+          checkpoints: [
+            expected.checkpoints[0]!,
+            {
+              ...expected.checkpoints[1]!,
+              observation: {
+                ...expected.checkpoints[1]!.observation,
+                score: 99,
+              },
+            },
+          ],
+        },
+        expectedDifference: {
+          step: 1,
+          kind: "observation",
+          path: "checkpoints[1].observation.score",
+          expected: 0,
+          actual: 99,
+        },
+      },
+      {
+        label: "event",
+        actual: {
+          ...expected,
+          checkpoints: [
+            expected.checkpoints[0]!,
+            {
+              ...expected.checkpoints[1]!,
+              events: [{ type: "step-advanced", step: 99 }],
+            },
+          ],
+        },
+        expectedDifference: {
+          step: 1,
+          kind: "event",
+          path: "checkpoints[1].events[0].step",
+          expected: 1,
+          actual: 99,
+        },
+      },
+      {
+        label: "random",
+        actual: {
+          ...expected,
+          checkpoints: [
+            expected.checkpoints[0]!,
+            {
+              ...expected.checkpoints[1]!,
+              state: {
+                ...expected.checkpoints[1]!.state,
+                random: {
+                  ...expected.checkpoints[1]!.state.random,
+                  state: expected.checkpoints[1]!.state.random.state + 1,
+                },
+              },
+            },
+          ],
+        },
+        expectedDifference: {
+          step: 1,
+          kind: "random",
+          path: "checkpoints[1].state.random.state",
+          expected: expected.checkpoints[1]!.state.random.state,
+          actual: expected.checkpoints[1]!.state.random.state + 1,
+        },
+      },
+    ] as const;
+
+    for (const testCase of cases) {
+      expect(
+        compareGameplayTracesForDivergence(expected, testCase.actual),
+        testCase.label,
+      ).toMatchObject({
+        identityDifferences: [],
+        incompatibleDifference: null,
+        behavioralDifference: testCase.expectedDifference,
+      });
+    }
+  });
+
+  it("compares the shared prefix before reporting unequal termination and separates ruleset identity", () => {
+    const session = createBrowserGameplaySession(gameplayEngine, config);
+    session.dispatch(noCommands);
+    session.dispatch(noCommands);
+    const expected = session.readDiagnostics();
+    const shorter = {
+      ...expected,
+      checkpoints: expected.checkpoints.slice(0, 2),
+    };
+
+    expect(compareGameplayTracesForDivergence(expected, shorter)).toMatchObject(
+      {
+        identityDifferences: [],
+        incompatibleDifference: null,
+        behavioralDifference: {
+          step: 2,
+          kind: "termination",
+          path: "checkpoints.length",
+          expected: 3,
+          actual: 2,
+        },
+      },
+    );
+
+    const identityOnly: GameplayTrace = {
+      ...expected,
+      config: { ...expected.config, ruleset: "candidate-v1" },
+      checkpoints: expected.checkpoints.map((checkpoint) => ({
+        ...checkpoint,
+        state: { ...checkpoint.state, ruleset: "candidate-v1" },
+        observation: { ...checkpoint.observation, ruleset: "candidate-v1" },
+      })),
+      traceHash: "candidate-trace",
+    };
+
+    expect(compareGameplayTracesForDivergence(expected, identityOnly)).toEqual({
+      identityDifferences: [
+        {
+          path: "config.ruleset",
+          expected: ORIGINAL_V13_RULESET_ID,
+          actual: "candidate-v1",
+        },
+      ],
+      incompatibleDifference: null,
+      behavioralDifference: null,
+    });
+  });
+
+  it("reports an initial-state difference at logical step zero", () => {
+    const session = createBrowserGameplaySession(gameplayEngine, config);
+    const expected = session.readDiagnostics();
+    const actual = {
+      ...expected,
+      checkpoints: [
+        {
+          ...expected.checkpoints[0]!,
+          state: { ...expected.checkpoints[0]!.state, score: 99 },
+        },
+      ],
+    };
+
+    expect(compareGameplayTracesForDivergence(expected, actual)).toMatchObject({
+      behavioralDifference: {
+        step: 0,
+        kind: "state",
+        path: "checkpoints[0].state.score",
+        expected: 0,
         actual: 99,
       },
     });

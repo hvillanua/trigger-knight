@@ -13,6 +13,8 @@ import type {
   GameplayExecution,
   GameplayTrace,
   GameplayTraceComparison,
+  GameplayTraceDivergence,
+  GameplayTraceDivergenceComparison,
   ObservedBattleEnemy,
   ObservedPositionedBattleEncounter,
   PlayerAgent,
@@ -43,6 +45,9 @@ import type {
   SimulationPolicyComparison,
   SimulationAggregateDifferences,
   SimulationResultRecord,
+  SimulationReplay,
+  SimulationReplayInput,
+  SimulationReplayReport,
   SimulationRunner,
   StepResult,
   UseCarriedItemCommand,
@@ -127,6 +132,29 @@ describe("public application contracts", () => {
           }>;
         }>
     >();
+    expectTypeOf<GameplayTraceDivergence>().toMatchTypeOf<{
+      readonly step: number;
+      readonly kind:
+        | "command"
+        | "state"
+        | "random"
+        | "observation"
+        | "event"
+        | "termination"
+        | "input";
+      readonly path: string;
+      readonly expected: unknown;
+      readonly actual: unknown;
+    }>();
+    expectTypeOf<GameplayTraceDivergenceComparison>().toMatchTypeOf<{
+      readonly identityDifferences: readonly {
+        readonly path: string;
+        readonly expected: unknown;
+        readonly actual: unknown;
+      }[];
+      readonly incompatibleDifference: GameplayTraceDivergence | null;
+      readonly behavioralDifference: GameplayTraceDivergence | null;
+    }>();
   });
 
   it("defines reproducible policy and finite simulation boundaries", () => {
@@ -180,6 +208,26 @@ describe("public application contracts", () => {
       readonly manifest: SimulationManifest;
       readonly results: readonly SimulationResultRecord[];
     }>();
+    expectTypeOf<SimulationReplayInput>().toMatchTypeOf<
+      | Readonly<{
+          readonly schemaVersion: 1;
+          readonly mode: "case";
+          readonly experiment: SimulationBatchExport;
+          readonly requestIndex: number;
+        }>
+      | Readonly<{
+          readonly schemaVersion: 1;
+          readonly mode: "pair";
+          readonly policyComparison: SimulationPolicyComparison;
+          readonly baseline: SimulationBatchExport;
+          readonly candidate: SimulationBatchExport;
+          readonly baselineRequestIndex: number;
+          readonly candidateRequestIndex: number;
+        }>
+    >();
+    expectTypeOf<SimulationReplay["run"]>().toEqualTypeOf<
+      (input: SimulationReplayInput) => Promise<SimulationReplayReport>
+    >();
   });
 
   it("identifies normalized run results with their reproducibility inputs", () => {
