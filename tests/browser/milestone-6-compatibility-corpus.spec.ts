@@ -519,7 +519,7 @@ test("replays the retained compatibility corpus in Node and Chromium", async ({
         fixture.expected.completedProfile ?? null;
 
       for (const { page, variant } of contexts) {
-        await page.goto("/");
+        await page.goto("/?manual=1");
         const diagnostics = await runBrowserFixture(
           page,
           fixture,
@@ -606,7 +606,7 @@ test("replays the retained compatibility corpus in Node and Chromium", async ({
 
     for (const fixture of originalV13CompatibilitySettlements) {
       for (const { page, variant } of contexts) {
-        await page.goto("/");
+        await page.goto("/?manual=1");
         const profiles = await runBrowserSettlement(page, fixture);
         expect(profiles, `${fixture.id} ${variant.name} profiles`).toEqual(
           fixture.expectedProfiles,

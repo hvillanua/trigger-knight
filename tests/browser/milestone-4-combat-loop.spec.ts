@@ -43,7 +43,7 @@ for (const scenario of combatLoopScenarios) {
       });
       try {
         const page = await context.newPage();
-        await page.goto("/");
+        await page.goto("/?manual=1");
         const diagnostics = await page.evaluateHandle(
           async ({ config, schedule, maxSteps, redraws, renderEvery }) => {
             const enginePath = "/src/application/gameplay-engine.ts";
