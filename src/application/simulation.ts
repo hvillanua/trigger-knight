@@ -5,6 +5,7 @@ import type {
   RuleSetId,
   RunTerminalReason,
 } from "../domain/contracts.js";
+import type { GameplayTraceDivergenceComparison } from "./gameplay-execution.js";
 import type { RunConfig } from "./gameplay-engine.js";
 
 type PolicyConfigValue =
@@ -51,6 +52,9 @@ export const SIMULATION_REPORT_SCHEMA_VERSION = 1 as const;
 
 /** Version for paired simulation comparison inputs and reports. */
 export const SIMULATION_COMPARISON_SCHEMA_VERSION = 1 as const;
+
+/** Version for host-only retained simulation replay selections and reports. */
+export const SIMULATION_REPLAY_SCHEMA_VERSION = 1 as const;
 
 export type RunMetricKey =
   | "combat.battles-started"
@@ -252,6 +256,57 @@ export interface SimulationPolicyRegistry {
 /** Application service for executing retained simulation inputs. */
 export interface SimulationExperiment {
   run(manifest: SimulationManifest): Promise<SimulationBatchExport>;
+}
+
+export type SimulationReplayInput =
+  | Readonly<{
+      readonly schemaVersion: typeof SIMULATION_REPLAY_SCHEMA_VERSION;
+      readonly mode: "case";
+      readonly experiment: SimulationBatchExport;
+      readonly requestIndex: number;
+    }>
+  | Readonly<{
+      readonly schemaVersion: typeof SIMULATION_REPLAY_SCHEMA_VERSION;
+      readonly mode: "pair";
+      readonly policyComparison: SimulationPolicyComparison;
+      readonly baseline: SimulationBatchExport;
+      readonly candidate: SimulationBatchExport;
+      readonly baselineRequestIndex: number;
+      readonly candidateRequestIndex: number;
+    }>;
+
+export interface SimulationReplayRunReport {
+  readonly requestIndex: number;
+  readonly requestFingerprint: string;
+  readonly recordedResult: RunResult;
+  readonly replayedResult: RunResult;
+  readonly resultMatches: boolean;
+  readonly traceIdentityMatches: boolean;
+  /** Hash of the newly retained host diagnostic trace. */
+  readonly replayedTraceHash: string;
+}
+
+export interface SimulationReplayCaseReport {
+  readonly schemaVersion: typeof SIMULATION_REPLAY_SCHEMA_VERSION;
+  readonly mode: "case";
+  readonly run: SimulationReplayRunReport;
+}
+
+export interface SimulationReplayPairReport {
+  readonly schemaVersion: typeof SIMULATION_REPLAY_SCHEMA_VERSION;
+  readonly mode: "pair";
+  readonly policyComparison: SimulationPolicyComparison;
+  readonly baseline: SimulationReplayRunReport;
+  readonly candidate: SimulationReplayRunReport;
+  readonly comparison: GameplayTraceDivergenceComparison;
+}
+
+export type SimulationReplayReport =
+  SimulationReplayCaseReport | SimulationReplayPairReport;
+
+/** Host diagnostic service for replaying retained requests and pairs. */
+export interface SimulationReplay {
+  run(input: SimulationReplayInput): Promise<SimulationReplayReport>;
 }
 
 export interface SimulationRequest {

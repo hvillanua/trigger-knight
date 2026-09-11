@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import type {
   GameCommand,
   ProfileInput,
+  QueuedBattleEncounter,
   RunState,
   SimulationComparisonInput,
 } from "../../src/application/contracts.js";
@@ -36,9 +37,9 @@ const comparison = path.join(
 
 interface SimulationCommandModule {
   runSimulationCommand(
-    mode: "compare",
+    mode: "batch" | "compare" | "replay",
     input: unknown,
-    options: { ruleSetRegistry: RuleSetRegistry },
+    options?: { ruleSetRegistry?: RuleSetRegistry },
   ): Promise<string>;
 }
 
@@ -120,6 +121,173 @@ describe("simulation command", () => {
     expect(output.pairs[0]?.behavioralDifference).toBe(false);
     expect(output.aggregateDifferences.behavioralDifferenceCount).toBe(0);
     expect(result.stdout).toBe(`${result.stdout.trim()}\n`);
+  });
+
+  it("replays a retained case and emits host diagnostics", async () => {
+    const batch = runCommand("batch", manifest);
+    expect(batch.status).toBe(0);
+
+    const commandModule = (await import(
+      pathToFileURL(command).href
+    )) as unknown as SimulationCommandModule;
+    const retained = JSON.parse(batch.stdout) as unknown;
+    const output = await commandModule.runSimulationCommand("replay", {
+      schemaVersion: 1,
+      mode: "case",
+      experiment: retained,
+      requestIndex: 0,
+    });
+    const parsed = JSON.parse(output) as {
+      mode: string;
+      run: {
+        resultMatches: boolean;
+        traceIdentityMatches: boolean;
+      };
+    };
+
+    expect(parsed).toMatchObject({
+      mode: "case",
+      run: { resultMatches: true, traceIdentityMatches: true },
+    });
+
+    const pairOutput = await commandModule.runSimulationCommand("replay", {
+      schemaVersion: 1,
+      mode: "pair",
+      policyComparison: "same-policy",
+      baseline: retained,
+      candidate: retained,
+      baselineRequestIndex: 0,
+      candidateRequestIndex: 0,
+    });
+    const pair = JSON.parse(pairOutput) as {
+      mode: string;
+      comparison: { behavioralDifference: unknown };
+    };
+    expect(pair).toMatchObject({
+      mode: "pair",
+      comparison: { behavioralDifference: null },
+    });
+  });
+
+  it("serializes missing fields in a shop-versus-battle divergence", async () => {
+    const candidateId = "missing-field-candidate-v1";
+    const candidateRuleset = Object.freeze({
+      ...originalV13RuleSet,
+      id: candidateId,
+      createRun(seed: string, initialProfile: Readonly<ProfileInput>) {
+        const state = originalV13RuleSet.createRun(seed, initialProfile);
+        const shopIndex = state.encounters.upcoming.findIndex(
+          (encounter) => encounter.kind === "shop",
+        );
+        const battle = state.encounters.upcoming.find(
+          (encounter): encounter is QueuedBattleEncounter =>
+            encounter.kind === "battle",
+        );
+        if (shopIndex === -1 || battle === undefined) {
+          throw new Error("Expected a shop and battle in the initial queue");
+        }
+
+        return Object.freeze({
+          ...state,
+          ruleset: candidateId,
+          encounters: Object.freeze({
+            ...state.encounters,
+            upcoming: Object.freeze(
+              state.encounters.upcoming.map((encounter, index) =>
+                index === shopIndex ? battle : encounter,
+              ),
+            ),
+          }),
+        });
+      },
+      step(state: Readonly<RunState>, commands: readonly GameCommand[]) {
+        const result = originalV13RuleSet.step(state, commands);
+        return Object.freeze({
+          ...result,
+          state: Object.freeze({
+            ...result.state,
+            ruleset: candidateId,
+          }),
+        });
+      },
+    });
+    const registry = createRuleSetRegistry([
+      originalV13RuleSet,
+      candidateRuleset,
+    ]);
+    const commandModule = (await import(
+      pathToFileURL(command).href
+    )) as unknown as SimulationCommandModule;
+    const retainedInput = {
+      schemaVersion: 1,
+      requests: [
+        {
+          config: {
+            ruleset: "original-v1.3",
+            seed: "simulation-seed",
+            initialProfile: { schemaVersion: 1, scoreMultiplier: 1 },
+          },
+          policy: { id: "non-progressing", version: "1", config: {} },
+          maxSteps: 1,
+        },
+      ],
+    };
+    const retainedRequest = retainedInput.requests[0]!;
+    const baseline = JSON.parse(
+      await commandModule.runSimulationCommand("batch", retainedInput, {
+        ruleSetRegistry: registry,
+      }),
+    ) as unknown;
+    const candidate = JSON.parse(
+      await commandModule.runSimulationCommand(
+        "batch",
+        {
+          ...retainedInput,
+          requests: [
+            {
+              ...retainedRequest,
+              config: {
+                ...retainedRequest.config,
+                ruleset: candidateId,
+              },
+            },
+          ],
+        },
+        {
+          ruleSetRegistry: registry,
+        },
+      ),
+    ) as unknown;
+
+    const output = await commandModule.runSimulationCommand(
+      "replay",
+      {
+        schemaVersion: 1,
+        mode: "pair",
+        policyComparison: "same-policy",
+        baseline,
+        candidate,
+        baselineRequestIndex: 0,
+        candidateRequestIndex: 0,
+      },
+      { ruleSetRegistry: registry },
+    );
+    const parsed = JSON.parse(output) as {
+      comparison: {
+        behavioralDifference: {
+          path: string;
+          actual: unknown;
+        } | null;
+      };
+    };
+
+    const difference = parsed.comparison.behavioralDifference;
+    expect(difference).not.toBeNull();
+    if (difference === null) {
+      throw new Error("Expected a serialized missing-field divergence");
+    }
+    expect(difference.path).toContain(".cachedPrice");
+    expect(difference.actual).toEqual({ kind: "missing" });
   });
 
   it("dispatches a test-only candidate through the command integration", async () => {
