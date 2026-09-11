@@ -19,6 +19,7 @@ import {
 import type {
   CompletedRunSettlementInput,
   GameCommand,
+  GameEvent,
   GameObservation,
   ProfileLoadResult,
   ProfileState,
@@ -36,7 +37,10 @@ import {
   type BrowserGameplayClock,
 } from "./browser/gameplay-clock.js";
 import { observeDevicePixelRatioChanges } from "./browser/device-pixel-ratio.js";
-import type { CssDimensions } from "./browser/foundation.js";
+import {
+  mapClientPointToWorld,
+  type CssDimensions,
+} from "./browser/foundation.js";
 import {
   createBrowserGameplaySession,
   type BrowserGameplaySession,
@@ -46,7 +50,14 @@ import {
   commandsForDismissTutorialActivation,
   commandsForItemUseActivation,
   commandsForPurchaseActivation,
+  commandsForTogglePauseActivation,
+  bindingLabel,
+  createBindingCaptureController,
+  createKeyboardCommandRouter,
+  findBindingConflict,
+  type InputAction,
 } from "./browser/input.js";
+import { createHudView, describeGameEvent } from "./browser/hud.js";
 import { createFreshProfile } from "./domain/profile.js";
 import { ORIGINAL_V13_RULESET_ID, ruleSetRegistry } from "./domain/rulesets.js";
 import { createBrowserProfileStore } from "./persistence/browser-profile-store.js";
@@ -90,6 +101,41 @@ const purchaseButton = requiredElement<HTMLButtonElement>(
 );
 const useItemButton = requiredElement<HTMLButtonElement>("#use-carried-item");
 const gameStatus = requiredElement<HTMLElement>("#game-status");
+const hudHeroHp = requiredElement<HTMLElement>("#hud-hero-hp");
+const hudLifespan = requiredElement<HTMLElement>("#hud-lifespan");
+const hudGold = requiredElement<HTMLElement>("#hud-gold");
+const hudWeapon = requiredElement<HTMLElement>("#hud-weapon");
+const hudArmor = requiredElement<HTMLElement>("#hud-armor");
+const hudItem = requiredElement<HTMLElement>("#hud-item");
+const hudScore = requiredElement<HTMLElement>("#hud-score");
+const hudDay = requiredElement<HTMLElement>("#hud-day");
+const hudCurrentEncounter = requiredElement<HTMLElement>(
+  "#hud-current-encounter",
+);
+const hudCurrentEncounterDetail = requiredElement<HTMLElement>(
+  "#hud-current-encounter-detail",
+);
+const hudUpcomingEncounters = requiredElement<HTMLOListElement>(
+  "#hud-upcoming-encounters",
+);
+const hudContextTitle = requiredElement<HTMLElement>("#hud-context-title");
+const hudContextDescription = requiredElement<HTMLElement>(
+  "#hud-context-description",
+);
+const hudContextPrice = requiredElement<HTMLElement>("#hud-context-price");
+const hudContextWarning = requiredElement<HTMLElement>("#hud-context-warning");
+const hudBattle = requiredElement<HTMLElement>("#hud-battle");
+const hudBattleEnemy = requiredElement<HTMLElement>("#hud-battle-enemy");
+const hudBattleHp = requiredElement<HTMLElement>("#hud-battle-hp");
+const hudBattleHpBar =
+  requiredElement<HTMLProgressElement>("#hud-battle-hp-bar");
+const hudBattleHeroPhase = requiredElement<HTMLElement>(
+  "#hud-battle-hero-phase",
+);
+const hudBattleEnemyPhase = requiredElement<HTMLElement>(
+  "#hud-battle-enemy-phase",
+);
+const gameFeedback = requiredElement<HTMLElement>("#game-feedback");
 const profileSummary = requiredElement<HTMLElement>("#profile-summary");
 const titleProfileSummary = requiredElement<HTMLElement>(
   "#title-profile-summary",
@@ -112,6 +158,9 @@ const achievementProgress = requiredElement<HTMLElement>(
   "#achievements-progress",
 );
 const settingsStatus = requiredElement<HTMLElement>("#settings-status");
+const settingsBindingPrompt = requiredElement<HTMLElement>(
+  "#settings-binding-prompt",
+);
 const settingsForm = requiredElement<HTMLFormElement>("#settings-form");
 const tutorialPreference = requiredElement<HTMLInputElement>(
   "#tutorial-preference",
@@ -129,6 +178,13 @@ const bindingDismissTutorial = requiredElement<HTMLInputElement>(
 );
 const bindingPurchase = requiredElement<HTMLInputElement>("#binding-purchase");
 const bindingUseItem = requiredElement<HTMLInputElement>("#binding-use-item");
+const bindingInputs: Readonly<Record<InputAction, HTMLInputElement>> =
+  Object.freeze({
+    togglePause: bindingTogglePause,
+    dismissTutorial: bindingDismissTutorial,
+    purchaseCurrentEncounter: bindingPurchase,
+    useCarriedItem: bindingUseItem,
+  });
 const resultCollections = requiredElement<HTMLButtonElement>(
   "#result-view-collections",
 );
@@ -196,6 +252,11 @@ let currentSettings: BrowserSettings =
   settingsLoad.status === "failed"
     ? createDefaultSettings()
     : settingsLoad.settings;
+
+const keyboardRouter = createKeyboardCommandRouter(currentSettings.bindings);
+const bindingCapture = createBindingCaptureController(currentSettings.bindings);
+let latestObservation: Readonly<GameObservation> | undefined;
+let latestFeedback = "";
 
 const completedRunCoordinator = createCompletedRunCoordinator(profileStore);
 const presentation = new CanvasPresentation(canvas);
@@ -364,6 +425,81 @@ function renderPause(observation: Readonly<GameObservation>): void {
   );
 }
 
+function renderHud(observation: Readonly<GameObservation>): void {
+  const view = createHudView(observation);
+  hudHeroHp.textContent = view.player.hp;
+  hudLifespan.textContent = view.player.lifespan;
+  hudGold.textContent = view.player.gold;
+  hudWeapon.textContent = view.player.weapon;
+  hudArmor.textContent = view.player.armor;
+  hudItem.textContent = view.player.item;
+  hudScore.textContent = view.player.score;
+  hudDay.textContent = view.player.day;
+  hudCurrentEncounter.textContent = view.currentEncounter.label;
+  hudCurrentEncounterDetail.textContent = view.currentEncounter.detail;
+  hudUpcomingEncounters.replaceChildren(
+    ...view.upcomingEncounters.map((encounter, index) => {
+      const item = document.createElement("li");
+      item.dataset.queueIndex = String(index);
+      item.setAttribute(
+        "aria-label",
+        `${encounter.label}. ${encounter.detail}`,
+      );
+      item.textContent = `${encounter.label} · ${encounter.detail}`;
+      return item;
+    }),
+  );
+  hudContextTitle.textContent = view.context.title;
+  hudContextDescription.textContent = view.context.description;
+  hudContextPrice.textContent =
+    view.context.price === null ? "" : `Price: ${view.context.price}`;
+  hudContextWarning.textContent = view.context.warning ?? "";
+  hudContextWarning.hidden = view.context.warning === null;
+  hudBattle.hidden = view.battle === null;
+  if (view.battle !== null) {
+    hudBattleEnemy.textContent = view.battle.enemy;
+    hudBattleHp.textContent = `HP ${view.battle.hp}`;
+    hudBattleHpBar.value = view.battle.hpPercent;
+    hudBattleHpBar.setAttribute("aria-valuetext", `${view.battle.hp} HP`);
+    hudBattleHeroPhase.textContent =
+      observation.battle?.actors.hero.phase ?? "—";
+    hudBattleEnemyPhase.textContent =
+      observation.battle?.actors.enemy.phase ?? "—";
+  } else {
+    hudBattleHpBar.value = 0;
+    hudBattleHpBar.removeAttribute("aria-valuetext");
+  }
+}
+
+function renderFeedback(events: readonly GameEvent[]): void {
+  const announcement = events.map(describeGameEvent).filter(Boolean).join(" ");
+  if (announcement !== "") {
+    latestFeedback = announcement;
+    gameFeedback.textContent = latestFeedback;
+  }
+}
+
+function renderKeyboardHints(
+  bindings: Readonly<BrowserSettings["bindings"]>,
+): void {
+  pauseButton.setAttribute(
+    "aria-keyshortcuts",
+    bindingLabel(bindings.togglePause),
+  );
+  dismissTutorialButton.setAttribute(
+    "aria-keyshortcuts",
+    bindingLabel(bindings.dismissTutorial),
+  );
+  purchaseButton.setAttribute(
+    "aria-keyshortcuts",
+    bindingLabel(bindings.purchaseCurrentEncounter),
+  );
+  useItemButton.setAttribute(
+    "aria-keyshortcuts",
+    bindingLabel(bindings.useCarriedItem),
+  );
+}
+
 function syncControls(observation: Readonly<GameObservation>): void {
   const ended = observation.lifecycle.phase === "ended";
   dismissTutorialButton.disabled =
@@ -398,6 +534,7 @@ function renderSettings(settings: Readonly<BrowserSettings>): void {
   bindingDismissTutorial.value = settings.bindings.dismissTutorial;
   bindingPurchase.value = settings.bindings.purchaseCurrentEncounter;
   bindingUseItem.value = settings.bindings.useCarriedItem;
+  renderKeyboardHints(settings.bindings);
 }
 
 function setSettingsStatus(
@@ -429,14 +566,21 @@ function renderStorageNotice(): void {
 }
 
 function readSettingsForm(): BrowserSettings {
+  const bindings = {
+    togglePause: bindingTogglePause.value,
+    dismissTutorial: bindingDismissTutorial.value,
+    purchaseCurrentEncounter: bindingPurchase.value,
+    useCarriedItem: bindingUseItem.value,
+  };
+  const conflict = findBindingConflict(bindings);
+  if (conflict !== null) {
+    throw new TypeError(
+      `${bindingLabel(conflict.code)} is assigned to multiple actions`,
+    );
+  }
   return normalizeSettings({
     schemaVersion: SETTINGS_SCHEMA_VERSION,
-    bindings: {
-      togglePause: bindingTogglePause.value,
-      dismissTutorial: bindingDismissTutorial.value,
-      purchaseCurrentEncounter: bindingPurchase.value,
-      useCarriedItem: bindingUseItem.value,
-    },
+    bindings,
     sound: {
       muted: soundMuted.checked,
       volume: soundVolume.valueAsNumber,
@@ -552,6 +696,9 @@ function showProfileScreen(screen: "collections" | "achievements"): void {
 function showSettings(): void {
   settingsReturnScreen = currentScreen === "result" ? "result" : "title";
   renderSettings(currentSettings);
+  bindingCapture.replaceBindings(currentSettings.bindings);
+  settingsBindingPrompt.textContent =
+    "Choose Remap, then press a supported key. Press Escape to cancel.";
   showScreen("settings");
 }
 
@@ -560,7 +707,62 @@ function returnFromProfileScreen(): void {
 }
 
 function returnFromSettings(): void {
+  bindingCapture.replaceBindings(currentSettings.bindings);
+  settingsBindingPrompt.textContent =
+    "Choose Remap, then press a supported key. Press Escape to cancel.";
   showScreen(settingsReturnScreen);
+}
+
+function bindingActionLabel(action: InputAction): string {
+  switch (action) {
+    case "togglePause":
+      return "Pause";
+    case "dismissTutorial":
+      return "Dismiss tutorial";
+    case "purchaseCurrentEncounter":
+      return "Purchase current encounter";
+    case "useCarriedItem":
+      return "Use carried item";
+  }
+}
+
+function isInputAction(value: string | undefined): value is InputAction {
+  return (
+    value === "togglePause" ||
+    value === "dismissTutorial" ||
+    value === "purchaseCurrentEncounter" ||
+    value === "useCarriedItem"
+  );
+}
+
+function handleBindingCaptureResult(
+  result: ReturnType<
+    ReturnType<typeof createBindingCaptureController>["handleKeyDown"]
+  >,
+): void {
+  switch (result.status) {
+    case "captured":
+      bindingInputs[result.action].value = result.code;
+      settingsBindingPrompt.textContent = `${bindingActionLabel(result.action)} is ${bindingLabel(result.code)}. Save settings to keep it.`;
+      break;
+    case "cancelled":
+      settingsBindingPrompt.textContent = `${bindingActionLabel(result.action)} remapping cancelled.`;
+      break;
+    case "conflict":
+      settingsBindingPrompt.textContent = `${bindingLabel(result.code)} is already assigned to ${bindingActionLabel(result.conflictingAction)}. Choose another key or press Escape to cancel.`;
+      break;
+    case "unsupported":
+      settingsBindingPrompt.textContent = `${result.code || "That key"} is not supported. Choose another key or press Escape to cancel.`;
+      break;
+    case "ignored":
+      break;
+  }
+}
+
+function beginBindingCapture(action: InputAction): void {
+  bindingCapture.begin(action);
+  settingsBindingPrompt.textContent = `Press a key for ${bindingActionLabel(action)}. Press Escape to cancel.`;
+  bindingInputs[action].focus();
 }
 
 function startRun(profile: ProfileState, focus = true): void {
@@ -583,6 +785,8 @@ function startRun(profile: ProfileState, focus = true): void {
   delete gameStatus.dataset.completionStatus;
   delete gameStatus.dataset.completionError;
   gameStatus.textContent = "Step 0";
+  latestFeedback = "";
+  gameFeedback.textContent = "";
   dismissTutorialButton.disabled = false;
   if (advanceButton !== undefined) advanceButton.disabled = false;
   pauseButton.disabled = false;
@@ -606,8 +810,11 @@ function startRun(profile: ProfileState, focus = true): void {
     {
       retainDiagnostics: import.meta.env.DEV,
       renderOnDispatch: manualClock,
-      onTransition: ({ observation }) => {
+      onTransition: ({ observation, events }) => {
+        latestObservation = observation;
         gameStatus.textContent = `Step ${observation.steps}`;
+        renderHud(observation);
+        renderFeedback(events);
         syncControls(observation);
       },
       onCompletedRun: (run) => {
@@ -616,6 +823,9 @@ function startRun(profile: ProfileState, focus = true): void {
       },
     },
   );
+  latestObservation = record.session.readObservation();
+  renderHud(latestObservation);
+  syncControls(latestObservation);
   if (!manualClock) {
     record.clock = createBrowserGameplayClock(record.session, {
       requestFrame: (callback) => window.requestAnimationFrame(callback),
@@ -676,6 +886,84 @@ const dispatch = (commands: readonly GameCommand[]): void => {
   }
 };
 
+function interactiveEventTarget(target: EventTarget | null): boolean {
+  return (
+    target instanceof HTMLElement &&
+    (target.matches("button, input, textarea, select, a") ||
+      target.isContentEditable)
+  );
+}
+
+document.addEventListener("keydown", (event) => {
+  const activeBinding = bindingCapture.activeAction();
+  if (activeBinding !== null) {
+    if (event.repeat) {
+      event.preventDefault();
+      return;
+    }
+    event.preventDefault();
+    event.stopPropagation();
+    handleBindingCaptureResult(bindingCapture.handleKeyDown(event.code));
+    return;
+  }
+
+  if (
+    event.repeat ||
+    event.isComposing ||
+    currentScreen !== "gameplay" ||
+    interactiveEventTarget(event.target)
+  ) {
+    return;
+  }
+
+  const observation = latestObservation;
+  if (observation === undefined) return;
+  const commands = keyboardRouter.commandsFor(event.code, observation.actions);
+  if (commands.length === 0) return;
+  event.preventDefault();
+  dispatch(commands);
+});
+
+canvas.addEventListener("pointerup", (event) => {
+  if (event.pointerType === "mouse" && event.button !== 0) return;
+  if (currentScreen !== "gameplay") return;
+  const observation = latestObservation;
+  const current = observation?.encounters.current;
+  if (
+    observation === undefined ||
+    current?.kind !== "shop" ||
+    !observation.actions.canPurchaseCurrentEncounter
+  ) {
+    return;
+  }
+
+  const rect = canvas.getBoundingClientRect();
+  const computedStyle = window.getComputedStyle(canvas);
+  const worldPoint = mapClientPointToWorld(
+    observation.camera,
+    { width: canvas.width, height: canvas.height },
+    contentBox ?? { width: canvas.clientWidth, height: canvas.clientHeight },
+    rect,
+    { x: event.clientX, y: event.clientY },
+    {
+      left: Number.parseFloat(computedStyle.borderLeftWidth) || 0,
+      top: Number.parseFloat(computedStyle.borderTopWidth) || 0,
+      right: Number.parseFloat(computedStyle.borderRightWidth) || 0,
+      bottom: Number.parseFloat(computedStyle.borderBottomWidth) || 0,
+    },
+  );
+  if (
+    worldPoint === null ||
+    Math.abs(worldPoint.x - current.x) > 40 ||
+    worldPoint.y < observation.camera.y + observation.camera.height * 0.35
+  ) {
+    return;
+  }
+  event.preventDefault();
+  canvas.focus({ preventScroll: true });
+  dispatch(commandsForPurchaseActivation());
+});
+
 dismissTutorialButton.addEventListener("click", () => {
   dispatch(commandsForDismissTutorialActivation());
 });
@@ -693,7 +981,7 @@ useItemButton.addEventListener("click", () => {
 });
 
 pauseButton.addEventListener("click", () => {
-  dispatch([{ type: "toggle-pause" }]);
+  dispatch(commandsForTogglePauseActivation());
 });
 
 requiredElement<HTMLButtonElement>("#start-run").addEventListener(
@@ -751,21 +1039,50 @@ soundVolume.addEventListener("input", () => {
 requiredElement<HTMLButtonElement>(
   "#restore-default-settings",
 ).addEventListener("click", () => {
-  renderSettings(createDefaultSettings());
+  const defaults = createDefaultSettings();
+  renderSettings(defaults);
+  bindingCapture.replaceBindings(defaults.bindings);
+  settingsBindingPrompt.textContent =
+    "Defaults restored in this form. Save settings to keep them.";
   setSettingsStatus(
     "Defaults restored in this form. Save settings to keep them.",
   );
 });
+
+for (const button of document.querySelectorAll<HTMLButtonElement>(
+  "[data-remap-action]",
+)) {
+  button.addEventListener("click", () => {
+    const action = button.dataset.remapAction;
+    if (isInputAction(action)) beginBindingCapture(action);
+  });
+}
+
+for (const input of Object.values(bindingInputs)) {
+  input.addEventListener("input", () => {
+    bindingCapture.replaceBindings({
+      togglePause: bindingTogglePause.value,
+      dismissTutorial: bindingDismissTutorial.value,
+      purchaseCurrentEncounter: bindingPurchase.value,
+      useCarriedItem: bindingUseItem.value,
+    });
+  });
+}
 
 settingsForm.addEventListener("submit", (event) => {
   event.preventDefault();
   let settings: BrowserSettings;
   try {
     settings = readSettingsForm();
-  } catch {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
     setSettingsStatus(
-      "Settings could not be saved. Check each binding and the volume.",
-      "invalid-record",
+      message.includes("multiple actions")
+        ? `Settings could not be saved. ${message}.`
+        : "Settings could not be saved. Check each binding and the volume.",
+      message.includes("multiple actions")
+        ? "binding-conflict"
+        : "invalid-record",
     );
     return;
   }
@@ -805,6 +1122,11 @@ settingsForm.addEventListener("submit", (event) => {
     return;
   }
   currentSettings = settingsSave.settings;
+  keyboardRouter.replaceBindings(currentSettings.bindings);
+  bindingCapture.replaceBindings(currentSettings.bindings);
+  renderKeyboardHints(currentSettings.bindings);
+  settingsBindingPrompt.textContent =
+    "Choose Remap, then press a supported key. Press Escape to cancel.";
   gameStatus.dataset.settingsStatus = "loaded";
   delete gameStatus.dataset.settingsError;
   setSettingsStatus("Settings saved.");

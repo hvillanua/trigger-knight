@@ -43,10 +43,114 @@
         tabindex="-1"
       >
         <h2 id="gameplay-heading" class="visually-hidden">Gameplay</h2>
+        <section
+          id="gameplay-hud"
+          class="gameplay-hud"
+          aria-label="Current run information"
+        >
+          <div class="hud-grid">
+            <dl class="hud-card">
+              <div>
+                <dt>HP</dt>
+                <dd id="hud-hero-hp">—</dd>
+              </div>
+              <div>
+                <dt>Lifespan</dt>
+                <dd id="hud-lifespan">—</dd>
+              </div>
+              <div>
+                <dt>Gold</dt>
+                <dd id="hud-gold">—</dd>
+              </div>
+              <div>
+                <dt>Score</dt>
+                <dd id="hud-score">—</dd>
+              </div>
+              <div>
+                <dt>Day</dt>
+                <dd id="hud-day">—</dd>
+              </div>
+            </dl>
+            <dl class="hud-card">
+              <div>
+                <dt>Weapon</dt>
+                <dd id="hud-weapon">—</dd>
+              </div>
+              <div>
+                <dt>Armor</dt>
+                <dd id="hud-armor">—</dd>
+              </div>
+              <div>
+                <dt>Carried item</dt>
+                <dd id="hud-item">—</dd>
+              </div>
+            </dl>
+          </div>
+          <div class="encounter-grid">
+            <section
+              class="hud-card"
+              aria-labelledby="current-encounter-heading"
+            >
+              <h3 id="current-encounter-heading">Current encounter</h3>
+              <p id="hud-current-encounter">—</p>
+              <p id="hud-current-encounter-detail" class="help-text">—</p>
+            </section>
+            <section
+              class="hud-card"
+              aria-labelledby="upcoming-encounters-heading"
+            >
+              <h3 id="upcoming-encounters-heading">Queued encounters</h3>
+              <ol id="hud-upcoming-encounters" class="encounter-list"></ol>
+            </section>
+          </div>
+          <section
+            id="hud-context"
+            class="hud-card context-card"
+            aria-labelledby="hud-context-heading"
+          >
+            <h3 id="hud-context-heading">Context</h3>
+            <p id="hud-context-title">No action available</p>
+            <p id="hud-context-description" class="help-text">—</p>
+            <p id="hud-context-price"></p>
+            <p id="hud-context-warning" class="warning" hidden></p>
+          </section>
+          <section
+            id="hud-battle"
+            class="hud-card battle-card"
+            aria-labelledby="hud-battle-heading"
+            hidden
+          >
+            <h3 id="hud-battle-heading">Battle</h3>
+            <p>
+              <strong id="hud-battle-enemy">—</strong> ·
+              <span id="hud-battle-hp">—</span>
+            </p>
+            <progress
+              id="hud-battle-hp-bar"
+              max="100"
+              value="0"
+              aria-label="Current enemy HP"
+            >
+              0%
+            </progress>
+            <p class="help-text">
+              Hero: <span id="hud-battle-hero-phase">—</span> · Enemy:
+              <span id="hud-battle-enemy-phase">—</span>
+            </p>
+          </section>
+          <p
+            id="game-feedback"
+            class="game-feedback"
+            role="status"
+            aria-live="polite"
+          ></p>
+        </section>
         <canvas
           id="game-canvas"
           role="img"
           aria-label="Trigger Knight game view"
+          aria-describedby="gameplay-hud game-feedback"
+          tabindex="0"
         >
           Trigger Knight requires a browser with Canvas 2D support.
         </canvas>
@@ -83,11 +187,23 @@
           </p>
         </section>
         <div class="controls gameplay-controls" aria-label="Gameplay actions">
-          <button id="toggle-pause" type="button">Pause</button>
-          <button id="purchase-current-encounter" type="button" disabled>
+          <button id="toggle-pause" type="button" aria-pressed="false">
+            Pause
+          </button>
+          <button
+            id="purchase-current-encounter"
+            type="button"
+            aria-describedby="hud-context-description hud-context-warning"
+            disabled
+          >
             Purchase current shop
           </button>
-          <button id="use-carried-item" type="button" disabled>
+          <button
+            id="use-carried-item"
+            type="button"
+            aria-describedby="hud-context-description"
+            disabled
+          >
             Use carried item
           </button>
           <button id="gameplay-main-menu" type="button">Main menu</button>
@@ -232,6 +348,14 @@
           <button id="settings-back" type="button">Back</button>
         </div>
         <p id="settings-status" aria-live="polite"></p>
+        <p
+          id="settings-binding-prompt"
+          class="help-text"
+          role="status"
+          aria-live="polite"
+        >
+          Choose Remap, then press a supported key. Press Escape to cancel.
+        </p>
         <form id="settings-form">
           <fieldset>
             <legend>Tutorials</legend>
@@ -264,18 +388,41 @@
           </fieldset>
           <fieldset>
             <legend>Keyboard bindings</legend>
-            <label for="binding-toggle-pause">Pause</label>
-            <input id="binding-toggle-pause" type="text" autocomplete="off" />
-            <label for="binding-dismiss-tutorial">Dismiss tutorial</label>
-            <input
-              id="binding-dismiss-tutorial"
-              type="text"
-              autocomplete="off"
-            />
-            <label for="binding-purchase">Purchase current encounter</label>
-            <input id="binding-purchase" type="text" autocomplete="off" />
-            <label for="binding-use-item">Use carried item</label>
-            <input id="binding-use-item" type="text" autocomplete="off" />
+            <div class="binding-row">
+              <label for="binding-toggle-pause">Pause</label>
+              <input id="binding-toggle-pause" type="text" autocomplete="off" />
+              <button type="button" data-remap-action="togglePause">
+                Remap
+              </button>
+            </div>
+            <div class="binding-row">
+              <label for="binding-dismiss-tutorial">Dismiss tutorial</label>
+              <input
+                id="binding-dismiss-tutorial"
+                type="text"
+                autocomplete="off"
+              />
+              <button type="button" data-remap-action="dismissTutorial">
+                Remap
+              </button>
+            </div>
+            <div class="binding-row">
+              <label for="binding-purchase">Purchase current encounter</label>
+              <input id="binding-purchase" type="text" autocomplete="off" />
+              <button
+                type="button"
+                data-remap-action="purchaseCurrentEncounter"
+              >
+                Remap
+              </button>
+            </div>
+            <div class="binding-row">
+              <label for="binding-use-item">Use carried item</label>
+              <input id="binding-use-item" type="text" autocomplete="off" />
+              <button type="button" data-remap-action="useCarriedItem">
+                Remap
+              </button>
+            </div>
           </fieldset>
           <div class="controls">
             <button id="save-settings" type="submit">Save settings</button>

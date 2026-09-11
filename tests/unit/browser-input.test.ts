@@ -5,7 +5,12 @@ import {
   commandsForDismissTutorialActivation,
   commandsForItemUseActivation,
   commandsForPurchaseActivation,
+  commandsForTogglePauseActivation,
+  commandsForKeyboardActivation,
+  createBindingCaptureController,
+  findBindingConflict,
 } from "../../src/browser/input.js";
+import { createDefaultSettings } from "../../src/application/settings.js";
 import {
   PURCHASE_CURRENT_ENCOUNTER_COMMAND,
   USE_CARRIED_ITEM_COMMAND,
@@ -47,4 +52,67 @@ it("maps browser item-use activation to device-independent gameplay intent", () 
   expect(Object.isFrozen(commands[0])).toBe(true);
   expect(commands[0]).not.toHaveProperty("effect");
   expect(commands[0]).not.toHaveProperty("item");
+});
+
+it("maps keyboard bindings only when the public action is eligible", () => {
+  const settings = createDefaultSettings();
+  const eligible = {
+    canTogglePause: true,
+    canDismissTutorial: false,
+    canPurchaseCurrentEncounter: true,
+    canUseCarriedItem: false,
+  } as const;
+
+  expect(
+    commandsForKeyboardActivation(
+      settings.bindings.togglePause,
+      settings.bindings,
+      eligible,
+    ),
+  ).toEqual(commandsForTogglePauseActivation());
+  expect(
+    commandsForKeyboardActivation(
+      settings.bindings.dismissTutorial,
+      settings.bindings,
+      eligible,
+    ),
+  ).toEqual([]);
+  expect(
+    commandsForKeyboardActivation(
+      settings.bindings.purchaseCurrentEncounter,
+      settings.bindings,
+      eligible,
+    ),
+  ).toEqual(commandsForPurchaseActivation());
+});
+
+it("captures remaps with cancellation and rejects conflicts", () => {
+  const controller = createBindingCaptureController(
+    createDefaultSettings().bindings,
+  );
+
+  controller.begin("purchaseCurrentEncounter");
+  expect(controller.handleKeyDown("Escape")).toEqual({
+    status: "cancelled",
+    action: "purchaseCurrentEncounter",
+  });
+  expect(controller.activeAction()).toBeNull();
+
+  controller.begin("purchaseCurrentEncounter");
+  expect(controller.handleKeyDown("KeyP")).toEqual({
+    status: "conflict",
+    action: "purchaseCurrentEncounter",
+    code: "KeyP",
+    conflictingAction: "togglePause",
+  });
+  expect(controller.activeAction()).toBe("purchaseCurrentEncounter");
+
+  expect(findBindingConflict(controller.bindings())).toBeNull();
+  expect(controller.handleKeyDown("KeyQ")).toMatchObject({
+    status: "captured",
+    action: "purchaseCurrentEncounter",
+    code: "KeyQ",
+  });
+  expect(controller.bindings().purchaseCurrentEncounter).toBe("KeyQ");
+  expect(controller.activeAction()).toBeNull();
 });

@@ -166,6 +166,16 @@ const SUPPORTED_KEYBOARD_CODES = Object.freeze([
   "KeyZ",
 ] as const);
 
+/** Returns whether a value is a portable KeyboardEvent.code. */
+export function isSupportedKeyboardCode(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    SUPPORTED_KEYBOARD_CODES.includes(
+      value as (typeof SUPPORTED_KEYBOARD_CODES)[number],
+    )
+  );
+}
+
 /** Creates an independent copy of the supported browser defaults. */
 export function createDefaultSettings(): BrowserSettings {
   return Object.freeze({
@@ -195,12 +205,7 @@ function hasExactKeys(
 }
 
 function binding(value: unknown, field: string): string {
-  if (
-    typeof value !== "string" ||
-    !SUPPORTED_KEYBOARD_CODES.includes(
-      value as (typeof SUPPORTED_KEYBOARD_CODES)[number],
-    )
-  ) {
+  if (!isSupportedKeyboardCode(value)) {
     throw new TypeError(`Settings ${field} must be a supported keyboard code`);
   }
   return value;
@@ -254,17 +259,22 @@ export function normalizeSettings(input: unknown): BrowserSettings {
     throw new TypeError("Settings sound muted must be boolean");
   }
 
+  const normalizedBindings = Object.freeze({
+    togglePause: binding(bindings.togglePause, "togglePause"),
+    dismissTutorial: binding(bindings.dismissTutorial, "dismissTutorial"),
+    purchaseCurrentEncounter: binding(
+      bindings.purchaseCurrentEncounter,
+      "purchaseCurrentEncounter",
+    ),
+    useCarriedItem: binding(bindings.useCarriedItem, "useCarriedItem"),
+  });
+  if (new Set(Object.values(normalizedBindings)).size !== 4) {
+    throw new TypeError("Settings bindings must not conflict");
+  }
+
   return Object.freeze({
     schemaVersion: SETTINGS_SCHEMA_VERSION,
-    bindings: Object.freeze({
-      togglePause: binding(bindings.togglePause, "togglePause"),
-      dismissTutorial: binding(bindings.dismissTutorial, "dismissTutorial"),
-      purchaseCurrentEncounter: binding(
-        bindings.purchaseCurrentEncounter,
-        "purchaseCurrentEncounter",
-      ),
-      useCarriedItem: binding(bindings.useCarriedItem, "useCarriedItem"),
-    }),
+    bindings: normalizedBindings,
     sound: Object.freeze({ muted: sound.muted, volume: volume(sound.volume) }),
   });
 }
