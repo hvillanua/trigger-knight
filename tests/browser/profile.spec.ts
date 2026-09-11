@@ -144,6 +144,13 @@ test("shows a committed result and starts the next run from its profile", async 
     "data-state",
     "counting",
   );
+  await expect(
+    page.getByRole("button", { name: "View collections" }),
+  ).toBeEnabled();
+  await page.getByRole("button", { name: "View collections" }).click();
+  await expect(page.locator("#collections-screen")).toBeVisible();
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await expect(result).toBeVisible();
 
   const savedRecord = await page.evaluate((key) => {
     const raw = localStorage.getItem(key);

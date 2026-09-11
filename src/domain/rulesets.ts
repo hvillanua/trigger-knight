@@ -1,4 +1,8 @@
 import { normalizeProfile } from "./profile.js";
+import {
+  ORIGINAL_V13_ARMOR_NAMES,
+  ORIGINAL_V13_WEAPON_NAMES,
+} from "./equipment.js";
 import type {
   ArmorName,
   GameCommand,
@@ -158,32 +162,6 @@ export interface RuleSetRegistry {
   resolve(id: RuleSetId): RuleSetImplementation;
 }
 
-const originalV13WeaponNames = Object.freeze([
-  "Dagger",
-  "Sword",
-  "Rapier",
-  "Falchion",
-  "Katana",
-  "Flamberge",
-  "Zweihander",
-  "Broad Kris",
-  "Excalibur",
-  "Astral Sword",
-] as const satisfies readonly WeaponName[]);
-
-const originalV13ArmorNames = Object.freeze([
-  "Clothing",
-  "Protector",
-  "Breastplate",
-  "Chainmail",
-  "Fullplate",
-  "Samurai Mail",
-  "Valkyrie Garb",
-  "Odin Garb",
-  "Avalon",
-  "Astral Armor",
-] as const satisfies readonly ArmorName[]);
-
 const originalV13EnemyGenerationRules: EnemyGenerationRules = Object.freeze({
   ordinaryIds: Object.freeze(["goblin", "golem", "wolf"] as const),
   ordinaryRollUpperBound: 3,
@@ -253,14 +231,14 @@ const originalV13Constants: RuleSetConstants = Object.freeze({
     weapon: Object.freeze({
       initialTier: 1,
       maximumTier: 10,
-      names: originalV13WeaponNames,
+      names: ORIGINAL_V13_WEAPON_NAMES,
       baseAttack: 129,
       attackPerTier: 87,
     }),
     armor: Object.freeze({
       initialTier: 1,
       maximumTier: 10,
-      names: originalV13ArmorNames,
+      names: ORIGINAL_V13_ARMOR_NAMES,
       baseMaximumHp: 1_009,
       maximumHpPerTier: 899,
     }),

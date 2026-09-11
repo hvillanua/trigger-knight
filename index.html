@@ -11,36 +11,97 @@
   </head>
   <body>
     <main class="foundation">
-      <h1>Trigger Knight</h1>
-      <canvas id="game-canvas" role="img" aria-label="Trigger Knight game view">
-        Trigger Knight requires a browser with Canvas 2D support.
-      </canvas>
-      <p class="status" id="game-status" data-testid="game-status">Step 0</p>
-      <section class="profile-summary" aria-labelledby="profile-heading">
-        <h2 id="profile-heading">Committed profile</h2>
-        <p id="profile-summary" data-testid="profile-summary">
-          Loading profile…
-        </p>
+      <header class="site-header">
+        <h1>Trigger Knight</h1>
+        <p>Run, fight, and keep your discoveries.</p>
+        <p id="storage-notice" class="error" role="status" hidden></p>
+      </header>
+
+      <section
+        id="title-screen"
+        class="screen menu-screen"
+        aria-labelledby="title-screen-heading"
+        tabindex="-1"
+        hidden
+      >
+        <h2 id="title-screen-heading">Main menu</h2>
+        <p id="title-profile-summary">Loading profile…</p>
+        <div class="controls" aria-label="Main menu actions">
+          <button id="start-run" type="button">Start run</button>
+          <button id="title-collections" type="button">View collections</button>
+          <button id="title-achievements" type="button">
+            View achievements
+          </button>
+          <button id="title-settings" type="button">Settings</button>
+        </div>
       </section>
-      <div class="controls">
-        <button id="dismiss-tutorial" type="button">Dismiss tutorial</button>
-        <button id="toggle-pause" type="button">Pause</button>
-        <button id="purchase-current-encounter" type="button" disabled>
-          Purchase current shop
-        </button>
-        <button id="use-carried-item" type="button" disabled>
-          Use carried item
-        </button>
-      </div>
+
+      <section
+        id="gameplay-screen"
+        class="screen gameplay-screen"
+        aria-labelledby="gameplay-heading"
+      >
+        <h2 id="gameplay-heading" class="visually-hidden">Gameplay</h2>
+        <canvas
+          id="game-canvas"
+          role="img"
+          aria-label="Trigger Knight game view"
+        >
+          Trigger Knight requires a browser with Canvas 2D support.
+        </canvas>
+        <p class="status" id="game-status" data-testid="game-status">Step 0</p>
+        <section class="profile-summary" aria-labelledby="profile-heading">
+          <h2 id="profile-heading">Committed profile</h2>
+          <p id="profile-summary" data-testid="profile-summary">
+            Loading profile…
+          </p>
+        </section>
+        <section
+          id="tutorial-panel"
+          class="player-panel tutorial-panel"
+          aria-labelledby="tutorial-heading"
+          aria-live="polite"
+        >
+          <p id="tutorial-page-label">Tutorial page 1 of 6</p>
+          <h2 id="tutorial-heading">Basic survival</h2>
+          <p id="tutorial-copy">
+            Keep moving and watch your lifespan. The run ends when it is
+            depleted.
+          </p>
+          <button id="dismiss-tutorial" type="button">Dismiss tutorial</button>
+        </section>
+        <section
+          id="pause-panel"
+          class="player-panel pause-panel"
+          aria-labelledby="pause-heading"
+          hidden
+        >
+          <h2 id="pause-heading">Run paused</h2>
+          <p>
+            Resume when you are ready. Paused steps do not advance gameplay.
+          </p>
+        </section>
+        <div class="controls gameplay-controls" aria-label="Gameplay actions">
+          <button id="toggle-pause" type="button">Pause</button>
+          <button id="purchase-current-encounter" type="button" disabled>
+            Purchase current shop
+          </button>
+          <button id="use-carried-item" type="button" disabled>
+            Use carried item
+          </button>
+          <button id="gameplay-main-menu" type="button">Main menu</button>
+        </div>
+      </section>
+
       <section
         id="run-result"
-        class="run-result"
+        class="run-result screen"
         aria-labelledby="result-heading"
-        aria-live="polite"
+        tabindex="-1"
         hidden
       >
         <h2 id="result-heading">Run result</h2>
-        <p id="result-save-status"></p>
+        <p id="result-save-status" aria-live="polite"></p>
         <p id="result-save-error" class="error" hidden></p>
         <dl class="result-summary">
           <div>
@@ -107,7 +168,121 @@
             Retry save
           </button>
           <button id="next-run" type="button" disabled>Start next run</button>
+          <button id="result-view-collections" type="button" disabled>
+            View collections
+          </button>
+          <button id="result-view-achievements" type="button" disabled>
+            View achievements
+          </button>
+          <button id="result-main-menu" type="button" disabled>
+            Main menu
+          </button>
         </div>
+      </section>
+
+      <section
+        id="collections-screen"
+        class="screen profile-screen"
+        aria-labelledby="collections-heading"
+        tabindex="-1"
+        hidden
+      >
+        <div class="screen-heading-row">
+          <h2 id="collections-heading">Collections</h2>
+          <button id="collections-back" type="button">Back</button>
+        </div>
+        <p id="collections-progress"></p>
+        <div class="collection-columns">
+          <section aria-labelledby="weapons-heading">
+            <h3 id="weapons-heading">Weapons</h3>
+            <ul id="weapon-collection" class="discovery-list"></ul>
+          </section>
+          <section aria-labelledby="armor-heading">
+            <h3 id="armor-heading">Armor</h3>
+            <ul id="armor-collection" class="discovery-list"></ul>
+          </section>
+        </div>
+      </section>
+
+      <section
+        id="achievements-screen"
+        class="screen profile-screen"
+        aria-labelledby="achievements-heading"
+        tabindex="-1"
+        hidden
+      >
+        <div class="screen-heading-row">
+          <h2 id="achievements-heading">Achievements</h2>
+          <button id="achievements-back" type="button">Back</button>
+        </div>
+        <p id="achievements-progress"></p>
+        <ul id="achievement-list" class="achievement-list"></ul>
+      </section>
+
+      <section
+        id="settings-screen"
+        class="screen profile-screen settings-screen"
+        aria-labelledby="settings-heading"
+        tabindex="-1"
+        hidden
+      >
+        <div class="screen-heading-row">
+          <h2 id="settings-heading">Settings</h2>
+          <button id="settings-back" type="button">Back</button>
+        </div>
+        <p id="settings-status" aria-live="polite"></p>
+        <form id="settings-form">
+          <fieldset>
+            <legend>Tutorials</legend>
+            <label>
+              <input id="tutorial-preference" type="checkbox" />
+              Show contextual tutorials
+            </label>
+            <p class="help-text">
+              The first introduction is shown on every run. This setting
+              controls the contextual pages.
+            </p>
+          </fieldset>
+          <fieldset>
+            <legend>Sound preferences</legend>
+            <label>
+              <input id="sound-muted" type="checkbox" />
+              Mute sound effects
+            </label>
+            <label for="sound-volume">Sound volume</label>
+            <div class="range-row">
+              <input
+                id="sound-volume"
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+              />
+              <output id="sound-volume-value" for="sound-volume">100%</output>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Keyboard bindings</legend>
+            <label for="binding-toggle-pause">Pause</label>
+            <input id="binding-toggle-pause" type="text" autocomplete="off" />
+            <label for="binding-dismiss-tutorial">Dismiss tutorial</label>
+            <input
+              id="binding-dismiss-tutorial"
+              type="text"
+              autocomplete="off"
+            />
+            <label for="binding-purchase">Purchase current encounter</label>
+            <input id="binding-purchase" type="text" autocomplete="off" />
+            <label for="binding-use-item">Use carried item</label>
+            <input id="binding-use-item" type="text" autocomplete="off" />
+          </fieldset>
+          <div class="controls">
+            <button id="save-settings" type="submit">Save settings</button>
+            <button id="restore-default-settings" type="button">
+              Restore defaults
+            </button>
+          </div>
+        </form>
       </section>
     </main>
     <script type="module" src="/src/main.ts"></script>
