@@ -223,6 +223,51 @@ describe("simulation benchmark", () => {
     expect(report.targets.met).toBe(false);
   });
 
+  it("fails the benchmark when identical-input trace identities diverge", async () => {
+    const actualRunner = createSimulationRunner(engine);
+    let batchCalls = 0;
+    const divergentRunner: SimulationRunner = {
+      run: (request) => actualRunner.run(request),
+      async runBatch(requests) {
+        const results = await actualRunner.runBatch(requests);
+        batchCalls += 1;
+        if (batchCalls !== 2) return results;
+        return Object.freeze(
+          results.map((result, index) =>
+            Object.freeze({
+              ...result,
+              traceHash: `sha256-v1:trace-divergence-${index}`,
+            }),
+          ),
+        );
+      },
+    };
+    const report = await createSimulationBenchmark(
+      divergentRunner,
+      simulationPolicyRegistry,
+      environment(),
+    ).run({
+      ...baseConfig,
+      repetitions: 1,
+      warmupRepetitions: 0,
+      scenarios: [
+        {
+          ...baseConfig.scenarios[0],
+          batchSizes: [2],
+        },
+      ],
+    });
+
+    expect(report.deterministic.comparisons[0]?.behavioralDifferenceCount).toBe(
+      0,
+    );
+    expect(
+      report.deterministic.comparisons[0]?.traceIdentityDifferenceCount,
+    ).toBe(2);
+    expect(report.deterministic.stable).toBe(false);
+    expect(report.targets.met).toBe(false);
+  });
+
   it("rejects unsupported strategies and invalid targets", () => {
     expect(() =>
       normalizeSimulationBenchmark({
@@ -305,6 +350,60 @@ describe("simulation benchmark", () => {
 
     expect(retainedTraces.length).toBeGreaterThan(0);
     expect(report.targets.maximumMeasuredHeapDeltaBytes).toBeGreaterThan(1_000);
+    expect(report.targets.met).toBe(false);
+  });
+
+  it("samples temporary comparison heap before garbage collection", async () => {
+    const actualRunner = createSimulationRunner(engine);
+    let batchCalls = 0;
+    let temporaryHeap = 0;
+    const runner: SimulationRunner = {
+      run: (request) => actualRunner.run(request),
+      async runBatch(requests) {
+        const results = await actualRunner.runBatch(requests);
+        batchCalls += 1;
+        if (batchCalls > 1) temporaryHeap = 100_000_000;
+        return results;
+      },
+    };
+    let now = 0;
+    const report = await createSimulationBenchmark(
+      runner,
+      simulationPolicyRegistry,
+      {
+        host: {
+          nodeVersion: "v24.19.0",
+          platform: "test",
+          architecture: "test",
+          cpuCount: 1,
+        },
+        now: () => {
+          now += 10;
+          return now;
+        },
+        readHeapUsedBytes: () => 1_000 + temporaryHeap,
+        collectGarbage: () => {
+          temporaryHeap = 0;
+        },
+      },
+    ).run({
+      ...baseConfig,
+      repetitions: 1,
+      warmupRepetitions: 0,
+      targets: {
+        ...baseConfig.targets,
+        minimumRunsPerSecond: 1,
+        maximumHeapDeltaBytes: 1_000_000,
+      },
+      scenarios: [
+        {
+          ...baseConfig.scenarios[0],
+          batchSizes: [2],
+        },
+      ],
+    });
+
+    expect(report.targets.maximumMeasuredHeapDeltaBytes).toBe(100_000_000);
     expect(report.targets.met).toBe(false);
   });
 });

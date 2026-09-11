@@ -131,6 +131,7 @@ export interface SimulationBenchmarkComparisonCase {
   readonly comparisonFingerprint: string;
   readonly pairCount: number;
   readonly behavioralDifferenceCount: number;
+  readonly traceIdentityDifferenceCount: number;
   readonly stable: boolean;
 }
 
@@ -664,6 +665,7 @@ async function runSequential(
 function createBatchedRunner(
   runner: SimulationRunner,
   batchSize: number,
+  afterBatch?: () => void,
 ): SimulationRunner {
   return Object.freeze({
     run: (request: SimulationRequest) => runner.run(request),
@@ -679,6 +681,7 @@ function createBatchedRunner(
             `Simulation benchmark comparison runner returned ${batchResults.length} results for batch size ${end - start}`,
           );
         }
+        afterBatch?.();
         results.push(...batchResults);
       }
       return Object.freeze(results);
@@ -730,6 +733,14 @@ async function execute(
 
 function comparisonFingerprint(report: SimulationComparisonReport): string {
   return fingerprintCanonicalJson(report);
+}
+
+function traceIdentityDifferenceCount(
+  report: SimulationComparisonReport,
+): number {
+  return report.pairs.filter(
+    (pair) => pair.baseline.traceHash !== pair.candidate.traceHash,
+  ).length;
 }
 
 function comparisonInput(
@@ -872,7 +883,9 @@ export function createSimulationBenchmark(
               }),
             );
             const comparison = createSimulationComparison(
-              createBatchedRunner(runner, batchSize),
+              createBatchedRunner(runner, batchSize, () =>
+                heapTracker.sample(),
+              ),
               policies,
             );
             let firstComparison: string | undefined;
@@ -880,6 +893,7 @@ export function createSimulationBenchmark(
             let stableComparison = true;
             let pairCount = 0;
             let behavioralDifferenceCount = 0;
+            let traceDifferences = 0;
             for (
               let repetition = 0;
               repetition < config.repetitions;
@@ -910,6 +924,11 @@ export function createSimulationBenchmark(
               ) {
                 stable = false;
               }
+              traceDifferences = Math.max(
+                traceDifferences,
+                traceIdentityDifferenceCount(comparisonReport),
+              );
+              if (traceDifferences > 0) stable = false;
               pairCount = comparisonReport.aggregateDifferences.pairCount;
               heapTracker.collectAndSample();
             }
@@ -940,6 +959,7 @@ export function createSimulationBenchmark(
                 ),
                 pairCount,
                 behavioralDifferenceCount,
+                traceIdentityDifferenceCount: traceDifferences,
                 stable: stableComparison,
               }),
             );

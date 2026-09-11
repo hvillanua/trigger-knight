@@ -141,9 +141,11 @@ nonzero.
 Benchmark output keeps deterministic result and comparison fingerprints under
 `deterministic`. Timing samples and the Node host description are separate
 fields, so changing machines cannot change the identities of the simulation
-results. Ordinary benchmark batches do not retain diagnostic checkpoints. To
-inspect a selected case, retain its batch export and use the `replay` command
-described above.
+results. Identical-input comparison pairs also report trace-identity
+mismatches, which fail the benchmark even when their numeric outcomes match.
+Ordinary benchmark batches do not retain diagnostic checkpoints. To inspect a
+selected case, retain its batch export and use the `replay` command described
+above.
 
 In the development browser, call `window.triggerKnightDiagnostics.read()` in
 the console. This hook is absent from production builds. Browser sessions also
