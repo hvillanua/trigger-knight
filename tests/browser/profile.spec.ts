@@ -210,6 +210,7 @@ test("shows a committed result and starts the next run from its profile", async 
   await page.getByRole("button", { name: "Start next run" }).click();
 
   await expect(result).toBeHidden();
+  await expect(page.locator("#gameplay-screen")).toBeFocused();
   await expect(page.getByTestId("game-status")).toHaveText("Step 0");
   await expect
     .poll(() =>

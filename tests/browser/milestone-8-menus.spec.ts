@@ -94,6 +94,7 @@ test("starts a run from the title and presents readable tutorial and pause state
   await page.getByRole("button", { name: "Main menu", exact: true }).click();
   await page.getByRole("button", { name: "Start run" }).click();
   await expect(page.locator("#gameplay-screen")).toBeVisible();
+  await expect(page.locator("#gameplay-screen")).toBeFocused();
   await expect(page.locator("#tutorial-panel")).toBeVisible();
   await expect(page.locator("#tutorial-page-label")).toHaveText(
     "Tutorial page 1 of 6",
@@ -152,4 +153,10 @@ test("persists settings independently and reloads them through the menu", async 
   await expect(page.locator("#sound-muted")).toBeChecked();
   await expect(page.locator("#sound-volume")).toHaveValue("0.35");
   await expect(page.locator("#binding-toggle-pause")).toHaveValue("KeyQ");
+
+  await page.getByRole("button", { name: "Restore defaults" }).click();
+  await expect(page.locator("#sound-volume")).toHaveValue("1");
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await expect(page.locator("#sound-volume")).toHaveValue("0.35");
 });

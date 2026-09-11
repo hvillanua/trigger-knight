@@ -81,6 +81,17 @@ describe("versioned browser settings storage", () => {
       "invalid-record",
       {
         schemaVersion: SETTINGS_STORAGE_VERSION,
+        bindings: {
+          ...createDefaultSettings().bindings,
+          togglePause: "NotARealKey",
+        },
+        sound: createDefaultSettings().sound,
+      },
+    ],
+    [
+      "invalid-record",
+      {
+        schemaVersion: SETTINGS_STORAGE_VERSION,
         bindings: createDefaultSettings().bindings,
         sound: { muted: false, volume: 2 },
       },
@@ -93,6 +104,24 @@ describe("versioned browser settings storage", () => {
 
     expect(store.load()).toMatchObject({ status: "failed", error: { code } });
     expect(storage.getItem(SETTINGS_STORAGE_KEY)).toBe(raw);
+  });
+
+  it("rejects unsupported bindings when saving", () => {
+    const storage = new MemoryStorage();
+    const store = createBrowserSettingsStore(storage);
+    const existing = createDefaultSettings();
+    store.save(existing);
+
+    const result = store.save({
+      ...existing,
+      bindings: { ...existing.bindings, togglePause: "NotARealKey" },
+    });
+
+    expect(result).toMatchObject({
+      status: "failed",
+      error: { code: "invalid-record" },
+    });
+    expect(store.load()).toEqual({ status: "loaded", settings: existing });
   });
 
   it("reports read and write failures while leaving defaults available", () => {

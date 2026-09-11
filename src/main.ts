@@ -751,8 +751,7 @@ soundVolume.addEventListener("input", () => {
 requiredElement<HTMLButtonElement>(
   "#restore-default-settings",
 ).addEventListener("click", () => {
-  currentSettings = createDefaultSettings();
-  renderSettings(currentSettings);
+  renderSettings(createDefaultSettings());
   setSettingsStatus(
     "Defaults restored in this form. Save settings to keep them.",
   );
