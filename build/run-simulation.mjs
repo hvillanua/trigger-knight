@@ -29,7 +29,12 @@ function readInput(inputPath) {
   return JSON.parse(raw);
 }
 
-async function runCommand(mode, input) {
+/**
+ * Runs the simulation command. Optional registries are used by in-process
+ * integration tests to exercise candidate dispatch without adding a
+ * production ruleset.
+ */
+export async function runSimulationCommand(mode, input, options = {}) {
   const server = await createServer({
     appType: "custom",
     configFile: false,
@@ -55,7 +60,9 @@ async function runCommand(mode, input) {
     const canonical = await server.ssrLoadModule(
       "/src/simulation/canonical-json.ts",
     );
-    const engine = application.createGameplayEngine(rulesets.ruleSetRegistry);
+    const engine = application.createGameplayEngine(
+      options.ruleSetRegistry ?? rulesets.ruleSetRegistry,
+    );
     const runner = runnerModule.createSimulationRunner(engine);
 
     if (mode === "single") {
@@ -66,7 +73,9 @@ async function runCommand(mode, input) {
 
     if (mode === "compare") {
       return canonical.stringifyCanonicalJson(
-        await comparison.createSimulationComparison(runner).run(input),
+        await comparison
+          .createSimulationComparison(runner, options.policyRegistry)
+          .run(input),
       );
     }
 
@@ -91,12 +100,14 @@ async function main() {
   }
 
   const input = readInput(inputPath);
-  const output = await runCommand(mode, input);
+  const output = await runSimulationCommand(mode, input);
   process.stdout.write(`${output}\n`);
 }
 
-main().catch((error) => {
-  const message = error instanceof Error ? error.message : String(error);
-  process.stderr.write(`Simulation command failed: ${message}\n`);
-  process.exitCode = 1;
-});
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((error) => {
+    const message = error instanceof Error ? error.message : String(error);
+    process.stderr.write(`Simulation command failed: ${message}\n`);
+    process.exitCode = 1;
+  });
+}
