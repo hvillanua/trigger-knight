@@ -1,11 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 import type {
   GameCommand,
+  PresentationFrame,
   RunConfig,
 } from "../../src/application/contracts.js";
 import { createGameplayExecution } from "../../src/application/gameplay-execution.js";
 import { createBrowserGameplayClock } from "../../src/browser/gameplay-clock.js";
-import { createBrowserGameplaySession } from "../../src/browser/gameplay-session.js";
+import {
+  createBrowserGameplaySession,
+  type BrowserDispatchResult,
+} from "../../src/browser/gameplay-session.js";
 import { ORIGINAL_V13_RULESET_ID } from "../../src/domain/rulesets.js";
 import { createTestGameplayEngine } from "../helpers/gameplay-engine.js";
 
@@ -24,8 +28,8 @@ const dismiss: readonly GameCommand[] = [{ type: "dismiss-tutorial" }];
 function setup() {
   let nextId = 0;
   const callbacks = new Map<number, (time: number) => void>();
-  const present = vi.fn();
-  const onTransition = vi.fn();
+  const present = vi.fn<(frame: PresentationFrame) => void>();
+  const onTransition = vi.fn<(result: BrowserDispatchResult) => void>();
   const onCompletedRun = vi.fn();
   const session = createBrowserGameplaySession(
     engine,
