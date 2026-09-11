@@ -84,6 +84,37 @@ one canonical JSON document to standard output and sends failures to standard
 error. It does not include timings, progress messages, or full diagnostic
 traces.
 
+Run results use schema version 3 and carry a fixed `metrics` object. The metrics
+count promoted shops and battles, completed purchases, combat hits and damage,
+battle rewards, equipment and achievement discoveries, and the authoritative
+profile EXP and Dragon-kill totals. Metric names are versioned by the result
+schema. Report statistics round sums and means to six decimal places and use
+zero, with null minimum and maximum, for an empty input.
+
+### Compare retained simulations
+
+Compare two retained manifests with:
+
+```sh
+npm run simulate -- compare tests/fixtures/simulation/comparison.json
+```
+
+The comparison input has `schemaVersion: 1`, `baseline`, `candidate`, and a
+`policyComparison` value of `same-policy` or `allow-different`. Each side uses
+the normal manifest format, so the candidate ruleset is selected by its own
+request configs. Pairs require the same seed, exact initial-profile input,
+policy descriptor, and positive step limit. `allow-different` explicitly omits
+the policy descriptor from that pairing key. Missing or duplicate pairs fail.
+
+The output includes a versioned report for each side, per-pair deltas, and
+aggregate delta statistics. Step-limit runs are counted as truncated and are
+excluded from completed-run progression statistics. A ruleset or trace-hash
+change by itself is retained as an identifier but does not count as gameplay
+divergence. Pair request fingerprints and indices identify the retained inputs
+needed for replay. The frozen original-v1.3 corpus retains its v2 result and
+trace evidence; current result schema 3 adds metrics without changing those
+gameplay identities.
+
 In the development browser, call `window.triggerKnightDiagnostics.read()` in
 the console. This hook is absent from production builds. Browser sessions also
 provide `readDiagnostics()`. `compareGameplayTraces` reports the first differing

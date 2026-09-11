@@ -12,9 +12,10 @@ const repositoryRoot = path.resolve(
 
 function usage() {
   return [
-    "Usage: npm run simulate -- <single|batch> <input.json|->",
+    "Usage: npm run simulate -- <single|batch|compare> <input.json|->",
     "  single  execute one serializable simulation request",
     "  batch   execute a versioned simulation manifest",
+    "  compare execute two retained manifests and report paired differences",
     "  -       read JSON input from stdin",
   ].join("\n");
 }
@@ -28,7 +29,12 @@ function readInput(inputPath) {
   return JSON.parse(raw);
 }
 
-async function runCommand(mode, input) {
+/**
+ * Runs the simulation command. Optional registries are used by in-process
+ * integration tests to exercise candidate dispatch without adding a
+ * production ruleset.
+ */
+export async function runSimulationCommand(mode, input, options = {}) {
   const server = await createServer({
     appType: "custom",
     configFile: false,
@@ -48,16 +54,29 @@ async function runCommand(mode, input) {
     const experiment = await server.ssrLoadModule(
       "/src/simulation/simulation-experiment.ts",
     );
+    const comparison = await server.ssrLoadModule(
+      "/src/simulation/simulation-comparison.ts",
+    );
     const canonical = await server.ssrLoadModule(
       "/src/simulation/canonical-json.ts",
     );
-    const engine = application.createGameplayEngine(rulesets.ruleSetRegistry);
+    const engine = application.createGameplayEngine(
+      options.ruleSetRegistry ?? rulesets.ruleSetRegistry,
+    );
     const runner = runnerModule.createSimulationRunner(engine);
 
     if (mode === "single") {
       const request = experiment.normalizeSimulationRequestInput(input);
       const resolved = experiment.resolveSimulationRequest(request);
       return canonical.stringifyCanonicalJson(runner.run(resolved));
+    }
+
+    if (mode === "compare") {
+      return canonical.stringifyCanonicalJson(
+        await comparison
+          .createSimulationComparison(runner, options.policyRegistry)
+          .run(input),
+      );
     }
 
     const report = await experiment
@@ -71,19 +90,24 @@ async function runCommand(mode, input) {
 
 async function main() {
   const [mode, inputPath] = process.argv.slice(2);
-  if ((mode !== "single" && mode !== "batch") || inputPath === undefined) {
+  if (
+    (mode !== "single" && mode !== "batch" && mode !== "compare") ||
+    inputPath === undefined
+  ) {
     process.stderr.write(`${usage()}\n`);
     process.exitCode = 2;
     return;
   }
 
   const input = readInput(inputPath);
-  const output = await runCommand(mode, input);
+  const output = await runSimulationCommand(mode, input);
   process.stdout.write(`${output}\n`);
 }
 
-main().catch((error) => {
-  const message = error instanceof Error ? error.message : String(error);
-  process.stderr.write(`Simulation command failed: ${message}\n`);
-  process.exitCode = 1;
-});
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  main().catch((error) => {
+    const message = error instanceof Error ? error.message : String(error);
+    process.stderr.write(`Simulation command failed: ${message}\n`);
+    process.exitCode = 1;
+  });
+}

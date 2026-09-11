@@ -99,6 +99,21 @@ export type {
 export type { PresentationFrame, PresentationPort } from "./presentation.js";
 export type {
   SimulationBatchExport,
+  SimulationAggregateDifferences,
+  SimulationAggregateStatistics,
+  SimulationComparisonInput,
+  SimulationComparisonReport,
+  SimulationComparison,
+  SimulationNumericSummary,
+  SimulationPairDeltas,
+  SimulationPairReport,
+  SimulationPairSide,
+  SimulationPolicyComparison,
+  SimulationReport,
+  SimulationReportGroup,
+  SimulationTerminalCounts,
+  RunMetricKey,
+  RunMetrics,
   SimulationExperiment,
   SimulationManifest,
   SimulationPolicyRegistry,
@@ -114,7 +129,10 @@ export type {
 } from "./simulation.js";
 export {
   SIMULATION_BATCH_EXPORT_SCHEMA_VERSION,
+  SIMULATION_COMPARISON_SCHEMA_VERSION,
   SIMULATION_MANIFEST_SCHEMA_VERSION,
+  SIMULATION_REPORT_SCHEMA_VERSION,
+  SIMULATION_RUN_RESULT_SCHEMA_VERSION,
 } from "./simulation.js";
 export type {
   CompletedRunCommitRequest,

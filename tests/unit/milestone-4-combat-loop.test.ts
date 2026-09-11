@@ -253,7 +253,9 @@ describe("Milestone 4 complete combat loop", () => {
       // Compact regression evidence locks RNG consumption and event order as well
       // as the complete execution. It does not claim original Flash scheduling.
       expect({
-        result,
+        // Keep the v2 result projection in this older snapshot while the
+        // current runner's versioned metrics are asserted by M7 tests.
+        result: { ...result, schemaVersion: 2, metrics: {} },
         traceHash: trace.traceHash,
         firstOutcomes: Object.fromEntries(firstOutcomes),
       }).toMatchSnapshot();

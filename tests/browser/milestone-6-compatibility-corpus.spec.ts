@@ -33,11 +33,13 @@ import type * as OriginalLifecycleModule from "../helpers/original-lifecycle.js"
 import type * as CombatPolicyModule from "../../src/simulation/combat-policy.js";
 import type * as NonProgressingPolicyModule from "../../src/simulation/non-progressing-policy.js";
 import type * as PurchasingPolicyModule from "../../src/simulation/purchasing-policy.js";
+import type * as SimulationReportModule from "../../src/simulation/simulation-report.js";
 import {
   originalV13CompatibilityRuns,
   originalV13CompatibilitySettlements,
   summarizeCheckpoint,
   tutorialPages,
+  toOriginalV13BaselineResult,
   type CompatibilityPolicyKey,
   type OriginalV13CompatibilityRun,
   type OriginalV13CompatibilitySettlement,
@@ -132,7 +134,11 @@ function assertFixedBaseline(
   result: RunResult,
   trace: GameplayTrace,
 ): void {
-  expect(result, `${fixture.id} Node result`).toEqual(fixture.expected.result);
+  expect(result.schemaVersion, `${fixture.id} Node result schema`).toBe(3);
+  expect(
+    toOriginalV13BaselineResult(result),
+    `${fixture.id} Node result`,
+  ).toEqual(fixture.expected.result);
   expect(trace.traceHash, `${fixture.id} Node trace`).toBe(
     fixture.expected.traceHash,
   );
@@ -258,6 +264,7 @@ async function runBrowserFixture(
       const purchasingPath = "/src/simulation/purchasing-policy.ts";
       const completedRunPath = "/src/application/completed-run.ts";
       const profilePath = "/src/domain/profile.ts";
+      const reportPath = "/src/simulation/simulation-report.ts";
       const rulesPath = "/src/domain/rulesets.ts";
       const engineModule = (await import(
         enginePath
@@ -287,6 +294,9 @@ async function runBrowserFixture(
         completedRunPath
       )) as typeof CompletedRunModule;
       const profileModule = (await import(profilePath)) as typeof ProfileModule;
+      const reportModule = (await import(
+        reportPath
+      )) as typeof SimulationReportModule;
       const rulesModule = (await import(rulesPath)) as typeof RulesModule;
 
       const engine = engineModule.createGameplayEngine(
@@ -414,7 +424,7 @@ async function runBrowserFixture(
               settlement,
             );
       const browserResult = {
-        schemaVersion: 2,
+        schemaVersion: 3,
         ruleset: trace.config.ruleset,
         seed: trace.config.seed,
         initialProfileFingerprint: canonicalModule.fingerprintCanonicalJson(
@@ -430,7 +440,10 @@ async function runBrowserFixture(
         distance: terminal.distance,
         gold: terminal.player.gold,
         traceHash,
-        metrics: {},
+        metrics: reportModule.collectRunMetrics(
+          trace.checkpoints.flatMap(({ events }) => events),
+          terminal,
+        ),
       };
       const presentationKeys = Object.keys(canvas.dataset).filter((key) =>
         ["random", "tutorials", "state"].includes(key),
@@ -568,9 +581,15 @@ test("replays the retained compatibility corpus in Node and Chromium", async ({
         expect(summary.traceHash, `${fixture.id} ${variant.name} trace`).toBe(
           node.trace.traceHash,
         );
-        expect(summary.result, `${fixture.id} ${variant.name} result`).toEqual(
-          fixture.expected.result,
-        );
+        expect(summary.result.schemaVersion).toBe(3);
+        expect(
+          summary.result,
+          `${fixture.id} ${variant.name} current result`,
+        ).toEqual(node.result);
+        expect(
+          toOriginalV13BaselineResult(summary.result),
+          `${fixture.id} ${variant.name} result`,
+        ).toEqual(fixture.expected.result);
         expect(summary.completedProfile).toEqual(expectedCompletedProfile);
         expect(summary.initialObservationKeys).toEqual(OBSERVATION_KEYS);
         expect(summary.policyObservationShapes).toEqual([

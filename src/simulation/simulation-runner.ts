@@ -9,6 +9,7 @@ import type {
   SimulationRequest,
   SimulationRunner,
 } from "../application/contracts.js";
+import { SIMULATION_RUN_RESULT_SCHEMA_VERSION } from "../application/contracts.js";
 import { createGameplayExecution } from "../application/gameplay-execution.js";
 import {
   createCanonicalTraceHasher,
@@ -16,10 +17,12 @@ import {
   normalizeCanonicalJson,
 } from "./canonical-json.js";
 import { normalizePolicyDescriptor } from "./policy-descriptor.js";
+import { createRunMetricsAccumulator } from "./simulation-report.js";
 
-const RUN_RESULT_SCHEMA_VERSION = 2;
+// The trace header remains v2 so frozen original-v1.3 trace identities remain
+// valid while the result envelope evolves to carry populated metrics.
+const TRACE_RESULT_INPUT_SCHEMA_VERSION = 2;
 const NO_EVENTS: readonly GameEvent[] = Object.freeze([]);
-const NO_METRICS = Object.freeze({});
 
 export interface SimulationRunnerOptions {
   readonly onTrace?: (trace: GameplayTrace) => void;
@@ -64,9 +67,10 @@ function runSimulation(
   let state = checkpoint.state;
   let observation = checkpoint.observation;
   let precedingEvents = NO_EVENTS;
+  const metrics = createRunMetricsAccumulator();
 
   trace.add({
-    schemaVersion: RUN_RESULT_SCHEMA_VERSION,
+    schemaVersion: TRACE_RESULT_INPUT_SCHEMA_VERSION,
     ruleset: config.ruleset,
     seed: config.seed,
     initialProfile,
@@ -82,6 +86,7 @@ function runSimulation(
     state = checkpoint.state;
     observation = checkpoint.observation;
     precedingEvents = checkpoint.events;
+    metrics.add(checkpoint.events);
 
     trace.add({
       commands: normalizedCommands,
@@ -98,7 +103,7 @@ function runSimulation(
   options.onTrace?.(execution.readDiagnostics());
 
   return Object.freeze({
-    schemaVersion: RUN_RESULT_SCHEMA_VERSION,
+    schemaVersion: SIMULATION_RUN_RESULT_SCHEMA_VERSION,
     ruleset: config.ruleset,
     seed: config.seed,
     initialProfileFingerprint,
@@ -112,7 +117,7 @@ function runSimulation(
     distance: state.distance,
     gold: state.player.gold,
     traceHash: trace.digest(),
-    metrics: NO_METRICS,
+    metrics: metrics.finish(state),
   });
 }
 

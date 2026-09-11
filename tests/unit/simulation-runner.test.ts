@@ -13,6 +13,7 @@ import type {
 import { ORIGINAL_V13_RULESET_ID } from "../../src/domain/rulesets.js";
 import { nonProgressingPolicy } from "../../src/simulation/non-progressing-policy.js";
 import { createSimulationRunner } from "../../src/simulation/simulation-runner.js";
+import { RUN_METRIC_KEYS } from "../../src/simulation/simulation-report.js";
 import { createTestGameplayEngine } from "../helpers/gameplay-engine.js";
 
 const gameplayEngine = createTestGameplayEngine();
@@ -108,7 +109,7 @@ describe("headless simulation runner", () => {
 
     expect(secondAgent).not.toBe(firstAgent);
     expect(result).toEqual({
-      schemaVersion: 2,
+      schemaVersion: 3,
       ruleset: ORIGINAL_V13_RULESET_ID,
       seed: "simulation-seed",
       initialProfileFingerprint:
@@ -128,7 +129,7 @@ describe("headless simulation runner", () => {
       gold: 300,
       traceHash:
         "sha256-v1:16be9712c86a342c7cd75b534b24c2d6a4424ceaea13c784b5df25e00cef7ddb",
-      metrics: {},
+      metrics: Object.fromEntries(RUN_METRIC_KEYS.map((key) => [key, 0])),
     });
     expect(Object.isFrozen(result)).toBe(true);
     expect(Object.isFrozen(result.policy)).toBe(true);

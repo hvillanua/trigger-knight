@@ -16,11 +16,11 @@ import { assertOriginalV13CompatibilityBaseline } from "../fixtures/original-v13
 import { originalV13Traceability } from "../fixtures/original-v13-traceability.js";
 import {
   ORIGINAL_V13_GAMEPLAY_TRACE_SCHEMA_VERSION,
-  ORIGINAL_V13_RUN_RESULT_SCHEMA_VERSION,
   originalV13CompatibilityRuns,
   originalV13CompatibilitySettlements,
   summarizeCheckpoint,
   tutorialPages,
+  toOriginalV13BaselineResult,
   type CompatibilityPolicyKey,
 } from "../fixtures/original-v13-compatibility.js";
 
@@ -93,8 +93,10 @@ describe("original-v1.3 compatibility corpus", () => {
         ORIGINAL_V13_GAMEPLAY_TRACE_SCHEMA_VERSION,
       );
       expect(trace.config).toEqual(fixture.config);
-      expect(result.schemaVersion).toBe(ORIGINAL_V13_RUN_RESULT_SCHEMA_VERSION);
-      expect(result).toEqual(fixture.expected.result);
+      expect(result.schemaVersion).toBe(3);
+      expect(toOriginalV13BaselineResult(result)).toEqual(
+        fixture.expected.result,
+      );
       expect(trace.traceHash).toBe(fixture.expected.traceHash);
       expect(tutorialPages(trace)).toEqual(fixture.expected.tutorialPages);
 

@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "policyComparison": "same-policy",
+  "baseline": {
+    "schemaVersion": 1,
+    "requests": [
+      {
+        "config": {
+          "ruleset": "original-v1.3",
+          "seed": "cli-comparison",
+          "initialProfile": { "schemaVersion": 1, "scoreMultiplier": 1 }
+        },
+        "policy": { "id": "non-progressing", "version": "1", "config": {} },
+        "maxSteps": 3
+      }
+    ]
+  },
+  "candidate": {
+    "schemaVersion": 1,
+    "requests": [
+      {
+        "config": {
+          "ruleset": "original-v1.3",
+          "seed": "cli-comparison",
+          "initialProfile": { "schemaVersion": 1, "scoreMultiplier": 1 }
+        },
+        "policy": { "id": "non-progressing", "version": "1", "config": {} },
+        "maxSteps": 3
+      }
+    ]
+  }
+}
