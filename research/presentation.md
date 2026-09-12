@@ -190,6 +190,11 @@ deterministically rendered main frames. `exports/assets/key-sprites/` contains
 every frame of Hero, Dragon, Goblin, Golem, and Wolf. The curated subset is in
 `exports/assets/representative/`.
 
+**CONFIRMED** The raw export contains eight embedded TTF font files under
+`exports/assets/raw/fonts/`. The browser stages byte-for-byte reviewed copies
+under `src/assets/original/fonts/`; their redistribution rights remain
+unverified, and the staging decision does not create a license.
+
 **UNKNOWN** A working live runtime screenshot was not obtained: the current
 Kongregate wrapper rendered blank in the available Chromium environment and
 modern browsers do not execute Flash. No blank/browser image is included as

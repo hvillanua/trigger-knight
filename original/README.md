@@ -57,9 +57,10 @@ must not be copied into the implementation. Asset use does not change the
 underlying copyright or distribution terms.
 
 The reviewed runtime copies currently live under
-`../src/assets/original/`. The browser loads selected character and scene
-exports from that directory; the remaining staged exports are available for
-later presentation work.
+`../src/assets/original/`. The browser loads selected character, scene, and
+font exports from that directory; the remaining staged exports are available for
+later presentation work. Font redistribution rights remain unverified, and
+embedded SWF attribution is not treated as a standalone license grant.
 
 ## Comparison distributions
 

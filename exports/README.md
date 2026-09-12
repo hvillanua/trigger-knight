@@ -1,8 +1,8 @@
 # Extracted original-game assets
 
 All files here were generated from the primary Kongregate SWF. They are the
-recorded source exports for the original visual and audio assets used by the
-browser presentation where available.
+recorded source exports for the original visual, audio, and font assets used by
+the browser presentation where available.
 
 | Path | Contents |
 |---|---|
@@ -20,7 +20,11 @@ and review date in neighboring provenance metadata. Production code must not
 import the archival `exports/` directory directly.
 
 The reviewed runtime copies currently live under `../src/assets/original/`.
+That set includes the eight font exports under
+`../src/assets/original/fonts/`; their per-file hashes and attribution evidence
+are recorded in `../src/assets/original/fonts.provenance.json`.
 
-This project policy does not create a new license or transfer copyright.
-Distribution of these original assets remains subject to the rights holder's
-terms.
+The font exports are included by project direction with redistribution rights
+marked unverified. This project policy does not create a new license or transfer
+copyright. Distribution of these original assets remains subject to the rights
+holder's terms.

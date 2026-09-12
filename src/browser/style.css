@@ -1,9 +1,77 @@
 /* Browser presentation styles. */
+@font-face {
+  font-family: "Trigger Knight Calibri";
+  src: url("../assets/original/fonts/2_Calibri.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Trigger Knight Calibri 12";
+  src: url("../assets/original/fonts/14_Calibri_12pt_st.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Trigger Knight Calibri 14";
+  src: url("../assets/original/fonts/265_Calibri_14pt_st.ttf")
+    format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Trigger Knight Calibri 16";
+  src: url("../assets/original/fonts/246_Calibri_16pt_st.ttf")
+    format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Trigger Knight Calisto 5";
+  src: url("../assets/original/fonts/5_Calisto MT.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Trigger Knight Calisto 224";
+  src: url("../assets/original/fonts/224_Calisto MT.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Trigger Knight Eurostile";
+  src: url("../assets/original/fonts/77_Eurostile.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Trigger Knight Hooge";
+  src: url("../assets/original/fonts/91_hooge 05_55_14pt_st.ttf")
+    format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   color: #f7f1df;
   background: #05070d;
   font-family:
-    Inter,
+    "Trigger Knight Calibri",
+    "Trigger Knight Calibri 14",
     ui-sans-serif,
     system-ui,
     -apple-system,
@@ -37,6 +105,9 @@ body {
 .site-header p {
   margin: 0;
   color: #bac6df;
+  font-family:
+    "Trigger Knight Calisto 224", "Trigger Knight Calibri 14", system-ui,
+    sans-serif;
 }
 
 .screen {
@@ -60,6 +131,9 @@ body {
 .profile-screen h2 {
   margin-top: 0;
   color: #f4d58d;
+  font-family:
+    "Trigger Knight Calisto 5", "Trigger Knight Calibri 16", system-ui,
+    sans-serif;
 }
 
 .screen[hidden] {
@@ -80,6 +154,9 @@ body {
 h1 {
   margin: 0 0 0.5rem;
   color: #f4d58d;
+  font-family:
+    "Trigger Knight Eurostile", "Trigger Knight Calibri 16", system-ui,
+    sans-serif;
   letter-spacing: 0.04em;
 }
 
@@ -114,6 +191,9 @@ h1 {
 .hud-card h3 {
   margin: 0 0 0.6rem;
   color: #f4d58d;
+  font-family:
+    "Trigger Knight Calisto 5", "Trigger Knight Calibri 16", system-ui,
+    sans-serif;
   font-size: 1rem;
 }
 
@@ -130,6 +210,8 @@ h1 {
 
 .hud-card dt {
   color: #bac6df;
+  font-family:
+    "Trigger Knight Calibri 14", "Trigger Knight Calibri", system-ui, sans-serif;
   font-size: 0.78rem;
 }
 
@@ -169,6 +251,8 @@ h1 {
   min-height: 1.5rem;
   margin: 0;
   color: #f4d58d;
+  font-family:
+    "Trigger Knight Hooge", "Trigger Knight Calibri 12", system-ui, sans-serif;
   font-weight: 650;
 }
 
@@ -333,6 +417,8 @@ h1 {
 .help-text {
   margin: 0;
   color: #bac6df;
+  font-family:
+    "Trigger Knight Calibri 12", "Trigger Knight Calibri", system-ui, sans-serif;
   font-size: 0.9rem;
 }
 
@@ -372,6 +458,8 @@ button {
   color: #080b14;
   background: #f4d58d;
   font: inherit;
+  font-family:
+    "Trigger Knight Hooge", "Trigger Knight Calibri 12", system-ui, sans-serif;
   font-weight: 650;
   cursor: pointer;
 }

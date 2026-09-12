@@ -27,6 +27,7 @@ import {
   calculateWorldProjection,
   type CssDimensions,
 } from "./foundation.js";
+import { loadOriginalFonts, ORIGINAL_FONT_FAMILIES } from "./font-assets.js";
 
 type DisplayActorPhase = CombatActorPhase | "running";
 
@@ -49,6 +50,17 @@ interface WorldPoint {
 const GROUND_RATIO = 0.73;
 const HERO_RUNNING_X = 96;
 const EFFECT_BANNER_HEIGHT = 28;
+// Project presentation roles. The original SWF text-field mapping remains unresolved.
+const CANVAS_FONT_FAMILIES = Object.freeze({
+  body: `"${ORIGINAL_FONT_FAMILIES.calibri}", "${ORIGINAL_FONT_FAMILIES.calibri14}", system-ui, sans-serif`,
+  bodyMedium: `"${ORIGINAL_FONT_FAMILIES.calibri14}", "${ORIGINAL_FONT_FAMILIES.calibri}", system-ui, sans-serif`,
+  bodySmall: `"${ORIGINAL_FONT_FAMILIES.calibri12}", "${ORIGINAL_FONT_FAMILIES.calibri}", system-ui, sans-serif`,
+  compact: `"${ORIGINAL_FONT_FAMILIES.hooge}", "${ORIGINAL_FONT_FAMILIES.calibri12}", system-ui, sans-serif`,
+  display: `"${ORIGINAL_FONT_FAMILIES.eurostile}", "${ORIGINAL_FONT_FAMILIES.calibri16}", system-ui, sans-serif`,
+  displayMedium: `"${ORIGINAL_FONT_FAMILIES.calibri16}", "${ORIGINAL_FONT_FAMILIES.eurostile}", system-ui, sans-serif`,
+  serif: `"${ORIGINAL_FONT_FAMILIES.calisto5}", "${ORIGINAL_FONT_FAMILIES.calibri}", system-ui, sans-serif`,
+  serifSmall: `"${ORIGINAL_FONT_FAMILIES.calisto224}", "${ORIGINAL_FONT_FAMILIES.calibri12}", system-ui, sans-serif`,
+});
 
 const SHOP_PRODUCTS: Readonly<Record<ShopId, VisualSpriteId>> = Object.freeze({
   bladesmith: "weapon",
@@ -568,7 +580,7 @@ function drawPhaseBadge(
   context.fillRect(x - 29, y - 7, 58, 14);
   context.globalAlpha = 1;
   context.fillStyle = color;
-  context.font = "600 9px system-ui";
+  context.font = `600 9px ${CANVAS_FONT_FAMILIES.compact}`;
   context.textAlign = "center";
   context.textBaseline = "middle";
   context.fillText(phase.toUpperCase(), x, y);
@@ -826,7 +838,7 @@ function drawHealthBar(
   context.lineWidth = 1;
   context.strokeRect(x - 42, y - 5, 84, 10);
   context.fillStyle = "#f7f1df";
-  context.font = "600 8px system-ui";
+  context.font = `600 8px ${CANVAS_FONT_FAMILIES.body}`;
   context.textAlign = "center";
   context.fillText(
     `${formatNumber(current)} / ${formatNumber(maximum)}`,
@@ -908,11 +920,11 @@ function drawShop(
   });
   context.save();
   context.fillStyle = available ? "#f4d58d" : "#8994ae";
-  context.font = "700 9px system-ui";
+  context.font = `700 9px ${CANVAS_FONT_FAMILIES.serif}`;
   context.textAlign = "center";
   context.fillText(shopName(shop), x, groundY + 13);
   context.fillStyle = "#bac6df";
-  context.font = "500 8px system-ui";
+  context.font = `500 8px ${CANVAS_FONT_FAMILIES.serifSmall}`;
   context.fillText(shopDescription(shop), x, groundY + 25);
   if (!available || used) {
     context.strokeStyle = used ? "#8994ae" : "#ffb4a8";
@@ -965,11 +977,11 @@ function drawLoadout(
   context.strokeRect(left, top, width, 34);
 
   context.fillStyle = "#f4d58d";
-  context.font = "700 10px system-ui";
+  context.font = `700 10px ${CANVAS_FONT_FAMILIES.display}`;
   context.textAlign = "left";
   context.fillText("TRIGGER KNIGHT", left + 8, top + 13);
   context.fillStyle = "#bac6df";
-  context.font = "500 9px system-ui";
+  context.font = `500 9px ${CANVAS_FONT_FAMILIES.bodyMedium}`;
   context.fillText(
     `${observation.lifecycle.phase === "battling" ? "BATTLE" : observation.lifecycle.phase.toUpperCase()} · DAY ${formatNumber(observation.day)}`,
     left + 8,
@@ -983,7 +995,7 @@ function drawLoadout(
     `SCORE ${formatNumber(observation.score)}`,
   ];
   context.textAlign = "right";
-  context.font = "600 9px system-ui";
+  context.font = `600 9px ${CANVAS_FONT_FAMILIES.bodySmall}`;
   values.forEach((value, index) => {
     context.fillStyle = index === 1 ? "#ffb4a8" : "#f7f1df";
     context.fillText(value, left + width - 8 - index * 84, top + 14);
@@ -997,7 +1009,7 @@ function drawLoadout(
   }
   context.textAlign = "right";
   context.fillStyle = "#bac6df";
-  context.font = "500 8px system-ui";
+  context.font = `500 8px ${CANVAS_FONT_FAMILIES.compact}`;
   const itemLabel = item === null ? "NO ITEM" : itemName(item).toUpperCase();
   context.fillText(
     `${observation.player.weapon.name} T${observation.player.weapon.tier} · ${observation.player.armor.name} T${observation.player.armor.tier} · ${itemLabel}`,
@@ -1304,7 +1316,7 @@ function drawEffect(
       );
       context.globalAlpha = 1;
       context.fillStyle = "#f4d58d";
-      context.font = "700 15px system-ui";
+      context.font = `700 15px ${CANVAS_FONT_FAMILIES.displayMedium}`;
       context.textAlign = "center";
       context.fillText(
         effect.event.paused ? "RUN PAUSED" : "RUN RESUMED",
@@ -1316,7 +1328,7 @@ function drawEffect(
     case "tutorial-dismissed":
       context.save();
       context.fillStyle = "#bac6df";
-      context.font = "600 10px system-ui";
+      context.font = `600 10px ${CANVAS_FONT_FAMILIES.serifSmall}`;
       context.textAlign = "center";
       context.fillText(
         `Tutorial ${effect.event.page + 1}: ${tutorialLabel(effect.event.page)}`,
@@ -1414,7 +1426,7 @@ function drawDynamicWorld(
       drawApproachTrail(context, x, groundY, true);
       context.save();
       context.fillStyle = "#f7f1df";
-      context.font = "700 9px system-ui";
+      context.font = `700 9px ${CANVAS_FONT_FAMILIES.bodySmall}`;
       context.textAlign = "center";
       context.fillText(
         `Approaching ${enemyName(current.enemy.id)}`,
@@ -1454,6 +1466,7 @@ export class CanvasPresentation implements PresentationPort {
     this.#canvas.dataset.renderer = "canvas-2d";
     this.#canvas.dataset.visualVersion = "original-assets-v1";
     this.#canvas.dataset.assetSource = "original-runtime-assets";
+    this.#canvas.dataset.fontStatus = "loading";
     this.#atlas = createVisualAtlas((status) => {
       this.#canvas.dataset.assetStatus = status;
       this.#canvas.dataset.spriteMode =
@@ -1463,6 +1476,12 @@ export class CanvasPresentation implements PresentationPort {
     this.#canvas.dataset.assetStatus = this.#atlas.status;
     this.#canvas.dataset.spriteMode =
       this.#atlas.status === "ready" ? "atlas" : "fallback";
+    void loadOriginalFonts().then((loaded) => {
+      this.#staticLayerKey = undefined;
+      this.#lastDrawnVisualSignature = undefined;
+      this.#canvas.dataset.fontStatus = loaded ? "ready" : "fallback";
+      this.#draw();
+    });
   }
 
   present(frame: PresentationFrame): void {
