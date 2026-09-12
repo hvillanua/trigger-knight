@@ -56,6 +56,11 @@ ActionScript and other decompiled material are behavioral research inputs and
 must not be copied into the implementation. Asset use does not change the
 underlying copyright or distribution terms.
 
+The reviewed runtime copies currently live under
+`../src/assets/original/`. The browser loads selected character and scene
+exports from that directory; the remaining staged exports are available for
+later presentation work.
+
 ## Comparison distributions
 
 These were downloaded locally to compare portal wrappers and obfuscation. They

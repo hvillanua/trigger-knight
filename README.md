@@ -240,12 +240,16 @@ provenance. The runtime asset policy is:
 
 - Use original visual and audio assets from the preserved SWF or its recorded
   exports where available.
-- Stage a reviewed production copy under `src/assets/`; do not import directly
-  from the archival `original/` or `exports/` directories.
+- The current reviewed production copies live under `src/assets/original/`; do
+  not import directly from the archival `original/` or `exports/` directories.
 - Add neighboring provenance metadata recording the source path, artifact hash
   or export identifier, extraction details, rights or license, and review date.
 - Keep decompiled ActionScript, generated behavioral research, and other
   unapproved research outputs outside production.
+
+The Canvas presentation already loads staged original character frames and
+scene layers. The authored atlas remains a fallback for visual families that
+have not been mapped to an original export yet.
 
 This project policy does not transfer copyright or grant a public license. Any
 distribution of original assets remains subject to the rights holder's terms.

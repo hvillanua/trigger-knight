@@ -19,6 +19,8 @@ path, export identifier, artifact hash, extraction details, rights or license,
 and review date in neighboring provenance metadata. Production code must not
 import the archival `exports/` directory directly.
 
+The reviewed runtime copies currently live under `../src/assets/original/`.
+
 This project policy does not create a new license or transfer copyright.
 Distribution of these original assets remains subject to the rights holder's
 terms.

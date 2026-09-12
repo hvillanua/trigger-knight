@@ -1,16 +1,19 @@
 import { expect, test } from "@playwright/test";
 import type * as CanvasPresentationModule from "../../src/browser/canvas-presentation.js";
 
-test("loads the approved atlas and produces a readable world screenshot", async ({
+test("loads original runtime assets and produces a readable world screenshot", async ({
   page,
 }, testInfo) => {
   await page.goto("/?manual=1");
 
   const canvas = page.getByRole("img", { name: "Trigger Knight game view" });
-  await expect(canvas).toHaveAttribute("data-asset-source", "world-atlas.svg");
+  await expect(canvas).toHaveAttribute(
+    "data-asset-source",
+    "original-runtime-assets",
+  );
   await expect
     .poll(() => canvas.getAttribute("data-asset-status"), {
-      message: "the approved clean-room atlas should load",
+      message: "the original runtime assets should load",
     })
     .toBe("ready");
   await expect(canvas).toHaveAttribute("data-sprite-mode", "atlas");
@@ -37,6 +40,93 @@ test("loads the approved atlas and produces a readable world screenshot", async 
     contentType: "image/png",
   });
   expect(screenshot.byteLength).toBeGreaterThan(1_000);
+});
+
+test("keeps the authored shop atlas when the original building asset is unavailable", async ({
+  page,
+}) => {
+  await page.route("**/assets/original/images/366.png", (route) =>
+    route.abort(),
+  );
+  await page.goto("/?manual=1");
+
+  const fallbackCalls = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    await new Promise<void>((resolve) => {
+      const check = (): void => {
+        if (canvas.dataset.assetStatus === "ready") {
+          resolve();
+          return;
+        }
+        window.setTimeout(check, 0);
+      };
+      check();
+    });
+
+    const fillRectDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "fillRect",
+    );
+    if (typeof fillRectDescriptor?.value !== "function") {
+      throw new Error("Expected the Canvas fillRect method");
+    }
+    const originalFillRect = fillRectDescriptor.value as (
+      this: CanvasRenderingContext2D,
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+    ) => void;
+    let buildingFallbackCalls = 0;
+    CanvasRenderingContext2D.prototype.fillRect = function (
+      x,
+      y,
+      width,
+      height,
+    ): void {
+      if (width === 56 && height === 57) buildingFallbackCalls += 1;
+      originalFillRect.call(this, x, y, width, height);
+    };
+    try {
+      const current = {
+        ...base,
+        steps: base.steps + 1,
+        encounters: {
+          ...base.encounters,
+          current: {
+            kind: "shop" as const,
+            shop: "pharmacy" as const,
+            cachedPrice: 150,
+            x: 180,
+            used: false,
+          },
+        },
+        actions: { ...base.actions, canPurchaseCurrentEncounter: true },
+      };
+      presentation.present({
+        previous: base,
+        current,
+        interpolation: 1,
+        events: [],
+      });
+      return buildingFallbackCalls;
+    } finally {
+      CanvasRenderingContext2D.prototype.fillRect = originalFillRect;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(fallbackCalls).toBe(0);
 });
 
 test("covers every public enemy, shop, and actor phase in Canvas presentation", async ({

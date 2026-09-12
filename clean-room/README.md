@@ -7,9 +7,10 @@ Gameplay and domain code are reconstructed clean-room from the behavioral
 specification in `research/`, not by copying decompiled ActionScript. The
 browser presentation uses original game visual and audio assets where available.
 The preserved SWF and its extracted exports remain outside this directory as
-source records; reviewed production copies are staged under `src/assets/` with
-provenance and rights metadata. Decompiled code and unreviewed research output
-remain outside production.
+source records. Reviewed production copies are staged under
+`src/assets/original/` with provenance and rights metadata, and the Canvas
+presentation loads the staged character and scene exports. Decompiled code and
+unreviewed research output remain outside production.
 
 ## Design documents
 
