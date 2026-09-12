@@ -128,6 +128,36 @@ describe("browser gameplay session", () => {
     );
   });
 
+  it("keeps ordered public events from logical steps between renders", () => {
+    const present = vi.fn<(frame: PresentationFrame) => void>();
+    const session = createBrowserGameplaySession(
+      gameplayEngine,
+      config,
+      { present },
+      { renderOnDispatch: false },
+    );
+
+    session.dispatch([{ type: "dismiss-tutorial" }]);
+    session.dispatch([]);
+    session.render(0.5);
+
+    expect(present.mock.calls.at(-1)?.[0].events).toEqual([
+      { type: "tutorial-dismissed", page: 0 },
+      { type: "step-advanced", step: 1 },
+      { type: "step-advanced", step: 2 },
+    ]);
+    expect(session.readDiagnostics().checkpoints).toHaveLength(3);
+
+    session.render(1);
+
+    expect(present.mock.calls.at(-1)?.[0].events).toEqual([
+      { type: "tutorial-dismissed", page: 0 },
+      { type: "step-advanced", step: 1 },
+      { type: "step-advanced", step: 2 },
+    ]);
+    expect(session.readDiagnostics().checkpoints).toHaveLength(3);
+  });
+
   it("keeps the committed lifespan death trace fixed during later presentation", () => {
     const present = vi.fn<(frame: PresentationFrame) => void>();
     const session = createBrowserGameplaySession(
