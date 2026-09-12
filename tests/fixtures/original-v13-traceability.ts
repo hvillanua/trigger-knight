@@ -760,7 +760,7 @@ export const originalV13Traceability = Object.freeze([
     classification: "presentation-modernization",
     disposition: "allowed-modernization",
     rationale:
-      "Original visual and audio exports are approved presentation inputs when staged under src/assets with source, rights, and extraction provenance; decompiled code and unreviewed behavioral research remain excluded.",
+      "Original visual, audio, and font exports are approved presentation inputs when staged under src/assets with source, rights, and extraction provenance; decompiled code and unreviewed behavioral research remain excluded.",
     evidence: [],
   },
   {

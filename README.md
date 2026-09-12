@@ -3,7 +3,8 @@
 This project preserves Trigger Knight v1.3 by Mintsphere and builds a browser
 reimplementation using TypeScript, Vite, and Canvas 2D. Gameplay and domain
 logic are reconstructed clean-room from behavioral evidence; the browser
-presentation uses the original game assets where available.
+presentation uses the original game assets where available, including the
+reviewed font exports now staged under `src/assets/original/fonts/`.
 
 ## Run locally
 
@@ -238,8 +239,8 @@ Copyright remains with the original rights holders. The preserved material is
 retained for interoperability, behavioral research, and production asset
 provenance. The runtime asset policy is:
 
-- Use original visual and audio assets from the preserved SWF or its recorded
-  exports where available.
+- Use original visual, audio, and font assets from the preserved SWF or its
+  recorded exports where available.
 - The current reviewed production copies live under `src/assets/original/`; do
   not import directly from the archival `original/` or `exports/` directories.
 - Add neighboring provenance metadata recording the source path, artifact hash
@@ -247,9 +248,10 @@ provenance. The runtime asset policy is:
 - Keep decompiled ActionScript, generated behavioral research, and other
   unapproved research outputs outside production.
 
-The Canvas presentation already loads staged original character frames and
-scene layers. The authored atlas remains a fallback for visual families that
-have not been mapped to an original export yet.
+The Canvas presentation already loads staged original character frames, scene
+layers, and font exports. The authored atlas remains a fallback for visual
+families that have not been mapped to an original export yet. The browser font
+roles are a project mapping; exact original text-field usage remains unverified.
 
 This project policy does not transfer copyright or grant a public license. Any
 distribution of original assets remains subject to the rights holder's terms.

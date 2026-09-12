@@ -228,7 +228,7 @@ This milestone establishes:
 - responsive, high-density, fullscreen-capable Canvas presentation using the 480x320-world-unit reference camera;
 - pointer, touch, keyboard, and remappable input adapters;
 - display-rate visual interpolation and presentation-only transitions and effects;
-- original game visual and audio assets with recorded provenance;
+- original game visual, audio, and font assets with recorded provenance;
 - sound effects and their controls behind the presentation boundary;
 - accessible controls and readable information across representative viewport and input configurations.
 

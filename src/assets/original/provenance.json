@@ -5,10 +5,11 @@
   "sourceExportRoot": "exports/assets",
   "extraction": {
     "tool": "FFDec 26.2.1",
-    "method": "Reviewed copies of the recorded image, sound, and rendered key-sprite exports",
+    "method": "Reviewed copies of the recorded image, font, sound, and rendered key-sprite exports",
     "sourceDirectories": [
       "exports/assets/key-sprites",
       "exports/assets/raw/images",
+      "exports/assets/raw/fonts",
       "exports/assets/raw/sounds"
     ]
   },
@@ -30,15 +31,15 @@
       "source": "exports/assets/raw/sounds",
       "fileCount": 17,
       "use": "Original music and sound exports"
-    }
-  ],
-  "excludedSourceDirectories": [
+    },
     {
-      "path": "exports/assets/raw/fonts",
-      "reason": "Third-party typeface licensing requires separate review"
+      "path": "fonts",
+      "source": "exports/assets/raw/fonts",
+      "fileCount": 8,
+      "use": "Original embedded font exports reused by browser UI and Canvas labels"
     }
   ],
-  "rightsOrLicense": "Original Trigger Knight assets. Copyright remains with Mintsphere and other applicable rights holders; this repository does not grant a separate public license.",
+  "rightsOrLicense": "Original Trigger Knight assets. The staged font exports are included by explicit project direction, but their redistribution rights are unverified. Embedded notices identify Microsoft, Monotype, Miniml/Craig Kroeger, and other applicable rights holders. Copyright remains with applicable rights holders; this repository does not grant a separate public license.",
   "reviewDate": "2026-09-12",
   "transformations": "No transformations. Files retain their recorded export bytes."
 }

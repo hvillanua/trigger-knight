@@ -1,0 +1,104 @@
+{
+  "assetSet": "original-runtime-fonts",
+  "sourceArtifact": "original/kongregate/MonotouchKong13APPSTORE.swf",
+  "sourceArtifactSha256": "0f0630b981172fd2183b3a2ff890d98a178c11bc8e0aa3b5ed1be05c4ddb2c20",
+  "sourceExportRoot": "exports/assets/raw/fonts",
+  "extraction": {
+    "tool": "FFDec 26.2.1",
+    "method": "Recorded TTF exports from embedded DefineFont3 and DefineFontName symbols"
+  },
+  "mappingStatus": "PROJECT_MAPPING. The browser roles below reuse the embedded exports, but the exact original SWF text-field-to-font mapping has not been verified.",
+  "fonts": [
+    {
+      "path": "fonts/2_Calibri.ttf",
+      "source": "exports/assets/raw/fonts/2_Calibri.ttf",
+      "exportId": 2,
+      "embeddedFamily": "Calibri",
+      "cssFamily": "Trigger Knight Calibri",
+      "sha256": "9f7fbf907714d171e6476c6568e42ded98a9af873ded716f7388bd4c3b7212ab",
+      "presentationRole": "Browser body text and Canvas body labels",
+      "rightsStatus": "UNVERIFIED",
+      "rightsEvidence": "SWF font metadata identifies Microsoft and includes a copyright/all-rights-reserved notice. No standalone redistribution permission is recorded."
+    },
+    {
+      "path": "fonts/5_Calisto MT.ttf",
+      "source": "exports/assets/raw/fonts/5_Calisto MT.ttf",
+      "exportId": 5,
+      "embeddedFamily": "Calisto MT",
+      "cssFamily": "Trigger Knight Calisto 5",
+      "sha256": "651d32b9f4c5b43d39617e1d510f1585f134c30b1eff38c9cf6ba9b759d45127",
+      "presentationRole": "Canvas shop labels and browser headings",
+      "rightsStatus": "UNVERIFIED",
+      "rightsEvidence": "SWF font metadata identifies Monotype and includes copyright/trademark notices. No standalone redistribution permission is recorded."
+    },
+    {
+      "path": "fonts/14_Calibri_12pt_st.ttf",
+      "source": "exports/assets/raw/fonts/14_Calibri_12pt_st.ttf",
+      "exportId": 14,
+      "embeddedFamily": "Calibri_12pt_st",
+      "cssFamily": "Trigger Knight Calibri 12",
+      "sha256": "f3dcbdf0f54e8f21616e479a92c9f2390ca7ee0fab15bd4164eae4e7dd82c6d7",
+      "presentationRole": "Browser help text and Canvas small labels",
+      "rightsStatus": "UNVERIFIED",
+      "rightsEvidence": "SWF font metadata identifies Microsoft and includes a copyright/all-rights-reserved notice. No standalone redistribution permission is recorded."
+    },
+    {
+      "path": "fonts/77_Eurostile.ttf",
+      "source": "exports/assets/raw/fonts/77_Eurostile.ttf",
+      "exportId": 77,
+      "embeddedFamily": "Eurostile",
+      "cssFamily": "Trigger Knight Eurostile",
+      "sha256": "3a388a72faa6b3c1408de86c8b75d48c66540bcf9f88b9a1a14a9931648b5d7",
+      "presentationRole": "Browser title and Canvas display labels",
+      "rightsStatus": "UNVERIFIED",
+      "rightsEvidence": "SWF font metadata identifies Microsoft and includes a copyright/all-rights-reserved notice. No standalone redistribution permission is recorded."
+    },
+    {
+      "path": "fonts/91_hooge 05_55_14pt_st.ttf",
+      "source": "exports/assets/raw/fonts/91_hooge 05_55_14pt_st.ttf",
+      "exportId": 91,
+      "embeddedFamily": "hooge 05_55_14pt_st",
+      "cssFamily": "Trigger Knight Hooge",
+      "sha256": "19410bbba676b641fc0821c129a4806e3f4c5ab4fa62a23c487075d359760833",
+      "presentationRole": "Browser controls and Canvas compact labels",
+      "rightsStatus": "UNVERIFIED",
+      "rightsEvidence": "SWF font metadata names Miniml and Craig Kroeger. No standalone redistribution permission is recorded."
+    },
+    {
+      "path": "fonts/224_Calisto MT.ttf",
+      "source": "exports/assets/raw/fonts/224_Calisto MT.ttf",
+      "exportId": 224,
+      "embeddedFamily": "Calisto MT",
+      "cssFamily": "Trigger Knight Calisto 224",
+      "sha256": "f0fd69b2c57fe1a28542c83cec260c28646fe36057e6318b867f49111f4e67cc",
+      "presentationRole": "Browser header subtitle and Canvas event labels",
+      "rightsStatus": "UNVERIFIED",
+      "rightsEvidence": "SWF font metadata identifies Monotype and includes copyright/trademark notices. No standalone redistribution permission is recorded."
+    },
+    {
+      "path": "fonts/246_Calibri_16pt_st.ttf",
+      "source": "exports/assets/raw/fonts/246_Calibri_16pt_st.ttf",
+      "exportId": 246,
+      "embeddedFamily": "Calibri_16pt_st",
+      "cssFamily": "Trigger Knight Calibri 16",
+      "sha256": "e049da9c4c6546cbe660b9415435129852e19fa20cd38a6e3ce15a7c722d7f93",
+      "presentationRole": "Browser display fallback and Canvas pause banner",
+      "rightsStatus": "UNVERIFIED",
+      "rightsEvidence": "SWF font metadata identifies Microsoft and includes a copyright/all-rights-reserved notice. No standalone redistribution permission is recorded."
+    },
+    {
+      "path": "fonts/265_Calibri_14pt_st.ttf",
+      "source": "exports/assets/raw/fonts/265_Calibri_14pt_st.ttf",
+      "exportId": 265,
+      "embeddedFamily": "Calibri_14pt_st",
+      "cssFamily": "Trigger Knight Calibri 14",
+      "sha256": "eee3eb8fd9acc78fbaa27654166a3405982d09e34bde65b205a974a89ba6cbe1",
+      "presentationRole": "Browser metadata labels and Canvas secondary labels",
+      "rightsStatus": "UNVERIFIED",
+      "rightsEvidence": "SWF font metadata identifies Microsoft and includes a copyright/all-rights-reserved notice. No standalone redistribution permission is recorded."
+    }
+  ],
+  "rightsOrLicense": "UNVERIFIED. These font exports are included by explicit project direction for compatibility work. Embedded SWF inclusion and copyright notices do not establish permission to redistribute the raw font files. Copyright and any redistribution rights remain with applicable rights holders; this repository grants no separate public license.",
+  "reviewDate": "2026-09-12",
+  "transformations": "No transformations. Each staged file retains the recorded export bytes."
+}
