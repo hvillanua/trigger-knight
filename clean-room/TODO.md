@@ -2,7 +2,10 @@
 
 ## Purpose
 
-This document orders the capability milestones for the clean-room browser reimplementation. It describes what each milestone must establish and why it must precede the next one. Individual tickets will be created later.
+This document orders the capability milestones for the browser reimplementation.
+Gameplay and domain behavior remain clean-room; the presentation uses original
+game assets where available. It describes what each milestone must establish
+and why it must precede the next one. Individual tickets will be created later.
 
 The product requirements in [`PRD.md`](PRD.md), architecture and contracts in [`TDD.md`](TDD.md), and selected behavior in the existing implementation and tests are authoritative. Behavioral evidence in [`../research/`](../research/README.md) provides provenance and can identify gaps, but does not override a specific implementation absent a PRD or TDD conflict. This roadmap does not replace those sources or prescribe ticket-level implementation details.
 
@@ -13,7 +16,7 @@ The product requirements in [`PRD.md`](PRD.md), architecture and contracts in [`
 - Write tickets around one meaningful outcome. Tickets state **what** must exist and **why**, with observable acceptance criteria, constraints, non-goals, and required evidence. They do not prescribe **how** to implement the outcome.
 - Follow test-driven development for every behavior change: establish a failing test for the intended behavior, implement the smallest passing change, then refactor while the suite remains green. Tests are part of the behavior ticket and are never deferred to a later ticket.
 - Run only the smallest focused red and green checks locally. The repository-owned pre-push hook is the complete validation gate for code-affecting changes. GitHub Actions is disabled and is not a merge gate.
-- Preserve the clean-room boundary. Implementation work uses the behavioral specification and approved clean-room assets, not copied decompiled source or unapproved original artifacts.
+- Preserve the implementation boundary. Gameplay work uses the behavioral specification, not copied decompiled source. Presentation work uses approved original game assets staged with provenance under `src/assets/` where available.
 - Keep the repository runnable, deterministic, and inspectable at the end of every milestone.
 
 ## Milestone 0 — Agent-ready repository
@@ -225,7 +228,7 @@ This milestone establishes:
 - responsive, high-density, fullscreen-capable Canvas presentation using the 480x320-world-unit reference camera;
 - pointer, touch, keyboard, and remappable input adapters;
 - display-rate visual interpolation and presentation-only transitions and effects;
-- clean-room-safe visual assets with recorded provenance;
+- original game visual and audio assets with recorded provenance;
 - sound effects and their controls behind the presentation boundary;
 - accessible controls and readable information across representative viewport and input configurations.
 

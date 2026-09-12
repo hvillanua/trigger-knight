@@ -41,7 +41,7 @@ Additional focused checks and results:
 
 ## Boundary and documentation review
 
-- [ ] The implementation uses human-authored behavioral research and approved clean-room assets; it does not copy decompiled code or unapproved original/generated artifacts.
+- [ ] The implementation uses human-authored behavioral research and approved original or separately licensed assets with provenance; it does not copy decompiled code or unapproved research artifacts.
 - [ ] Dependencies still point inward and authoritative domain code has no ambient browser, Node, time, or randomness inputs.
 - [ ] The PRD, TDD, and implementation are treated as sources of truth. Usage or design guidance is updated only if intent changed. If the PRD and TDD leave behavior unspecified but code is specific, the implementation is preserved. If code conflicts with the PRD or TDD, the gap and appropriate source update are identified. Implemented behavior and fixtures remain in code and tests.
 - [ ] Non-goals and intentional deferrals remain outside this pull request and are linked to a later milestone when required.

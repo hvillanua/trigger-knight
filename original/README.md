@@ -43,6 +43,19 @@ mentions the 10% critical-hit addition.
 The FFDec logical uncompressed SWF size is 2,653,849 bytes. That is metadata,
 not a second artifact hash.
 
+## Production asset source
+
+This preserved SWF is the canonical source for original game visual and audio
+assets. When an asset is needed by the browser runtime, extract or convert the
+asset without altering this artifact, stage the reviewed production file under
+`src/assets/`, and add neighboring provenance metadata. The metadata must link
+the staged file to this artifact hash or an identifiable export.
+
+The SWF remains an archival source record rather than a production module. Its
+ActionScript and other decompiled material are behavioral research inputs and
+must not be copied into the implementation. Asset use does not change the
+underlying copyright or distribution terms.
+
 ## Comparison distributions
 
 These were downloaded locally to compare portal wrappers and obfuscation. They

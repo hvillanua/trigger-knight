@@ -757,10 +757,10 @@ export const originalV13Traceability = Object.freeze([
   {
     id: "presentation.research-exports",
     source: "research/presentation.md#reference-exports",
-    classification: "excluded-scope",
-    disposition: "excluded",
+    classification: "presentation-modernization",
+    disposition: "allowed-modernization",
     rationale:
-      "Exported original artifacts remain research evidence and are not implementation inputs under the clean-room boundary.",
+      "Original visual and audio exports are approved presentation inputs when staged under src/assets with source, rights, and extraction provenance; decompiled code and unreviewed behavioral research remain excluded.",
     evidence: [],
   },
   {

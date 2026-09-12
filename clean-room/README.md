@@ -1,9 +1,15 @@
-# Clean-room implementation boundary
+# Implementation and asset boundary
 
 The runtime implementation lives in `src/`. This directory remains limited to
-planning, product scope, architecture, and the clean-room boundary.
+planning, product scope, architecture, and the implementation boundary.
 
-A future implementation belongs here and should be based on the behavioral specification in `research/`, not by copying decompiled ActionScript. Original SWFs, decompiler output, and extracted assets remain outside this directory.
+Gameplay and domain code are reconstructed clean-room from the behavioral
+specification in `research/`, not by copying decompiled ActionScript. The
+browser presentation uses original game visual and audio assets where available.
+The preserved SWF and its extracted exports remain outside this directory as
+source records; reviewed production copies are staged under `src/assets/` with
+provenance and rights metadata. Decompiled code and unreviewed research output
+remain outside production.
 
 ## Design documents
 

@@ -42,7 +42,7 @@ function sprite(x: number, y: number): SpriteRect {
   });
 }
 
-/** Every visual sprite is authored in the clean-room atlas. */
+/** Every visual sprite maps to an approved runtime asset or fallback tile. */
 export const VISUAL_SPRITES: Readonly<Record<VisualSpriteId, SpriteRect>> =
   Object.freeze({
     hero: sprite(0, 0),
