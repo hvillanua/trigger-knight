@@ -97,8 +97,8 @@ The presentation may interpolate between observations, but only `current` is aut
 #### Runtime asset inputs
 
 Presentation adapters consume reviewed copies of the original game's visual and
-audio assets where available. The preserved SWF and recorded exports are source records;
-production files are staged under `src/assets/` and carry neighboring
+audio assets where available. The preserved SWF and recorded exports are source
+records; production files are staged under `src/assets/original/` and carry neighboring
 provenance metadata linking them to the source artifact hash or export
 identifier, extraction details, rights or license, and review date. Asset files
 must not carry gameplay decisions or hidden state. The presentation boundary

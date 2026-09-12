@@ -204,12 +204,16 @@ function battleActorX(
   );
 }
 
+function imageReady(
+  image: HTMLImageElement | undefined,
+): image is HTMLImageElement {
+  return image !== undefined && image.complete && image.naturalWidth > 0;
+}
+
 function spriteReady(atlas: VisualAtlas, sprite: SpriteRect): boolean {
   return (
     atlas.status === "ready" &&
-    atlas.image !== undefined &&
-    atlas.image.complete &&
-    atlas.image.naturalWidth > 0 &&
+    imageReady(atlas.image) &&
     sprite.width > 0 &&
     sprite.height > 0
   );
@@ -224,15 +228,30 @@ function drawAtlasSprite(
   options: SpriteOptions = {},
 ): boolean {
   const sprite = VISUAL_SPRITES[spriteId];
-  if (!spriteReady(atlas, sprite) || atlas.image === undefined) return false;
-
   const scale = options.scale ?? 1;
   const alpha = options.alpha ?? 1;
+  const originalImage = atlas.originalImages[spriteId];
   context.save();
   context.globalAlpha = alpha;
   context.translate(x, baselineY);
   if (options.flipX === true) context.scale(-1, 1);
   try {
+    if (imageReady(originalImage)) {
+      const fitScale = Math.min(
+        (sprite.width * scale) / originalImage.naturalWidth,
+        (sprite.height * scale) / originalImage.naturalHeight,
+      );
+      const width = originalImage.naturalWidth * fitScale;
+      const height = originalImage.naturalHeight * fitScale;
+      context.drawImage(originalImage, -width / 2, -height, width, height);
+      context.restore();
+      return true;
+    }
+
+    if (!spriteReady(atlas, sprite) || atlas.image === undefined) {
+      context.restore();
+      return false;
+    }
     context.drawImage(
       atlas.image,
       sprite.x,
@@ -348,42 +367,74 @@ function drawRockFallback(
   context.restore();
 }
 
+function drawSceneImage(
+  context: CanvasRenderingContext2D,
+  atlas: VisualAtlas,
+  assetId: "sky" | "ground" | "mountains",
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): boolean {
+  const image = atlas.sceneImages[assetId];
+  if (!imageReady(image)) return false;
+  try {
+    context.drawImage(image, x, y, width, height);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function drawBackground(
   context: CanvasRenderingContext2D,
   camera: Readonly<GameObservation["camera"]>,
   day: number,
   atlas: VisualAtlas,
 ): void {
-  const gradient = context.createLinearGradient(
+  context.fillStyle = "#d9edf0";
+  context.fillRect(camera.x, camera.y, camera.width, camera.height);
+  const originalSky = drawSceneImage(
+    context,
+    atlas,
+    "sky",
     camera.x,
     camera.y,
-    camera.x,
-    camera.y + camera.height,
+    960,
+    320,
   );
-  gradient.addColorStop(0, day % 2 === 0 ? "#202b4d" : "#18213b");
-  gradient.addColorStop(0.62, "#10182e");
-  gradient.addColorStop(1, "#080b14");
-  context.fillStyle = gradient;
-  context.fillRect(camera.x, camera.y, camera.width, camera.height);
+  if (!originalSky) {
+    const gradient = context.createLinearGradient(
+      camera.x,
+      camera.y,
+      camera.x,
+      camera.y + camera.height,
+    );
+    gradient.addColorStop(0, day % 2 === 0 ? "#202b4d" : "#18213b");
+    gradient.addColorStop(0.62, "#10182e");
+    gradient.addColorStop(1, "#080b14");
+    context.fillStyle = gradient;
+    context.fillRect(camera.x, camera.y, camera.width, camera.height);
 
-  const stars = [
-    [22, 34],
-    [68, 72],
-    [111, 28],
-    [157, 54],
-    [205, 22],
-    [252, 75],
-    [301, 42],
-    [347, 86],
-    [395, 30],
-    [451, 64],
-  ] as const;
-  context.fillStyle = "#f7f1df";
-  for (const [x, y] of stars) {
-    context.globalAlpha = x % 2 === 0 ? 0.72 : 0.42;
-    context.fillRect(camera.x + x, camera.y + y, 2, 2);
+    const stars = [
+      [22, 34],
+      [68, 72],
+      [111, 28],
+      [157, 54],
+      [205, 22],
+      [252, 75],
+      [301, 42],
+      [347, 86],
+      [395, 30],
+      [451, 64],
+    ] as const;
+    context.fillStyle = "#f7f1df";
+    for (const [x, y] of stars) {
+      context.globalAlpha = x % 2 === 0 ? 0.72 : 0.42;
+      context.fillRect(camera.x + x, camera.y + y, 2, 2);
+    }
+    context.globalAlpha = 1;
   }
-  context.globalAlpha = 1;
 
   const moonX = camera.x + camera.width - 58;
   const moonY = camera.y + 74;
@@ -391,35 +442,57 @@ function drawBackground(
     drawMoonFallback(context, moonX, moonY);
   }
 
-  context.fillStyle = "#263557";
-  context.beginPath();
-  context.moveTo(camera.x, camera.y + 188);
-  for (let x = camera.x - 40; x <= camera.x + camera.width + 40; x += 52) {
-    const peak = camera.y + 142 + ((Math.floor(x / 52) + day) % 3) * 11;
-    context.lineTo(x + 26, peak);
-    context.lineTo(x + 52, camera.y + 188);
+  const originalMountains = drawSceneImage(
+    context,
+    atlas,
+    "mountains",
+    camera.x,
+    camera.y + 60,
+    960,
+    120,
+  );
+  if (!originalMountains) {
+    context.fillStyle = "#263557";
+    context.beginPath();
+    context.moveTo(camera.x, camera.y + 188);
+    for (let x = camera.x - 40; x <= camera.x + camera.width + 40; x += 52) {
+      const peak = camera.y + 142 + ((Math.floor(x / 52) + day) % 3) * 11;
+      context.lineTo(x + 26, peak);
+      context.lineTo(x + 52, camera.y + 188);
+    }
+    context.lineTo(camera.x + camera.width, camera.y + 188);
+    context.closePath();
+    context.fill();
   }
-  context.lineTo(camera.x + camera.width, camera.y + 188);
-  context.closePath();
-  context.fill();
 
   const groundY = camera.y + camera.height * GROUND_RATIO;
-  context.fillStyle = "#1e3c35";
-  context.fillRect(camera.x, groundY, camera.width, camera.height * 0.08);
-  context.fillStyle = "#111c2a";
-  context.fillRect(
+  const originalGround = drawSceneImage(
+    context,
+    atlas,
+    "ground",
     camera.x,
-    groundY + camera.height * 0.08,
-    camera.width,
-    camera.height * 0.19,
+    camera.y + 170,
+    960,
+    188,
   );
-  context.fillStyle = "#182536";
-  context.fillRect(
-    camera.x,
-    groundY + camera.height * 0.12,
-    camera.width,
-    camera.height * 0.06,
-  );
+  if (!originalGround) {
+    context.fillStyle = "#1e3c35";
+    context.fillRect(camera.x, groundY, camera.width, camera.height * 0.08);
+    context.fillStyle = "#111c2a";
+    context.fillRect(
+      camera.x,
+      groundY + camera.height * 0.08,
+      camera.width,
+      camera.height * 0.19,
+    );
+    context.fillStyle = "#182536";
+    context.fillRect(
+      camera.x,
+      groundY + camera.height * 0.12,
+      camera.width,
+      camera.height * 0.06,
+    );
+  }
   context.strokeStyle = "#806d3f";
   context.lineWidth = 2;
   context.beginPath();
@@ -792,6 +865,24 @@ function drawBuildingFallback(
   context.restore();
 }
 
+function drawOriginalBuilding(
+  context: CanvasRenderingContext2D,
+  atlas: VisualAtlas,
+  x: number,
+  groundY: number,
+): boolean {
+  const image = atlas.sceneImages.building;
+  if (!imageReady(image)) return false;
+  const width = 124;
+  const height = width * (image.naturalHeight / image.naturalWidth);
+  try {
+    context.drawImage(image, x - width / 2, groundY - height, width, height);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function drawShop(
   context: CanvasRenderingContext2D,
   atlas: VisualAtlas,
@@ -802,10 +893,12 @@ function drawShop(
   used: boolean,
 ): void {
   drawShadow(context, x, groundY, 31);
-  const drawn = drawAtlasSprite(context, atlas, shop, x, groundY, {
-    alpha: available ? 1 : 0.68,
-    scale: 1.02,
-  });
+  const drawn =
+    drawOriginalBuilding(context, atlas, x, groundY) ||
+    drawAtlasSprite(context, atlas, shop, x, groundY, {
+      alpha: available ? 1 : 0.68,
+      scale: 1.02,
+    });
   if (!drawn) drawBuildingFallback(context, x, groundY, shop);
 
   const product = SHOP_PRODUCTS[shop];
@@ -1248,16 +1341,6 @@ function drawEffects(
   );
 }
 
-function drawStaticWorld(
-  context: CanvasRenderingContext2D,
-  frame: Readonly<PresentationFrame>,
-  atlas: VisualAtlas,
-): void {
-  const camera = frame.current.camera;
-  drawBackground(context, camera, frame.current.day, atlas);
-  drawLoadout(context, camera, frame.current, atlas);
-}
-
 function drawDynamicWorld(
   context: CanvasRenderingContext2D,
   frame: Readonly<PresentationFrame>,
@@ -1361,14 +1444,16 @@ export class CanvasPresentation implements PresentationPort {
   #effectSequence = 0;
   #lastFrameStep: number | undefined;
   #lastDrawnVisualSignature: string | undefined;
+  #backgroundLayer: HTMLCanvasElement | undefined;
+  #backgroundLayerKey: string | undefined;
   #staticLayer: HTMLCanvasElement | undefined;
   #staticLayerKey: string | undefined;
 
   constructor(canvas: HTMLCanvasElement) {
     this.#canvas = canvas;
     this.#canvas.dataset.renderer = "canvas-2d";
-    this.#canvas.dataset.visualVersion = "clean-room-atlas-v1";
-    this.#canvas.dataset.assetSource = "world-atlas.svg";
+    this.#canvas.dataset.visualVersion = "original-assets-v1";
+    this.#canvas.dataset.assetSource = "original-runtime-assets";
     this.#atlas = createVisualAtlas((status) => {
       this.#canvas.dataset.assetStatus = status;
       this.#canvas.dataset.spriteMode =
@@ -1523,6 +1608,7 @@ export class CanvasPresentation implements PresentationPort {
 
     context.setTransform(1, 0, 0, 1, 0, 0);
     context.clearRect(0, 0, layer.width, layer.height);
+    context.drawImage(this.#ensureBackgroundLayer(frame, projection), 0, 0);
     context.save();
     context.beginPath();
     context.rect(
@@ -1535,11 +1621,68 @@ export class CanvasPresentation implements PresentationPort {
     context.translate(projection.viewport.x, projection.viewport.y);
     context.scale(projection.scale, projection.scale);
     context.translate(-frame.current.camera.x, -frame.current.camera.y);
-    drawStaticWorld(context, frame, this.#atlas);
+    drawLoadout(context, frame.current.camera, frame.current, this.#atlas);
     context.restore();
 
     this.#staticLayer = layer;
     this.#staticLayerKey = key;
+    return layer;
+  }
+
+  #ensureBackgroundLayer(
+    frame: Readonly<PresentationFrame>,
+    projection: ReturnType<typeof calculateWorldProjection>,
+  ): HTMLCanvasElement {
+    const camera = frame.current.camera;
+    const key = JSON.stringify([
+      this.#canvas.width,
+      this.#canvas.height,
+      camera.x,
+      camera.y,
+      camera.width,
+      camera.height,
+      frame.current.day,
+      this.#atlas.status,
+    ]);
+    if (
+      this.#backgroundLayer !== undefined &&
+      this.#backgroundLayerKey === key
+    ) {
+      return this.#backgroundLayer;
+    }
+
+    const layer = this.#backgroundLayer ?? document.createElement("canvas");
+    if (
+      layer.width !== this.#canvas.width ||
+      layer.height !== this.#canvas.height
+    ) {
+      layer.width = this.#canvas.width;
+      layer.height = this.#canvas.height;
+    }
+    const context = layer.getContext("2d");
+    if (context === null) {
+      throw new Error("Canvas 2D is unavailable for the background layer");
+    }
+
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    context.clearRect(0, 0, layer.width, layer.height);
+    context.save();
+    context.beginPath();
+    context.rect(
+      projection.viewport.x,
+      projection.viewport.y,
+      projection.viewport.width,
+      projection.viewport.height,
+    );
+    context.clip();
+    context.translate(projection.viewport.x, projection.viewport.y);
+    context.scale(projection.scale, projection.scale);
+    context.translate(-camera.x, -camera.y);
+    drawBackground(context, camera, frame.current.day, this.#atlas);
+    context.restore();
+
+    this.#backgroundLayer = layer;
+    this.#backgroundLayerKey = key;
     return layer;
   }
 

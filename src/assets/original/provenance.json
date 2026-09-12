@@ -1,0 +1,44 @@
+{
+  "assetSet": "original-runtime-assets",
+  "sourceArtifact": "original/kongregate/MonotouchKong13APPSTORE.swf",
+  "sourceArtifactSha256": "0f0630b981172fd2183b3a2ff890d98a178c11bc8e0aa3b5ed1be05c4ddb2c20",
+  "sourceExportRoot": "exports/assets",
+  "extraction": {
+    "tool": "FFDec 26.2.1",
+    "method": "Reviewed copies of the recorded image, sound, and rendered key-sprite exports",
+    "sourceDirectories": [
+      "exports/assets/key-sprites",
+      "exports/assets/raw/images",
+      "exports/assets/raw/sounds"
+    ]
+  },
+  "stagedDirectories": [
+    {
+      "path": "key-sprites",
+      "source": "exports/assets/key-sprites",
+      "fileCount": 280,
+      "use": "Hero and enemy animation frames"
+    },
+    {
+      "path": "images",
+      "source": "exports/assets/raw/images",
+      "fileCount": 138,
+      "use": "Original scene, interface, effect, and embedded image exports"
+    },
+    {
+      "path": "sounds",
+      "source": "exports/assets/raw/sounds",
+      "fileCount": 17,
+      "use": "Original music and sound exports"
+    }
+  ],
+  "excludedSourceDirectories": [
+    {
+      "path": "exports/assets/raw/fonts",
+      "reason": "Third-party typeface licensing requires separate review"
+    }
+  ],
+  "rightsOrLicense": "Original Trigger Knight assets. Copyright remains with Mintsphere and other applicable rights holders; this repository does not grant a separate public license.",
+  "reviewDate": "2026-09-12",
+  "transformations": "No transformations. Files retain their recorded export bytes."
+}

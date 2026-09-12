@@ -13,7 +13,8 @@ The behavioral specification in `research/` is the source of truth for original-
 
 The browser presentation uses original visual and audio assets where available. The
 preserved SWF in `original/` and its recorded exports in `exports/` are source
-and provenance records; reviewed production copies belong under `src/assets/`
+and provenance records; reviewed production copies belong under
+`src/assets/original/`
 with the source artifact hash or export identifier, extraction details, rights
 or license, and review date recorded in neighboring metadata. This policy does
 not permit copying decompiled ActionScript or generated behavioral research into
