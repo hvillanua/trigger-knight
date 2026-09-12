@@ -351,7 +351,6 @@ function drawRockFallback(
 function drawBackground(
   context: CanvasRenderingContext2D,
   camera: Readonly<GameObservation["camera"]>,
-  distance: number,
   day: number,
   atlas: VisualAtlas,
 ): void {
@@ -392,21 +391,6 @@ function drawBackground(
     drawMoonFallback(context, moonX, moonY);
   }
 
-  for (const offset of [70, 290] as const) {
-    const cloudX =
-      camera.x +
-      positiveModulo(offset - distance * 0.08, camera.width + 110) -
-      55;
-    if (
-      !drawAtlasSprite(context, atlas, "cloud", cloudX, camera.y + 112, {
-        scale: 0.95,
-        alpha: 0.72,
-      })
-    ) {
-      drawCloudFallback(context, cloudX, camera.y + 112);
-    }
-  }
-
   context.fillStyle = "#263557";
   context.beginPath();
   context.moveTo(camera.x, camera.y + 188);
@@ -442,6 +426,29 @@ function drawBackground(
   context.moveTo(camera.x, groundY);
   context.lineTo(camera.x + camera.width, groundY);
   context.stroke();
+}
+
+function drawMovingBackground(
+  context: CanvasRenderingContext2D,
+  camera: Readonly<GameObservation["camera"]>,
+  distance: number,
+  atlas: VisualAtlas,
+): void {
+  const groundY = camera.y + camera.height * GROUND_RATIO;
+  for (const offset of [70, 290] as const) {
+    const cloudX =
+      camera.x +
+      positiveModulo(offset - distance * 0.08, camera.width + 110) -
+      55;
+    if (
+      !drawAtlasSprite(context, atlas, "cloud", cloudX, camera.y + 112, {
+        scale: 0.95,
+        alpha: 0.72,
+      })
+    ) {
+      drawCloudFallback(context, cloudX, camera.y + 112);
+    }
+  }
 
   const sceneryWidth = camera.width + 128;
   for (let index = 0; index < 7; index += 1) {
@@ -944,10 +951,7 @@ function effectAnchor(
     case "combat-hit":
     case "combat-lethal-hit":
       return {
-        x:
-          event.type === "combat-hit" && event.target === "hero"
-            ? heroX
-            : enemyX,
+        x: event.target === "hero" ? heroX : enemyX,
         y: groundY - 53,
       };
     case "combat-phase-changed":
@@ -1250,21 +1254,8 @@ function drawStaticWorld(
   atlas: VisualAtlas,
 ): void {
   const camera = frame.current.camera;
-  drawBackground(
-    context,
-    camera,
-    frame.current.distance,
-    frame.current.day,
-    atlas,
-  );
+  drawBackground(context, camera, frame.current.day, atlas);
   drawLoadout(context, camera, frame.current, atlas);
-  const markerOffset = positiveModulo(frame.current.distance, camera.width);
-  drawRouteMarker(
-    context,
-    atlas,
-    camera.x + markerOffset,
-    camera.y + camera.height - 6,
-  );
 }
 
 function drawDynamicWorld(
@@ -1275,6 +1266,12 @@ function drawDynamicWorld(
 ): void {
   const camera = frame.current.camera;
   const groundY = camera.y + camera.height * GROUND_RATIO;
+  const distance = interpolate(
+    frame.previous.distance,
+    frame.current.distance,
+    frame.interpolation,
+  );
+  drawMovingBackground(context, camera, distance, atlas);
   const battle = frame.current.battle;
   if (battle === null) {
     drawHero(
@@ -1344,6 +1341,13 @@ function drawDynamicWorld(
       context.restore();
     }
   }
+  const markerOffset = positiveModulo(distance, camera.width);
+  drawRouteMarker(
+    context,
+    atlas,
+    camera.x + markerOffset,
+    camera.y + camera.height - 6,
+  );
   drawEffects(context, atlas, frame, effects);
 }
 

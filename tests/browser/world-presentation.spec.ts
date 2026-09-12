@@ -187,6 +187,137 @@ test("covers every public enemy, shop, and actor phase in Canvas presentation", 
   );
 });
 
+test("anchors targeted lethal effects to the targeted public actor", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+
+  const result = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    const current = {
+      ...base,
+      steps: base.steps + 1,
+      lifecycle: { ...base.lifecycle, phase: "battling" as const },
+      battle: {
+        enemy: { id: "goblin" as const, maximumHp: 900, currentHp: 720 },
+        actors: {
+          hero: { phase: "idle" as const, x: 70 },
+          enemy: { phase: "idle" as const, x: 380 },
+        },
+      },
+    };
+    const previous = current;
+    const countBurstPixels = (centerX: number): number => {
+      const context = canvas.getContext("2d");
+      if (context === null) throw new Error("Expected a Canvas 2D context");
+      const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+      let count = 0;
+      for (let y = 145; y <= 216; y += 1) {
+        for (let x = centerX - 35; x <= centerX + 35; x += 1) {
+          const offset = (y * canvas.width + x) * 4;
+          const red = pixels.data[offset] ?? 0;
+          const green = pixels.data[offset + 1] ?? 0;
+          const blue = pixels.data[offset + 2] ?? 0;
+          if (red > 230 && green > 120 && blue > 110 && red - green > 40) {
+            count += 1;
+          }
+        }
+      }
+      return count;
+    };
+    const presentLethalHit = (target: "hero" | "enemy") => {
+      const event =
+        target === "hero"
+          ? {
+              type: "combat-lethal-hit" as const,
+              attacker: "enemy" as const,
+              target,
+            }
+          : {
+              type: "combat-lethal-hit" as const,
+              attacker: "hero" as const,
+              target,
+            };
+      presentation.present({
+        previous,
+        current,
+        interpolation: 1,
+        events: [event],
+      });
+      return {
+        hero: countBurstPixels(70),
+        enemy: countBurstPixels(380),
+      };
+    };
+
+    return {
+      heroTarget: presentLethalHit("hero"),
+      enemyTarget: presentLethalHit("enemy"),
+    };
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(result.heroTarget.hero).toBeGreaterThan(result.heroTarget.enemy);
+  expect(result.enemyTarget.enemy).toBeGreaterThan(result.enemyTarget.hero);
+});
+
+test("interpolates moving scenery from public distance", async ({ page }) => {
+  await page.goto("/?manual=1");
+
+  const changedPixels = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    const current = { ...base, steps: base.steps + 1, distance: 10 };
+    const snapshot = (): Uint8ClampedArray => {
+      const context = canvas.getContext("2d");
+      if (context === null) throw new Error("Expected a Canvas 2D context");
+      return context.getImageData(0, 0, canvas.width, canvas.height).data;
+    };
+
+    presentation.present({
+      previous: base,
+      current,
+      interpolation: 0,
+      events: [],
+    });
+    const start = snapshot();
+    presentation.present({
+      previous: base,
+      current,
+      interpolation: 1,
+      events: [],
+    });
+    const end = snapshot();
+    let changed = 0;
+    for (let index = 0; index < start.length; index += 1) {
+      if (start[index] !== end[index]) changed += 1;
+    }
+    return changed;
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(changedPixels).toBeGreaterThan(100);
+});
+
 test("does not restart one-shot effects when a frame is redrawn", async ({
   page,
 }) => {
