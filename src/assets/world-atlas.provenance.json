@@ -1,0 +1,10 @@
+{
+  "asset": "world-atlas.svg",
+  "source": "Independently authored in this repository from the clean-room product and presentation requirements",
+  "author": "Trigger Knight implementation contributors",
+  "generator": null,
+  "license": "Original project-authored artwork; no third-party license restrictions",
+  "reviewDate": "2026-09-12",
+  "inputs": ["clean-room/PRD.md", "clean-room/TDD.md"],
+  "cleanRoomReview": "No files from original/, decompiled/, or exports/ were used."
+}

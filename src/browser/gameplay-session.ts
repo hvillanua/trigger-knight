@@ -65,10 +65,24 @@ export function createBrowserGameplaySession(
   let observation = execution.readCurrentCheckpoint().observation;
   let previousObservation = observation;
   let events: readonly GameEvent[] = Object.freeze([]);
+  // Display rendering can lag behind logical dispatch. Keep the public event
+  // sequence intact until the presentation consumes it.
+  let pendingPresentationEvents: GameEvent[] = [];
+  let lastPresentedEvents: readonly GameEvent[] = Object.freeze([]);
 
   const render = (interpolation: number): void => {
+    const frameEvents =
+      presentation === undefined
+        ? events
+        : pendingPresentationEvents.length > 0
+          ? Object.freeze([...pendingPresentationEvents])
+          : lastPresentedEvents;
+    if (presentation !== undefined && pendingPresentationEvents.length > 0) {
+      lastPresentedEvents = frameEvents;
+      pendingPresentationEvents = [];
+    }
     presentation?.present(
-      createFrame(previousObservation, observation, events, interpolation),
+      createFrame(previousObservation, observation, frameEvents, interpolation),
     );
   };
 
@@ -81,6 +95,9 @@ export function createBrowserGameplaySession(
       const checkpoint = execution.dispatch(commands);
       observation = checkpoint.observation;
       events = checkpoint.events;
+      if (presentation !== undefined) {
+        pendingPresentationEvents.push(...checkpoint.events);
+      }
       const completedRun = completedRunSettlementFromState(checkpoint.state);
       if (completedRun !== undefined) {
         options.onCompletedRun?.(completedRun);
