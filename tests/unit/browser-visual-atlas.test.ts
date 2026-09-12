@@ -6,7 +6,7 @@ import {
   WORLD_ATLAS_URL,
 } from "../../src/browser/visual-atlas.js";
 
-describe("clean-room visual atlas", () => {
+describe("approved visual atlas", () => {
   it("covers every player-facing actor, shop, item, and scenery family", () => {
     expect(Object.keys(VISUAL_SPRITES).sort()).toEqual([
       "armor",

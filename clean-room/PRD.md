@@ -2,9 +2,23 @@
 
 ## Objective
 
-Build a native-browser reimplementation of Trigger Knight v1.3 that preserves the researched gameplay experience while creating a clean foundation that can evolve independently over time.
+Build a native-browser reimplementation of Trigger Knight v1.3 that preserves
+the researched gameplay experience, uses the original game assets in its
+presentation where available, and creates a clean foundation that can evolve
+independently over time.
 
 The behavioral specification in `research/` is the source of truth for original-game behavior. The implementation must remain inside the clean-room boundary and must not copy decompiled ActionScript.
+
+### Original asset policy
+
+The browser presentation uses original visual and audio assets where available. The
+preserved SWF in `original/` and its recorded exports in `exports/` are source
+and provenance records; reviewed production copies belong under `src/assets/`
+with the source artifact hash or export identifier, extraction details, rights
+or license, and review date recorded in neighboring metadata. This policy does
+not permit copying decompiled ActionScript or generated behavioral research into
+the implementation, and it does not transfer copyright or grant a public
+license for the original assets.
 
 ## Product requirements
 
@@ -36,7 +50,7 @@ The browser version must provide the main game screens, HUD information, interac
 
 The original coordinate scale is retained as abstract world units for the `original-v1.3` ruleset: one original stage coordinate unit equals one world unit, and the initial camera shows a 480x320-world-unit viewport. This preserves researched positions, distances, speeds, and thresholds without treating them as physical pixels. The renderer must project that camera into responsive, high-density, and fullscreen output while preserving the intended composition and mapping input back to world coordinates.
 
-The original 30 fps timing remains a 30 Hz gameplay simulation requirement because mechanics are frame-based. Rendering may run at the display refresh rate and interpolate between logical ticks; changing render cadence must not change gameplay outcomes.
+The original 30 fps timing remains a 30 Hz gameplay simulation requirement because mechanics are frame-based. Rendering may run at the display refresh rate and interpolate between logical ticks; changing render cadence must not change gameplay outcomes. The presentation should use the original game visual and audio assets where available; asset loading and playback must remain outside authoritative gameplay state.
 
 ### 3. Separate gameplay behavior from presentation
 

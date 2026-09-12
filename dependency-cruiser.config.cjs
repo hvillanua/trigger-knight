@@ -104,7 +104,7 @@ module.exports = {
       name: "production-does-not-import-prohibited-inputs",
       severity: "error",
       comment:
-        "Original, decompiled, exported, research, and tooling files are not production inputs.",
+        "Archival original, decompiled, exported, research, and tooling roots are not direct production imports; reviewed assets must be staged under src/assets/.",
       from: { path: "(^|/)src/" },
       to: {
         path: "(^|/)(original|decompiled|exports|research|tooling|clean-room)/",

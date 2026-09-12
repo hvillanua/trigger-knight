@@ -7,7 +7,7 @@ import {
   PROHIBITED_PRODUCTION_ROOTS,
 } from "../../build/clean-room-boundary.js";
 
-describe("production clean-room boundary", () => {
+describe("production implementation boundary", () => {
   const projectRoot = path.resolve("/trigger-knight");
 
   it.each(PROHIBITED_PRODUCTION_ROOTS)(
@@ -21,7 +21,7 @@ describe("production clean-room boundary", () => {
     },
   );
 
-  it("accepts an approved clean-room asset location", () => {
+  it("accepts an approved runtime asset location", () => {
     const file = path.join(projectRoot, "src/assets/hero.svg");
 
     expect(() =>

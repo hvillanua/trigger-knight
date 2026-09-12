@@ -1,8 +1,8 @@
-# Extracted research assets
+# Extracted original-game assets
 
-All files here were generated from the primary Kongregate SWF. They are
-reference evidence, not clean-room implementation assets and not newly licensed
-for redistribution.
+All files here were generated from the primary Kongregate SWF. They are the
+recorded source exports for the original visual and audio assets used by the
+browser presentation where available.
 
 | Path | Contents |
 |---|---|
@@ -13,4 +13,12 @@ for redistribution.
 
 These are FFDec renders/exports. They are not screenshots captured from a
 running Flash Player unless a file is explicitly labeled as such; none in the
-current set are live captures.
+current set are live captures. To use an export in production, preserve this
+source file, stage a reviewed copy under `src/assets/`, and record its source
+path, export identifier, artifact hash, extraction details, rights or license,
+and review date in neighboring provenance metadata. Production code must not
+import the archival `exports/` directory directly.
+
+This project policy does not create a new license or transfer copyright.
+Distribution of these original assets remains subject to the rights holder's
+terms.

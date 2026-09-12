@@ -1,11 +1,20 @@
 # Repository instructions
 
-## Clean-room constraints
+## Clean-room and asset constraints
 
-- Preserve original artifacts. Never copy decompiled code or generated research
-  artifacts into the implementation.
-- Use human-authored behavioral evidence and approved runtime assets with recorded
-  provenance. Research files are not production inputs.
+- Preserve the original artifacts. Never modify or overwrite the preserved SWF or
+  its provenance records.
+- The gameplay and domain implementation remains clean-room: never copy
+  decompiled code or generated behavioral research artifacts into production.
+- The browser presentation uses the original game's visual and audio assets where
+  available. Stage approved files from `original/` or `exports/` under
+  `src/assets/` (or another explicitly approved runtime asset directory), and
+  record the source path, artifact hash or export identifier, extraction details,
+  rights or license, and review date in neighboring provenance metadata.
+- The archival `original/` and `exports/` directories are source/provenance
+  records, not direct production module roots. Do not import code or unreviewed
+  files from them. Research files remain non-production inputs except for an
+  explicitly approved asset staged with provenance.
 - Distinguish confirmed behavior, derived evidence, and unresolved questions.
   Never present a compatibility choice as confirmed original behavior.
 - Keep hidden gameplay state out of player-facing observations, events, and policy
