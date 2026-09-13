@@ -96,16 +96,19 @@ The presentation may interpolate between observations, but only `current` is aut
 
 #### Runtime asset inputs
 
-Presentation adapters consume reviewed copies of the original game's visual,
-audio, and font assets where available. The preserved SWF and recorded exports are source
-records; production files are staged under `src/assets/original/` and carry neighboring
-provenance metadata linking them to the source artifact hash or export
-identifier, extraction details, rights or license, and review date. Asset files
-must not carry gameplay decisions or hidden state. The presentation boundary
-does not permit decompiled ActionScript, generated behavioral research, or
-direct imports from archival source roots. Font files may be reused when staged
-with their recorded rights status; an embedded SWF copyright notice does not by
-itself establish redistribution rights.
+Presentation adapters consume reviewed copies of the original game's visual and
+font assets where available. The original sound exports remain source records;
+the browser sound adapter consumes independently authored effects staged under
+`src/assets/sound-effects/`. The preserved SWF and recorded exports are source
+records; original production files are staged under `src/assets/original/` and
+carry neighboring provenance metadata linking them to the source artifact hash
+or export identifier, extraction details, rights or license, and review date.
+Authored sound files carry equivalent generator, hash, rights, and review
+metadata. Asset files must not carry gameplay decisions or hidden state. The
+presentation boundary does not permit decompiled ActionScript, generated
+behavioral research, or direct imports from archival source roots. Font files
+may be reused when staged with their recorded rights status; an embedded SWF
+copyright notice does not by itself establish redistribution rights.
 
 Input adapters translate pointer, touch, keyboard, or future devices into `GameCommand` values. They must honor public action eligibility rather than recreate availability rules. A max-tier equipment shop is therefore ineligible before input mapping, and a direct invalid command cannot spend gold, heal HP, or consume the shop. Presentation chooses the unavailable cue but cannot display an ineligible shop as purchasable. A sound-effects adapter maps domain events and UI actions to semantic cues without putting file paths or playback operations in the domain. Background music is outside the initial scope; a future music controller can observe application or screen lifecycle without changing gameplay contracts or deterministic state.
 

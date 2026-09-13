@@ -1,17 +1,20 @@
 # Approved runtime assets
 
-The browser presentation uses the original Trigger Knight visual, audio, and
-font assets where available. This directory is the production staging area for
-reviewed asset files from the preserved game artifact and its recorded exports.
-The currently staged set is under [`original/`](original/): 280 character
+The browser presentation uses the original Trigger Knight visual and font assets
+where available. This directory is the production staging area for reviewed
+asset files from the preserved game artifact and its recorded exports. The
+currently staged original set is under [`original/`](original/): 280 character
 animation frames, 138 raster image exports, 17 music or sound exports, and 8
-font exports.
+font exports. The original sound exports remain provenance records and are not
+production inputs. The browser sound adapter uses the independently authored
+files under [`sound-effects/`](sound-effects/).
 
 The Canvas presentation currently loads the original Hero, Dragon, Goblin,
 Golem, and Wolf idle frames plus the sky, ground, mountain, and building scene
 layers from that set. It also loads the staged font exports for browser text and
 Canvas labels. Its authored `world-atlas.svg` remains the fallback for sprite
-families that have not been mapped to an original export yet.
+families that have not been mapped to an original export yet. Sound cue mapping
+and playback live in `src/sound/` and do not affect gameplay state.
 
 The font-to-presentation-role mapping is a compatibility choice made for this
 browser implementation. It has not been verified against every original SWF
