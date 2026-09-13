@@ -32,6 +32,26 @@ export interface SpriteRect {
 
 export type OriginalSceneAssetId = "sky" | "ground" | "mountains" | "building";
 
+export type OriginalUiImageId =
+  | "parchment"
+  | "bottom-strip"
+  | "message-strip"
+  | "lifespan-fill"
+  | "lifespan-frame"
+  | "hp-fill"
+  | "hp-frame"
+  | "portrait"
+  | "logo"
+  | "gold-bag"
+  | "pointer"
+  | "pointer-click"
+  | "weapon-icon"
+  | "armor-icon"
+  | "shrine-icon"
+  | "elixir-icon"
+  | "divine-edge-icon"
+  | "voucher-icon";
+
 const SPRITE_WIDTH = 64;
 const SPRITE_HEIGHT = 96;
 
@@ -110,6 +130,47 @@ export const ORIGINAL_SCENE_ASSET_URLS: Readonly<
   building: new URL("../assets/original/images/366.png", import.meta.url).href,
 });
 
+/** Reviewed interface exports used by the composed browser presentation. */
+export const ORIGINAL_UI_IMAGE_URLS: Readonly<
+  Record<OriginalUiImageId, string>
+> = Object.freeze({
+  parchment: new URL("../assets/original/images/529.jpg", import.meta.url).href,
+  "bottom-strip": new URL("../assets/original/images/200.jpg", import.meta.url)
+    .href,
+  "message-strip": new URL("../assets/original/images/190.png", import.meta.url)
+    .href,
+  "lifespan-fill": new URL("../assets/original/images/251.png", import.meta.url)
+    .href,
+  "lifespan-frame": new URL(
+    "../assets/original/images/253.png",
+    import.meta.url,
+  ).href,
+  "hp-fill": new URL("../assets/original/images/202.png", import.meta.url).href,
+  "hp-frame": new URL("../assets/original/images/204.png", import.meta.url)
+    .href,
+  portrait: new URL("../assets/original/images/194.png", import.meta.url).href,
+  logo: new URL("../assets/original/images/268.png", import.meta.url).href,
+  "gold-bag": new URL("../assets/original/images/233.png", import.meta.url)
+    .href,
+  pointer: new URL("../assets/original/images/19.png", import.meta.url).href,
+  "pointer-click": new URL("../assets/original/images/21.png", import.meta.url)
+    .href,
+  "weapon-icon": new URL("../assets/original/images/156.png", import.meta.url)
+    .href,
+  "armor-icon": new URL("../assets/original/images/158.png", import.meta.url)
+    .href,
+  "shrine-icon": new URL("../assets/original/images/172.png", import.meta.url)
+    .href,
+  "elixir-icon": new URL("../assets/original/images/198.png", import.meta.url)
+    .href,
+  "divine-edge-icon": new URL(
+    "../assets/original/images/179.png",
+    import.meta.url,
+  ).href,
+  "voucher-icon": new URL("../assets/original/images/164.png", import.meta.url)
+    .href,
+});
+
 export const WORLD_ATLAS_URL = new URL(
   "../assets/world-atlas.svg",
   import.meta.url,
@@ -126,6 +187,9 @@ export interface VisualAtlas {
   readonly sceneImages: Readonly<
     Partial<Record<OriginalSceneAssetId, HTMLImageElement>>
   >;
+  readonly uiImages: Readonly<
+    Partial<Record<OriginalUiImageId, HTMLImageElement>>
+  >;
 }
 
 /** Loads optional artwork without making presentation or gameplay wait for it. */
@@ -138,6 +202,7 @@ export function createVisualAtlas(
   const originalImages: Partial<Record<VisualSpriteId, HTMLImageElement>> = {};
   const sceneImages: Partial<Record<OriginalSceneAssetId, HTMLImageElement>> =
     {};
+  const uiImages: Partial<Record<OriginalUiImageId, HTMLImageElement>> = {};
 
   if (status === "loading") {
     const originalSpriteEntries = Object.entries(ORIGINAL_SPRITE_URLS) as Array<
@@ -146,8 +211,14 @@ export function createVisualAtlas(
     const originalSceneEntries = Object.entries(
       ORIGINAL_SCENE_ASSET_URLS,
     ) as Array<[OriginalSceneAssetId, string]>;
+    const originalUiEntries = Object.entries(ORIGINAL_UI_IMAGE_URLS) as Array<
+      [OriginalUiImageId, string]
+    >;
     let pending =
-      1 + originalSpriteEntries.length + originalSceneEntries.length;
+      1 +
+      originalSpriteEntries.length +
+      originalSceneEntries.length +
+      originalUiEntries.length;
     let fallbackLoaded = false;
 
     const settle = (): void => {
@@ -187,6 +258,15 @@ export function createVisualAtlas(
       sceneImage.onerror = settle;
       sceneImage.src = url;
     }
+
+    for (const [assetId, url] of originalUiEntries) {
+      const uiImage = new Image();
+      uiImage.decoding = "async";
+      uiImages[assetId] = uiImage;
+      uiImage.onload = settle;
+      uiImage.onerror = settle;
+      uiImage.src = url;
+    }
   }
 
   return Object.freeze({
@@ -198,5 +278,6 @@ export function createVisualAtlas(
     },
     originalImages: Object.freeze(originalImages),
     sceneImages: Object.freeze(sceneImages),
+    uiImages: Object.freeze(uiImages),
   });
 }

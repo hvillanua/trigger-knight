@@ -186,3 +186,75 @@ test("uses the projected Canvas shop target for one touch-style activation", asy
     "false",
   );
 });
+
+test("uses the Canvas item prompt for one touch-style battle activation", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+
+  const found = await page.evaluate(() => {
+    const advance = document.querySelector<HTMLButtonElement>("#advance-run");
+    const dismiss =
+      document.querySelector<HTMLButtonElement>("#dismiss-tutorial");
+    const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
+    if (advance === null || dismiss === null || canvas === null) {
+      throw new Error("Missing controls");
+    }
+    for (let index = 0; index < 4_000; index += 1) {
+      if (!dismiss.disabled) dismiss.click();
+      if (canvas.dataset.itemEligible === "true") return true;
+      advance.click();
+    }
+    return false;
+  });
+  expect(found).toBe(true);
+
+  await page.evaluate(() => {
+    const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
+    if (canvas === null) throw new Error("Missing game canvas");
+    const rect = canvas.getBoundingClientRect();
+    const camera = canvas.dataset.worldCamera?.split(",").map(Number);
+    const projection = canvas.dataset.projectionViewport
+      ?.split(",")
+      .map(Number);
+    if (camera === undefined || projection === undefined) {
+      throw new Error("Missing public Canvas projection");
+    }
+    const scale = projection[2]! / camera[2]!;
+    const backingX = projection[0]! + (110 - camera[0]!) * scale;
+    const backingY = projection[1]! + (176 - camera[1]!) * scale;
+    const styles = getComputedStyle(canvas);
+    const borderLeft = Number.parseFloat(styles.borderLeftWidth) || 0;
+    const borderTop = Number.parseFloat(styles.borderTopWidth) || 0;
+    const clientX =
+      rect.left + borderLeft + (backingX / canvas.width) * canvas.clientWidth;
+    const clientY =
+      rect.top + borderTop + (backingY / canvas.height) * canvas.clientHeight;
+    canvas.dispatchEvent(
+      new PointerEvent("pointermove", {
+        bubbles: true,
+        clientX,
+        clientY,
+        pointerId: 8,
+        pointerType: "touch",
+      }),
+    );
+    canvas.dispatchEvent(
+      new PointerEvent("pointerup", {
+        bubbles: true,
+        button: 0,
+        clientX,
+        clientY,
+        pointerId: 8,
+        pointerType: "touch",
+      }),
+    );
+  });
+
+  await expect(page.locator("#game-feedback")).toContainText("Used Elixir");
+  await expect(page.locator("#game-canvas")).toHaveAttribute(
+    "data-item-eligible",
+    "false",
+  );
+});
