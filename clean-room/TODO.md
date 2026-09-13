@@ -242,30 +242,19 @@ Background music, music assets, playlists, transitions, and music controls remai
 - the same seed and command schedule produce the same domain checkpoints in browser and headless execution;
 - presentation settings and supported input devices cannot change gameplay outcomes.
 
-## Milestone 9 — Release readiness
+## Initial local-play scope ends at Milestone 8
 
-### Builds
+Milestone 8 completes the initial local-play scope. The repository is intended
+for local play and experimentation for fun, so the planned Milestone 9 release
+readiness work is retired without tickets. Closing that milestone records a
+scope decision, not completion of release certification.
 
-A releasable initial compatibility version with known limitations documented and every product acceptance criterion demonstrated.
-
-This milestone establishes:
-
-- complete PRD acceptance coverage;
-- supported-browser validation and production build verification;
-- performance and stability checks for browser play and supported simulation workloads;
-- persistence migration, failure recovery, and corrupted-data behavior;
-- accessibility and responsive-presentation review;
-- deployment and release documentation;
-- documented compatibility limitations, deferred behavior, and future extension points;
-- final confirmation that original artifacts and implementation outputs remain inside their intended boundaries.
-
-### Complete when
-
-- every PRD acceptance criterion has reproducible evidence;
-- focused local evidence and the complete pre-push validation gate pass from a clean checkout;
-- a release build can be produced and exercised using documented commands;
-- no unresolved issue blocks the declared compatibility scope;
-- deferred work, including background music and any enhanced rulesets, remains clearly outside the initial release.
+Public deployment, broad browser certification, and a formal release process
+are not required. Existing gameplay acceptance criteria, compatibility tests,
+persistence recovery coverage, simulation benchmarks, and repository validation
+rules remain in effect. Future bugs or measured performance problems can receive
+focused tickets when they arise. Background music and enhanced rulesets remain
+outside the initial local-play version.
 
 ## Milestone completion rule
 

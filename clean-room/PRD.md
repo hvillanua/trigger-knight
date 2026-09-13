@@ -7,6 +7,10 @@ the researched gameplay experience, uses the original game assets in its
 presentation where available, and creates a clean foundation that can evolve
 independently over time.
 
+The project is intended for local play and experimentation for fun. The initial
+local-play version does not require public deployment or a formal release
+certification process.
+
 The behavioral specification in `research/` is the source of truth for original-game behavior. The implementation must remain inside the clean-room boundary and must not copy decompiled ActionScript.
 
 ### Original asset policy
@@ -110,7 +114,7 @@ The first complete implementation is acceptable when:
 - profile and collection updates are committed durably without depending on score-count animation completion;
 - unresolved research questions and implementation decisions remain explicitly documented.
 
-## Out of scope for the initial compatibility release
+## Out of scope for the initial local-play version
 
 - new enemies, items, shops, progression systems, or other original content;
 - intentional balance changes to the original-v1.3 ruleset;
