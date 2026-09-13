@@ -339,10 +339,17 @@ export function createBrowserSoundEffects(
 
     const queued = pendingCues;
     pendingCues = [];
-    for (const cue of queued) {
+    for (let index = 0; index < queued.length; index += 1) {
+      const cue = queued[index];
+      if (cue === undefined) continue;
       const buffer = buffers.get(cue);
       if (buffer === undefined) {
-        if (!failedCues.has(cue)) retain(pendingCues, cue);
+        if (!failedCues.has(cue)) {
+          for (const remainingCue of queued.slice(index)) {
+            retain(pendingCues, remainingCue);
+          }
+          break;
+        }
         continue;
       }
       let source: SoundAudioSource | undefined;

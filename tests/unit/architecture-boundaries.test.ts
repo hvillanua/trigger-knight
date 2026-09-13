@@ -161,5 +161,6 @@ describe("player-visible contract rules", () => {
     expect(result.stdout + result.stderr).toContain(
       "GameObservation -> MergeHiddenState",
     );
+    expect(result.stdout + result.stderr).toContain("SoundPort -> RunState");
   });
 });

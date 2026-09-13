@@ -10,7 +10,7 @@ export interface InputBindings {
   readonly useCarriedItem: string;
 }
 
-/** Sound presentation preferences persisted outside gameplay state. */
+/** @playerVisible Sound presentation preferences persisted outside gameplay state. */
 export interface SoundPreferences {
   readonly muted: boolean;
   /** Master volume, normalized to the inclusive range 0–1. */

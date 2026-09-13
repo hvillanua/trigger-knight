@@ -1,7 +1,7 @@
 import type { GameEvent } from "../domain/contracts.js";
 import type { SoundPreferences } from "./settings.js";
 
-/** Semantic presentation cue. Cue names carry no asset or playback details. */
+/** @playerVisible Semantic presentation cue with no asset or playback details. */
 export type SoundCue =
   | "ui-activate"
   | "ui-confirm"
@@ -22,9 +22,10 @@ export type SoundCue =
   | "run-ended"
   | "pause";
 
-/** Browser actions that need feedback without changing gameplay state. */
+/** @playerVisible Browser actions that need feedback without changing gameplay state. */
 export type SoundUiAction = "activate" | "confirm" | "cancel";
 
+/** @playerVisible Sound availability state surfaced by the browser UI. */
 export type SoundStatus =
   | "uninitialized"
   | "loading"
@@ -34,12 +35,13 @@ export type SoundStatus =
   | "unavailable"
   | "failed";
 
+/** @playerVisible Result of loading the player-facing sound adapter. */
 export interface SoundInitializationResult {
   readonly status: Exclude<SoundStatus, "uninitialized" | "loading">;
   readonly failedCues: readonly SoundCue[];
 }
 
-/** Application boundary for browser sound effects. */
+/** @playerVisible Application boundary for browser sound effects. */
 export interface SoundPort {
   initialize(): Promise<SoundInitializationResult>;
   setPreferences(preferences: Readonly<SoundPreferences>): void;

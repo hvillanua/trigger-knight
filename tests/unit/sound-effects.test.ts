@@ -202,6 +202,47 @@ describe("browser sound effects", () => {
     expect(sound.readDiagnostics().playedCues).toEqual(["ui-activate"]);
   });
 
+  it("preserves cue order when later assets decode first", async () => {
+    const context = new FakeContext();
+    let releaseBattle: (() => void) | undefined;
+    let releaseItem: (() => void) | undefined;
+    const runtime: SoundAudioRuntime = {
+      createContext: () => context,
+      load: (url) => {
+        if (url.endsWith("battle-start.wav")) {
+          return new Promise<ArrayBuffer>((resolve) => {
+            releaseBattle = () => resolve(new ArrayBuffer(8));
+          });
+        }
+        if (url.endsWith("item.wav")) {
+          return new Promise<ArrayBuffer>((resolve) => {
+            releaseItem = () => resolve(new ArrayBuffer(8));
+          });
+        }
+        return Promise.resolve(new ArrayBuffer(8));
+      },
+    };
+    const sound = createBrowserSoundEffects({ runtime });
+    const initialization = sound.initialize();
+    releaseItem?.();
+    await Promise.resolve();
+    await Promise.resolve();
+    sound.setSession("run-1");
+    sound.presentTransition("run-1", 1, [
+      event("battle-started"),
+      event("item-used"),
+    ]);
+    expect(sound.readDiagnostics().playedCues).toEqual([]);
+
+    releaseBattle?.();
+    await initialization;
+
+    expect(sound.readDiagnostics().playedCues).toEqual([
+      "battle-start",
+      "item-use",
+    ]);
+  });
+
   it("stops old-session playback and ignores stale transitions", async () => {
     const { context, sound } = setup();
     await sound.initialize();
