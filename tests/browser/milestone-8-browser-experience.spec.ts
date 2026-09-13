@@ -1,10 +1,14 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
+import { createGameplayExecution } from "../../src/application/gameplay-execution.js";
+import type { GameplayTrace } from "../../src/application/gameplay-execution.js";
 import { createFreshProfile } from "../../src/domain/profile.js";
+import { ORIGINAL_V13_RULESET_ID } from "../../src/domain/rulesets.js";
 import {
   PROFILE_STORAGE_ENVELOPE_VERSION,
   PROFILE_STORAGE_KEY,
 } from "../../src/persistence/browser-profile-store.js";
+import { createTestGameplayEngine } from "../helpers/gameplay-engine.js";
 
 const REPRESENTATIVE_VIEWPORTS = [
   { name: "desktop", width: 1280, height: 720, dpr: 1 },
@@ -37,9 +41,7 @@ function profileEnvelope() {
   };
 }
 
-async function seedDisabledTutorialProfile(
-  page: import("@playwright/test").Page,
-): Promise<void> {
+async function seedDisabledTutorialProfile(page: Page): Promise<void> {
   await page.addInitScript(
     ({ key, value }) => {
       if (window.localStorage.getItem(key) === null) {
@@ -51,7 +53,7 @@ async function seedDisabledTutorialProfile(
 }
 
 async function installFullscreenStub(
-  page: import("@playwright/test").Page,
+  page: Page,
   mode: "working" | "denied" | "unsupported",
 ): Promise<void> {
   await page.addInitScript((stubMode) => {
@@ -87,7 +89,7 @@ async function installFullscreenStub(
 }
 
 async function advanceUntilResult(
-  page: import("@playwright/test").Page,
+  page: Page,
   maxSteps: number,
   purchase: boolean,
 ) {
@@ -139,6 +141,14 @@ async function advanceUntilResult(
     },
     { maxSteps, purchase },
   );
+}
+
+async function readDiagnostics(page: Page): Promise<GameplayTrace> {
+  return page.evaluate(() => {
+    const trace = window.triggerKnightDiagnostics?.read();
+    if (trace === undefined) throw new Error("Missing browser diagnostics");
+    return trace;
+  });
 }
 
 test("exposes fullscreen controls and the reduced-motion presentation state", async ({
@@ -299,49 +309,84 @@ test("keeps assembled screens readable and operable at representative sizes", as
 });
 
 test("reduced motion keeps timing and committed results durable", async ({
-  page,
+  browser,
 }) => {
-  await page.emulateMedia({ reducedMotion: "reduce" });
-  await seedDisabledTutorialProfile(page);
-  await page.goto("/?manual=1&seed=m4-policy-3");
-
-  const summary = await advanceUntilResult(page, 12_000, true);
-  expect(
-    summary,
-    JSON.stringify({ ...summary, eventTypes: summary.eventTypes.length }),
-  ).toMatchObject({
-    seed: "m4-policy-3",
-    terminalReason: "lifespan",
+  test.setTimeout(90_000);
+  const normalContext = await browser.newContext({
+    viewport: { width: 640, height: 360 },
+    deviceScaleFactor: 2,
   });
-  expect(summary.purchaseCount).toBeGreaterThan(0);
-  await expect(page.locator("#run-result")).toHaveAttribute(
-    "data-result-state",
-    "committed",
-  );
-  await expect(page.locator("#run-result")).toHaveAttribute(
-    "data-reduced-motion",
-    "true",
-  );
-  await expect(page.locator("#result-score-count")).toHaveAttribute(
-    "data-state",
-    "complete",
-  );
-  await expect(page.locator("#result-save-status")).toHaveText(
-    "Progress saved.",
-  );
+  const reducedContext = await browser.newContext({
+    viewport: { width: 640, height: 360 },
+    deviceScaleFactor: 2,
+  });
+  const normalPage = await normalContext.newPage();
+  const reducedPage = await reducedContext.newPage();
+  try {
+    await seedDisabledTutorialProfile(normalPage);
+    await normalPage.goto("/?manual=1&seed=m4-policy-3");
+    const normalSummary = await advanceUntilResult(normalPage, 12_000, true);
+    const normalTrace = await readDiagnostics(normalPage);
 
-  const saved = await page.evaluate((key) => {
-    const value = window.localStorage.getItem(key);
-    if (value === null) throw new Error("Expected a committed profile");
-    return value;
-  }, PROFILE_STORAGE_KEY);
-  await page.goto("/?manual=1&seed=m4-policy-3");
-  expect(
-    await page.evaluate(
-      (key) => localStorage.getItem(key),
-      PROFILE_STORAGE_KEY,
-    ),
-  ).toBe(saved);
+    await reducedPage.emulateMedia({ reducedMotion: "reduce" });
+    await seedDisabledTutorialProfile(reducedPage);
+    await reducedPage.goto("/?manual=1&seed=m4-policy-3");
+    const reducedSummary = await advanceUntilResult(reducedPage, 12_000, true);
+    const reducedTrace = await readDiagnostics(reducedPage);
+
+    for (const summary of [normalSummary, reducedSummary]) {
+      expect(
+        summary,
+        JSON.stringify({ ...summary, eventTypes: summary.eventTypes.length }),
+      ).toMatchObject({
+        seed: "m4-policy-3",
+        terminalReason: "lifespan",
+      });
+      expect(summary.purchaseCount).toBeGreaterThan(0);
+    }
+    expect(reducedTrace).toEqual(normalTrace);
+
+    const headless = createGameplayExecution(createTestGameplayEngine(), {
+      ruleset: ORIGINAL_V13_RULESET_ID,
+      seed: "m4-policy-3",
+      initialProfile: disabledTutorialProfile,
+    });
+    for (const checkpoint of normalTrace.checkpoints.slice(1)) {
+      headless.dispatch(checkpoint.commands);
+    }
+    expect(headless.readDiagnostics()).toEqual(normalTrace);
+
+    await expect(reducedPage.locator("#run-result")).toHaveAttribute(
+      "data-result-state",
+      "committed",
+    );
+    await expect(reducedPage.locator("#run-result")).toHaveAttribute(
+      "data-reduced-motion",
+      "true",
+    );
+    await expect(reducedPage.locator("#result-score-count")).toHaveAttribute(
+      "data-state",
+      "complete",
+    );
+    await expect(reducedPage.locator("#result-save-status")).toHaveText(
+      "Progress saved.",
+    );
+
+    const saved = await reducedPage.evaluate((key) => {
+      const value = window.localStorage.getItem(key);
+      if (value === null) throw new Error("Expected a committed profile");
+      return value;
+    }, PROFILE_STORAGE_KEY);
+    await reducedPage.goto("/?manual=1&seed=m4-policy-3");
+    expect(
+      await reducedPage.evaluate(
+        (key) => localStorage.getItem(key),
+        PROFILE_STORAGE_KEY,
+      ),
+    ).toBe(saved);
+  } finally {
+    await Promise.all([normalContext.close(), reducedContext.close()]);
+  }
 });
 
 test("completes both gameplay death paths and starts another real browser run", async ({
