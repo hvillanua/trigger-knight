@@ -44,6 +44,11 @@ import {
   type CssDimensions,
 } from "./browser/foundation.js";
 import {
+  createFullscreenController,
+  type FullscreenState,
+  type FullscreenStateChange,
+} from "./browser/fullscreen.js";
+import {
   createBrowserGameplaySession,
   type BrowserGameplaySession,
 } from "./browser/gameplay-session.js";
@@ -59,7 +64,7 @@ import {
   findBindingConflict,
   type InputAction,
 } from "./browser/input.js";
-import { createHudView, describeGameEvent } from "./browser/hud.js";
+import { createHudView, describeAccessibleGameEvent } from "./browser/hud.js";
 import { createFreshProfile } from "./domain/profile.js";
 import { ORIGINAL_V13_RULESET_ID, ruleSetRegistry } from "./domain/rulesets.js";
 import { createBrowserProfileStore } from "./persistence/browser-profile-store.js";
@@ -88,6 +93,9 @@ const dismissTutorialButton =
 const manualClock =
   import.meta.env.DEV &&
   new URLSearchParams(window.location.search).get("manual") === "1";
+const devSeedOverride = import.meta.env.DEV
+  ? new URLSearchParams(window.location.search).get("seed")?.trim() || undefined
+  : undefined;
 const advanceButton = manualClock
   ? document.createElement("button")
   : undefined;
@@ -99,6 +107,9 @@ if (advanceButton !== undefined) {
   gameplayControls.prepend(advanceButton);
 }
 const pauseButton = requiredElement<HTMLButtonElement>("#toggle-pause");
+const fullscreenButton =
+  requiredElement<HTMLButtonElement>("#toggle-fullscreen");
+const fullscreenStatus = requiredElement<HTMLElement>("#fullscreen-status");
 const purchaseButton = requiredElement<HTMLButtonElement>(
   "#purchase-current-encounter",
 );
@@ -291,6 +302,10 @@ let latestFeedback = "";
 
 const completedRunCoordinator = createCompletedRunCoordinator(profileStore);
 const presentation = new CanvasPresentation(canvas);
+const reducedMotionQuery =
+  typeof window.matchMedia === "function"
+    ? window.matchMedia("(prefers-reduced-motion: reduce)")
+    : null;
 let runNumber = 0;
 
 type ScreenId =
@@ -304,11 +319,40 @@ const screens: Readonly<Record<ScreenId, HTMLElement>> = Object.freeze({
   achievements: achievementsScreen,
   settings: settingsScreen,
 });
+
+function fullscreenStatusText(state: FullscreenState): string {
+  switch (state) {
+    case "unsupported":
+      return "Fullscreen is not available in this browser.";
+    case "available":
+      return "Fullscreen is available.";
+    case "active":
+      return "Fullscreen is active. Use Exit fullscreen to leave it.";
+    case "denied":
+      return "Fullscreen request was denied. Check browser permissions and try again.";
+  }
+}
+
+function renderFullscreen(change: FullscreenStateChange): void {
+  fullscreenButton.disabled = !change.supported;
+  fullscreenButton.textContent = change.active
+    ? "Exit fullscreen"
+    : "Enter fullscreen";
+  fullscreenButton.setAttribute("aria-pressed", String(change.active));
+  fullscreenStatus.textContent = fullscreenStatusText(change.state);
+  fullscreenStatus.dataset.state = change.state;
+}
+
+const fullscreenController = createFullscreenController(gameplayScreen, {
+  onStateChange: renderFullscreen,
+});
+
 let currentScreen: ScreenId = "gameplay";
 let profileReturnScreen: "title" | "result" = "title";
 let settingsReturnScreen: "title" | "result" = "title";
 
 function showScreen(screen: ScreenId, focus = true): void {
+  if (screen !== "gameplay") void fullscreenController.exit();
   if (screen !== "gameplay") soundEffects.stop();
   for (const [id, element] of Object.entries(screens) as [
     ScreenId,
@@ -504,7 +548,10 @@ function renderHud(observation: Readonly<GameObservation>): void {
 }
 
 function renderFeedback(events: readonly GameEvent[]): void {
-  const announcement = events.map(describeGameEvent).filter(Boolean).join(" ");
+  const announcement = events
+    .map(describeAccessibleGameEvent)
+    .filter(Boolean)
+    .join(" ");
   if (announcement !== "") {
     latestFeedback = announcement;
     gameFeedback.textContent = latestFeedback;
@@ -725,6 +772,16 @@ const resultPresentation = new CompletedRunPresentation(resultRoot, {
   },
 });
 
+function syncReducedMotion(): void {
+  const reducedMotion = reducedMotionQuery?.matches ?? false;
+  presentation.setReducedMotion(reducedMotion);
+  resultPresentation.setReducedMotion(reducedMotion);
+  document.documentElement.dataset.reducedMotion = String(reducedMotion);
+}
+
+syncReducedMotion();
+reducedMotionQuery?.addEventListener("change", syncReducedMotion);
+
 function showTitle(): void {
   activeRun?.clock?.stop();
   activeRun = undefined;
@@ -850,11 +907,19 @@ function startRun(profile: ProfileState, focus = true): void {
   tutorialPanel.hidden = false;
   showScreen("gameplay", focus);
 
+  const seed =
+    devSeedOverride === undefined
+      ? runNumber === 1
+        ? "browser-run"
+        : `browser-run-${runNumber}`
+      : runNumber === 1
+        ? devSeedOverride
+        : `${devSeedOverride}-${runNumber}`;
   record.session = createBrowserGameplaySession(
     gameplayEngine,
     Object.freeze({
       ruleset: ORIGINAL_V13_RULESET_ID,
-      seed: runNumber === 1 ? "browser-run" : `browser-run-${runNumber}`,
+      seed,
       initialProfile: profile,
     }),
     presentation,
@@ -1065,6 +1130,12 @@ pauseButton.addEventListener("click", () => {
   dispatch(commandsForTogglePauseActivation());
 });
 
+fullscreenButton.addEventListener("click", () => {
+  runUiAction("activate", () => {
+    void fullscreenController.toggle();
+  });
+});
+
 requiredElement<HTMLButtonElement>("#start-run").addEventListener(
   "click",
   () => {
@@ -1244,6 +1315,7 @@ window.addEventListener("pageshow", () => {
 
 observeDevicePixelRatioChanges(window, render);
 window.addEventListener("resize", render);
+document.addEventListener("fullscreenchange", render);
 
 const resizeObserver = new ResizeObserver(([entry]) => {
   if (entry === undefined) {

@@ -1,6 +1,11 @@
 import { expect, it } from "vitest";
 
-import { createHudView } from "../../src/browser/hud.js";
+import {
+  createHudView,
+  describeAccessibleGameEvent,
+  describeGameEvent,
+} from "../../src/browser/hud.js";
+import type { GameEvent } from "../../src/application/contracts.js";
 import { ORIGINAL_V13_RULESET_ID } from "../../src/domain/rulesets.js";
 import { createTestGameplayEngine } from "../helpers/gameplay-engine.js";
 
@@ -79,4 +84,24 @@ it("communicates an ineligible max-tier shop without making it purchasable", () 
   expect(observation.actions.canPurchaseCurrentEncounter).toBe(false);
   expect(view.context.warning).toContain("maximum tier");
   expect(view.context.actionEnabled).toBe(false);
+});
+
+it("keeps repeated combat updates out of the live accessibility announcement", () => {
+  const hit: GameEvent = {
+    type: "combat-hit",
+    attacker: "hero",
+    target: "enemy",
+    damage: 216,
+    critical: false,
+    remainingHp: 784,
+  };
+  const purchase: GameEvent = {
+    type: "shop-purchased",
+    shop: "bladesmith",
+    price: 300,
+  };
+
+  expect(describeGameEvent(hit)).toContain("hit");
+  expect(describeAccessibleGameEvent(hit)).toBe("");
+  expect(describeAccessibleGameEvent(purchase)).toContain("Purchased");
 });

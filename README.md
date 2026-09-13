@@ -172,6 +172,20 @@ For deterministic manual browser tests, open `/?manual=1` on the development
 server. This enables the Advance run control and immediate single-step command
 dispatch. Production builds always use automatic scheduling.
 
+The gameplay screen provides an Enter fullscreen control when the host supports
+the Fullscreen API. Entry, exit, denied requests, and unsupported hosts are
+reported beside the control; changing the presentation size does not change the
+480 by 320 world camera. The browser honors `prefers-reduced-motion` by removing
+optional world effects, interpolation, and result counting animation while
+leaving logical timing, action eligibility, and committed results unchanged.
+For deterministic development replays, `/?manual=1&seed=<seed>` selects the
+first run seed in a development build only; production builds ignore this query
+parameter.
+
+Playwright is configured to retain a screenshot, error context, and trace for
+each local failure under `test-results/`. The trace includes browser console and
+page-error diagnostics and can be opened with `npx playwright show-trace`.
+
 `BrowserGameplaySessionOptions.onTransition` receives every step's public
 observation and ordered events once, including steps between displayed frames.
 Use it for event-driven consumers. Repeated `PresentationFrame` renders retain
