@@ -143,6 +143,7 @@
             class="game-feedback"
             role="status"
             aria-live="polite"
+            aria-atomic="true"
           ></p>
         </section>
         <canvas
@@ -191,6 +192,14 @@
             Pause
           </button>
           <button
+            id="toggle-fullscreen"
+            type="button"
+            aria-pressed="false"
+            aria-describedby="fullscreen-status"
+          >
+            Enter fullscreen
+          </button>
+          <button
             id="purchase-current-encounter"
             type="button"
             aria-describedby="hud-context-description hud-context-warning"
@@ -208,6 +217,15 @@
           </button>
           <button id="gameplay-main-menu" type="button">Main menu</button>
         </div>
+        <p
+          id="fullscreen-status"
+          class="help-text"
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          Fullscreen is available.
+        </p>
       </section>
 
       <section

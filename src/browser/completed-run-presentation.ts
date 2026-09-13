@@ -64,6 +64,7 @@ export class CompletedRunPresentation {
   readonly #onRetry: () => void;
   readonly #onNextRun: () => void;
   #scoreFrame: number | undefined;
+  #reducedMotion = false;
 
   constructor(root: HTMLElement, options: CompletedRunPresentationOptions) {
     this.#root = root;
@@ -105,6 +106,16 @@ export class CompletedRunPresentation {
     this.#nextRun.addEventListener("click", () => {
       this.#onNextRun();
     });
+    this.#root.dataset.reducedMotion = "false";
+  }
+
+  /** Completes optional result animation when the user prefers less motion. */
+  setReducedMotion(reducedMotion: boolean): void {
+    this.#reducedMotion = reducedMotion;
+    this.#root.dataset.reducedMotion = String(reducedMotion);
+    if (reducedMotion && this.#scoreFrame !== undefined) {
+      this.#finishScoreCount();
+    }
   }
 
   reset(): void {
@@ -214,7 +225,7 @@ export class CompletedRunPresentation {
 
   #beginScoreCount(score: number): void {
     this.#cancelScoreCount();
-    if (score <= 0) {
+    if (score <= 0 || this.#reducedMotion) {
       this.#finishScoreCount();
       return;
     }

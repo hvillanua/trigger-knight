@@ -42,6 +42,8 @@ interface EffectRecord {
   readonly key: string;
 }
 
+const NO_VISUAL_EFFECTS: readonly EffectRecord[] = Object.freeze([]);
+
 interface WorldPoint {
   readonly x: number;
   readonly y: number;
@@ -1450,6 +1452,7 @@ function drawDynamicWorld(
 export class CanvasPresentation implements PresentationPort {
   readonly #canvas: HTMLCanvasElement;
   #frame: PresentationFrame | undefined;
+  #reducedMotion = false;
   #atlas: VisualAtlas;
   #activeEffects: readonly EffectRecord[] = Object.freeze([]);
   #seenEffectKeys = new Set<string>();
@@ -1476,12 +1479,22 @@ export class CanvasPresentation implements PresentationPort {
     this.#canvas.dataset.assetStatus = this.#atlas.status;
     this.#canvas.dataset.spriteMode =
       this.#atlas.status === "ready" ? "atlas" : "fallback";
+    this.#canvas.dataset.reducedMotion = "false";
     void loadOriginalFonts().then((loaded) => {
       this.#staticLayerKey = undefined;
       this.#lastDrawnVisualSignature = undefined;
       this.#canvas.dataset.fontStatus = loaded ? "ready" : "fallback";
       this.#draw();
     });
+  }
+
+  /** Disables optional visual effects without changing public game state. */
+  setReducedMotion(reducedMotion: boolean): void {
+    if (this.#reducedMotion === reducedMotion) return;
+    this.#reducedMotion = reducedMotion;
+    this.#canvas.dataset.reducedMotion = String(reducedMotion);
+    this.#lastDrawnVisualSignature = undefined;
+    this.#draw();
   }
 
   present(frame: PresentationFrame): void {
@@ -1495,16 +1508,21 @@ export class CanvasPresentation implements PresentationPort {
     const normalizedFrame = Object.freeze({
       previous: frame.previous,
       current: frame.current,
-      interpolation: Number.isFinite(frame.interpolation)
-        ? clamp(frame.interpolation, 0, 1)
-        : 1,
+      interpolation: this.#reducedMotion
+        ? 1
+        : Number.isFinite(frame.interpolation)
+          ? clamp(frame.interpolation, 0, 1)
+          : 1,
       events: Object.freeze([...frame.events]),
     });
     this.#frame = normalizedFrame;
     this.#registerEffects(normalizedFrame);
+    const visibleEffects = this.#reducedMotion
+      ? NO_VISUAL_EFFECTS
+      : this.#activeEffects;
     const visualSignature = visualFrameSignature(
       normalizedFrame,
-      this.#activeEffects,
+      visibleEffects,
       this.#atlas.status,
     );
     this.#canvas.dataset.assetStatus = this.#atlas.status;
@@ -1534,7 +1552,7 @@ export class CanvasPresentation implements PresentationPort {
     this.#canvas.dataset.itemEligible = String(
       frame.current.actions.canUseCarriedItem,
     );
-    this.#canvas.dataset.activeEffects = this.#activeEffects
+    this.#canvas.dataset.activeEffects = visibleEffects
       .map(({ event }) => event.type)
       .join(",");
     this.#canvas.dataset.effectSequence = String(this.#effectSequence);
@@ -1776,11 +1794,14 @@ export class CanvasPresentation implements PresentationPort {
     context.translate(viewport.x, viewport.y);
     context.scale(projection.scale, projection.scale);
     context.translate(-camera.x, -camera.y);
-    drawDynamicWorld(context, this.#frame, this.#atlas, this.#activeEffects);
+    const visibleEffects = this.#reducedMotion
+      ? NO_VISUAL_EFFECTS
+      : this.#activeEffects;
+    drawDynamicWorld(context, this.#frame, this.#atlas, visibleEffects);
     context.restore();
     this.#lastDrawnVisualSignature = visualFrameSignature(
       this.#frame,
-      this.#activeEffects,
+      visibleEffects,
       this.#atlas.status,
     );
 

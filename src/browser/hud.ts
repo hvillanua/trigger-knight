@@ -284,6 +284,14 @@ const ITEM_REJECTION_MESSAGES: Readonly<Record<string, string>> = Object.freeze(
   },
 );
 
+const REPEATED_GAMEPLAY_EVENTS: ReadonlySet<GameEvent["type"]> = new Set([
+  "combat-phase-changed",
+  "combat-hit",
+  "combat-lethal-hit",
+  "lifespan-death",
+  "step-advanced",
+]);
+
 /** Converts public events into short announcements for the accessible HUD. */
 export function describeGameEvent(event: GameEvent): string {
   switch (event.type) {
@@ -326,4 +334,11 @@ export function describeGameEvent(event: GameEvent): string {
     case "run-ended":
       return `Run ended by ${event.reason}.`;
   }
+}
+
+/** Omits per-tick combat noise and duplicate terminal announcements. */
+export function describeAccessibleGameEvent(event: GameEvent): string {
+  return REPEATED_GAMEPLAY_EVENTS.has(event.type)
+    ? ""
+    : describeGameEvent(event);
 }
