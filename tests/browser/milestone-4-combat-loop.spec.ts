@@ -1,6 +1,7 @@
 import { expect, test } from "@playwright/test";
 import type {
   GameEvent,
+  GameplayTrace,
   PresentationFrame,
 } from "../../src/application/contracts.js";
 import { compareGameplayTraces } from "../../src/application/gameplay-execution.js";
@@ -201,10 +202,15 @@ for (const scenario of combatLoopScenarios) {
         // Compare every field, not only hashes. Small transfers keep a complete
         // long run inspectable and report the first divergent checkpoint path.
         for (let start = 0; start < summary.length; start += 250) {
-          const checkpoints = await diagnostics.evaluate(
-            ({ trace }, start) => trace.checkpoints.slice(start, start + 250),
-            start,
-          );
+          // Diagnostics are already normalized JSON values. Send text to avoid
+          // Playwright's recursive object protocol, then compare every field.
+          const checkpoints = JSON.parse(
+            await diagnostics.evaluate(
+              ({ trace }, start) =>
+                JSON.stringify(trace.checkpoints.slice(start, start + 250)),
+              start,
+            ),
+          ) as GameplayTrace["checkpoints"];
           const expected = {
             ...headless.trace,
             checkpoints: headless.trace.checkpoints.slice(start, start + 250),

@@ -558,11 +558,15 @@ test("replays the retained compatibility corpus in Node and Chromium", async ({
           start < summary.length;
           start += COMPATIBILITY_CHECKPOINT_BLOCK_SIZE
         ) {
-          const checkpoints = await diagnostics.evaluate(
-            ({ trace }, range: { start: number; end: number }) =>
-              trace.checkpoints.slice(range.start, range.end),
-            { start, end: start + COMPATIBILITY_CHECKPOINT_BLOCK_SIZE },
-          );
+          // Diagnostics are already normalized JSON values. Send text to avoid
+          // Playwright's recursive object protocol, then compare every field.
+          const checkpoints = JSON.parse(
+            await diagnostics.evaluate(
+              ({ trace }, range: { start: number; end: number }) =>
+                JSON.stringify(trace.checkpoints.slice(range.start, range.end)),
+              { start, end: start + COMPATIBILITY_CHECKPOINT_BLOCK_SIZE },
+            ),
+          ) as GameplayTrace["checkpoints"];
           const comparison = compareGameplayTraceBlock(
             node.trace,
             {

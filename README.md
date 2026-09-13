@@ -42,6 +42,16 @@ installation. The repository-owned pre-push hook is the complete validation gate
 for code-affecting changes. GitHub Actions is intentionally disabled and is not a
 merge gate.
 
+Local test runs use at most four workers and at most half the available CPU
+parallelism. Override Vitest with `VITEST_MAX_WORKERS` or
+`npm run test:unit -- --maxWorkers=2`. Override Playwright with
+`PLAYWRIGHT_WORKERS` or `npm run test:browser -- --workers=2`; Playwright also
+accepts percentages such as `50%`. With `CI` set, Playwright defaults to `50%`
+without the local cap. Vitest keeps its cap unless overridden. Choose higher
+counts on dedicated runners only when their measurements show a benefit.
+See the [test performance investigation](docs/test-performance.md) for measured
+tradeoffs and the checkpoint transport change.
+
 ## Simulation and diagnostics
 
 Call `createSimulationRunner` with an engine, run configuration, policy, and

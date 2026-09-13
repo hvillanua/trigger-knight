@@ -1,0 +1,2196 @@
+{
+  "dates": ["2026-09-12", "2026-09-13"],
+  "baselineCommit": "8f2c125",
+  "environment": {
+    "cpu": "AMD Ryzen 7 7700X",
+    "logicalCPUs": 16,
+    "memoryGiB": 15.168289184570312,
+    "os": "WSL2 Linux 5.15.167.4-microsoft-standard-WSL2",
+    "node": "24.19.0",
+    "npm": "12.0.2",
+    "vitest": "4.1.11",
+    "playwright": "1.62.1",
+    "browser": "bundled Chromium headless shell, revision 1234",
+    "CI": false
+  },
+  "method": {
+    "wall": "Elapsed time around the complete npm process, including startup, Vite setup and teardown.",
+    "cpu": "Linux descendant-process CPU ticks sampled every 500ms, with CLK_TCK=100. Values are active logical-core equivalents, not percentages of the whole machine. Short-lived processes can escape samples; these are qualitative pressure indicators, not power or temperature measurements.",
+    "ordering": "Benchmark processes ran sequentially. Unit worker counts were repeated in reversed order. Browser worker counts had one initial run each; an 8-worker baseline was repeated after the session restart.",
+    "priorEvidence": "Prior-session figures were retained from captured tool outputs. Temporary raw files were lost on the WSL session restart; hardware, OS and Node/npm versions matched after restart."
+  },
+  "priorRuns": [
+    {
+      "label": "unit-default",
+      "workers": 15,
+      "wallSeconds": 13.570088339,
+      "p95SampledCores": 9.260719650524042,
+      "peakSampledCores": 10.78341872522929,
+      "passedTests": 440
+    },
+    {
+      "label": "unit-default-repeat",
+      "workers": 15,
+      "wallSeconds": 13.07685311,
+      "p95SampledCores": 8.62531293788375,
+      "peakSampledCores": 10.099660085840153,
+      "passedTests": 440
+    },
+    {
+      "label": "unit-2",
+      "workers": 2,
+      "wallSeconds": 23.36804884,
+      "p95SampledCores": 2.496122762528471,
+      "peakSampledCores": 2.5172697742373984,
+      "passedTests": 440
+    },
+    {
+      "label": "unit-2-repeat",
+      "workers": 2,
+      "wallSeconds": 23.293412833,
+      "p95SampledCores": 2.660125047158218,
+      "peakSampledCores": 2.8555456343649537,
+      "passedTests": 440
+    },
+    {
+      "label": "unit-4",
+      "workers": 4,
+      "wallSeconds": 13.00904584,
+      "p95SampledCores": 5.1532633861319495,
+      "peakSampledCores": 5.38296668212972,
+      "passedTests": 440
+    },
+    {
+      "label": "unit-4-repeat",
+      "workers": 4,
+      "wallSeconds": 12.807910684,
+      "p95SampledCores": 5.013367054691558,
+      "peakSampledCores": 5.069540362099622,
+      "passedTests": 440
+    },
+    {
+      "label": "browser-default",
+      "workers": 8,
+      "wallSeconds": 110.689624244,
+      "p95SampledCores": 10.152840521449479,
+      "peakSampledCores": 11.85710113942391,
+      "passedTests": 49
+    },
+    {
+      "label": "browser-4",
+      "workers": 4,
+      "wallSeconds": 120.607337848,
+      "p95SampledCores": 5.4746393973413126,
+      "peakSampledCores": 7.148242998810139,
+      "passedTests": 49
+    },
+    {
+      "label": "browser-2",
+      "workers": 2,
+      "wallSeconds": 149.201393847,
+      "p95SampledCores": 3.093152428643931,
+      "peakSampledCores": 4.371195197679614,
+      "passedTests": 49
+    },
+    {
+      "label": "combat-baseline",
+      "workers": 1,
+      "wallSeconds": 62.733372594,
+      "p95SampledCores": 1.340307619362939,
+      "peakSampledCores": 2.2176581529904427,
+      "passedTests": 1
+    },
+    {
+      "label": "corpus-baseline",
+      "workers": 1,
+      "wallSeconds": 94.655027196,
+      "p95SampledCores": 1.5005258562852577,
+      "peakSampledCores": 2.1978453598842003,
+      "passedTests": 1
+    },
+    {
+      "label": "combat-profile",
+      "workers": 1,
+      "wallSeconds": 62.700232567,
+      "p95SampledCores": 1.4002273745219782,
+      "peakSampledCores": 2.0351234047355984,
+      "passedTests": 1
+    },
+    {
+      "label": "corpus-profile",
+      "workers": 1,
+      "wallSeconds": 95.255638498,
+      "p95SampledCores": 1.5201055652510975,
+      "peakSampledCores": 2.020731157113103,
+      "passedTests": 1
+    },
+    {
+      "label": "combat-json-profile",
+      "workers": 1,
+      "wallSeconds": 35.025246115,
+      "p95SampledCores": 1.3399835316023982,
+      "peakSampledCores": 2.041302571501295,
+      "passedTests": 1
+    },
+    {
+      "label": "corpus-json-profile",
+      "workers": 1,
+      "wallSeconds": 54.838431702,
+      "p95SampledCores": 1.8187168588817293,
+      "peakSampledCores": 2.1156752551212965,
+      "passedTests": 1
+    }
+  ],
+  "profiles": {
+    "combat-before": {
+      "nodeSimulationMs": 2366.771321,
+      "contextAndPageMs": 90.009113,
+      "navigationMs": 279.766481,
+      "browserEvaluationMs": 24628.108077,
+      "browserImportsMs": 33.4,
+      "browserLoopMs": 21197.8,
+      "canvasPresentMs": 19886.2,
+      "presentationCalls": 26642,
+      "policyAndCommandCheckMs": 29.9,
+      "readDiagnosticsMs": 2018.6,
+      "canonicalRecordSerializationMs": 926.9,
+      "encodingAndWebCryptoDigestMs": 209.4,
+      "summaryEvaluationMs": 26.567644,
+      "checkpointTransferMs": 32122.020702,
+      "checkpointComparisonMs": 1888.044866,
+      "checkpointBlocks": 120
+    },
+    "corpus-before": {
+      "nodeSimulationMs": 3486.490219,
+      "contextAndPageMs": 113.34261,
+      "navigationMs": 866.077115,
+      "browserEvaluationMs": 39326.847414,
+      "browserImportsMs": 135.5,
+      "browserLoopMs": 33929.7,
+      "canvasPresentMs": 31963.8,
+      "presentationCalls": 53436,
+      "policyAndPublicShapeChecksMs": 165.3,
+      "readDiagnosticsMs": 2986,
+      "canonicalRecordSerializationMs": 1389.6,
+      "encodingAndWebCryptoDigestMs": 334.6,
+      "summaryEvaluationMs": 142.336019,
+      "checkpointTransferMs": 46994.587137,
+      "checkpointComparisonMs": 2810.620381,
+      "checkpointBlocks": 180
+    },
+    "combat-json": {
+      "nodeSimulationMs": 2236.05044,
+      "contextAndPageMs": 92.622691,
+      "navigationMs": 280.599265,
+      "browserEvaluationMs": 24594.205279,
+      "browserLoopMs": 21189.8,
+      "canvasPresentMs": 19902,
+      "presentationCalls": 26642,
+      "readDiagnosticsMs": 2007.2,
+      "canonicalRecordSerializationMs": 919.3,
+      "encodingAndWebCryptoDigestMs": 197.4,
+      "checkpointTransferAndParseMs": 4926.547104,
+      "checkpointComparisonMs": 1597.387689,
+      "checkpointBlocks": 120
+    },
+    "notes": "Timings overlap: browserEvaluation includes imports, loop, diagnostics and hashing; Canvas and policy timers sit inside the loop, with initial presentation just before it. readDiagnostics includes whole-trace canonical serialization and hashing. Block transfer includes lazy browser checkpoint hashing; comparison includes lazy Node checkpoint hashing. Corpus navigation timing covers run fixtures, not the two settlement navigations. These are wall-clock phase timings, not a sampled CPU attribution."
+  },
+  "finalRuns": [
+    {
+      "label": "browser-control-8",
+      "args": [
+        "npm",
+        "run",
+        "test:browser",
+        "--",
+        "--workers=8",
+        "--reporter=list,json"
+      ],
+      "code": 0,
+      "wallSeconds": 110.38758213199999,
+      "logicalCPUs": 16,
+      "peakCores": 11.822783024928809,
+      "p95Cores": 10.1300587452896,
+      "maxWorkersObserved": 8,
+      "maxThreads": 820,
+      "workerLimit": 8,
+      "stats": {
+        "startTime": "2026-09-13T03:37:16.342Z",
+        "duration": 109867.38799999999,
+        "expected": 49,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "tests": [
+        {
+          "file": "automatic-gameplay.spec.ts",
+          "title": "normal play advances automatically with no manual control",
+          "durationSeconds": 0.721,
+          "startTime": "2026-09-13T03:37:17.398Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "automatic-gameplay.spec.ts",
+          "title": "scheduled browser input and interpolated rendering match headless execution",
+          "durationSeconds": 1.163,
+          "startTime": "2026-09-13T03:37:17.377Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "automatic-gameplay.spec.ts",
+          "title": "pause and tutorial commands resume at logical opportunities; leaving cancels queued input",
+          "durationSeconds": 0.981,
+          "startTime": "2026-09-13T03:37:17.395Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 2
+        },
+        {
+          "file": "automatic-gameplay.spec.ts",
+          "title": "visibility and long gaps discard elapsed time and queued actions",
+          "durationSeconds": 0.814,
+          "startTime": "2026-09-13T03:37:17.399Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 3
+        },
+        {
+          "file": "automatic-gameplay.spec.ts",
+          "title": "automatic termination commits progression and the next run gets a fresh clock",
+          "durationSeconds": 14.42,
+          "startTime": "2026-09-13T03:37:17.395Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 4
+        },
+        {
+          "file": "deterministic-randomness.spec.ts",
+          "title": "produces unit and bounded integer sequences in Chromium",
+          "durationSeconds": 0.726,
+          "startTime": "2026-09-13T03:37:17.367Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 5
+        },
+        {
+          "file": "encounter-queue.spec.ts",
+          "title": "reproduces encounter generation state and hashes in Node and Chromium",
+          "durationSeconds": 0.715,
+          "startTime": "2026-09-13T03:37:17.392Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 6
+        },
+        {
+          "file": "foundation.spec.ts",
+          "title": "loads the browser and Canvas foundation",
+          "durationSeconds": 0.796,
+          "startTime": "2026-09-13T03:37:17.384Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 7
+        },
+        {
+          "file": "foundation.spec.ts",
+          "title": "projects the complete 480x320 world camera into wide and tall output",
+          "durationSeconds": 0.454,
+          "startTime": "2026-09-13T03:37:18.213Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 5
+        },
+        {
+          "file": "foundation.spec.ts",
+          "title": "interpolates public observations without mutating gameplay",
+          "durationSeconds": 0.409,
+          "startTime": "2026-09-13T03:37:18.300Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 6
+        },
+        {
+          "file": "foundation.spec.ts",
+          "title": "sizes the Canvas backing store from its content box after a DPR change",
+          "durationSeconds": 0.538,
+          "startTime": "2026-09-13T03:37:18.303Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "shows readable public HUD values and keeps queued battles generic",
+          "durationSeconds": 0.383,
+          "startTime": "2026-09-13T03:37:18.313Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 7
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "routes keyboard bindings once and ignores held-key repeats",
+          "durationSeconds": 0.486,
+          "startTime": "2026-09-13T03:37:18.373Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 3
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "keeps shortcuts active from focused gameplay buttons",
+          "durationSeconds": 0.591,
+          "startTime": "2026-09-13T03:37:18.502Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 2
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "prevents held Enter from repeating a focused gameplay button",
+          "durationSeconds": 0.535,
+          "startTime": "2026-09-13T03:37:18.688Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 5
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "captures, cancels, and rejects conflicting keyboard remaps",
+          "durationSeconds": 0.886,
+          "startTime": "2026-09-13T03:37:18.715Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 7
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "uses the projected Canvas shop target for one touch-style activation",
+          "durationSeconds": 1.437,
+          "startTime": "2026-09-13T03:37:18.751Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 6
+        },
+        {
+          "file": "gameplay.spec.ts",
+          "title": "drives one fixed shared-engine step from the browser",
+          "durationSeconds": 0.506,
+          "startTime": "2026-09-13T03:37:18.790Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "gameplay.spec.ts",
+          "title": "physical Canvas size does not change the engine result",
+          "durationSeconds": 0.546,
+          "startTime": "2026-09-13T03:37:18.873Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "gameplay.spec.ts",
+          "title": "matches browser and headless diagnostic traces",
+          "durationSeconds": 0.598,
+          "startTime": "2026-09-13T03:37:18.907Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 3
+        },
+        {
+          "file": "item-use.spec.ts",
+          "title": "browser item-use input shares the domain command and outcome",
+          "durationSeconds": 0.315,
+          "startTime": "2026-09-13T03:37:19.112Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 2
+        },
+        {
+          "file": "milestone-2-lifecycle.spec.ts",
+          "title": "proves the complete lifecycle across Node, Chromium, and Canvas variants",
+          "durationSeconds": 24.468,
+          "startTime": "2026-09-13T03:37:19.271Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 5
+        },
+        {
+          "file": "milestone-3-economy.spec.ts",
+          "title": "exposes a disabled purchase activation until public eligibility allows it",
+          "durationSeconds": 0.277,
+          "startTime": "2026-09-13T03:37:19.310Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "milestone-3-economy.spec.ts",
+          "title": "matches Node and Chromium traces for a purchasing policy schedule",
+          "durationSeconds": 1.862,
+          "startTime": "2026-09-13T03:37:19.443Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "milestone-3-economy.spec.ts",
+          "title": "keeps policy outcomes fixed across Canvas size, DPR, and redraw cadence",
+          "durationSeconds": 12.692,
+          "startTime": "2026-09-13T03:37:19.452Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 2
+        },
+        {
+          "file": "milestone-4-combat-loop.spec.ts",
+          "title": "complete combat run matches Node across Canvas output settings",
+          "durationSeconds": 74.725,
+          "startTime": "2026-09-13T03:37:19.522Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 3
+        },
+        {
+          "file": "milestone-4-combat-loop.spec.ts",
+          "title": "complete lifespan run matches Node across Canvas output settings",
+          "durationSeconds": 27.711,
+          "startTime": "2026-09-13T03:37:19.599Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "milestone-5-progression-persistence.spec.ts",
+          "title": "browser and headless progression agree despite storage and presentation cadence",
+          "durationSeconds": 2.684,
+          "startTime": "2026-09-13T03:37:19.635Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 7
+        },
+        {
+          "file": "milestone-5-progression-persistence.spec.ts",
+          "title": "a migrated profile is committed before result presentation and survives navigation",
+          "durationSeconds": 15.261,
+          "startTime": "2026-09-13T03:37:20.228Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 6
+        },
+        {
+          "file": "milestone-6-compatibility-corpus.spec.ts",
+          "title": "replays the retained compatibility corpus in Node and Chromium",
+          "durationSeconds": 104.709,
+          "startTime": "2026-09-13T03:37:21.335Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "milestone-6-tutorial-gates.spec.ts",
+          "title": "keeps contextual tutorial gates equivalent in Node and Chromium",
+          "durationSeconds": 6.908,
+          "startTime": "2026-09-13T03:37:22.333Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 7
+        },
+        {
+          "file": "milestone-6-tutorial-gates.spec.ts",
+          "title": "displays and dismisses the initial public tutorial gate",
+          "durationSeconds": 0.372,
+          "startTime": "2026-09-13T03:37:29.251Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 7
+        },
+        {
+          "file": "milestone-8-menus.spec.ts",
+          "title": "browses collections and defined achievements from the main menu",
+          "durationSeconds": 0.512,
+          "startTime": "2026-09-13T03:37:29.641Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 7
+        },
+        {
+          "file": "milestone-8-menus.spec.ts",
+          "title": "starts a run from the title and presents readable tutorial and pause states",
+          "durationSeconds": 0.62,
+          "startTime": "2026-09-13T03:37:30.176Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 7
+        },
+        {
+          "file": "milestone-8-menus.spec.ts",
+          "title": "persists settings independently and reloads them through the menu",
+          "durationSeconds": 0.924,
+          "startTime": "2026-09-13T03:37:30.809Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 7
+        },
+        {
+          "file": "original-fonts.spec.ts",
+          "title": "loads and uses the staged original fonts in browser presentation",
+          "durationSeconds": 0.339,
+          "startTime": "2026-09-13T03:37:31.750Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 7
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "retains an explicit complete profile with identical browser and headless traces",
+          "durationSeconds": 0.657,
+          "startTime": "2026-09-13T03:37:31.945Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 4
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "starts a browser run from the stored complete profile",
+          "durationSeconds": 0.373,
+          "startTime": "2026-09-13T03:37:32.109Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 7
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "shows a committed result and starts the next run from its profile",
+          "durationSeconds": 12.225,
+          "startTime": "2026-09-13T03:37:32.160Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 2
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "keeps a failed completed-run save visible until retry succeeds",
+          "durationSeconds": 11.601,
+          "startTime": "2026-09-13T03:37:32.496Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 7
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "reports an unreadable stored profile without replacing it",
+          "durationSeconds": 0.327,
+          "startTime": "2026-09-13T03:37:32.617Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 4
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "starts gameplay when browser storage access is denied",
+          "durationSeconds": 0.348,
+          "startTime": "2026-09-13T03:37:32.960Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 4
+        },
+        {
+          "file": "shop-purchases.spec.ts",
+          "title": "browser input uses the shared purchase command and domain outcome",
+          "durationSeconds": 0.275,
+          "startTime": "2026-09-13T03:37:33.334Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 4
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "loads original runtime assets and produces a readable world screenshot",
+          "durationSeconds": 0.553,
+          "startTime": "2026-09-13T03:37:33.625Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 4
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "keeps the authored shop atlas when the original building asset is unavailable",
+          "durationSeconds": 0.326,
+          "startTime": "2026-09-13T03:37:34.191Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 4
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "covers every public enemy, shop, and actor phase in Canvas presentation",
+          "durationSeconds": 0.308,
+          "startTime": "2026-09-13T03:37:34.529Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 4
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "anchors targeted lethal effects to the targeted public actor",
+          "durationSeconds": 0.293,
+          "startTime": "2026-09-13T03:37:34.849Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 4
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "interpolates moving scenery from public distance",
+          "durationSeconds": 0.337,
+          "startTime": "2026-09-13T03:37:35.153Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 4
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "does not restart one-shot effects when a frame is redrawn",
+          "durationSeconds": 0.267,
+          "startTime": "2026-09-13T03:37:35.507Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 6
+        }
+      ]
+    },
+    {
+      "label": "browser-final-2",
+      "args": [
+        "npm",
+        "run",
+        "test:browser",
+        "--",
+        "--workers=2",
+        "--reporter=list,json"
+      ],
+      "code": 0,
+      "wallSeconds": 99.534854487,
+      "logicalCPUs": 16,
+      "peakCores": 4.0106817584723595,
+      "p95Cores": 3.1726828289009723,
+      "maxWorkersObserved": 2,
+      "maxThreads": 274,
+      "workerLimit": 2,
+      "stats": {
+        "startTime": "2026-09-13T03:43:32.541Z",
+        "duration": 99039.639,
+        "expected": 49,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "tests": [
+        {
+          "file": "automatic-gameplay.spec.ts",
+          "title": "normal play advances automatically with no manual control",
+          "durationSeconds": 0.419,
+          "startTime": "2026-09-13T03:43:33.122Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "automatic-gameplay.spec.ts",
+          "title": "scheduled browser input and interpolated rendering match headless execution",
+          "durationSeconds": 0.655,
+          "startTime": "2026-09-13T03:43:33.136Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "automatic-gameplay.spec.ts",
+          "title": "pause and tutorial commands resume at logical opportunities; leaving cancels queued input",
+          "durationSeconds": 0.34,
+          "startTime": "2026-09-13T03:43:33.612Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "automatic-gameplay.spec.ts",
+          "title": "visibility and long gaps discard elapsed time and queued actions",
+          "durationSeconds": 0.273,
+          "startTime": "2026-09-13T03:43:33.864Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "automatic-gameplay.spec.ts",
+          "title": "automatic termination commits progression and the next run gets a fresh clock",
+          "durationSeconds": 8.51,
+          "startTime": "2026-09-13T03:43:33.962Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "deterministic-randomness.spec.ts",
+          "title": "produces unit and bounded integer sequences in Chromium",
+          "durationSeconds": 0.144,
+          "startTime": "2026-09-13T03:43:34.146Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "encounter-queue.spec.ts",
+          "title": "reproduces encounter generation state and hashes in Node and Chromium",
+          "durationSeconds": 0.158,
+          "startTime": "2026-09-13T03:43:34.299Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "foundation.spec.ts",
+          "title": "loads the browser and Canvas foundation",
+          "durationSeconds": 0.192,
+          "startTime": "2026-09-13T03:43:34.467Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "foundation.spec.ts",
+          "title": "projects the complete 480x320 world camera into wide and tall output",
+          "durationSeconds": 0.335,
+          "startTime": "2026-09-13T03:43:34.668Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "foundation.spec.ts",
+          "title": "interpolates public observations without mutating gameplay",
+          "durationSeconds": 0.19,
+          "startTime": "2026-09-13T03:43:35.011Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "foundation.spec.ts",
+          "title": "sizes the Canvas backing store from its content box after a DPR change",
+          "durationSeconds": 0.257,
+          "startTime": "2026-09-13T03:43:35.209Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "shows readable public HUD values and keeps queued battles generic",
+          "durationSeconds": 0.189,
+          "startTime": "2026-09-13T03:43:35.479Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "routes keyboard bindings once and ignores held-key repeats",
+          "durationSeconds": 0.214,
+          "startTime": "2026-09-13T03:43:35.674Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "keeps shortcuts active from focused gameplay buttons",
+          "durationSeconds": 0.245,
+          "startTime": "2026-09-13T03:43:35.895Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "prevents held Enter from repeating a focused gameplay button",
+          "durationSeconds": 0.22,
+          "startTime": "2026-09-13T03:43:36.145Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "captures, cancels, and rejects conflicting keyboard remaps",
+          "durationSeconds": 0.478,
+          "startTime": "2026-09-13T03:43:36.371Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "uses the projected Canvas shop target for one touch-style activation",
+          "durationSeconds": 0.741,
+          "startTime": "2026-09-13T03:43:36.854Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "gameplay.spec.ts",
+          "title": "drives one fixed shared-engine step from the browser",
+          "durationSeconds": 0.214,
+          "startTime": "2026-09-13T03:43:37.608Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "gameplay.spec.ts",
+          "title": "physical Canvas size does not change the engine result",
+          "durationSeconds": 0.272,
+          "startTime": "2026-09-13T03:43:37.828Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "gameplay.spec.ts",
+          "title": "matches browser and headless diagnostic traces",
+          "durationSeconds": 0.287,
+          "startTime": "2026-09-13T03:43:38.104Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "item-use.spec.ts",
+          "title": "browser item-use input shares the domain command and outcome",
+          "durationSeconds": 0.148,
+          "startTime": "2026-09-13T03:43:38.399Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "milestone-2-lifecycle.spec.ts",
+          "title": "proves the complete lifecycle across Node, Chromium, and Canvas variants",
+          "durationSeconds": 16.213,
+          "startTime": "2026-09-13T03:43:38.558Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "milestone-3-economy.spec.ts",
+          "title": "exposes a disabled purchase activation until public eligibility allows it",
+          "durationSeconds": 0.176,
+          "startTime": "2026-09-13T03:43:42.488Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "milestone-3-economy.spec.ts",
+          "title": "matches Node and Chromium traces for a purchasing policy schedule",
+          "durationSeconds": 1.069,
+          "startTime": "2026-09-13T03:43:42.671Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "milestone-3-economy.spec.ts",
+          "title": "keeps policy outcomes fixed across Canvas size, DPR, and redraw cadence",
+          "durationSeconds": 6.411,
+          "startTime": "2026-09-13T03:43:43.746Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "milestone-4-combat-loop.spec.ts",
+          "title": "complete combat run matches Node across Canvas output settings",
+          "durationSeconds": 35.97,
+          "startTime": "2026-09-13T03:43:50.167Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "milestone-4-combat-loop.spec.ts",
+          "title": "complete lifespan run matches Node across Canvas output settings",
+          "durationSeconds": 10.972,
+          "startTime": "2026-09-13T03:43:54.779Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "milestone-5-progression-persistence.spec.ts",
+          "title": "browser and headless progression agree despite storage and presentation cadence",
+          "durationSeconds": 1.594,
+          "startTime": "2026-09-13T03:44:05.760Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "milestone-5-progression-persistence.spec.ts",
+          "title": "a migrated profile is committed before result presentation and survives navigation",
+          "durationSeconds": 7.735,
+          "startTime": "2026-09-13T03:44:07.359Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "milestone-6-compatibility-corpus.spec.ts",
+          "title": "replays the retained compatibility corpus in Node and Chromium",
+          "durationSeconds": 56.329,
+          "startTime": "2026-09-13T03:44:15.106Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "milestone-6-tutorial-gates.spec.ts",
+          "title": "keeps contextual tutorial gates equivalent in Node and Chromium",
+          "durationSeconds": 3.343,
+          "startTime": "2026-09-13T03:44:26.146Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "milestone-6-tutorial-gates.spec.ts",
+          "title": "displays and dismisses the initial public tutorial gate",
+          "durationSeconds": 0.223,
+          "startTime": "2026-09-13T03:44:29.494Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "milestone-8-menus.spec.ts",
+          "title": "browses collections and defined achievements from the main menu",
+          "durationSeconds": 0.341,
+          "startTime": "2026-09-13T03:44:29.728Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "milestone-8-menus.spec.ts",
+          "title": "starts a run from the title and presents readable tutorial and pause states",
+          "durationSeconds": 0.358,
+          "startTime": "2026-09-13T03:44:30.075Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "milestone-8-menus.spec.ts",
+          "title": "persists settings independently and reloads them through the menu",
+          "durationSeconds": 0.606,
+          "startTime": "2026-09-13T03:44:30.439Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "original-fonts.spec.ts",
+          "title": "loads and uses the staged original fonts in browser presentation",
+          "durationSeconds": 0.187,
+          "startTime": "2026-09-13T03:44:31.054Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "retains an explicit complete profile with identical browser and headless traces",
+          "durationSeconds": 0.317,
+          "startTime": "2026-09-13T03:44:31.250Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "starts a browser run from the stored complete profile",
+          "durationSeconds": 0.179,
+          "startTime": "2026-09-13T03:44:31.573Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "shows a committed result and starts the next run from its profile",
+          "durationSeconds": 8.28,
+          "startTime": "2026-09-13T03:44:31.757Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "keeps a failed completed-run save visible until retry succeeds",
+          "durationSeconds": 8.724,
+          "startTime": "2026-09-13T03:44:40.043Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "reports an unreadable stored profile without replacing it",
+          "durationSeconds": 0.204,
+          "startTime": "2026-09-13T03:44:48.774Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "starts gameplay when browser storage access is denied",
+          "durationSeconds": 0.229,
+          "startTime": "2026-09-13T03:44:48.986Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "shop-purchases.spec.ts",
+          "title": "browser input uses the shared purchase command and domain outcome",
+          "durationSeconds": 0.175,
+          "startTime": "2026-09-13T03:44:49.224Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "loads original runtime assets and produces a readable world screenshot",
+          "durationSeconds": 0.397,
+          "startTime": "2026-09-13T03:44:49.411Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "keeps the authored shop atlas when the original building asset is unavailable",
+          "durationSeconds": 0.2,
+          "startTime": "2026-09-13T03:44:49.816Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "covers every public enemy, shop, and actor phase in Canvas presentation",
+          "durationSeconds": 0.199,
+          "startTime": "2026-09-13T03:44:50.023Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "anchors targeted lethal effects to the targeted public actor",
+          "durationSeconds": 0.185,
+          "startTime": "2026-09-13T03:44:50.228Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "interpolates moving scenery from public distance",
+          "durationSeconds": 0.188,
+          "startTime": "2026-09-13T03:44:50.419Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "does not restart one-shot effects when a frame is redrawn",
+          "durationSeconds": 0.183,
+          "startTime": "2026-09-13T03:44:50.614Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        }
+      ]
+    },
+    {
+      "label": "browser-final-8",
+      "args": [
+        "npm",
+        "run",
+        "test:browser",
+        "--",
+        "--workers=8",
+        "--reporter=list,json"
+      ],
+      "code": 0,
+      "wallSeconds": 71.05402326199999,
+      "logicalCPUs": 16,
+      "peakCores": 11.681559466862497,
+      "p95Cores": 10.053538643933468,
+      "maxWorkersObserved": 8,
+      "maxThreads": 809,
+      "workerLimit": 8,
+      "stats": {
+        "startTime": "2026-09-13T03:42:21.453Z",
+        "duration": 70596.248,
+        "expected": 49,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "tests": [
+        {
+          "file": "automatic-gameplay.spec.ts",
+          "title": "normal play advances automatically with no manual control",
+          "durationSeconds": 0.719,
+          "startTime": "2026-09-13T03:42:22.118Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "automatic-gameplay.spec.ts",
+          "title": "scheduled browser input and interpolated rendering match headless execution",
+          "durationSeconds": 1.162,
+          "startTime": "2026-09-13T03:42:22.121Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "automatic-gameplay.spec.ts",
+          "title": "pause and tutorial commands resume at logical opportunities; leaving cancels queued input",
+          "durationSeconds": 0.989,
+          "startTime": "2026-09-13T03:42:22.116Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 2
+        },
+        {
+          "file": "automatic-gameplay.spec.ts",
+          "title": "visibility and long gaps discard elapsed time and queued actions",
+          "durationSeconds": 0.817,
+          "startTime": "2026-09-13T03:42:22.099Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 3
+        },
+        {
+          "file": "automatic-gameplay.spec.ts",
+          "title": "automatic termination commits progression and the next run gets a fresh clock",
+          "durationSeconds": 14.727,
+          "startTime": "2026-09-13T03:42:22.117Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 4
+        },
+        {
+          "file": "deterministic-randomness.spec.ts",
+          "title": "produces unit and bounded integer sequences in Chromium",
+          "durationSeconds": 0.616,
+          "startTime": "2026-09-13T03:42:22.103Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 5
+        },
+        {
+          "file": "encounter-queue.spec.ts",
+          "title": "reproduces encounter generation state and hashes in Node and Chromium",
+          "durationSeconds": 0.596,
+          "startTime": "2026-09-13T03:42:22.098Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 6
+        },
+        {
+          "file": "foundation.spec.ts",
+          "title": "loads the browser and Canvas foundation",
+          "durationSeconds": 0.645,
+          "startTime": "2026-09-13T03:42:22.103Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 7
+        },
+        {
+          "file": "foundation.spec.ts",
+          "title": "projects the complete 480x320 world camera into wide and tall output",
+          "durationSeconds": 0.494,
+          "startTime": "2026-09-13T03:42:22.831Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 6
+        },
+        {
+          "file": "foundation.spec.ts",
+          "title": "interpolates public observations without mutating gameplay",
+          "durationSeconds": 0.394,
+          "startTime": "2026-09-13T03:42:22.955Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 5
+        },
+        {
+          "file": "foundation.spec.ts",
+          "title": "sizes the Canvas backing store from its content box after a DPR change",
+          "durationSeconds": 0.476,
+          "startTime": "2026-09-13T03:42:22.975Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 7
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "shows readable public HUD values and keeps queued battles generic",
+          "durationSeconds": 0.443,
+          "startTime": "2026-09-13T03:42:23.006Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "routes keyboard bindings once and ignores held-key repeats",
+          "durationSeconds": 0.473,
+          "startTime": "2026-09-13T03:42:23.012Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 3
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "keeps shortcuts active from focused gameplay buttons",
+          "durationSeconds": 0.594,
+          "startTime": "2026-09-13T03:42:23.303Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 2
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "prevents held Enter from repeating a focused gameplay button",
+          "durationSeconds": 0.517,
+          "startTime": "2026-09-13T03:42:23.347Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 6
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "captures, cancels, and rejects conflicting keyboard remaps",
+          "durationSeconds": 0.943,
+          "startTime": "2026-09-13T03:42:23.376Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 5
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "uses the projected Canvas shop target for one touch-style activation",
+          "durationSeconds": 1.334,
+          "startTime": "2026-09-13T03:42:23.438Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "gameplay.spec.ts",
+          "title": "drives one fixed shared-engine step from the browser",
+          "durationSeconds": 0.48,
+          "startTime": "2026-09-13T03:42:23.491Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 7
+        },
+        {
+          "file": "gameplay.spec.ts",
+          "title": "physical Canvas size does not change the engine result",
+          "durationSeconds": 0.487,
+          "startTime": "2026-09-13T03:42:23.486Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "gameplay.spec.ts",
+          "title": "matches browser and headless diagnostic traces",
+          "durationSeconds": 0.578,
+          "startTime": "2026-09-13T03:42:23.512Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 3
+        },
+        {
+          "file": "item-use.spec.ts",
+          "title": "browser item-use input shares the domain command and outcome",
+          "durationSeconds": 0.279,
+          "startTime": "2026-09-13T03:42:23.881Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 6
+        },
+        {
+          "file": "milestone-2-lifecycle.spec.ts",
+          "title": "proves the complete lifecycle across Node, Chromium, and Canvas variants",
+          "durationSeconds": 24.377,
+          "startTime": "2026-09-13T03:42:23.919Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 2
+        },
+        {
+          "file": "milestone-3-economy.spec.ts",
+          "title": "exposes a disabled purchase activation until public eligibility allows it",
+          "durationSeconds": 0.271,
+          "startTime": "2026-09-13T03:42:23.988Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "milestone-3-economy.spec.ts",
+          "title": "matches Node and Chromium traces for a purchasing policy schedule",
+          "durationSeconds": 1.821,
+          "startTime": "2026-09-13T03:42:23.987Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 7
+        },
+        {
+          "file": "milestone-3-economy.spec.ts",
+          "title": "keeps policy outcomes fixed across Canvas size, DPR, and redraw cadence",
+          "durationSeconds": 12.678,
+          "startTime": "2026-09-13T03:42:24.104Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 3
+        },
+        {
+          "file": "milestone-4-combat-loop.spec.ts",
+          "title": "complete combat run matches Node across Canvas output settings",
+          "durationSeconds": 46.7,
+          "startTime": "2026-09-13T03:42:24.183Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 6
+        },
+        {
+          "file": "milestone-4-combat-loop.spec.ts",
+          "title": "complete lifespan run matches Node across Canvas output settings",
+          "durationSeconds": 18.412,
+          "startTime": "2026-09-13T03:42:24.273Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "milestone-5-progression-persistence.spec.ts",
+          "title": "browser and headless progression agree despite storage and presentation cadence",
+          "durationSeconds": 2.595,
+          "startTime": "2026-09-13T03:42:24.354Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 5
+        },
+        {
+          "file": "milestone-5-progression-persistence.spec.ts",
+          "title": "a migrated profile is committed before result presentation and survives navigation",
+          "durationSeconds": 14.973,
+          "startTime": "2026-09-13T03:42:24.806Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "milestone-6-compatibility-corpus.spec.ts",
+          "title": "replays the retained compatibility corpus in Node and Chromium",
+          "durationSeconds": 66.081,
+          "startTime": "2026-09-13T03:42:25.837Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 7
+        },
+        {
+          "file": "milestone-6-tutorial-gates.spec.ts",
+          "title": "keeps contextual tutorial gates equivalent in Node and Chromium",
+          "durationSeconds": 5.412,
+          "startTime": "2026-09-13T03:42:26.965Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 5
+        },
+        {
+          "file": "milestone-6-tutorial-gates.spec.ts",
+          "title": "displays and dismisses the initial public tutorial gate",
+          "durationSeconds": 0.388,
+          "startTime": "2026-09-13T03:42:32.388Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 5
+        },
+        {
+          "file": "milestone-8-menus.spec.ts",
+          "title": "browses collections and defined achievements from the main menu",
+          "durationSeconds": 0.593,
+          "startTime": "2026-09-13T03:42:32.810Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 5
+        },
+        {
+          "file": "milestone-8-menus.spec.ts",
+          "title": "starts a run from the title and presents readable tutorial and pause states",
+          "durationSeconds": 0.618,
+          "startTime": "2026-09-13T03:42:33.418Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 5
+        },
+        {
+          "file": "milestone-8-menus.spec.ts",
+          "title": "persists settings independently and reloads them through the menu",
+          "durationSeconds": 1.051,
+          "startTime": "2026-09-13T03:42:34.054Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 5
+        },
+        {
+          "file": "original-fonts.spec.ts",
+          "title": "loads and uses the staged original fonts in browser presentation",
+          "durationSeconds": 0.331,
+          "startTime": "2026-09-13T03:42:35.121Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 5
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "retains an explicit complete profile with identical browser and headless traces",
+          "durationSeconds": 0.586,
+          "startTime": "2026-09-13T03:42:35.468Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 5
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "starts a browser run from the stored complete profile",
+          "durationSeconds": 0.29,
+          "startTime": "2026-09-13T03:42:36.066Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 5
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "shows a committed result and starts the next run from its profile",
+          "durationSeconds": 11.513,
+          "startTime": "2026-09-13T03:42:36.364Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 5
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "keeps a failed completed-run save visible until retry succeeds",
+          "durationSeconds": 10.668,
+          "startTime": "2026-09-13T03:42:36.802Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 3
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "reports an unreadable stored profile without replacing it",
+          "durationSeconds": 0.298,
+          "startTime": "2026-09-13T03:42:36.981Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 4
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "starts gameplay when browser storage access is denied",
+          "durationSeconds": 0.308,
+          "startTime": "2026-09-13T03:42:37.291Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 4
+        },
+        {
+          "file": "shop-purchases.spec.ts",
+          "title": "browser input uses the shared purchase command and domain outcome",
+          "durationSeconds": 0.238,
+          "startTime": "2026-09-13T03:42:37.612Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 4
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "loads original runtime assets and produces a readable world screenshot",
+          "durationSeconds": 0.498,
+          "startTime": "2026-09-13T03:42:37.862Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 4
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "keeps the authored shop atlas when the original building asset is unavailable",
+          "durationSeconds": 0.266,
+          "startTime": "2026-09-13T03:42:38.379Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 4
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "covers every public enemy, shop, and actor phase in Canvas presentation",
+          "durationSeconds": 0.246,
+          "startTime": "2026-09-13T03:42:38.656Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 4
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "anchors targeted lethal effects to the targeted public actor",
+          "durationSeconds": 0.236,
+          "startTime": "2026-09-13T03:42:38.911Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 4
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "interpolates moving scenery from public distance",
+          "durationSeconds": 0.236,
+          "startTime": "2026-09-13T03:42:39.157Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 4
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "does not restart one-shot effects when a frame is redrawn",
+          "durationSeconds": 0.258,
+          "startTime": "2026-09-13T03:42:39.404Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 4
+        }
+      ]
+    },
+    {
+      "label": "browser-final-default",
+      "args": ["npm", "run", "test:browser", "--", "--reporter=list,json"],
+      "code": 0,
+      "wallSeconds": 81.5339153,
+      "logicalCPUs": 16,
+      "peakCores": 7.167764325250696,
+      "p95Cores": 5.899507733275719,
+      "maxWorkersObserved": 4,
+      "maxThreads": 451,
+      "workerLimit": 4,
+      "stats": {
+        "startTime": "2026-09-13T03:40:59.895Z",
+        "duration": 81032.433,
+        "expected": 49,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "tests": [
+        {
+          "file": "automatic-gameplay.spec.ts",
+          "title": "normal play advances automatically with no manual control",
+          "durationSeconds": 0.588,
+          "startTime": "2026-09-13T03:41:00.728Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "automatic-gameplay.spec.ts",
+          "title": "scheduled browser input and interpolated rendering match headless execution",
+          "durationSeconds": 0.806,
+          "startTime": "2026-09-13T03:41:00.740Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "automatic-gameplay.spec.ts",
+          "title": "pause and tutorial commands resume at logical opportunities; leaving cancels queued input",
+          "durationSeconds": 0.656,
+          "startTime": "2026-09-13T03:41:00.738Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 2
+        },
+        {
+          "file": "automatic-gameplay.spec.ts",
+          "title": "visibility and long gaps discard elapsed time and queued actions",
+          "durationSeconds": 0.615,
+          "startTime": "2026-09-13T03:41:00.728Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 3
+        },
+        {
+          "file": "automatic-gameplay.spec.ts",
+          "title": "automatic termination commits progression and the next run gets a fresh clock",
+          "durationSeconds": 9.905,
+          "startTime": "2026-09-13T03:41:01.398Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "deterministic-randomness.spec.ts",
+          "title": "produces unit and bounded integer sequences in Chromium",
+          "durationSeconds": 0.213,
+          "startTime": "2026-09-13T03:41:01.421Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 3
+        },
+        {
+          "file": "encounter-queue.spec.ts",
+          "title": "reproduces encounter generation state and hashes in Node and Chromium",
+          "durationSeconds": 0.223,
+          "startTime": "2026-09-13T03:41:01.501Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 2
+        },
+        {
+          "file": "foundation.spec.ts",
+          "title": "loads the browser and Canvas foundation",
+          "durationSeconds": 0.267,
+          "startTime": "2026-09-13T03:41:01.651Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 3
+        },
+        {
+          "file": "foundation.spec.ts",
+          "title": "projects the complete 480x320 world camera into wide and tall output",
+          "durationSeconds": 0.392,
+          "startTime": "2026-09-13T03:41:01.656Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "foundation.spec.ts",
+          "title": "interpolates public observations without mutating gameplay",
+          "durationSeconds": 0.243,
+          "startTime": "2026-09-13T03:41:01.741Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 2
+        },
+        {
+          "file": "foundation.spec.ts",
+          "title": "sizes the Canvas backing store from its content box after a DPR change",
+          "durationSeconds": 0.286,
+          "startTime": "2026-09-13T03:41:01.928Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 3
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "shows readable public HUD values and keeps queued battles generic",
+          "durationSeconds": 0.238,
+          "startTime": "2026-09-13T03:41:01.999Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 2
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "routes keyboard bindings once and ignores held-key repeats",
+          "durationSeconds": 0.275,
+          "startTime": "2026-09-13T03:41:02.071Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "keeps shortcuts active from focused gameplay buttons",
+          "durationSeconds": 0.322,
+          "startTime": "2026-09-13T03:41:02.227Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 3
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "prevents held Enter from repeating a focused gameplay button",
+          "durationSeconds": 0.296,
+          "startTime": "2026-09-13T03:41:02.243Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 2
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "captures, cancels, and rejects conflicting keyboard remaps",
+          "durationSeconds": 0.619,
+          "startTime": "2026-09-13T03:41:02.354Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "gameplay-hud-input.spec.ts",
+          "title": "uses the projected Canvas shop target for one touch-style activation",
+          "durationSeconds": 1.004,
+          "startTime": "2026-09-13T03:41:02.549Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 2
+        },
+        {
+          "file": "gameplay.spec.ts",
+          "title": "drives one fixed shared-engine step from the browser",
+          "durationSeconds": 0.282,
+          "startTime": "2026-09-13T03:41:02.567Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 3
+        },
+        {
+          "file": "gameplay.spec.ts",
+          "title": "physical Canvas size does not change the engine result",
+          "durationSeconds": 0.302,
+          "startTime": "2026-09-13T03:41:02.857Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 3
+        },
+        {
+          "file": "gameplay.spec.ts",
+          "title": "matches browser and headless diagnostic traces",
+          "durationSeconds": 0.334,
+          "startTime": "2026-09-13T03:41:02.987Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "item-use.spec.ts",
+          "title": "browser item-use input shares the domain command and outcome",
+          "durationSeconds": 0.178,
+          "startTime": "2026-09-13T03:41:03.170Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 3
+        },
+        {
+          "file": "milestone-2-lifecycle.spec.ts",
+          "title": "proves the complete lifecycle across Node, Chromium, and Canvas variants",
+          "durationSeconds": 17.58,
+          "startTime": "2026-09-13T03:41:03.334Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "milestone-3-economy.spec.ts",
+          "title": "exposes a disabled purchase activation until public eligibility allows it",
+          "durationSeconds": 0.188,
+          "startTime": "2026-09-13T03:41:03.360Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 3
+        },
+        {
+          "file": "milestone-3-economy.spec.ts",
+          "title": "matches Node and Chromium traces for a purchasing policy schedule",
+          "durationSeconds": 1.324,
+          "startTime": "2026-09-13T03:41:03.557Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 3
+        },
+        {
+          "file": "milestone-3-economy.spec.ts",
+          "title": "keeps policy outcomes fixed across Canvas size, DPR, and redraw cadence",
+          "durationSeconds": 7.801,
+          "startTime": "2026-09-13T03:41:03.577Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 2
+        },
+        {
+          "file": "milestone-4-combat-loop.spec.ts",
+          "title": "complete combat run matches Node across Canvas output settings",
+          "durationSeconds": 40.374,
+          "startTime": "2026-09-13T03:41:04.895Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 3
+        },
+        {
+          "file": "milestone-4-combat-loop.spec.ts",
+          "title": "complete lifespan run matches Node across Canvas output settings",
+          "durationSeconds": 12.217,
+          "startTime": "2026-09-13T03:41:11.320Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "milestone-5-progression-persistence.spec.ts",
+          "title": "browser and headless progression agree despite storage and presentation cadence",
+          "durationSeconds": 1.709,
+          "startTime": "2026-09-13T03:41:11.390Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 2
+        },
+        {
+          "file": "milestone-5-progression-persistence.spec.ts",
+          "title": "a migrated profile is committed before result presentation and survives navigation",
+          "durationSeconds": 9.145,
+          "startTime": "2026-09-13T03:41:13.107Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 2
+        },
+        {
+          "file": "milestone-6-compatibility-corpus.spec.ts",
+          "title": "replays the retained compatibility corpus in Node and Chromium",
+          "durationSeconds": 59.884,
+          "startTime": "2026-09-13T03:41:20.940Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 1
+        },
+        {
+          "file": "milestone-6-tutorial-gates.spec.ts",
+          "title": "keeps contextual tutorial gates equivalent in Node and Chromium",
+          "durationSeconds": 4.338,
+          "startTime": "2026-09-13T03:41:22.262Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 2
+        },
+        {
+          "file": "milestone-6-tutorial-gates.spec.ts",
+          "title": "displays and dismisses the initial public tutorial gate",
+          "durationSeconds": 0.229,
+          "startTime": "2026-09-13T03:41:23.547Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "milestone-8-menus.spec.ts",
+          "title": "browses collections and defined achievements from the main menu",
+          "durationSeconds": 0.364,
+          "startTime": "2026-09-13T03:41:23.786Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "milestone-8-menus.spec.ts",
+          "title": "starts a run from the title and presents readable tutorial and pause states",
+          "durationSeconds": 0.399,
+          "startTime": "2026-09-13T03:41:24.157Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "milestone-8-menus.spec.ts",
+          "title": "persists settings independently and reloads them through the menu",
+          "durationSeconds": 0.68,
+          "startTime": "2026-09-13T03:41:24.561Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "original-fonts.spec.ts",
+          "title": "loads and uses the staged original fonts in browser presentation",
+          "durationSeconds": 0.275,
+          "startTime": "2026-09-13T03:41:25.259Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "retains an explicit complete profile with identical browser and headless traces",
+          "durationSeconds": 0.452,
+          "startTime": "2026-09-13T03:41:25.548Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "starts a browser run from the stored complete profile",
+          "durationSeconds": 0.267,
+          "startTime": "2026-09-13T03:41:26.010Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "shows a committed result and starts the next run from its profile",
+          "durationSeconds": 10.061,
+          "startTime": "2026-09-13T03:41:26.286Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "keeps a failed completed-run save visible until retry succeeds",
+          "durationSeconds": 9.791,
+          "startTime": "2026-09-13T03:41:26.614Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 2
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "reports an unreadable stored profile without replacing it",
+          "durationSeconds": 0.233,
+          "startTime": "2026-09-13T03:41:36.356Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "profile.spec.ts",
+          "title": "starts gameplay when browser storage access is denied",
+          "durationSeconds": 0.256,
+          "startTime": "2026-09-13T03:41:36.416Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 2
+        },
+        {
+          "file": "shop-purchases.spec.ts",
+          "title": "browser input uses the shared purchase command and domain outcome",
+          "durationSeconds": 0.192,
+          "startTime": "2026-09-13T03:41:36.599Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "loads original runtime assets and produces a readable world screenshot",
+          "durationSeconds": 0.43,
+          "startTime": "2026-09-13T03:41:36.683Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 2
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "keeps the authored shop atlas when the original building asset is unavailable",
+          "durationSeconds": 0.213,
+          "startTime": "2026-09-13T03:41:36.804Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "covers every public enemy, shop, and actor phase in Canvas presentation",
+          "durationSeconds": 0.208,
+          "startTime": "2026-09-13T03:41:37.023Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "anchors targeted lethal effects to the targeted public actor",
+          "durationSeconds": 0.219,
+          "startTime": "2026-09-13T03:41:37.120Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 2
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "interpolates moving scenery from public distance",
+          "durationSeconds": 0.229,
+          "startTime": "2026-09-13T03:41:37.238Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        },
+        {
+          "file": "world-presentation.spec.ts",
+          "title": "does not restart one-shot effects when a frame is redrawn",
+          "durationSeconds": 0.205,
+          "startTime": "2026-09-13T03:41:37.346Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 2
+        }
+      ]
+    },
+    {
+      "label": "combat-final",
+      "args": [
+        "npm",
+        "run",
+        "test:browser",
+        "--",
+        "tests/browser/milestone-4-combat-loop.spec.ts",
+        "--grep",
+        "complete combat run",
+        "--reporter=list,json"
+      ],
+      "code": 0,
+      "wallSeconds": 35.017172706,
+      "logicalCPUs": 16,
+      "peakCores": 2.3164637651758504,
+      "p95Cores": 1.4377407945006335,
+      "maxWorkersObserved": 1,
+      "maxThreads": 144,
+      "workerLimit": 4,
+      "stats": {
+        "startTime": "2026-09-13T03:45:12.100Z",
+        "duration": 34566.432,
+        "expected": 1,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "tests": [
+        {
+          "file": "milestone-4-combat-loop.spec.ts",
+          "title": "complete combat run matches Node across Canvas output settings",
+          "durationSeconds": 33.932,
+          "startTime": "2026-09-13T03:45:12.585Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        }
+      ]
+    },
+    {
+      "label": "corpus-final",
+      "args": [
+        "npm",
+        "run",
+        "test:browser",
+        "--",
+        "tests/browser/milestone-6-compatibility-corpus.spec.ts",
+        "--reporter=list,json"
+      ],
+      "code": 0,
+      "wallSeconds": 53.813320345,
+      "logicalCPUs": 16,
+      "peakCores": 2.296468683362095,
+      "p95Cores": 1.6754348789188844,
+      "maxWorkersObserved": 1,
+      "maxThreads": 166,
+      "workerLimit": 4,
+      "stats": {
+        "startTime": "2026-09-13T03:45:47.134Z",
+        "duration": 53340.078,
+        "expected": 1,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+      },
+      "tests": [
+        {
+          "file": "milestone-6-compatibility-corpus.spec.ts",
+          "title": "replays the retained compatibility corpus in Node and Chromium",
+          "durationSeconds": 52.708,
+          "startTime": "2026-09-13T03:45:47.602Z",
+          "status": "passed",
+          "retry": 0,
+          "workerIndex": 0
+        }
+      ]
+    },
+    {
+      "label": "unit-control-15",
+      "args": ["npm", "run", "test:unit", "--", "--maxWorkers=15"],
+      "code": 0,
+      "wallSeconds": 13.091936486,
+      "logicalCPUs": 16,
+      "peakCores": 10.86382402260066,
+      "p95Cores": 8.97492767602505,
+      "maxWorkersObserved": 15,
+      "maxThreads": 226,
+      "passedTests": 440
+    },
+    {
+      "label": "unit-final-default",
+      "args": ["npm", "run", "test:unit"],
+      "code": 0,
+      "wallSeconds": 12.813076698000001,
+      "logicalCPUs": 16,
+      "peakCores": 5.234016252791126,
+      "p95Cores": 4.852462553456621,
+      "maxWorkersObserved": 4,
+      "maxThreads": 135,
+      "passedTests": 440
+    }
+  ],
+  "faultInjection": {
+    "purpose": "Verify late field divergence and hidden observation data survive the JSON browser-to-Node transport even when retained trace hashes are unchanged.",
+    "result": "Both selected browser tests failed as expected.",
+    "checkpointBlockStart": 250,
+    "combatDifference": "checkpoints[0].state.steps",
+    "combatExpected": 250,
+    "combatActual": -1,
+    "corpusDifference": "checkpoints[0].observation.random",
+    "corpusActual": "injected-secret",
+    "temporaryMutationsRemoved": true
+  },
+  "validation": {
+    "unitSuite": "440 passed, 57 files",
+    "browserSuites": "49 passed at each of 2, 4 and 8 workers",
+    "focusedUnits": "11 passed, gameplay-diagnostics and canonical-json",
+    "typecheck": "passed",
+    "changedTypeScriptLint": "passed",
+    "aggregateValidation": "not run",
+    "prePush": "not run; no push",
+    "githubActions": "not run or polled"
+  }
+}
