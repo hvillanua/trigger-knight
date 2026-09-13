@@ -109,6 +109,13 @@ export type {
 } from "./gameplay-execution.js";
 export type { PresentationFrame, PresentationPort } from "./presentation.js";
 export type {
+  SoundCue,
+  SoundInitializationResult,
+  SoundPort,
+  SoundStatus,
+  SoundUiAction,
+} from "./sound.js";
+export type {
   SimulationBatchExport,
   SimulationAggregateDifferences,
   SimulationAggregateStatistics,

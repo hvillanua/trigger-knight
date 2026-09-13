@@ -1,0 +1,96 @@
+{
+  "assetSet": "project-authored-sound-effects-v1",
+  "source": "Project-authored additive synthesis definitions in build/generate-sound-effects.mjs",
+  "author": "Trigger Knight implementation contributors",
+  "generator": "build/generate-sound-effects.mjs",
+  "generatorSha256": "2b2addfb5b0d86049a676aaeb8cbec0a2165990ffec953c32234a4bbb435b40e",
+  "license": "Project-authored original audio; no third-party license restrictions",
+  "reviewDate": "2026-09-13",
+  "cleanRoomReview": "No original SWF, extracted sound bytes, decompiled code, or generated behavioral research was used.",
+  "assets": [
+    {
+      "path": "achievement.wav",
+      "sha256": "f8b08dc9fd051d135bcfed58bde75573f57ab8653d0635fc97285ae8386ec191",
+      "cue": "achievement",
+      "description": "Ascending four-note achievement cue"
+    },
+    {
+      "path": "attack.wav",
+      "sha256": "3697bc99d2419d036b3e6964212603ccbcfeff10b808cfac2c6432d88e6da60b",
+      "cue": "combat-attack",
+      "description": "Short low attack cue"
+    },
+    {
+      "path": "battle-start.wav",
+      "sha256": "a6e918f8b5e5bc094cbf5d67e64df1912d56b1ed67095684e6c16d56f53d2ea8",
+      "cue": "battle-start",
+      "description": "Rising three-note battle cue"
+    },
+    {
+      "path": "death.wav",
+      "sha256": "bc4346b32f2bba662e58716d6efc83595f3935bb199d57abda124501ef954566",
+      "cue": "death, run-ended",
+      "description": "Descending terminal cue"
+    },
+    {
+      "path": "encounter.wav",
+      "sha256": "4528760acf8ae7b7a5b61eea765f7949459b3a45cbf2b578e775c2f997b4f8a6",
+      "cue": "encounter",
+      "description": "Two-note encounter cue"
+    },
+    {
+      "path": "hit.wav",
+      "sha256": "44a3d487463ae6e66ef7e034dbe36244e2868565ec361e351b9cee44f9743c23",
+      "cue": "combat-hit",
+      "description": "Impact and noise hit cue"
+    },
+    {
+      "path": "item.wav",
+      "sha256": "d7c8a72eef9c756624d2cfc8c60f5b63d8f9862e0a0aae662ccff7df7ea6f2f6",
+      "cue": "item-use",
+      "description": "Ascending item-use arpeggio"
+    },
+    {
+      "path": "lethal.wav",
+      "sha256": "858255dc4a7098000aee5c36286804505ca5f382ec23cc1d19bd816ada249221",
+      "cue": "combat-lethal",
+      "description": "Low two-note lethal-hit cue"
+    },
+    {
+      "path": "purchase.wav",
+      "sha256": "afc7c074131baf278cb6a052bf6381c5d88657b296b189151d68f45337a9cd60",
+      "cue": "shop-purchase",
+      "description": "Ascending purchase arpeggio"
+    },
+    {
+      "path": "reject.wav",
+      "sha256": "044a0772a454849b957a1aad4be550d8ea04eb4dd38e50a47c35d3de0cd7ac26",
+      "cue": "purchase-rejected, item-use-rejected",
+      "description": "Descending rejection cue"
+    },
+    {
+      "path": "reward.wav",
+      "sha256": "e0221a8a1751a9d267aaf90be22b3c0843d24ec882f79d63d71380381a7201ea",
+      "cue": "reward, discovery",
+      "description": "Ascending reward arpeggio"
+    },
+    {
+      "path": "ui-activate.wav",
+      "sha256": "02d33a20b7b23421e9c75a1cff08b501c91c2779b75a9bf6c80622f1a146201f",
+      "cue": "ui-activate",
+      "description": "Short neutral activation cue"
+    },
+    {
+      "path": "ui-cancel.wav",
+      "sha256": "498269eb4177826c2956e4a87f9b0a8dddf40a29dd3e317cd8b8b4714284343e",
+      "cue": "ui-cancel",
+      "description": "Descending navigation-cancel cue"
+    },
+    {
+      "path": "ui-confirm.wav",
+      "sha256": "a3dca815d1daadc8484208d025bbd9b800f78b8b123c61408613331801e4f621",
+      "cue": "ui-confirm, pause, tutorial",
+      "description": "Two-note confirmation cue"
+    }
+  ]
+}

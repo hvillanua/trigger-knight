@@ -24,6 +24,8 @@ import type {
   ProfileLoadResult,
   ProfileState,
   ProfileStore,
+  SoundStatus,
+  SoundUiAction,
   TutorialPage,
 } from "./application/contracts.js";
 import { createGameplayEngine } from "./application/gameplay-engine.js";
@@ -62,6 +64,7 @@ import { createFreshProfile } from "./domain/profile.js";
 import { ORIGINAL_V13_RULESET_ID, ruleSetRegistry } from "./domain/rulesets.js";
 import { createBrowserProfileStore } from "./persistence/browser-profile-store.js";
 import { createBrowserSettingsStore } from "./persistence/browser-settings-store.js";
+import { createBrowserSoundEffects } from "./sound/sound-effects.js";
 import "./browser/style.css";
 
 const gameplayEngine = createGameplayEngine(ruleSetRegistry);
@@ -158,6 +161,7 @@ const achievementProgress = requiredElement<HTMLElement>(
   "#achievements-progress",
 );
 const settingsStatus = requiredElement<HTMLElement>("#settings-status");
+const soundStatus = requiredElement<HTMLElement>("#sound-status");
 const settingsBindingPrompt = requiredElement<HTMLElement>(
   "#settings-binding-prompt",
 );
@@ -253,6 +257,33 @@ let currentSettings: BrowserSettings =
     ? createDefaultSettings()
     : settingsLoad.settings;
 
+function soundStatusText(status: SoundStatus): string {
+  switch (status) {
+    case "uninitialized":
+      return "Sound effects start after the first player interaction.";
+    case "loading":
+      return "Loading sound effects.";
+    case "ready":
+      return "Sound effects ready.";
+    case "degraded":
+      return "Some sound effects are unavailable. Gameplay continues.";
+    case "suspended":
+      return "Sound is paused while the page is hidden or playback is waiting for browser permission.";
+    case "unavailable":
+      return "Audio is unavailable. Gameplay continues without sound.";
+    case "failed":
+      return "Sound effects could not be decoded. Gameplay continues without sound.";
+  }
+}
+
+const soundEffects = createBrowserSoundEffects({
+  onStatusChange: (status) => {
+    soundStatus.textContent = soundStatusText(status);
+    gameStatus.dataset.soundStatus = status;
+  },
+});
+soundEffects.setPreferences(currentSettings.sound);
+
 const keyboardRouter = createKeyboardCommandRouter(currentSettings.bindings);
 const bindingCapture = createBindingCaptureController(currentSettings.bindings);
 let latestObservation: Readonly<GameObservation> | undefined;
@@ -278,6 +309,7 @@ let profileReturnScreen: "title" | "result" = "title";
 let settingsReturnScreen: "title" | "result" = "title";
 
 function showScreen(screen: ScreenId, focus = true): void {
+  if (screen !== "gameplay") soundEffects.stop();
   for (const [id, element] of Object.entries(screens) as [
     ScreenId,
     HTMLElement,
@@ -549,6 +581,20 @@ function setSettingsStatus(
   }
 }
 
+function primeSound(): void {
+  void soundEffects.initialize();
+}
+
+function presentUiAction(action: SoundUiAction): void {
+  primeSound();
+  soundEffects.presentUiAction(action);
+}
+
+function runUiAction(action: SoundUiAction, callback: () => void): void {
+  callback();
+  presentUiAction(action);
+}
+
 function renderStorageNotice(): void {
   const messages: string[] = [];
   if (profileLoad.status === "failed") {
@@ -664,6 +710,7 @@ const resultPresentation = new CompletedRunPresentation(resultRoot, {
   onRetry: () => {
     if (activeRun?.settlement !== undefined) {
       commitCompletedRun(activeRun);
+      presentUiAction("confirm");
     }
   },
   onNextRun: () => {
@@ -673,6 +720,7 @@ const resultPresentation = new CompletedRunPresentation(resultRoot, {
       (commit.status === "committed" || commit.status === "already-committed")
     ) {
       startRun(commit.profile);
+      presentUiAction("activate");
     }
   },
 });
@@ -680,6 +728,7 @@ const resultPresentation = new CompletedRunPresentation(resultRoot, {
 function showTitle(): void {
   activeRun?.clock?.stop();
   activeRun = undefined;
+  soundEffects.setSession(null);
   resultPresentation.reset();
   updateProfileSummary(currentProfile);
   renderProfileScreens(currentProfile);
@@ -777,6 +826,8 @@ function startRun(profile: ProfileState, focus = true): void {
     commit: undefined,
   };
   activeRun = record;
+  soundEffects.setSession(record.completionId);
+  soundEffects.setPreferences(currentSettings.sound);
   currentProfile = profile;
   resultPresentation.reset();
   updateProfileSummary(profile);
@@ -811,11 +862,17 @@ function startRun(profile: ProfileState, focus = true): void {
       retainDiagnostics: import.meta.env.DEV,
       renderOnDispatch: manualClock,
       onTransition: ({ observation, events }) => {
+        if (activeRun !== record) return;
         latestObservation = observation;
         gameStatus.textContent = `Step ${observation.steps}`;
         renderHud(observation);
         renderFeedback(events);
         syncControls(observation);
+        soundEffects.presentTransition(
+          record.completionId,
+          observation.steps,
+          events,
+        );
       },
       onCompletedRun: (run) => {
         record.settlement = run;
@@ -845,6 +902,9 @@ if (import.meta.env.DEV) {
       }
       return session.readDiagnostics();
     },
+  });
+  window.triggerKnightSoundDiagnostics = Object.freeze({
+    read: () => soundEffects.readDiagnostics(),
   });
 }
 
@@ -878,6 +938,8 @@ const dispatch = (commands: readonly GameCommand[]): void => {
     return;
   }
 
+  primeSound();
+
   if (manualClock) {
     session.dispatch(commands);
     session.render(1);
@@ -910,6 +972,7 @@ document.addEventListener("keydown", (event) => {
     }
     event.preventDefault();
     event.stopPropagation();
+    primeSound();
     handleBindingCaptureResult(bindingCapture.handleKeyDown(event.code));
     return;
   }
@@ -1005,47 +1068,49 @@ pauseButton.addEventListener("click", () => {
 requiredElement<HTMLButtonElement>("#start-run").addEventListener(
   "click",
   () => {
-    startRun(currentProfile);
+    runUiAction("activate", () => startRun(currentProfile));
   },
 );
 requiredElement<HTMLButtonElement>("#title-collections").addEventListener(
   "click",
-  () => showProfileScreen("collections"),
+  () => runUiAction("activate", () => showProfileScreen("collections")),
 );
 requiredElement<HTMLButtonElement>("#title-achievements").addEventListener(
   "click",
-  () => showProfileScreen("achievements"),
+  () => runUiAction("activate", () => showProfileScreen("achievements")),
 );
 requiredElement<HTMLButtonElement>("#title-settings").addEventListener(
   "click",
-  showSettings,
+  () => runUiAction("activate", showSettings),
 );
 requiredElement<HTMLButtonElement>("#gameplay-main-menu").addEventListener(
   "click",
-  showTitle,
+  () => runUiAction("cancel", showTitle),
 );
 requiredElement<HTMLButtonElement>("#result-main-menu").addEventListener(
   "click",
-  showTitle,
+  () => runUiAction("cancel", showTitle),
 );
 requiredElement<HTMLButtonElement>("#result-view-collections").addEventListener(
   "click",
-  () => showProfileScreen("collections"),
+  () => runUiAction("activate", () => showProfileScreen("collections")),
 );
 requiredElement<HTMLButtonElement>(
   "#result-view-achievements",
-).addEventListener("click", () => showProfileScreen("achievements"));
+).addEventListener("click", () =>
+  runUiAction("activate", () => showProfileScreen("achievements")),
+);
 requiredElement<HTMLButtonElement>("#collections-back").addEventListener(
   "click",
-  returnFromProfileScreen,
+  () => runUiAction("cancel", returnFromProfileScreen),
 );
 requiredElement<HTMLButtonElement>("#achievements-back").addEventListener(
   "click",
-  returnFromProfileScreen,
+  () => runUiAction("cancel", returnFromProfileScreen),
 );
 requiredElement<HTMLButtonElement>("#settings-back").addEventListener(
   "click",
-  returnFromSettings,
+  () => runUiAction("cancel", returnFromSettings),
 );
 
 soundVolume.addEventListener("input", () => {
@@ -1057,14 +1122,16 @@ soundVolume.addEventListener("input", () => {
 requiredElement<HTMLButtonElement>(
   "#restore-default-settings",
 ).addEventListener("click", () => {
-  const defaults = createDefaultSettings();
-  renderSettings(defaults);
-  bindingCapture.replaceBindings(defaults.bindings);
-  settingsBindingPrompt.textContent =
-    "Defaults restored in this form. Save settings to keep them.";
-  setSettingsStatus(
-    "Defaults restored in this form. Save settings to keep them.",
-  );
+  runUiAction("confirm", () => {
+    const defaults = createDefaultSettings();
+    renderSettings(defaults);
+    bindingCapture.replaceBindings(defaults.bindings);
+    settingsBindingPrompt.textContent =
+      "Defaults restored in this form. Save settings to keep them.";
+    setSettingsStatus(
+      "Defaults restored in this form. Save settings to keep them.",
+    );
+  });
 });
 
 for (const button of document.querySelectorAll<HTMLButtonElement>(
@@ -1072,7 +1139,9 @@ for (const button of document.querySelectorAll<HTMLButtonElement>(
 )) {
   button.addEventListener("click", () => {
     const action = button.dataset.remapAction;
-    if (isInputAction(action)) beginBindingCapture(action);
+    if (isInputAction(action)) {
+      runUiAction("activate", () => beginBindingCapture(action));
+    }
   });
 }
 
@@ -1089,6 +1158,7 @@ for (const input of Object.values(bindingInputs)) {
 
 settingsForm.addEventListener("submit", (event) => {
   event.preventDefault();
+  primeSound();
   let settings: BrowserSettings;
   try {
     settings = readSettingsForm();
@@ -1102,6 +1172,7 @@ settingsForm.addEventListener("submit", (event) => {
         ? "binding-conflict"
         : "invalid-record",
     );
+    soundEffects.presentUiAction("cancel");
     return;
   }
 
@@ -1113,6 +1184,7 @@ settingsForm.addEventListener("submit", (event) => {
         `Tutorial preference could not be saved. Storage status: ${latest.error.code}`,
         latest.error.code,
       );
+      soundEffects.presentUiAction("cancel");
       return;
     }
     const profileSave = profileStore.save({
@@ -1124,6 +1196,7 @@ settingsForm.addEventListener("submit", (event) => {
         `Tutorial preference could not be saved. Storage status: ${profileSave.error.code}`,
         profileSave.error.code,
       );
+      soundEffects.presentUiAction("cancel");
       return;
     }
     currentProfile = profileSave.profile;
@@ -1137,9 +1210,11 @@ settingsForm.addEventListener("submit", (event) => {
       `Settings could not be saved. Storage status: ${settingsSave.error.code}`,
       settingsSave.error.code,
     );
+    soundEffects.presentUiAction("cancel");
     return;
   }
   currentSettings = settingsSave.settings;
+  soundEffects.setPreferences(currentSettings.sound);
   keyboardRouter.replaceBindings(currentSettings.bindings);
   bindingCapture.replaceBindings(currentSettings.bindings);
   renderKeyboardHints(currentSettings.bindings);
@@ -1148,15 +1223,23 @@ settingsForm.addEventListener("submit", (event) => {
   gameStatus.dataset.settingsStatus = "loaded";
   delete gameStatus.dataset.settingsError;
   setSettingsStatus("Settings saved.");
+  soundEffects.presentUiAction("confirm");
 });
 
 document.addEventListener("visibilitychange", () => {
-  activeRun?.clock?.setVisible(document.visibilityState === "visible");
+  const visible = document.visibilityState === "visible";
+  activeRun?.clock?.setVisible(visible);
+  soundEffects.setVisible(visible);
 });
-window.addEventListener("pagehide", () => activeRun?.clock?.stop());
+window.addEventListener("pagehide", () => {
+  activeRun?.clock?.stop();
+  soundEffects.setVisible(false);
+});
 window.addEventListener("pageshow", () => {
-  activeRun?.clock?.setVisible(document.visibilityState === "visible");
+  const visible = document.visibilityState === "visible";
+  activeRun?.clock?.setVisible(visible);
   activeRun?.clock?.start();
+  soundEffects.setVisible(visible);
 });
 
 observeDevicePixelRatioChanges(window, render);

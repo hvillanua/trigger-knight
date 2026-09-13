@@ -1,0 +1,279 @@
+import { describe, expect, it, vi } from "vitest";
+
+import type { GameEvent } from "../../src/application/contracts.js";
+import {
+  createBrowserSoundEffects,
+  soundCuesForEvent,
+  type SoundAudioContext,
+  type SoundAudioRuntime,
+  type SoundAudioSource,
+  type SoundBuffer,
+} from "../../src/sound/sound-effects.js";
+
+class FakeSource implements SoundAudioSource {
+  buffer: SoundBuffer | null = null;
+  onEnded: (() => void) | undefined;
+  started = false;
+  stopped = false;
+
+  connect(): void {}
+
+  start(): void {
+    this.started = true;
+  }
+
+  stop(): void {
+    this.stopped = true;
+    this.onEnded?.();
+  }
+}
+
+class FakeContext implements SoundAudioContext {
+  state: "closed" | "interrupted" | "running" | "suspended" = "running";
+  readonly destination = { native: undefined };
+  readonly sources: FakeSource[] = [];
+  readonly resume = vi.fn(() => {
+    this.state = "running";
+    return Promise.resolve();
+  });
+  readonly suspend = vi.fn(() => {
+    this.state = "suspended";
+    return Promise.resolve();
+  });
+
+  createGain() {
+    return {
+      setGain: vi.fn(),
+      connect: vi.fn(),
+    };
+  }
+
+  createBufferSource(): SoundAudioSource {
+    const source = new FakeSource();
+    this.sources.push(source);
+    return source;
+  }
+
+  decodeAudioData(data: ArrayBuffer): Promise<SoundBuffer> {
+    return Promise.resolve({ id: String(data.byteLength) });
+  }
+}
+
+function event(type: GameEvent["type"]): GameEvent {
+  switch (type) {
+    case "battle-started":
+      return {
+        type,
+        enemy: { id: "goblin", maximumHp: 100, currentHp: 100 },
+      };
+    case "battle-reward":
+      return {
+        type,
+        enemy: "goblin",
+        gold: 10,
+        score: 20,
+        profileExp: 2,
+        dragonKilled: false,
+      };
+    case "combat-phase-changed":
+      return { type, actor: "hero", phase: "attack" };
+    case "combat-hit":
+      return {
+        type,
+        attacker: "hero",
+        target: "enemy",
+        damage: 10,
+        critical: false,
+        remainingHp: 90,
+      };
+    case "combat-lethal-hit":
+      return { type, attacker: "hero", target: "enemy" };
+    case "encounter-promoted":
+      return {
+        type,
+        encounter: {
+          kind: "shop",
+          shop: "pharmacy",
+          cachedPrice: 10,
+          x: 100,
+          used: false,
+        },
+      };
+    case "equipment-discovered":
+      return { type, equipment: "weapon", tier: 2 };
+    case "achievement-unlocked":
+      return { type, achievement: "reach-day-10" };
+    case "lifespan-death":
+      return { type };
+    case "pause-toggled":
+      return { type, paused: true };
+    case "purchase-rejected":
+      return { type, reason: "insufficient-gold" };
+    case "item-use-rejected":
+      return { type, reason: "no-item" };
+    case "item-used":
+      return { type, item: "elixir" };
+    case "shop-departed":
+      return { type, shop: "pharmacy" };
+    case "shop-purchased":
+      return { type, shop: "pharmacy", price: 10 };
+    case "tutorial-dismissed":
+      return { type, page: 0 };
+    case "run-ended":
+      return { type, reason: "lifespan" };
+    case "step-advanced":
+      return { type, step: 1 };
+  }
+}
+
+function setup() {
+  const context = new FakeContext();
+  const runtime: SoundAudioRuntime = {
+    createContext: () => context,
+    load: () => Promise.resolve(new ArrayBuffer(8)),
+  };
+  const sound = createBrowserSoundEffects({ runtime });
+  return { context, sound };
+}
+
+describe("sound cue mapping", () => {
+  it("covers public gameplay outcomes and leaves logical steps silent", () => {
+    expect(soundCuesForEvent(event("battle-started"))).toEqual([
+      "battle-start",
+    ]);
+    expect(soundCuesForEvent(event("combat-phase-changed"))).toEqual([
+      "combat-attack",
+    ]);
+    expect(soundCuesForEvent(event("combat-hit"))).toEqual(["combat-hit"]);
+    expect(soundCuesForEvent(event("shop-purchased"))).toEqual([
+      "shop-purchase",
+    ]);
+    expect(soundCuesForEvent(event("item-used"))).toEqual(["item-use"]);
+    expect(soundCuesForEvent(event("battle-reward"))).toEqual(["reward"]);
+    expect(soundCuesForEvent(event("lifespan-death"))).toEqual(["death"]);
+    expect(soundCuesForEvent(event("step-advanced"))).toEqual([]);
+  });
+});
+
+describe("browser sound effects", () => {
+  it("delivers each transition once and keeps event order between renders", async () => {
+    const { context, sound } = setup();
+    await sound.initialize();
+    sound.setSession("run-1");
+
+    sound.presentTransition("run-1", 4, [event("shop-purchased")]);
+    sound.presentTransition("run-1", 4, [event("shop-purchased")]);
+    sound.presentTransition("run-1", 5, [
+      event("item-used"),
+      event("battle-reward"),
+    ]);
+
+    expect(sound.readDiagnostics().deliveredCues).toEqual([
+      "shop-purchase",
+      "item-use",
+      "reward",
+    ]);
+    expect(sound.readDiagnostics().playedCues).toEqual([
+      "shop-purchase",
+      "item-use",
+      "reward",
+    ]);
+    expect(context.sources.filter((source) => source.started)).toHaveLength(3);
+  });
+
+  it("retains a first-interaction cue while assets are decoding", async () => {
+    const context = new FakeContext();
+    const releases: Array<() => void> = [];
+    const runtime: SoundAudioRuntime = {
+      createContext: () => context,
+      load: () =>
+        new Promise<ArrayBuffer>((resolve) => {
+          releases.push(() => resolve(new ArrayBuffer(8)));
+        }),
+    };
+    const sound = createBrowserSoundEffects({ runtime });
+    const initialization = sound.initialize();
+
+    sound.presentUiAction("activate");
+    expect(sound.readDiagnostics().pendingCues).toEqual(["ui-activate"]);
+    for (const release of releases) release();
+    await initialization;
+
+    expect(sound.readDiagnostics().playedCues).toEqual(["ui-activate"]);
+  });
+
+  it("stops old-session playback and ignores stale transitions", async () => {
+    const { context, sound } = setup();
+    await sound.initialize();
+    sound.setSession("run-1");
+    sound.presentTransition("run-1", 1, [event("battle-started")]);
+    const oldSource = context.sources[0];
+
+    sound.setSession("run-2");
+    sound.presentTransition("run-1", 2, [event("shop-purchased")]);
+    sound.presentTransition("run-2", 1, [event("item-used")]);
+
+    expect(oldSource?.stopped).toBe(true);
+    expect(sound.readDiagnostics().deliveredCues).toEqual(["item-use"]);
+  });
+
+  it("suspends and resumes visibly without replaying hidden cues", async () => {
+    const { context, sound } = setup();
+    await sound.initialize();
+    sound.setSession("run-1");
+    sound.presentTransition("run-1", 1, [event("battle-started")]);
+    sound.setVisible(false);
+    sound.presentTransition("run-1", 2, [event("shop-purchased")]);
+    sound.setVisible(true);
+    await Promise.resolve();
+
+    expect(context.suspend).toHaveBeenCalledTimes(1);
+    expect(context.resume).toHaveBeenCalledTimes(1);
+    expect(sound.readDiagnostics().deliveredCues).toEqual([
+      "battle-start",
+      "shop-purchase",
+    ]);
+    expect(sound.readDiagnostics().playedCues).toEqual(["battle-start"]);
+  });
+
+  it("keeps controls independent from playback and reports unavailable audio", async () => {
+    const status = vi.fn();
+    const sound = createBrowserSoundEffects({
+      runtime: { createContext: () => undefined, load: vi.fn() },
+      onStatusChange: status,
+    });
+
+    sound.setPreferences({ muted: true, volume: 0.25 });
+    sound.presentUiAction("activate");
+    await expect(sound.initialize()).resolves.toMatchObject({
+      status: "unavailable",
+    });
+    expect(sound.readDiagnostics().deliveredCues).toEqual(["ui-activate"]);
+    expect(status).toHaveBeenCalledWith("unavailable");
+  });
+
+  it("continues with available cues when one asset cannot decode", async () => {
+    const context = new FakeContext();
+    let calls = 0;
+    const runtime: SoundAudioRuntime = {
+      createContext: () => context,
+      load: () => {
+        calls += 1;
+        if (calls === 1) {
+          return Promise.reject(new Error("decode fixture failure"));
+        }
+        return Promise.resolve(new ArrayBuffer(8));
+      },
+    };
+    const sound = createBrowserSoundEffects({ runtime });
+
+    await expect(sound.initialize()).resolves.toMatchObject({
+      status: "degraded",
+    });
+    sound.setSession("run-1");
+    sound.presentTransition("run-1", 1, [event("shop-purchased")]);
+
+    expect(sound.readDiagnostics().status).toBe("degraded");
+    expect(sound.readDiagnostics().failedCues.length).toBeGreaterThan(0);
+  });
+});

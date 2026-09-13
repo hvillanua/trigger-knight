@@ -249,8 +249,11 @@ Copyright remains with the original rights holders. The preserved material is
 retained for interoperability, behavioral research, and production asset
 provenance. The runtime asset policy is:
 
-- Use original visual, audio, and font assets from the preserved SWF or its
-  recorded exports where available.
+- Use original visual and font assets from the preserved SWF or its recorded
+  exports where approved.
+- Use separately authored sound effects from `src/assets/sound-effects/`; the
+  original extracted sound bytes remain provenance records and are not
+  production inputs for this adapter.
 - The current reviewed production copies live under `src/assets/original/`; do
   not import directly from the archival `original/` or `exports/` directories.
 - Add neighboring provenance metadata recording the source path, artifact hash
