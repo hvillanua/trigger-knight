@@ -89,7 +89,7 @@ test("pause and tutorial commands resume at logical opportunities; leaving cance
   await installFrames(page);
   await page.evaluate(() => window.testFrame(100));
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
-  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  await page.keyboard.press("p");
   await page.evaluate(() => window.testFrame(200));
   await expect(
     page.getByRole("button", { name: "Resume", exact: true }),
@@ -101,10 +101,8 @@ test("pause and tutorial commands resume at logical opportunities; leaving cance
   expect(paused?.lifecycle.paused).toBe(true);
   await page.getByRole("button", { name: "Resume", exact: true }).click();
   await page.evaluate(() => window.testFrame(300));
-  await expect(
-    page.getByRole("button", { name: "Pause", exact: true }),
-  ).toBeEnabled();
-  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  await expect(page.locator("#toggle-pause")).toBeHidden();
+  await page.keyboard.press("p");
   await page.evaluate(() => {
     window.dispatchEvent(new Event("pagehide"));
     window.testFrame(400);

@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   createVisualAtlas,
+  ORIGINAL_EFFECT_IMAGE_URLS,
   ORIGINAL_SCENE_ASSET_URLS,
   ORIGINAL_SPRITE_URLS,
   ORIGINAL_ANIMATION_URLS,
@@ -95,6 +96,18 @@ describe("approved visual atlas", () => {
       expect(url).toContain("/assets/original/key-sprites/");
     }
     for (const url of Object.values(ORIGINAL_SCENE_ASSET_URLS)) {
+      expect(url).toContain("/assets/original/images/");
+    }
+    expect(Object.keys(ORIGINAL_EFFECT_IMAGE_URLS)).toEqual([
+      "hit-1",
+      "hit-2",
+      "hit-3",
+      "hit-4",
+      "hit-5",
+      "hit-6",
+      "hit-7",
+    ]);
+    for (const url of Object.values(ORIGINAL_EFFECT_IMAGE_URLS)) {
       expect(url).toContain("/assets/original/images/");
     }
   });

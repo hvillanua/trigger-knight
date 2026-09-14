@@ -807,16 +807,7 @@ body {
 
 .gameplay-stage:not([data-paused="true"]) .gameplay-controls .stage-resume,
 .gameplay-stage:not([data-paused="true"]) .gameplay-controls .stage-quit {
-  right: 0.75rem;
-  bottom: auto;
-}
-
-.gameplay-stage:not([data-paused="true"]) .gameplay-controls .stage-resume {
-  top: 29%;
-}
-
-.gameplay-stage:not([data-paused="true"]) .gameplay-controls .stage-quit {
-  top: 44%;
+  display: none;
 }
 
 .gameplay-controls .stage-control:hover,

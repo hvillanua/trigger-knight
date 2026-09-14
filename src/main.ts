@@ -39,10 +39,7 @@ import {
   type BrowserGameplayClock,
 } from "./browser/gameplay-clock.js";
 import { observeDevicePixelRatioChanges } from "./browser/device-pixel-ratio.js";
-import {
-  mapClientPointToWorld,
-  type CssDimensions,
-} from "./browser/foundation.js";
+import { type CssDimensions } from "./browser/foundation.js";
 import {
   createFullscreenController,
   type FullscreenState,
@@ -1140,11 +1137,28 @@ document.addEventListener("keydown", (event) => {
   dispatch(commands);
 });
 
+gameplayStage.addEventListener("pointerup", (event) => {
+  if (event.pointerType === "mouse" && event.button !== 0) return;
+  if (currentScreen !== "gameplay") return;
+  if (event.target === dismissTutorialButton) return;
+  const observation = latestObservation;
+  if (
+    observation !== undefined &&
+    observation.lifecycle.tutorialPage !== null &&
+    observation.actions.canDismissTutorial
+  ) {
+    event.preventDefault();
+    canvas.focus({ preventScroll: true });
+    dispatch(commandsForDismissTutorialActivation());
+  }
+});
+
 canvas.addEventListener("pointerup", (event) => {
   if (event.pointerType === "mouse" && event.button !== 0) return;
   if (currentScreen !== "gameplay") return;
   const observation = latestObservation;
   if (observation === undefined) return;
+  if (observation.lifecycle.tutorialPage !== null) return;
   if (
     observation.battle !== null &&
     observation.player.inventory.item !== null &&
@@ -1155,7 +1169,7 @@ canvas.addEventListener("pointerup", (event) => {
     dispatch(commandsForItemUseActivation());
     return;
   }
-  const current = observation?.encounters.current;
+  const current = observation.encounters.current;
   if (
     current?.kind !== "shop" ||
     !observation.actions.canPurchaseCurrentEncounter
@@ -1163,28 +1177,6 @@ canvas.addEventListener("pointerup", (event) => {
     return;
   }
 
-  const rect = canvas.getBoundingClientRect();
-  const computedStyle = window.getComputedStyle(canvas);
-  const worldPoint = mapClientPointToWorld(
-    observation.camera,
-    { width: canvas.width, height: canvas.height },
-    contentBox ?? { width: canvas.clientWidth, height: canvas.clientHeight },
-    rect,
-    { x: event.clientX, y: event.clientY },
-    {
-      left: Number.parseFloat(computedStyle.borderLeftWidth) || 0,
-      top: Number.parseFloat(computedStyle.borderTopWidth) || 0,
-      right: Number.parseFloat(computedStyle.borderRightWidth) || 0,
-      bottom: Number.parseFloat(computedStyle.borderBottomWidth) || 0,
-    },
-  );
-  if (
-    worldPoint === null ||
-    Math.abs(worldPoint.x - current.x) > 40 ||
-    worldPoint.y < observation.camera.y + observation.camera.height * 0.35
-  ) {
-    return;
-  }
   event.preventDefault();
   canvas.focus({ preventScroll: true });
   dispatch(commandsForPurchaseActivation());

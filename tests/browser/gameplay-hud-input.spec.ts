@@ -49,7 +49,7 @@ test("routes keyboard bindings once and ignores held-key repeats", async ({
   ]);
 });
 
-test("keeps active-run controls visible and clear of the live HUD", async ({
+test("hides pause and main-menu controls during an active run", async ({
   page,
 }) => {
   await page.goto("/?manual=1");
@@ -71,42 +71,51 @@ test("keeps active-run controls visible and clear of the live HUD", async ({
       stageBox.bottom - stageBox.height * 0.04,
     );
     return {
-      pauseVisible: getComputedStyle(pause).visibility !== "hidden",
-      quitVisible: getComputedStyle(quit).visibility !== "hidden",
-      pauseTopRatio: (pauseBox.top - stageBox.top) / stageBox.height,
-      quitTopRatio: (quitBox.top - stageBox.top) / stageBox.height,
+      pauseVisible: getComputedStyle(pause).display !== "none",
+      quitVisible: getComputedStyle(quit).display !== "none",
+      pauseArea: pauseBox.width * pauseBox.height,
+      quitArea: quitBox.width * quitBox.height,
       hudHitId: hudHit instanceof HTMLElement ? hudHit.id : null,
       canvasId: canvas.id,
     };
   });
 
-  expect(geometry.pauseVisible).toBe(true);
-  expect(geometry.quitVisible).toBe(true);
-  expect(geometry.pauseTopRatio).toBeGreaterThan(0.26);
-  expect(geometry.quitTopRatio).toBeGreaterThan(0.4);
-  expect(geometry.quitTopRatio).toBeLessThan(0.7);
+  expect(geometry.pauseVisible).toBe(false);
+  expect(geometry.quitVisible).toBe(false);
+  expect(geometry.pauseArea).toBe(0);
+  expect(geometry.quitArea).toBe(0);
   expect(geometry.hudHitId).toBe(geometry.canvasId);
 });
 
-test("keeps shortcuts active from focused gameplay buttons", async ({
+test("dismisses the first tutorial dialog from any stage click", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+  await expect(page.locator("#tutorial-panel")).toBeVisible();
+
+  await page.locator(".gameplay-stage").dispatchEvent("pointerup", {
+    bubbles: true,
+    button: 0,
+    pointerType: "mouse",
+  });
+
+  await expect(page.locator("#tutorial-panel")).toBeHidden();
+});
+
+test("keeps the keyboard pause shortcut active while controls are hidden", async ({
   page,
 }) => {
   await page.goto("/?manual=1");
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
 
-  const pauseButton = page.getByRole("button", {
-    name: "Pause",
-    exact: true,
-  });
-  await pauseButton.click();
+  await page.keyboard.press("p");
   await expect(
     page.getByRole("button", { name: "Resume", exact: true }),
   ).toBeVisible();
 
   await page.keyboard.press("p");
-  await expect(
-    page.getByRole("button", { name: "Pause", exact: true }),
-  ).toBeVisible();
+  await expect(page.locator("#pause-panel")).toBeHidden();
+  await expect(page.locator("#toggle-pause")).toBeHidden();
 });
 
 test("prevents held Enter from repeating a focused gameplay button", async ({
@@ -115,20 +124,25 @@ test("prevents held Enter from repeating a focused gameplay button", async ({
   await page.goto("/?manual=1");
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
 
-  await page.getByRole("button", { name: "Pause", exact: true }).focus();
+  await page.keyboard.press("p");
+  const resumeButton = page.getByRole("button", {
+    name: "Resume",
+    exact: true,
+  });
+  await resumeButton.focus();
   await page.keyboard.down("Enter");
   await page.keyboard.down("Enter");
   await page.keyboard.up("Enter");
 
-  await expect(
-    page.getByRole("button", { name: "Resume", exact: true }),
-  ).toBeVisible();
+  await expect(page.locator("#pause-panel")).toBeHidden();
 });
 
 test("captures, cancels, and rejects conflicting keyboard remaps", async ({
   page,
 }) => {
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+  await page.keyboard.press("p");
   await page.getByRole("button", { name: "Main menu", exact: true }).click();
   await page.getByRole("button", { name: "Settings", exact: true }).click();
 
@@ -153,14 +167,13 @@ test("captures, cancels, and rejects conflicting keyboard remaps", async ({
   await page.getByRole("button", { name: "Save settings" }).click();
   await expect(page.locator("#settings-status")).toHaveText("Settings saved.");
   await page.reload();
+  await page.keyboard.press("q");
   await page.getByRole("button", { name: "Main menu", exact: true }).click();
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   await expect(page.locator("#binding-toggle-pause")).toHaveValue("KeyQ");
 });
 
-test("uses the projected Canvas shop target for one touch-style activation", async ({
-  page,
-}) => {
+test("purchases the current shop from any Canvas click", async ({ page }) => {
   await page.goto("/?manual=1");
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
 
@@ -184,35 +197,12 @@ test("uses the projected Canvas shop target for one touch-style activation", asy
   await page.evaluate(() => {
     const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
     if (canvas === null) throw new Error("Missing game canvas");
-    const rect = canvas.getBoundingClientRect();
-    const camera = canvas.dataset.worldCamera?.split(",").map(Number);
-    const projection = canvas.dataset.projectionViewport
-      ?.split(",")
-      .map(Number);
-    const x = Number(canvas.dataset.currentEncounterX);
-    if (
-      camera === undefined ||
-      projection === undefined ||
-      !Number.isFinite(x)
-    ) {
-      throw new Error("Missing public Canvas projection");
-    }
-    const scale = projection[2]! / camera[2]!;
-    const backingX = projection[0]! + (x - camera[0]!) * scale;
-    const backingY = projection[1]! + 220 * scale;
-    const styles = getComputedStyle(canvas);
-    const borderLeft = Number.parseFloat(styles.borderLeftWidth) || 0;
-    const borderTop = Number.parseFloat(styles.borderTopWidth) || 0;
-    const clientX =
-      rect.left + borderLeft + (backingX / canvas.width) * canvas.clientWidth;
-    const clientY =
-      rect.top + borderTop + (backingY / canvas.height) * canvas.clientHeight;
     canvas.dispatchEvent(
       new PointerEvent("pointerup", {
         bubbles: true,
         button: 0,
-        clientX,
-        clientY,
+        clientX: 1,
+        clientY: 1,
         pointerId: 7,
         pointerType: "touch",
       }),

@@ -27,6 +27,9 @@ export type VisualSpriteId =
 
 export type OriginalSceneAssetId = "sky" | "ground" | "mountains" | "building";
 
+export type OriginalEffectImageId =
+  "hit-1" | "hit-2" | "hit-3" | "hit-4" | "hit-5" | "hit-6" | "hit-7";
+
 export type OriginalUiImageId =
   | "parchment"
   | "bottom-strip"
@@ -79,6 +82,19 @@ export const ORIGINAL_SCENE_ASSET_URLS: Readonly<
   ground: new URL("../assets/original/images/360.png", import.meta.url).href,
   mountains: new URL("../assets/original/images/363.png", import.meta.url).href,
   building: new URL("../assets/original/images/366.png", import.meta.url).href,
+});
+
+/** Reviewed frames exported from the original FXHit timeline. */
+export const ORIGINAL_EFFECT_IMAGE_URLS: Readonly<
+  Record<OriginalEffectImageId, string>
+> = Object.freeze({
+  "hit-1": new URL("../assets/original/images/119.png", import.meta.url).href,
+  "hit-2": new URL("../assets/original/images/121.png", import.meta.url).href,
+  "hit-3": new URL("../assets/original/images/123.png", import.meta.url).href,
+  "hit-4": new URL("../assets/original/images/125.png", import.meta.url).href,
+  "hit-5": new URL("../assets/original/images/127.png", import.meta.url).href,
+  "hit-6": new URL("../assets/original/images/129.png", import.meta.url).href,
+  "hit-7": new URL("../assets/original/images/131.png", import.meta.url).href,
 });
 
 /** Reviewed interface exports used by the composed browser presentation. */
@@ -163,6 +179,9 @@ export interface VisualAtlas {
   readonly sceneImages: Readonly<
     Partial<Record<OriginalSceneAssetId, HTMLImageElement>>
   >;
+  readonly effectImages: Readonly<
+    Partial<Record<OriginalEffectImageId, HTMLImageElement>>
+  >;
   readonly uiImages: Readonly<
     Partial<Record<OriginalUiImageId, HTMLImageElement>>
   >;
@@ -180,6 +199,8 @@ export function createVisualAtlas(
   > = {};
   const sceneImages: Partial<Record<OriginalSceneAssetId, HTMLImageElement>> =
     {};
+  const effectImages: Partial<Record<OriginalEffectImageId, HTMLImageElement>> =
+    {};
   const uiImages: Partial<Record<OriginalUiImageId, HTMLImageElement>> = {};
   if (status === "loading") {
     let pending =
@@ -188,6 +209,7 @@ export function createVisualAtlas(
         0,
       ) +
       Object.keys(ORIGINAL_SCENE_ASSET_URLS).length +
+      Object.keys(ORIGINAL_EFFECT_IMAGE_URLS).length +
       Object.keys(ORIGINAL_UI_IMAGE_URLS).length;
     let loaded = 0;
     let failed = 0;
@@ -237,6 +259,13 @@ export function createVisualAtlas(
       });
     }
     for (const id of Object.keys(
+      ORIGINAL_EFFECT_IMAGE_URLS,
+    ) as OriginalEffectImageId[]) {
+      load(ORIGINAL_EFFECT_IMAGE_URLS[id], (image) => {
+        effectImages[id] = image;
+      });
+    }
+    for (const id of Object.keys(
       ORIGINAL_UI_IMAGE_URLS,
     ) as OriginalUiImageId[]) {
       load(ORIGINAL_UI_IMAGE_URLS[id], (image) => {
@@ -251,6 +280,7 @@ export function createVisualAtlas(
     originalImages,
     originalFrames,
     sceneImages,
+    effectImages,
     uiImages,
   });
 }

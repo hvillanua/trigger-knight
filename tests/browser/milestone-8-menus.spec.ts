@@ -51,6 +51,8 @@ test("browses collections and defined achievements from the main menu", async ({
   );
   await page.goto("/?manual=1");
 
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+  await page.keyboard.press("p");
   await page.getByRole("button", { name: "Main menu", exact: true }).click();
   await expect(page.locator("#title-screen")).toBeVisible();
   await expect(page.locator("#gameplay-screen")).toBeHidden();
@@ -91,6 +93,8 @@ test("starts a run from the title and presents readable tutorial and pause state
 }) => {
   await page.goto("/?manual=1");
 
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+  await page.keyboard.press("p");
   await page.getByRole("button", { name: "Main menu", exact: true }).click();
   await page.getByRole("button", { name: "Start run" }).click();
   await expect(page.locator("#gameplay-screen")).toBeVisible();
@@ -110,7 +114,7 @@ test("starts a run from the title and presents readable tutorial and pause state
   );
 
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
-  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  await page.keyboard.press("p");
   await expect(page.locator("#pause-panel")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Run paused" })).toBeVisible();
   await page.getByRole("button", { name: "Resume", exact: true }).click();
@@ -121,6 +125,8 @@ test("persists settings independently and reloads them through the menu", async 
   page,
 }) => {
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+  await page.keyboard.press("p");
   await page.getByRole("button", { name: "Main menu", exact: true }).click();
   await page.getByRole("button", { name: "Settings", exact: true }).click();
 
@@ -153,6 +159,7 @@ test("persists settings independently and reloads them through the menu", async 
   });
 
   await page.reload();
+  await page.keyboard.press("q");
   await page.getByRole("button", { name: "Main menu", exact: true }).click();
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   await expect(page.locator("#tutorial-preference")).not.toBeChecked();
