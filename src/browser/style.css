@@ -807,22 +807,16 @@ body {
 
 .gameplay-stage:not([data-paused="true"]) .gameplay-controls .stage-resume,
 .gameplay-stage:not([data-paused="true"]) .gameplay-controls .stage-quit {
-  color: transparent !important;
-  background: transparent;
-  border-color: transparent;
-  text-shadow: none;
+  right: 0.75rem;
+  bottom: auto;
 }
 
-.gameplay-stage:not([data-paused="true"])
-  .gameplay-controls
-  .stage-control:focus-visible {
-  color: #f7f1df !important;
-  text-shadow:
-    -1px -1px 0 #080b14,
-    1px -1px 0 #080b14,
-    -1px 1px 0 #080b14,
-    1px 1px 0 #080b14;
-  border-color: #806d3f;
+.gameplay-stage:not([data-paused="true"]) .gameplay-controls .stage-resume {
+  top: 29%;
+}
+
+.gameplay-stage:not([data-paused="true"]) .gameplay-controls .stage-quit {
+  top: 44%;
 }
 
 .gameplay-controls .stage-control:hover,

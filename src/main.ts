@@ -518,7 +518,7 @@ const tutorialContent: Readonly<
 > = Object.freeze({
   0: {
     title: "Basic survival",
-    copy: "Guide the Knight to survive as long as possible using only a single click every time!",
+    copy: "Guide the Knight to survive as long as possible using only a single click every time! Game will end if your lifespan or HP becomes 0. Getting hit by the Enemy reduces your HP, while Lifespan reduces gradually over time.",
   },
   1: {
     title: "Encounter and building interaction",
