@@ -1140,7 +1140,7 @@ document.addEventListener("keydown", (event) => {
 gameplayStage.addEventListener("pointerup", (event) => {
   if (event.pointerType === "mouse" && event.button !== 0) return;
   if (currentScreen !== "gameplay") return;
-  if (event.target === dismissTutorialButton) return;
+  if (event.target instanceof HTMLButtonElement) return;
   const observation = latestObservation;
   if (
     observation !== undefined &&
