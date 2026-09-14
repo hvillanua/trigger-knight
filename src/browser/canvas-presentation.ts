@@ -1,5 +1,4 @@
 import type {
-  CombatActorPhase,
   EnemyId,
   GameEvent,
   GameObservation,
@@ -19,8 +18,6 @@ import {
 } from "./hud.js";
 import {
   createVisualAtlas,
-  VISUAL_SPRITES,
-  type SpriteRect,
   type VisualAtlas,
   type VisualAtlasStatus,
   type OriginalUiImageId,
@@ -34,17 +31,24 @@ import {
 } from "./foundation.js";
 import { loadOriginalFonts, ORIGINAL_FONT_FAMILIES } from "./font-assets.js";
 
-type DisplayActorPhase = CombatActorPhase | "running";
+import {
+  ActorAnimation,
+  actorFrameNumber,
+  type ActorPose,
+  type ActorSpriteId,
+} from "./sprite-animation.js";
 
 interface SpriteOptions {
   readonly scale?: number;
   readonly alpha?: number;
   readonly flipX?: boolean;
+  readonly frame?: number;
 }
 
 interface EffectRecord {
   readonly event: GameEvent;
   readonly key: string;
+  readonly startActiveTicks: number;
 }
 
 const NO_VISUAL_EFFECTS: readonly EffectRecord[] = Object.freeze([]);
@@ -55,7 +59,7 @@ interface WorldPoint {
 }
 
 const GROUND_RATIO = 0.73;
-const HERO_RUNNING_X = 110;
+const HERO_RUNNING_X = 50;
 const GAMEPLAY_HUD_TOP = 8;
 const GAMEPLAY_HUD_BOTTOM = 251;
 const MESSAGE_STRIP_Y = GAMEPLAY_HUD_BOTTOM - 15;
@@ -86,8 +90,6 @@ const ENEMY_SPRITES: Readonly<Record<EnemyId, VisualSpriteId>> = Object.freeze({
   wolf: "wolf",
   dragon: "dragon",
 });
-
-const SCENERY_SPRITES = Object.freeze(["tree", "pine", "rock"] as const);
 
 const SHOP_UI_ICONS: Readonly<Record<ShopId, OriginalUiImageId>> =
   Object.freeze({
@@ -161,25 +163,6 @@ function formatLifespan(
   return `${lifespan.whole}.${String(lifespan.fraction).padStart(2, "0")}%`;
 }
 
-function tutorialLabel(page: number): string {
-  switch (page) {
-    case 0:
-      return "Basic survival";
-    case 1:
-      return "Building interaction";
-    case 2:
-      return "Soul Shrine";
-    case 3:
-      return "Automatic battle and item use";
-    case 4:
-      return "Low lifespan";
-    case 5:
-      return "Low HP";
-    default:
-      return `Page ${page}`;
-  }
-}
-
 function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(maximum, Math.max(minimum, value));
 }
@@ -249,12 +232,19 @@ function currentEncounterX(frame: Readonly<PresentationFrame>): number | null {
 function battleActorX(
   frame: Readonly<PresentationFrame>,
   actor: "hero" | "enemy",
+  runningX = HERO_RUNNING_X,
 ): number | null {
   const current = frame.current.battle;
   if (current === null) return null;
   const previous = frame.previous.battle;
+  if (previous === null) {
+    const from =
+      actor === "hero"
+        ? runningX
+        : (frame.previous.encounters.current?.x ?? current.actors.enemy.x);
+    return interpolate(from, current.actors[actor].x, frame.interpolation);
+  }
   if (
-    previous === null ||
     previous.enemy.id !== current.enemy.id ||
     previous.actors[actor] === undefined
   ) {
@@ -319,6 +309,7 @@ function drawOutlinedText(
     readonly lineWidth?: number;
     readonly align?: CanvasTextAlign;
     readonly baseline?: CanvasTextBaseline;
+    readonly alpha?: number;
   }>,
 ): void {
   context.save();
@@ -329,18 +320,10 @@ function drawOutlinedText(
   context.lineWidth = options.lineWidth ?? 3;
   context.strokeStyle = options.stroke ?? "#080b14";
   context.fillStyle = options.fill ?? "#f7f1df";
+  context.globalAlpha = options.alpha ?? 1;
   context.strokeText(text, x, y);
   context.fillText(text, x, y);
   context.restore();
-}
-
-function spriteReady(atlas: VisualAtlas, sprite: SpriteRect): boolean {
-  return (
-    atlas.status === "ready" &&
-    imageReady(atlas.image) &&
-    sprite.width > 0 &&
-    sprite.height > 0
-  );
 }
 
 function drawAtlasSprite(
@@ -351,127 +334,48 @@ function drawAtlasSprite(
   baselineY: number,
   options: SpriteOptions = {},
 ): boolean {
-  const sprite = VISUAL_SPRITES[spriteId];
+  const iconIds: Partial<Record<VisualSpriteId, OriginalUiImageId>> = {
+    weapon: "weapon-icon",
+    armor: "armor-icon",
+    "soul-shrine": "shrine-icon",
+    elixir: "elixir-icon",
+    "divine-edge": "divine-edge-icon",
+    "gold-voucher": "voucher-icon",
+  };
+  const icon = iconIds[spriteId];
+  const originalImage =
+    options.frame !== undefined
+      ? atlas.originalFrames[spriteId as ActorSpriteId]?.[options.frame - 1]
+      : icon !== undefined
+        ? atlas.uiImages[icon]
+        : atlas.originalImages[spriteId];
+  if (!imageReady(originalImage)) return false;
   const scale = options.scale ?? 1;
-  const alpha = options.alpha ?? 1;
-  const originalImage = atlas.originalImages[spriteId];
+  // Each entity's frames share a padded registration canvas. These anchors are
+  // the bottom center of the embedded shadow; never fit or recenter a pose.
+  const anchors: Readonly<Record<ActorSpriteId, readonly [number, number]>> = {
+    hero: [64.5, 75],
+    dragon: [114.5, 115],
+    goblin: [62, 98],
+    golem: [86.5, 103],
+    wolf: [64.5, 65],
+  };
+  const anchor = anchors[spriteId as ActorSpriteId] ?? [
+    originalImage.naturalWidth / 2,
+    originalImage.naturalHeight,
+  ];
   context.save();
-  context.globalAlpha = alpha;
+  context.globalAlpha = options.alpha ?? 1;
   context.translate(x, baselineY);
-  if (options.flipX === true) context.scale(-1, 1);
+  context.scale(options.flipX === true ? -scale : scale, scale);
   try {
-    if (imageReady(originalImage)) {
-      const fitScale = Math.min(
-        (sprite.width * scale) / originalImage.naturalWidth,
-        (sprite.height * scale) / originalImage.naturalHeight,
-      );
-      const width = originalImage.naturalWidth * fitScale;
-      const height = originalImage.naturalHeight * fitScale;
-      context.drawImage(originalImage, -width / 2, -height, width, height);
-      context.restore();
-      return true;
-    }
-
-    if (!spriteReady(atlas, sprite) || atlas.image === undefined) {
-      context.restore();
-      return false;
-    }
-    context.drawImage(
-      atlas.image,
-      sprite.x,
-      sprite.y,
-      sprite.width,
-      sprite.height,
-      (-sprite.width * scale) / 2,
-      -sprite.height * scale,
-      sprite.width * scale,
-      sprite.height * scale,
-    );
+    context.drawImage(originalImage, -anchor[0], -anchor[1]);
   } catch {
     context.restore();
     return false;
   }
   context.restore();
   return true;
-}
-
-function drawShadow(
-  context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-): void {
-  context.save();
-  context.fillStyle = "#05070d";
-  context.globalAlpha = 0.55;
-  context.beginPath();
-  context.ellipse(x, y - 2, width, 5, 0, 0, Math.PI * 2);
-  context.fill();
-  context.restore();
-}
-
-function drawCloudFallback(
-  context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-): void {
-  context.save();
-  context.fillStyle = "#8994ae";
-  context.globalAlpha = 0.42;
-  context.beginPath();
-  context.ellipse(x - 18, y - 10, 23, 9, 0, 0, Math.PI * 2);
-  context.ellipse(x + 8, y - 13, 25, 12, 0, 0, Math.PI * 2);
-  context.ellipse(x + 30, y - 8, 17, 8, 0, 0, Math.PI * 2);
-  context.fill();
-  context.restore();
-}
-
-function drawTreeFallback(
-  context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  pine: boolean,
-): void {
-  context.save();
-  context.fillStyle = "#5c382d";
-  context.fillRect(x - 4, y - 42, 8, 42);
-  context.fillStyle = pine ? "#315c54" : "#396b56";
-  context.beginPath();
-  if (pine) {
-    context.moveTo(x, y - 92);
-    context.lineTo(x - 30, y - 38);
-    context.lineTo(x + 30, y - 38);
-  } else {
-    context.arc(x, y - 60, 30, 0, Math.PI * 2);
-  }
-  context.fill();
-  context.restore();
-}
-
-function drawRockFallback(
-  context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-): void {
-  context.save();
-  context.fillStyle = "#7f899b";
-  context.beginPath();
-  context.moveTo(x - 28, y);
-  context.lineTo(x - 18, y - 25);
-  context.lineTo(x + 4, y - 39);
-  context.lineTo(x + 27, y - 22);
-  context.lineTo(x + 32, y);
-  context.closePath();
-  context.fill();
-  context.fillStyle = "#aab3c0";
-  context.beginPath();
-  context.moveTo(x - 18, y - 25);
-  context.lineTo(x + 4, y - 39);
-  context.lineTo(x + 11, y - 18);
-  context.lineTo(x - 4, y - 10);
-  context.closePath();
-  context.fill();
-  context.restore();
 }
 
 function drawSceneImage(
@@ -496,91 +400,9 @@ function drawSceneImage(
 function drawBackground(
   context: CanvasRenderingContext2D,
   camera: Readonly<GameObservation["camera"]>,
-  day: number,
   atlas: VisualAtlas,
 ): void {
-  context.fillStyle = "#63cde4";
-  context.fillRect(camera.x, camera.y, camera.width, camera.height);
-  const originalSky = drawSceneImage(
-    context,
-    atlas,
-    "sky",
-    camera.x,
-    camera.y,
-    960,
-    320,
-  );
-  if (!originalSky) {
-    const gradient = context.createLinearGradient(
-      camera.x,
-      camera.y,
-      camera.x,
-      camera.y + camera.height,
-    );
-    gradient.addColorStop(0, day % 2 === 0 ? "#63cde4" : "#86d7e6");
-    gradient.addColorStop(0.62, "#d9edf0");
-    gradient.addColorStop(1, "#77c779");
-    context.fillStyle = gradient;
-    context.fillRect(camera.x, camera.y, camera.width, camera.height);
-  }
-
-  const originalMountains = drawSceneImage(
-    context,
-    atlas,
-    "mountains",
-    camera.x,
-    camera.y + 82,
-    960,
-    120,
-  );
-  if (!originalMountains) {
-    context.fillStyle = "#3a8a8c";
-    context.beginPath();
-    context.moveTo(camera.x, camera.y + 204);
-    for (let x = camera.x - 40; x <= camera.x + camera.width + 40; x += 52) {
-      const peak = camera.y + 154 + ((Math.floor(x / 52) + day) % 3) * 11;
-      context.lineTo(x + 26, peak);
-      context.lineTo(x + 52, camera.y + 204);
-    }
-    context.lineTo(camera.x + camera.width, camera.y + 204);
-    context.closePath();
-    context.fill();
-  }
-
-  const groundY = camera.y + camera.height * GROUND_RATIO;
-  const originalGround = drawSceneImage(
-    context,
-    atlas,
-    "ground",
-    camera.x,
-    camera.y + 164,
-    960,
-    188,
-  );
-  if (!originalGround) {
-    context.fillStyle = "#2d8f48";
-    context.fillRect(camera.x, groundY, camera.width, camera.height * 0.08);
-    context.fillStyle = "#4fc65c";
-    context.fillRect(
-      camera.x,
-      groundY + camera.height * 0.08,
-      camera.width,
-      camera.height * 0.19,
-    );
-    context.fillStyle = "#379e4c";
-    context.fillRect(
-      camera.x,
-      groundY + camera.height * 0.12,
-      camera.width,
-      camera.height * 0.06,
-    );
-  }
-  context.strokeStyle = "#806d3f";
-  context.lineWidth = 2;
-  context.beginPath();
-  context.moveTo(camera.x, groundY);
-  context.lineTo(camera.x + camera.width, groundY);
-  context.stroke();
+  drawSceneImage(context, atlas, "sky", camera.x, camera.y, 960, 320);
 }
 
 function drawMovingBackground(
@@ -589,133 +411,23 @@ function drawMovingBackground(
   distance: number,
   atlas: VisualAtlas,
 ): void {
-  const groundY = camera.y + camera.height * GROUND_RATIO;
-  for (const offset of [70, 290] as const) {
-    const cloudX =
-      camera.x +
-      positiveModulo(offset - distance * 0.08, camera.width + 110) -
-      55;
-    if (
-      !drawAtlasSprite(context, atlas, "cloud", cloudX, camera.y + 112, {
-        scale: 0.95,
-        alpha: 0.72,
-      })
-    ) {
-      drawCloudFallback(context, cloudX, camera.y + 112);
+  for (const layer of [
+    { id: "mountains" as const, speed: 0.18, y: 82, height: 120 },
+    { id: "ground" as const, speed: 1, y: 164, height: 188 },
+  ]) {
+    const offset = positiveModulo(distance * layer.speed, 960);
+    for (let x = camera.x - offset; x < camera.x + camera.width; x += 960) {
+      drawSceneImage(
+        context,
+        atlas,
+        layer.id,
+        x,
+        camera.y + layer.y,
+        960,
+        layer.height,
+      );
     }
   }
-
-  const sceneryWidth = camera.width + 128;
-  for (let index = 0; index < 7; index += 1) {
-    const spriteId = SCENERY_SPRITES[index % SCENERY_SPRITES.length]!;
-    const x =
-      camera.x +
-      positiveModulo(index * 97 + 34 - distance * 0.18, sceneryWidth) -
-      64;
-    const baseline = groundY + (index % 2 === 0 ? 4 : 10);
-    const drawn = drawAtlasSprite(context, atlas, spriteId, x, baseline, {
-      scale: index % 2 === 0 ? 0.78 : 0.62,
-      alpha: 0.82,
-    });
-    if (!drawn && spriteId === "rock") drawRockFallback(context, x, baseline);
-    if (!drawn && (spriteId === "tree" || spriteId === "pine")) {
-      drawTreeFallback(context, x, baseline, spriteId === "pine");
-    }
-  }
-
-  context.strokeStyle = "#526486";
-  context.lineWidth = 1;
-  for (let index = -1; index < 8; index += 1) {
-    const x =
-      camera.x +
-      positiveModulo(index * 72 - distance * 0.55, camera.width + 72) -
-      36;
-    context.beginPath();
-    context.moveTo(x, groundY + camera.height * 0.15);
-    context.lineTo(x + 30, groundY + camera.height * 0.15);
-    context.stroke();
-  }
-}
-
-function drawPhaseBadge(
-  context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  phase: DisplayActorPhase,
-  color: string,
-): void {
-  context.save();
-  context.fillStyle = "#080b14";
-  context.globalAlpha = 0.85;
-  context.fillRect(x - 29, y - 7, 58, 14);
-  context.globalAlpha = 1;
-  context.fillStyle = color;
-  context.font = `600 9px ${CANVAS_FONT_FAMILIES.compact}`;
-  context.textAlign = "center";
-  context.textBaseline = "middle";
-  context.fillText(phase.toUpperCase(), x, y);
-  context.restore();
-}
-
-function drawHeroFallback(
-  context: CanvasRenderingContext2D,
-  x: number,
-  groundY: number,
-  phase: DisplayActorPhase,
-  weaponTier: number,
-  armorTier: number,
-): void {
-  const bob = phase === "move" || phase === "running" ? -2 : 0;
-  const color = phase === "flinch" ? "#ffb4a8" : "#5478b7";
-  context.save();
-  context.globalAlpha = phase === "dead" ? 0.48 : 1;
-  context.translate(x, groundY + bob);
-  context.fillStyle = color;
-  context.beginPath();
-  context.moveTo(-15, -64);
-  context.lineTo(-22, -16);
-  context.lineTo(18, -16);
-  context.lineTo(14, -64);
-  context.closePath();
-  context.fill();
-  context.fillStyle = armorTier >= 7 ? "#aab3c0" : "#7e92ba";
-  context.fillRect(-12, -49, 24, 31);
-  context.fillStyle = "#f4d58d";
-  context.beginPath();
-  context.arc(0, -72, 12, 0, Math.PI * 2);
-  context.fill();
-  context.fillStyle = armorTier >= 5 ? "#bac6df" : "#5478b7";
-  context.fillRect(-13, -82, 26, 8);
-  context.fillStyle = "#080b14";
-  context.fillRect(-7, -73, 4, 4);
-  context.fillRect(4, -73, 4, 4);
-  context.strokeStyle = "#f7f1df";
-  context.lineWidth = 4;
-  context.beginPath();
-  context.moveTo(-8, -17);
-  context.lineTo(-12, 3);
-  context.moveTo(8, -17);
-  context.lineTo(12, 3);
-  context.stroke();
-  context.strokeStyle = "#f4d58d";
-  context.lineWidth = 3;
-  context.beginPath();
-  context.moveTo(12, -43);
-  context.lineTo(29 + weaponTier, -52);
-  context.stroke();
-  if (phase === "attack") {
-    context.strokeStyle = "#ffe9a6";
-    context.lineWidth = 3;
-    context.beginPath();
-    context.arc(28, -46, 21, -1.1, 0.55);
-    context.stroke();
-  }
-  if (phase === "flinch") {
-    context.strokeStyle = "#ffb4a8";
-    context.lineWidth = 2;
-    context.strokeRect(-20, -88, 40, 78);
-  }
-  context.restore();
 }
 
 function drawHero(
@@ -723,128 +435,12 @@ function drawHero(
   atlas: VisualAtlas,
   x: number,
   groundY: number,
-  phase: DisplayActorPhase,
-  weaponTier: number,
-  armorTier: number,
+  pose: ActorPose,
 ): void {
-  drawShadow(context, x, groundY, 22);
-  const drawn = drawAtlasSprite(context, atlas, "hero", x, groundY, {
-    alpha: phase === "dead" ? 0.5 : 1,
-    scale: 1.42,
+  drawAtlasSprite(context, atlas, "hero", x, groundY, {
+    frame: pose.frame,
+    alpha: pose.alpha,
   });
-  if (!drawn) {
-    drawHeroFallback(context, x, groundY, phase, weaponTier, armorTier);
-  } else if (phase === "attack") {
-    context.save();
-    context.strokeStyle = "#ffe9a6";
-    context.lineWidth = 3;
-    context.globalAlpha = 0.9;
-    context.beginPath();
-    context.arc(x + 20, groundY - 47, 24, -1.2, 0.55);
-    context.stroke();
-    context.restore();
-  } else if (phase === "flinch") {
-    context.save();
-    context.strokeStyle = "#ffb4a8";
-    context.lineWidth = 3;
-    context.strokeRect(x - 28, groundY - 91, 56, 78);
-    context.restore();
-  }
-  drawPhaseBadge(
-    context,
-    x,
-    groundY + 16,
-    phase,
-    phase === "flinch" ? "#ffb4a8" : "#f7f1df",
-  );
-  if (phase !== "dead") {
-    const weaponX = x + 29 + Math.min(weaponTier, 10);
-    context.save();
-    context.strokeStyle = weaponTier >= 7 ? "#ffe9a6" : "#bac6df";
-    context.lineWidth = 2;
-    context.beginPath();
-    context.moveTo(weaponX - 8, groundY - 51);
-    context.lineTo(weaponX + 9, groundY - 60);
-    context.stroke();
-    context.restore();
-  }
-}
-
-function drawEnemyFallback(
-  context: CanvasRenderingContext2D,
-  x: number,
-  groundY: number,
-  enemy: EnemyId,
-  phase: CombatActorPhase,
-): void {
-  const flinching = phase === "flinch";
-  const dead = phase === "dead";
-  const offset = phase === "move" ? -3 : 0;
-  context.save();
-  context.translate(x, groundY + offset);
-  context.globalAlpha = dead ? 0.42 : 1;
-  if (enemy === "goblin") {
-    context.fillStyle = flinching ? "#ffb4a8" : "#6e9b63";
-    context.fillRect(-20, -53, 40, 38);
-    context.beginPath();
-    context.moveTo(-17, -52);
-    context.lineTo(-26, -80);
-    context.lineTo(-5, -65);
-    context.lineTo(17, -52);
-    context.lineTo(26, -80);
-    context.lineTo(20, -44);
-    context.closePath();
-    context.fill();
-  } else if (enemy === "golem") {
-    context.fillStyle = flinching ? "#ffb4a8" : "#788594";
-    context.fillRect(-27, -76, 54, 64);
-    context.fillStyle = "#18213b";
-    context.fillRect(-17, -62, 9, 9);
-    context.fillRect(8, -62, 9, 9);
-    context.fillStyle = "#586675";
-    context.fillRect(-35, -60, 8, 35);
-    context.fillRect(27, -60, 8, 35);
-  } else if (enemy === "wolf") {
-    context.fillStyle = flinching ? "#ffb4a8" : "#a87b5f";
-    context.beginPath();
-    context.ellipse(0, -34, 31, 20, 0, 0, Math.PI * 2);
-    context.fill();
-    context.beginPath();
-    context.moveTo(17, -48);
-    context.lineTo(36, -75);
-    context.lineTo(41, -42);
-    context.closePath();
-    context.fill();
-    context.fillStyle = "#f4d58d";
-    context.fillRect(30, -52, 5, 5);
-  } else {
-    context.fillStyle = flinching ? "#ffb4a8" : "#a9506e";
-    context.beginPath();
-    context.ellipse(0, -38, 27, 36, 0, 0, Math.PI * 2);
-    context.fill();
-    context.fillStyle = "#d16a7e";
-    context.beginPath();
-    context.moveTo(-19, -50);
-    context.lineTo(-48, -83);
-    context.lineTo(-35, -31);
-    context.closePath();
-    context.moveTo(19, -50);
-    context.lineTo(48, -83);
-    context.lineTo(35, -31);
-    context.closePath();
-    context.fill();
-    context.fillStyle = "#ffe9a6";
-    context.fillRect(-12, -51, 7, 7);
-    context.fillRect(6, -51, 7, 7);
-  }
-  if (phase === "attack") {
-    context.strokeStyle = "#ffb4a8";
-    context.lineWidth = 3;
-    context.beginPath();
-    context.arc(-28, -38, 19, 1.1, 2.4);
-    context.stroke();
-  }
-  context.restore();
 }
 
 function drawEnemy(
@@ -852,42 +448,13 @@ function drawEnemy(
   atlas: VisualAtlas,
   x: number,
   groundY: number,
-  enemy: EnemyId,
-  phase: CombatActorPhase,
+  pose: ActorPose,
 ): void {
-  drawShadow(context, x, groundY, enemy === "dragon" ? 30 : 23);
-  const drawn = drawAtlasSprite(
-    context,
-    atlas,
-    ENEMY_SPRITES[enemy],
-    x,
-    groundY,
-    {
-      alpha: phase === "dead" ? 0.45 : 1,
-      scale: enemy === "dragon" ? 1.16 : 1.08,
-      flipX: true,
-    },
-  );
-  if (!drawn) drawEnemyFallback(context, x, groundY, enemy, phase);
-  if (phase === "flinch") {
-    context.save();
-    context.strokeStyle = "#ffb4a8";
-    context.lineWidth = 3;
-    context.strokeRect(
-      x - (enemy === "dragon" ? 38 : 29),
-      groundY - (enemy === "dragon" ? 100 : 88),
-      enemy === "dragon" ? 76 : 58,
-      78,
-    );
-    context.restore();
-  }
-  drawPhaseBadge(
-    context,
-    x,
-    groundY + 16,
-    phase,
-    phase === "flinch" ? "#ffb4a8" : "#f7f1df",
-  );
+  drawAtlasSprite(context, atlas, pose.id, x, groundY, {
+    frame: pose.frame,
+    alpha: pose.alpha,
+    flipX: true,
+  });
 }
 
 function drawHealthBar(
@@ -918,35 +485,6 @@ function drawHealthBar(
   context.restore();
 }
 
-function drawBuildingFallback(
-  context: CanvasRenderingContext2D,
-  x: number,
-  groundY: number,
-  shop: ShopId,
-): void {
-  const colors: Readonly<Record<ShopId, string>> = {
-    bladesmith: "#c28a49",
-    armorsmith: "#8fa6ca",
-    "soul-shrine": "#c097df",
-    pharmacy: "#d77b70",
-    "grims-shop": "#a9506e",
-    "voucher-store": "#d3a747",
-  };
-  context.save();
-  context.fillStyle = "#5c382d";
-  context.fillRect(x - 28, groundY - 57, 56, 57);
-  context.fillStyle = colors[shop];
-  context.beginPath();
-  context.moveTo(x - 34, groundY - 57);
-  context.lineTo(x, groundY - 82);
-  context.lineTo(x + 34, groundY - 57);
-  context.closePath();
-  context.fill();
-  context.fillStyle = "#18213b";
-  context.fillRect(x - 8, groundY - 30, 16, 30);
-  context.restore();
-}
-
 function drawOriginalBuilding(
   context: CanvasRenderingContext2D,
   atlas: VisualAtlas,
@@ -955,8 +493,10 @@ function drawOriginalBuilding(
 ): boolean {
   const image = atlas.sceneImages.building;
   if (!imageReady(image)) return false;
-  const width = 124;
-  const height = width * (image.naturalHeight / image.naturalWidth);
+  // The export contains the building's registration padding. Preserve that
+  // canvas at runtime scale so its embedded footprint remains authoritative.
+  const width = image.naturalWidth;
+  const height = image.naturalHeight;
   try {
     context.drawImage(image, x - width / 2, groundY - height, width, height);
     return true;
@@ -974,14 +514,7 @@ function drawShop(
   available: boolean,
   used: boolean,
 ): void {
-  drawShadow(context, x, groundY, 31);
-  const drawn =
-    drawOriginalBuilding(context, atlas, x, groundY) ||
-    drawAtlasSprite(context, atlas, shop, x, groundY, {
-      alpha: available ? 1 : 0.68,
-      scale: 1.02,
-    });
-  if (!drawn) drawBuildingFallback(context, x, groundY, shop);
+  drawOriginalBuilding(context, atlas, x, groundY);
 
   const product = SHOP_PRODUCTS[shop];
   drawAtlasSprite(context, atlas, product, x + 24, groundY - 22, {
@@ -1009,25 +542,6 @@ function drawShop(
   context.restore();
 }
 
-function drawApproachTrail(
-  context: CanvasRenderingContext2D,
-  x: number,
-  groundY: number,
-  battle: boolean,
-): void {
-  context.save();
-  context.strokeStyle = battle ? "#d16a7e" : "#f4d58d";
-  context.globalAlpha = 0.35;
-  context.lineWidth = 2;
-  context.setLineDash([6, 7]);
-  context.beginPath();
-  context.moveTo(x, groundY + 3);
-  context.lineTo(x - 72, groundY + 3);
-  context.stroke();
-  context.setLineDash([]);
-  context.restore();
-}
-
 function drawEncounterIcon(
   context: CanvasRenderingContext2D,
   atlas: VisualAtlas,
@@ -1036,20 +550,7 @@ function drawEncounterIcon(
   y: number,
 ): void {
   if (encounter.kind === "shop") {
-    if (
-      !drawUiImage(context, atlas, SHOP_UI_ICONS[encounter.shop], x, y, 28, 28)
-    ) {
-      drawAtlasSprite(
-        context,
-        atlas,
-        SHOP_PRODUCTS[encounter.shop],
-        x + 14,
-        y + 28,
-        {
-          scale: 0.35,
-        },
-      );
-    }
+    drawUiImage(context, atlas, SHOP_UI_ICONS[encounter.shop], x, y, 28, 28);
     return;
   }
   drawAtlasSprite(context, atlas, "weapon", x + 14, y + 28, { scale: 0.35 });
@@ -1088,21 +589,8 @@ function drawLifeBar(
   const ratio = clamp((lifespan.whole + lifespan.fraction / 100) / 100, 0, 1);
   const x = camera.x + 162;
   const y = camera.y + GAMEPLAY_HUD_TOP;
-  if (
-    !drawUiImage(context, atlas, "lifespan-fill", x + 2, y + 2, 305 * ratio, 10)
-  ) {
-    context.save();
-    context.fillStyle = "#f1ac2c";
-    context.fillRect(x + 2, y + 2, 305 * ratio, 10);
-    context.restore();
-  }
-  if (!drawUiImage(context, atlas, "lifespan-frame", x, y, 309, 14)) {
-    context.save();
-    context.strokeStyle = "#080b14";
-    context.lineWidth = 2;
-    context.strokeRect(x, y, 309, 14);
-    context.restore();
-  }
+  drawUiImage(context, atlas, "lifespan-fill", x + 2, y + 2, 305 * ratio, 10);
+  drawUiImage(context, atlas, "lifespan-frame", x, y, 309, 14);
   drawOutlinedText(context, "LIFESPAN", camera.x + 237, camera.y + 28, {
     font: `700 14px ${CANVAS_FONT_FAMILIES.displayMedium}`,
     align: "center",
@@ -1208,29 +696,10 @@ function drawBottomHud(
 ): void {
   const camera = observation.camera;
   const y = camera.y + GAMEPLAY_HUD_BOTTOM;
-  const hasOriginalStrip = drawUiImage(
-    context,
-    atlas,
-    "bottom-strip",
-    camera.x,
-    y,
-    480,
-    69,
-  );
-  if (!hasOriginalStrip) {
-    context.save();
-    context.fillStyle = "#061018";
-    context.fillRect(camera.x, y, camera.width, 69);
-    context.restore();
-  }
+  drawUiImage(context, atlas, "bottom-strip", camera.x, y, 480, 69);
+
   drawUiImage(context, atlas, "portrait", camera.x - 1, y + 1, 126, 75);
-  if (!hasOriginalStrip) {
-    drawOutlinedText(context, "STATUS", camera.x + 126, y + 14, {
-      font: `700 11px ${CANVAS_FONT_FAMILIES.compact}`,
-      align: "center",
-      lineWidth: 2,
-    });
-  }
+
   const hpRatio =
     observation.player.hp.maximum <= 0
       ? 0
@@ -1241,10 +710,7 @@ function drawBottomHud(
         );
   const hpX = camera.x + 126;
   const hpY = y + 22;
-  if (!drawUiImage(context, atlas, "hp-fill", hpX, hpY, 97 * hpRatio, 9)) {
-    context.fillStyle = "#a9e75a";
-    context.fillRect(hpX, hpY, 97 * hpRatio, 9);
-  }
+  drawUiImage(context, atlas, "hp-fill", hpX, hpY, 97 * hpRatio, 9);
   drawUiImage(context, atlas, "hp-frame", hpX, hpY - 2, 101, 13);
   drawOutlinedText(context, "HP", hpX + 7, hpY + 7, {
     font: `700 9px ${CANVAS_FONT_FAMILIES.displayMedium}`,
@@ -1262,13 +728,6 @@ function drawBottomHud(
     },
   );
 
-  if (!hasOriginalStrip) {
-    drawOutlinedText(context, "EQUIPMENT", camera.x + 274, y + 14, {
-      font: `700 11px ${CANVAS_FONT_FAMILIES.compact}`,
-      align: "center",
-      lineWidth: 2,
-    });
-  }
   const inventoryItem = observation.player.inventory.item;
   const equipmentRows: readonly (readonly [
     OriginalUiImageId | null,
@@ -1295,13 +754,6 @@ function drawBottomHud(
     });
   });
 
-  if (!hasOriginalStrip) {
-    drawOutlinedText(context, "SCORE", camera.x + 414, y + 14, {
-      font: `700 11px ${CANVAS_FONT_FAMILIES.compact}`,
-      align: "center",
-      lineWidth: 2,
-    });
-  }
   drawOutlinedText(
     context,
     formatNumber(observation.score),
@@ -1349,6 +801,7 @@ function drawGoldAndLifespan(
 
 function contextMessage(
   observation: Readonly<GameObservation>,
+  previous: Readonly<GameObservation>,
   events: readonly GameEvent[],
 ): string | null {
   for (let index = events.length - 1; index >= 0; index -= 1) {
@@ -1358,9 +811,9 @@ function contextMessage(
       case "shop-purchased":
         switch (event.shop) {
           case "bladesmith":
-            return `Weapon upgraded: ${observation.player.weapon.name}`;
+            return `Upgrade: ${previous.player.weapon.name} > ${observation.player.weapon.name}`;
           case "armorsmith":
-            return `Armor upgraded: ${observation.player.armor.name}`;
+            return `Upgrade: ${previous.player.armor.name} > ${observation.player.armor.name}`;
           case "soul-shrine":
             return "Lifespan restored!";
           case "pharmacy":
@@ -1390,7 +843,9 @@ function contextMessage(
     observation.player.inventory.item !== null
   ) {
     const item = observation.player.inventory.item;
-    return `${itemName(item)}: ${itemDescription(item)}`;
+    return item === "elixir"
+      ? `You can use ${itemName(item)} to heal HP!`
+      : `You can use ${itemName(item)} during battle!`;
   }
   return null;
 }
@@ -1525,25 +980,21 @@ function drawMessageStrip(
   context: CanvasRenderingContext2D,
   atlas: VisualAtlas,
   observation: Readonly<GameObservation>,
+  previous: Readonly<GameObservation>,
   events: readonly GameEvent[],
 ): void {
-  const message = contextMessage(observation, events);
+  const message = contextMessage(observation, previous, events);
   if (message === null) return;
   const camera = observation.camera;
-  if (
-    !drawUiImage(
-      context,
-      atlas,
-      "message-strip",
-      camera.x,
-      camera.y + MESSAGE_STRIP_Y,
-      480,
-      15,
-    )
-  ) {
-    context.fillStyle = "#ed8c00";
-    context.fillRect(camera.x, camera.y + MESSAGE_STRIP_Y, camera.width, 15);
-  }
+  drawUiImage(
+    context,
+    atlas,
+    "message-strip",
+    camera.x,
+    camera.y + MESSAGE_STRIP_Y,
+    480,
+    15,
+  );
   drawOutlinedText(
     context,
     message,
@@ -1560,6 +1011,7 @@ function drawMessageStrip(
 function drawGameplayHud(
   context: CanvasRenderingContext2D,
   observation: Readonly<GameObservation>,
+  previous: Readonly<GameObservation>,
   atlas: VisualAtlas,
   events: readonly GameEvent[],
   pointer: WorldPoint | undefined,
@@ -1567,27 +1019,7 @@ function drawGameplayHud(
   drawGoldAndLifespan(context, atlas, observation);
   drawBottomHud(context, atlas, observation);
   drawContextPrompt(context, atlas, observation, pointer);
-  drawMessageStrip(context, atlas, observation, events);
-}
-
-function drawRouteMarker(
-  context: CanvasRenderingContext2D,
-  atlas: VisualAtlas,
-  x: number,
-  y: number,
-): void {
-  if (!drawAtlasSprite(context, atlas, "road-marker", x, y, { scale: 0.34 })) {
-    context.save();
-    context.strokeStyle = "#f4d58d";
-    context.lineWidth = 2;
-    context.setLineDash([6, 7]);
-    context.beginPath();
-    context.moveTo(x, y - 14);
-    context.lineTo(x, y);
-    context.stroke();
-    context.setLineDash([]);
-    context.restore();
-  }
+  drawMessageStrip(context, atlas, observation, previous, events);
 }
 
 function effectAnchor(
@@ -1620,10 +1052,11 @@ function effectAnchor(
     case "encounter-promoted":
       return { x: encounterX, y: groundY - 40 };
     case "shop-purchased":
+    case "item-used":
+      return { x: heroX, y: groundY - 6 };
     case "purchase-rejected":
     case "shop-departed":
       return { x: encounterX, y: groundY - 50 };
-    case "item-used":
     case "item-use-rejected":
       return { x: heroX, y: groundY - 55 };
     case "battle-reward":
@@ -1639,8 +1072,73 @@ function effectAnchor(
   }
 }
 
+const VISUAL_EFFECT_EVENT_TYPES: ReadonlySet<GameEvent["type"]> = new Set([
+  "achievement-unlocked",
+  "battle-reward",
+  "battle-started",
+  "combat-hit",
+  "combat-lethal-hit",
+  "encounter-promoted",
+  "equipment-discovered",
+  "item-use-rejected",
+  "item-used",
+  "lifespan-death",
+  "purchase-rejected",
+  "run-ended",
+  "shop-departed",
+  "shop-purchased",
+]);
+
 function isVisualEffectEvent(event: GameEvent): boolean {
-  return event.type !== "step-advanced";
+  return VISUAL_EFFECT_EVENT_TYPES.has(event.type);
+}
+
+/** Visual lifetimes are presentation choices measured in public active ticks. */
+function effectLifetime(event: GameEvent): number {
+  switch (event.type) {
+    case "combat-hit":
+      return 12;
+    case "combat-lethal-hit":
+      return 16;
+    case "combat-phase-changed":
+      return 1;
+    case "battle-started":
+    case "encounter-promoted":
+      return 14;
+    case "shop-purchased":
+    case "item-used":
+      return 24;
+    case "battle-reward":
+    case "equipment-discovered":
+    case "achievement-unlocked":
+      return 20;
+    case "purchase-rejected":
+    case "item-use-rejected":
+      return 10;
+    case "shop-departed":
+      return 12;
+    case "lifespan-death":
+    case "run-ended":
+      return 20;
+    case "pause-toggled":
+    case "tutorial-dismissed":
+      return 12;
+    case "step-advanced":
+      return 0;
+  }
+}
+
+function effectAge(
+  frame: Readonly<PresentationFrame>,
+  effect: Readonly<EffectRecord>,
+): number {
+  const activeTickAge = Math.max(
+    0,
+    frame.current.activeTicks - effect.startActiveTicks,
+  );
+  return (
+    activeTickAge + (frame.current.lifecycle.paused ? 0 : frame.interpolation)
+  );
 }
 
 function sameEventList(
@@ -1664,6 +1162,8 @@ function visualObservationSignature(
     observation.distance,
     observation.day,
     observation.lifecycle.phase,
+    observation.lifecycle.paused,
+    observation.lifecycle.tutorialPage,
     observation.lifespan.whole,
     observation.lifespan.fraction,
     observation.player.hp.current,
@@ -1706,6 +1206,7 @@ function visualFrameSignature(
   const previousKey = JSON.stringify(previous);
   const currentKey = JSON.stringify(current);
   return JSON.stringify([
+    frame.current.activeTicks,
     previousKey,
     currentKey,
     previousKey === currentKey ? null : frame.interpolation,
@@ -1719,15 +1220,19 @@ function drawBurst(
   point: WorldPoint,
   color: string,
   size: number,
+  age: number,
+  lifetime: number,
 ): void {
+  const progress = clamp(age / lifetime, 0, 1);
+  const radiusScale = 0.65 + progress * 0.55;
   context.save();
   context.strokeStyle = color;
   context.lineWidth = 2;
-  context.globalAlpha = 0.9;
+  context.globalAlpha = 0.95 * (1 - progress);
   for (let index = 0; index < 8; index += 1) {
     const angle = (Math.PI * 2 * index) / 8;
-    const inner = size * 0.35;
-    const outer = size * (index % 2 === 0 ? 1 : 0.78);
+    const inner = size * 0.35 * radiusScale;
+    const outer = size * (index % 2 === 0 ? 1 : 0.78) * radiusScale;
     context.beginPath();
     context.moveTo(
       point.x + Math.cos(angle) * inner,
@@ -1741,9 +1246,72 @@ function drawBurst(
   }
   context.fillStyle = color;
   context.beginPath();
-  context.arc(point.x, point.y, size * 0.25, 0, Math.PI * 2);
+  context.arc(
+    point.x,
+    point.y,
+    size * (0.25 - progress * 0.08),
+    0,
+    Math.PI * 2,
+  );
   context.fill();
   context.restore();
+}
+
+function effectSeed(key: string): number {
+  let hash = 0;
+  for (let index = 0; index < key.length; index += 1) {
+    hash = (hash * 31 + key.charCodeAt(index)) >>> 0;
+  }
+  return hash;
+}
+
+/** Deterministic particles keep redraws cosmetic and independent of domain RNG. */
+function drawParticles(
+  context: CanvasRenderingContext2D,
+  point: WorldPoint,
+  color: string,
+  size: number,
+  age: number,
+  lifetime: number,
+  key: string,
+): void {
+  const progress = clamp(age / lifetime, 0, 1);
+  const seed = effectSeed(key) % 360;
+  context.save();
+  context.fillStyle = color;
+  context.globalAlpha = 0.95 * (1 - progress);
+  for (let index = 0; index < 10; index += 1) {
+    const angle = ((seed + index * 137.5) * Math.PI) / 180;
+    const distance = size * (0.25 + progress * (0.55 + (index % 3) * 0.18));
+    const x = point.x + Math.cos(angle) * distance;
+    const y = point.y + Math.sin(angle) * distance - progress * (index % 2) * 7;
+    const radius = Math.max(1, size * (0.055 + (index % 3) * 0.018));
+    context.beginPath();
+    context.arc(x, y, radius, 0, Math.PI * 2);
+    context.fill();
+  }
+  context.restore();
+}
+
+function drawFloatingText(
+  context: CanvasRenderingContext2D,
+  text: string,
+  point: WorldPoint,
+  age: number,
+  lifetime: number,
+  options: Readonly<{
+    readonly fill: string;
+    readonly font: string;
+  }>,
+): void {
+  const progress = clamp(age / lifetime, 0, 1);
+  drawOutlinedText(context, text, point.x, point.y - progress * 24, {
+    font: options.font,
+    fill: options.fill,
+    align: "center",
+    lineWidth: 2,
+    alpha: 1 - progress,
+  });
 }
 
 function drawEffect(
@@ -1751,9 +1319,10 @@ function drawEffect(
   atlas: VisualAtlas,
   frame: Readonly<PresentationFrame>,
   effect: EffectRecord,
-  index: number,
 ): void {
   const point = effectAnchor(frame, effect.event);
+  const age = effectAge(frame, effect);
+  const lifetime = effectLifetime(effect.event);
   switch (effect.event.type) {
     case "combat-hit":
       drawBurst(
@@ -1761,67 +1330,119 @@ function drawEffect(
         point,
         effect.event.critical ? "#ffe9a6" : "#f7f1df",
         effect.event.critical ? 24 : 17,
+        age,
+        lifetime,
+      );
+      drawFloatingText(
+        context,
+        formatNumber(effect.event.damage),
+        point,
+        age,
+        lifetime,
+        {
+          fill: effect.event.critical ? "#ffe9a6" : "#f7f1df",
+          font: `700 ${effect.event.critical ? 13 : 11}px ${CANVAS_FONT_FAMILIES.displayMedium}`,
+        },
       );
       break;
     case "combat-lethal-hit":
-      drawBurst(context, point, "#ffb4a8", 30);
+      drawBurst(context, point, "#ffb4a8", 30, age, lifetime);
+      drawFloatingText(context, "DEFEATED", point, age, lifetime, {
+        fill: "#ffb4a8",
+        font: `700 10px ${CANVAS_FONT_FAMILIES.displayMedium}`,
+      });
       break;
     case "combat-phase-changed":
-      context.save();
-      context.strokeStyle =
-        effect.event.phase === "attack" ? "#ffe9a6" : "#bac6df";
-      context.lineWidth = 2;
-      context.globalAlpha = 0.8;
-      context.beginPath();
-      context.arc(point.x, point.y, 22, 0, Math.PI * 2);
-      context.stroke();
-      context.restore();
       break;
     case "battle-started":
     case "encounter-promoted":
-      drawBurst(context, point, "#d16a7e", 25);
+      drawParticles(context, point, "#d16a7e", 20, age, lifetime, effect.key);
+      drawBurst(context, point, "#d16a7e", 25, age, lifetime);
       break;
-    case "shop-purchased":
-    case "battle-reward":
+    case "shop-purchased": {
       if (
-        !drawAtlasSprite(
-          context,
-          atlas,
-          "gold-voucher",
-          point.x,
-          point.y + 26,
-          {
-            scale: 0.42,
-          },
-        )
+        effect.event.shop === "armorsmith" ||
+        effect.event.shop === "bladesmith"
       ) {
-        drawBurst(context, point, "#ffe9a6", 25);
+        drawParticles(context, point, "#ffe04f", 24, age, lifetime, effect.key);
+        drawFloatingText(context, "UPGRADE!", point, age, lifetime, {
+          fill: "#ffe04f",
+          font: `700 13px ${CANVAS_FONT_FAMILIES.displayMedium}`,
+        });
+        drawFloatingText(
+          context,
+          `-Lost ${formatNumber(effect.event.price)}G!`,
+          {
+            x: frame.current.camera.x + 58,
+            y: frame.current.camera.y + 50,
+          },
+          age,
+          lifetime,
+          {
+            fill: "#f7f1df",
+            font: `600 9px ${CANVAS_FONT_FAMILIES.bodySmall}`,
+          },
+        );
+      } else {
+        drawParticles(context, point, "#ffe9a6", 20, age, lifetime, effect.key);
       }
+      drawAtlasSprite(
+        context,
+        atlas,
+        SHOP_PRODUCTS[effect.event.shop],
+        point.x,
+        point.y + 26,
+        {
+          scale: 0.42,
+          alpha: 1 - clamp(age / lifetime, 0, 1),
+        },
+      );
+      break;
+    }
+    case "battle-reward":
+      drawParticles(context, point, "#ffe9a6", 20, age, lifetime, effect.key);
+      drawFloatingText(
+        context,
+        `+${formatNumber(effect.event.gold)}G`,
+        point,
+        age,
+        lifetime,
+        {
+          fill: "#ffe9a6",
+          font: `700 11px ${CANVAS_FONT_FAMILIES.displayMedium}`,
+        },
+      );
+      drawAtlasSprite(context, atlas, "gold-voucher", point.x, point.y + 26, {
+        scale: 0.42,
+        alpha: 1 - clamp(age / lifetime, 0, 1),
+      });
       break;
     case "item-used":
-      if (
-        !drawAtlasSprite(
-          context,
-          atlas,
-          effect.event.item,
-          point.x,
-          point.y + 28,
-          {
-            scale: 0.45,
-          },
-        )
-      ) {
-        drawBurst(context, point, "#9ee0c6", 24);
-      }
+      drawParticles(context, point, "#59d9ff", 24, age, lifetime, effect.key);
+      drawFloatingText(context, "ITEM USED!", point, age, lifetime, {
+        fill: "#59d9ff",
+        font: `700 12px ${CANVAS_FONT_FAMILIES.displayMedium}`,
+      });
+      drawAtlasSprite(
+        context,
+        atlas,
+        effect.event.item,
+        point.x,
+        point.y + 28,
+        {
+          scale: 0.45,
+          alpha: 1 - clamp(age / lifetime, 0, 1),
+        },
+      );
       break;
     case "purchase-rejected":
     case "item-use-rejected":
-      drawBurst(context, point, "#ffb4a8", 20);
+      drawBurst(context, point, "#ffb4a8", 20, age, lifetime);
       break;
     case "shop-departed":
       context.save();
       context.strokeStyle = "#bac6df";
-      context.globalAlpha = 0.7;
+      context.globalAlpha = 0.7 * (1 - clamp(age / lifetime, 0, 1));
       context.lineWidth = 2;
       context.setLineDash([4, 5]);
       context.beginPath();
@@ -1832,22 +1453,18 @@ function drawEffect(
       context.restore();
       break;
     case "equipment-discovered":
-      drawBurst(context, point, "#ffe9a6", 28);
+      drawParticles(context, point, "#ffe9a6", 22, age, lifetime, effect.key);
+      drawBurst(context, point, "#ffe9a6", 28, age, lifetime);
       break;
     case "achievement-unlocked":
-      if (
-        !drawAtlasSprite(context, atlas, "spark", point.x, point.y + 28, {
-          scale: 0.6,
-        })
-      ) {
-        drawBurst(context, point, "#ffe9a6", 30);
-      }
+      drawParticles(context, point, "#ffe9a6", 26, age, lifetime, effect.key);
+      drawBurst(context, point, "#ffe9a6", 30, age, lifetime);
       break;
     case "lifespan-death":
     case "run-ended":
       context.save();
       context.fillStyle = "#a9506e";
-      context.globalAlpha = 0.22;
+      context.globalAlpha = 0.22 * (1 - clamp(age / lifetime, 0, 1));
       context.fillRect(
         frame.current.camera.x,
         frame.current.camera.y,
@@ -1859,16 +1476,6 @@ function drawEffect(
     case "pause-toggled":
       break;
     case "tutorial-dismissed":
-      context.save();
-      context.fillStyle = "#bac6df";
-      context.font = `600 10px ${CANVAS_FONT_FAMILIES.serifSmall}`;
-      context.textAlign = "center";
-      context.fillText(
-        `Tutorial ${effect.event.page + 1}: ${tutorialLabel(effect.event.page)}`,
-        frame.current.camera.x + frame.current.camera.width / 2,
-        frame.current.camera.y + 122 + index * 12,
-      );
-      context.restore();
       break;
     case "step-advanced":
       break;
@@ -1881,9 +1488,7 @@ function drawEffects(
   frame: Readonly<PresentationFrame>,
   effects: readonly EffectRecord[],
 ): void {
-  effects.forEach((effect, index) =>
-    drawEffect(context, atlas, frame, effect, index),
-  );
+  effects.forEach((effect) => drawEffect(context, atlas, frame, effect));
 }
 
 const TUTORIAL_COPY: Readonly<
@@ -2181,6 +1786,8 @@ function drawDynamicWorld(
   context: CanvasRenderingContext2D,
   frame: Readonly<PresentationFrame>,
   atlas: VisualAtlas,
+  animation: ActorAnimation,
+  reducedMotion: boolean,
 ): void {
   const camera = frame.current.camera;
   const groundY = camera.y + camera.height * GROUND_RATIO;
@@ -2190,37 +1797,29 @@ function drawDynamicWorld(
     frame.interpolation,
   );
   drawMovingBackground(context, camera, distance, atlas);
+  const pose = (actor: ActorPose): ActorPose =>
+    reducedMotion
+      ? { ...actor, frame: actorFrameNumber(actor.id, actor.phase, 0) }
+      : actor;
   const battle = frame.current.battle;
   if (battle === null) {
     drawHero(
       context,
       atlas,
-      camera.x + HERO_RUNNING_X,
+      camera.x + animation.runningX(distance),
       groundY,
-      "running",
-      frame.current.player.weapon.tier,
-      frame.current.player.armor.tier,
+      pose(animation.hero),
     );
   } else {
-    const heroX = battleActorX(frame, "hero") ?? camera.x + HERO_RUNNING_X;
+    const heroX =
+      battleActorX(
+        frame,
+        "hero",
+        animation.runningX(frame.previous.distance),
+      ) ?? camera.x + HERO_RUNNING_X;
     const enemyX = battleActorX(frame, "enemy") ?? camera.x + 390;
-    drawHero(
-      context,
-      atlas,
-      heroX,
-      groundY,
-      battle.actors.hero.phase,
-      frame.current.player.weapon.tier,
-      frame.current.player.armor.tier,
-    );
-    drawEnemy(
-      context,
-      atlas,
-      enemyX,
-      groundY,
-      battle.enemy.id,
-      battle.actors.enemy.phase,
-    );
+    drawHero(context, atlas, heroX, groundY, pose(animation.hero));
+    drawEnemy(context, atlas, enemyX, groundY, pose(animation.enemy!));
     drawHealthBar(
       context,
       enemyX,
@@ -2243,10 +1842,8 @@ function drawDynamicWorld(
         frame.current.actions.canPurchaseCurrentEncounter,
         current.used,
       );
-      drawApproachTrail(context, x, groundY, false);
     } else if (battle === null) {
-      drawEnemy(context, atlas, x, groundY, current.enemy.id, "idle");
-      drawApproachTrail(context, x, groundY, true);
+      drawEnemy(context, atlas, x, groundY, pose(animation.enemy!));
       context.save();
       context.fillStyle = "#f7f1df";
       context.font = `700 9px ${CANVAS_FONT_FAMILIES.bodySmall}`;
@@ -2259,22 +1856,17 @@ function drawDynamicWorld(
       context.restore();
     }
   }
-  const markerOffset = positiveModulo(distance, camera.width);
-  drawRouteMarker(
-    context,
-    atlas,
-    camera.x + markerOffset,
-    camera.y + camera.height - 6,
-  );
 }
 
 /** Canvas 2D adapter for public gameplay observations and events. */
 export class CanvasPresentation implements PresentationPort {
   readonly #canvas: HTMLCanvasElement;
+  readonly #animation = new ActorAnimation();
   #frame: PresentationFrame | undefined;
   #reducedMotion = false;
   #atlas: VisualAtlas;
   #activeEffects: readonly EffectRecord[] = Object.freeze([]);
+  #effectHistory = new Map<string, EffectRecord>();
   #seenEffectKeys = new Set<string>();
   #effectSequence = 0;
   #lastFrameStep: number | undefined;
@@ -2294,12 +1886,12 @@ export class CanvasPresentation implements PresentationPort {
     this.#atlas = createVisualAtlas((status) => {
       this.#canvas.dataset.assetStatus = status;
       this.#canvas.dataset.spriteMode =
-        status === "ready" ? "atlas" : "fallback";
+        status === "ready" ? "atlas" : "missing";
       this.#draw();
     });
     this.#canvas.dataset.assetStatus = this.#atlas.status;
     this.#canvas.dataset.spriteMode =
-      this.#atlas.status === "ready" ? "atlas" : "fallback";
+      this.#atlas.status === "ready" ? "atlas" : "missing";
     this.#canvas.dataset.reducedMotion = "false";
     this.#canvas.addEventListener("pointermove", (event) => {
       const frame = this.#frame;
@@ -2330,6 +1922,7 @@ export class CanvasPresentation implements PresentationPort {
   }
 
   present(frame: PresentationFrame): void {
+    this.#animation.present(frame.current);
     const previousFrame = this.#frame;
     const redrawRequired =
       previousFrame === undefined ||
@@ -2359,7 +1952,7 @@ export class CanvasPresentation implements PresentationPort {
     );
     this.#canvas.dataset.assetStatus = this.#atlas.status;
     this.#canvas.dataset.spriteMode =
-      this.#atlas.status === "ready" ? "atlas" : "fallback";
+      this.#atlas.status === "ready" ? "atlas" : "missing";
     this.#canvas.dataset.observationStep = String(frame.current.steps);
     this.#canvas.dataset.events = frame.events.map(describeEvent).join(",");
     this.#canvas.dataset.eventAnnouncement = frame.events
@@ -2398,7 +1991,6 @@ export class CanvasPresentation implements PresentationPort {
         (current?.kind === "battle" ? current.enemy.id : ""),
       current?.kind === "shop" ? current.shop : "",
       current?.kind === "shop" ? SHOP_PRODUCTS[current.shop] : "",
-      ...SCENERY_SPRITES,
     ]
       .filter(Boolean)
       .join(",");
@@ -2533,7 +2125,7 @@ export class CanvasPresentation implements PresentationPort {
     context.translate(projection.viewport.x, projection.viewport.y);
     context.scale(projection.scale, projection.scale);
     context.translate(-camera.x, -camera.y);
-    drawBackground(context, camera, frame.current.day, this.#atlas);
+    drawBackground(context, camera, this.#atlas);
     context.restore();
 
     this.#backgroundLayer = layer;
@@ -2546,20 +2138,36 @@ export class CanvasPresentation implements PresentationPort {
       this.#lastFrameStep !== undefined &&
       frame.current.steps < this.#lastFrameStep
     ) {
+      this.#effectHistory.clear();
       this.#seenEffectKeys.clear();
       this.#effectSequence = 0;
     }
 
-    const active: EffectRecord[] = [];
     frame.events.forEach((event, index) => {
       if (!isVisualEffectEvent(event)) return;
       const key = `${frame.current.steps}:${index}:${describeEvent(event)}`;
       if (!this.#seenEffectKeys.has(key)) {
         this.#seenEffectKeys.add(key);
         this.#effectSequence += 1;
+        this.#effectHistory.set(
+          key,
+          Object.freeze({
+            event,
+            key,
+            startActiveTicks: frame.current.activeTicks,
+          }),
+        );
       }
-      active.push(Object.freeze({ event, key }));
     });
+
+    const active: EffectRecord[] = [];
+    for (const [key, effect] of this.#effectHistory) {
+      if (effectAge(frame, effect) <= effectLifetime(effect.event)) {
+        active.push(effect);
+      } else {
+        this.#effectHistory.delete(key);
+      }
+    }
     this.#activeEffects = Object.freeze(active);
     this.#lastFrameStep = frame.current.steps;
   }
@@ -2615,7 +2223,13 @@ export class CanvasPresentation implements PresentationPort {
     const visibleEffects = this.#reducedMotion
       ? NO_VISUAL_EFFECTS
       : this.#activeEffects;
-    drawDynamicWorld(context, this.#frame, this.#atlas);
+    drawDynamicWorld(
+      context,
+      this.#frame,
+      this.#atlas,
+      this.#animation,
+      this.#reducedMotion,
+    );
     if (this.#frame.current.lifecycle.paused) {
       drawPauseOverlay(context, this.#frame.current);
     } else if (this.#frame.current.lifecycle.tutorialPage !== null) {
@@ -2629,8 +2243,9 @@ export class CanvasPresentation implements PresentationPort {
       drawGameplayHud(
         context,
         this.#frame.current,
+        this.#frame.previous,
         this.#atlas,
-        this.#activeEffects.map(({ event }) => event),
+        this.#frame.events,
         this.#pointerWorld,
       );
     }

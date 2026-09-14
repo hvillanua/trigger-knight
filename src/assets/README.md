@@ -9,12 +9,14 @@ font exports. The original sound exports remain provenance records and are not
 production inputs. The browser sound adapter uses the independently authored
 files under [`sound-effects/`](sound-effects/).
 
-The Canvas presentation currently loads the original Hero, Dragon, Goblin,
-Golem, and Wolf idle frames plus the sky, ground, mountain, and building scene
-layers from that set. It also loads the staged font exports for browser text and
-Canvas labels. Its authored `world-atlas.svg` remains the fallback for sprite
-families that have not been mapped to an original export yet. Sound cue mapping
-and playback live in `src/sound/` and do not affect gameplay state.
+The Canvas presentation loads the numbered Hero, Dragon, Goblin, Golem, and Wolf
+frames from their existing entity directories. It selects pose sequences using
+`src/browser/sprite-animation.ts` and keeps a fixed origin per entity. That
+mapping excludes frames containing another entity or only a shadow. The original
+sky, ground, mountain, building, and interface exports supply the other artwork.
+Failed or unmapped images stay absent. There is no authored fallback atlas or
+procedural replacement scenery. Sound cue mapping and playback live in
+`src/sound/` and do not affect gameplay state.
 
 The font-to-presentation-role mapping is a compatibility choice made for this
 browser implementation. It has not been verified against every original SWF
@@ -42,5 +44,4 @@ The archival `original/` and `exports/` directories remain source and provenance
 records. Production code must consume the reviewed staged copy in this
 directory rather than importing those roots directly. Decompiled ActionScript,
 generated behavioral research, and unreviewed exports are never production
-inputs. Independently authored or separately licensed replacements may be used
-when an original asset is unavailable or cannot be distributed.
+inputs. Missing original visuals are omitted rather than replaced.

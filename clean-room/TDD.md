@@ -104,7 +104,14 @@ records; original production files are staged under `src/assets/original/` and
 carry neighboring provenance metadata linking them to the source artifact hash
 or export identifier, extraction details, rights or license, and review date.
 Authored sound files carry equivalent generator, hash, rights, and review
-metadata. Asset files must not carry gameplay decisions or hidden state. The
+metadata. Missing or failed visual assets are omitted without substitute art.
+Character playback uses public active ticks and phases, preserves each entity's
+exported frame canvas and a fixed origin, and never advances gameplay. Unverified
+pose timing and visual transitions remain presentation choices. Event feedback is
+retained only in the presentation adapter for bounded visual lifetimes, and its
+particle placement is deterministic from the public event key without consuming
+gameplay randomness.
+Asset files must not carry gameplay decisions or hidden state. The
 presentation boundary does not permit decompiled ActionScript, generated
 behavioral research, or direct imports from archival source roots. Font files
 may be reused when staged with their recorded rights status; an embedded SWF

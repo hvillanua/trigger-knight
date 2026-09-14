@@ -1,3 +1,5 @@
+import type { ActorSpriteId } from "./sprite-animation.js";
+
 import type {
   EnemyId,
   InventoryItemId,
@@ -23,13 +25,6 @@ export type VisualSpriteId =
   | "mountain"
   | "sign";
 
-export interface SpriteRect {
-  readonly x: number;
-  readonly y: number;
-  readonly width: number;
-  readonly height: number;
-}
-
 export type OriginalSceneAssetId = "sky" | "ground" | "mountains" | "building";
 
 export type OriginalUiImageId =
@@ -51,50 +46,6 @@ export type OriginalUiImageId =
   | "elixir-icon"
   | "divine-edge-icon"
   | "voucher-icon";
-
-const SPRITE_WIDTH = 64;
-const SPRITE_HEIGHT = 96;
-
-function sprite(x: number, y: number): SpriteRect {
-  return Object.freeze({
-    x,
-    y,
-    width: SPRITE_WIDTH,
-    height: SPRITE_HEIGHT,
-  });
-}
-
-/** Every visual sprite maps to an approved runtime asset or fallback tile. */
-export const VISUAL_SPRITES: Readonly<Record<VisualSpriteId, SpriteRect>> =
-  Object.freeze({
-    hero: sprite(0, 0),
-    goblin: sprite(64, 0),
-    golem: sprite(128, 0),
-    wolf: sprite(192, 0),
-    dragon: sprite(256, 0),
-    tree: sprite(320, 0),
-    pine: sprite(384, 0),
-    rock: sprite(448, 0),
-    bladesmith: sprite(0, 96),
-    armorsmith: sprite(64, 96),
-    "soul-shrine": sprite(128, 96),
-    pharmacy: sprite(192, 96),
-    "grims-shop": sprite(256, 96),
-    "voucher-store": sprite(320, 96),
-    weapon: sprite(384, 96),
-    armor: sprite(448, 96),
-    elixir: sprite(0, 192),
-    "divine-edge": sprite(64, 192),
-    "gold-voucher": sprite(128, 192),
-    "road-marker": sprite(192, 192),
-    moon: sprite(256, 192),
-    cloud: sprite(320, 192),
-    effect: sprite(384, 192),
-    fence: sprite(448, 192),
-    spark: sprite(0, 288),
-    mountain: sprite(64, 288),
-    sign: sprite(128, 288),
-  });
 
 export const ORIGINAL_SPRITE_URLS: Readonly<
   Partial<Record<VisualSpriteId, string>>
@@ -171,18 +122,43 @@ export const ORIGINAL_UI_IMAGE_URLS: Readonly<
     .href,
 });
 
-export const WORLD_ATLAS_URL = new URL(
-  "../assets/world-atlas.svg",
-  import.meta.url,
-).href;
+const frameUrls = import.meta.glob<string>(
+  "../assets/original/key-sprites/*/*.png",
+  { eager: true, query: "?url&no-inline", import: "default" },
+);
 
-export type VisualAtlasStatus = "loading" | "ready" | "fallback";
+function entityFrames(entity: string): readonly string[] {
+  return Object.freeze(
+    Object.entries(frameUrls)
+      .filter(([path]) => path.includes(`/${entity}/`))
+      .sort(
+        ([a], [b]) =>
+          Number(a.split("/").at(-1)?.split(".")[0]) -
+          Number(b.split("/").at(-1)?.split(".")[0]),
+      )
+      .map(([, url]) => url),
+  );
+}
+
+export const ORIGINAL_ANIMATION_URLS: Readonly<
+  Record<ActorSpriteId, readonly string[]>
+> = Object.freeze({
+  hero: entityFrames("DefineSprite_497_Hero"),
+  dragon: entityFrames("DefineSprite_397_EnemyDragon"),
+  goblin: entityFrames("DefineSprite_421_EnemyGoblin"),
+  golem: entityFrames("DefineSprite_446_EnemyGolem"),
+  wolf: entityFrames("DefineSprite_477_EnemyWolf"),
+});
+
+export type VisualAtlasStatus = "loading" | "ready" | "partial" | "unavailable";
 
 export interface VisualAtlas {
   readonly status: VisualAtlasStatus;
-  readonly image: HTMLImageElement | undefined;
   readonly originalImages: Readonly<
     Partial<Record<VisualSpriteId, HTMLImageElement>>
+  >;
+  readonly originalFrames: Readonly<
+    Partial<Record<ActorSpriteId, readonly (HTMLImageElement | undefined)[]>>
   >;
   readonly sceneImages: Readonly<
     Partial<Record<OriginalSceneAssetId, HTMLImageElement>>
@@ -192,92 +168,89 @@ export interface VisualAtlas {
   >;
 }
 
-/** Loads optional artwork without making presentation or gameplay wait for it. */
+/** Failed or unmapped artwork stays absent. Gameplay never waits for images. */
 export function createVisualAtlas(
   onStatusChange: (status: VisualAtlasStatus) => void,
 ): VisualAtlas {
   let status: VisualAtlasStatus =
-    typeof Image === "undefined" ? "fallback" : "loading";
-  let image: HTMLImageElement | undefined;
+    typeof Image === "undefined" ? "unavailable" : "loading";
   const originalImages: Partial<Record<VisualSpriteId, HTMLImageElement>> = {};
+  const originalFrames: Partial<
+    Record<ActorSpriteId, (HTMLImageElement | undefined)[]>
+  > = {};
   const sceneImages: Partial<Record<OriginalSceneAssetId, HTMLImageElement>> =
     {};
   const uiImages: Partial<Record<OriginalUiImageId, HTMLImageElement>> = {};
-
   if (status === "loading") {
-    const originalSpriteEntries = Object.entries(ORIGINAL_SPRITE_URLS) as Array<
-      [VisualSpriteId, string]
-    >;
-    const originalSceneEntries = Object.entries(
-      ORIGINAL_SCENE_ASSET_URLS,
-    ) as Array<[OriginalSceneAssetId, string]>;
-    const originalUiEntries = Object.entries(ORIGINAL_UI_IMAGE_URLS) as Array<
-      [OriginalUiImageId, string]
-    >;
     let pending =
-      1 +
-      originalSpriteEntries.length +
-      originalSceneEntries.length +
-      originalUiEntries.length;
-    let fallbackLoaded = false;
-
-    const settle = (): void => {
-      pending -= 1;
-      if (pending !== 0) return;
-      status = fallbackLoaded ? "ready" : "fallback";
-      onStatusChange(status);
+      Object.values(ORIGINAL_ANIMATION_URLS).reduce(
+        (total, urls) => total + urls.length,
+        0,
+      ) +
+      Object.keys(ORIGINAL_SCENE_ASSET_URLS).length +
+      Object.keys(ORIGINAL_UI_IMAGE_URLS).length;
+    let loaded = 0;
+    let failed = 0;
+    const load = (
+      url: string,
+      save: (image: HTMLImageElement) => void,
+    ): void => {
+      const image = new Image();
+      image.decoding = "async";
+      const settle = (): void => {
+        pending -= 1;
+        if (pending !== 0) return;
+        status =
+          loaded === 0 ? "unavailable" : failed > 0 ? "partial" : "ready";
+        onStatusChange(status);
+      };
+      image.onload = () => {
+        save(image);
+        loaded += 1;
+        settle();
+      };
+      image.onerror = () => {
+        failed += 1;
+        settle();
+      };
+      image.src = url;
     };
-
-    const candidate = new Image();
-    candidate.decoding = "async";
-    image = candidate;
-    candidate.onload = () => {
-      fallbackLoaded = true;
-      settle();
-    };
-    candidate.onerror = () => {
-      image = undefined;
-      settle();
-    };
-    candidate.src = WORLD_ATLAS_URL;
-
-    for (const [spriteId, url] of originalSpriteEntries) {
-      const spriteImage = new Image();
-      spriteImage.decoding = "async";
-      originalImages[spriteId] = spriteImage;
-      spriteImage.onload = settle;
-      spriteImage.onerror = settle;
-      spriteImage.src = url;
+    for (const id of Object.keys(ORIGINAL_ANIMATION_URLS) as ActorSpriteId[]) {
+      const urls = ORIGINAL_ANIMATION_URLS[id];
+      const frames: (HTMLImageElement | undefined)[] = Array.from(
+        { length: urls.length },
+        () => undefined,
+      );
+      originalFrames[id] = frames;
+      urls.forEach((url, index) =>
+        load(url, (image) => {
+          frames[index] = image;
+          if (index === 0) originalImages[id] = image;
+        }),
+      );
     }
-
-    for (const [assetId, url] of originalSceneEntries) {
-      const sceneImage = new Image();
-      sceneImage.decoding = "async";
-      sceneImages[assetId] = sceneImage;
-      sceneImage.onload = settle;
-      sceneImage.onerror = settle;
-      sceneImage.src = url;
+    for (const id of Object.keys(
+      ORIGINAL_SCENE_ASSET_URLS,
+    ) as OriginalSceneAssetId[]) {
+      load(ORIGINAL_SCENE_ASSET_URLS[id], (image) => {
+        sceneImages[id] = image;
+      });
     }
-
-    for (const [assetId, url] of originalUiEntries) {
-      const uiImage = new Image();
-      uiImage.decoding = "async";
-      uiImages[assetId] = uiImage;
-      uiImage.onload = settle;
-      uiImage.onerror = settle;
-      uiImage.src = url;
+    for (const id of Object.keys(
+      ORIGINAL_UI_IMAGE_URLS,
+    ) as OriginalUiImageId[]) {
+      load(ORIGINAL_UI_IMAGE_URLS[id], (image) => {
+        uiImages[id] = image;
+      });
     }
   }
-
   return Object.freeze({
     get status() {
       return status;
     },
-    get image() {
-      return image;
-    },
-    originalImages: Object.freeze(originalImages),
-    sceneImages: Object.freeze(sceneImages),
-    uiImages: Object.freeze(uiImages),
+    originalImages,
+    originalFrames,
+    sceneImages,
+    uiImages,
   });
 }

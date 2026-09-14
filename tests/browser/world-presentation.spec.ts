@@ -23,15 +23,7 @@ test("loads original runtime assets and produces a readable world screenshot", a
     ",",
   );
   expect(sprites).toEqual(
-    expect.arrayContaining([
-      "hero",
-      "weapon",
-      "armor",
-      "elixir",
-      "tree",
-      "pine",
-      "rock",
-    ]),
+    expect.arrayContaining(["hero", "weapon", "armor", "elixir"]),
   );
 
   const screenshot = await canvas.screenshot();
@@ -42,7 +34,7 @@ test("loads original runtime assets and produces a readable world screenshot", a
   expect(screenshot.byteLength).toBeGreaterThan(1_000);
 });
 
-test("keeps the authored shop atlas when the original building asset is unavailable", async ({
+test("omits the building when its original image is unavailable", async ({
   page,
 }) => {
   await page.route("**/assets/original/images/366.png", (route) =>
@@ -65,7 +57,7 @@ test("keeps the authored shop atlas when the original building asset is unavaila
     const presentation = new CanvasPresentation(canvas);
     await new Promise<void>((resolve) => {
       const check = (): void => {
-        if (canvas.dataset.assetStatus === "ready") {
+        if (canvas.dataset.assetStatus === "partial") {
           resolve();
           return;
         }
@@ -127,6 +119,82 @@ test("keeps the authored shop atlas when the original building asset is unavaila
   }, "/src/browser/canvas-presentation.ts");
 
   expect(fallbackCalls).toBe(0);
+});
+
+test("preserves the original building registration canvas", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+
+  const drawArguments = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    while (canvas.dataset.assetStatus === "loading")
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const calls: number[][] = [];
+    const drawImageDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "drawImage",
+    );
+    if (typeof drawImageDescriptor?.value !== "function") {
+      throw new Error("Expected the Canvas drawImage method");
+    }
+    const originalDrawImage =
+      drawImageDescriptor.value as CanvasRenderingContext2D["drawImage"];
+    CanvasRenderingContext2D.prototype.drawImage = function (
+      image: CanvasImageSource,
+      ...args: number[]
+    ) {
+      if (image instanceof HTMLImageElement && image.src.includes("/366.png")) {
+        calls.push(args);
+      }
+      originalDrawImage.apply(this, [image, ...args] as Parameters<
+        typeof originalDrawImage
+      >);
+    };
+    try {
+      const current = {
+        ...base,
+        steps: base.steps + 1,
+        lifecycle: { ...base.lifecycle, paused: false, tutorialPage: null },
+        encounters: {
+          ...base.encounters,
+          current: {
+            kind: "shop" as const,
+            shop: "armorsmith" as const,
+            cachedPrice: 204,
+            x: 180,
+            used: false,
+          },
+        },
+      };
+      presentation.present({
+        previous: base,
+        current,
+        interpolation: 1,
+        events: [],
+      });
+      return calls;
+    } finally {
+      CanvasRenderingContext2D.prototype.drawImage = originalDrawImage;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(
+    drawArguments.some(
+      (args) => args.length === 4 && args[2] === 478 && args[3] === 203,
+    ),
+  ).toBe(true);
 });
 
 test("covers every public enemy, shop, and actor phase in Canvas presentation", async ({
@@ -361,7 +429,7 @@ test("anchors targeted lethal effects to the targeted public actor", async ({
   expect(result.enemyTarget.enemy).toBeGreaterThan(result.enemyTarget.hero);
 });
 
-test("interpolates moving scenery from public distance", async ({ page }) => {
+test("interpolates original scenery from public distance", async ({ page }) => {
   await page.goto("/?manual=1");
 
   const changedPixels = await page.evaluate(async (modulePath) => {
@@ -377,6 +445,8 @@ test("interpolates moving scenery from public distance", async ({ page }) => {
     canvas.height = 320;
     document.body.append(canvas);
     const presentation = new CanvasPresentation(canvas);
+    while (canvas.dataset.assetStatus === "loading")
+      await new Promise((resolve) => setTimeout(resolve, 10));
     const current = { ...base, steps: base.steps + 1, distance: 10 };
     const snapshot = (): Uint8ClampedArray => {
       const context = canvas.getContext("2d");
@@ -470,4 +540,246 @@ test("does not restart one-shot effects when a frame is redrawn", async ({
 
   expect(sequence.redraw).toBe(sequence.first);
   expect(Number(sequence.next)).toBeGreaterThan(Number(sequence.redraw));
+});
+
+test("keeps event feedback visible between logical event frames", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+
+  const result = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    const current = {
+      ...base,
+      steps: 10,
+      activeTicks: 10,
+      lifecycle: { ...base.lifecycle, paused: false, tutorialPage: null },
+      battle: {
+        enemy: { id: "goblin" as const, maximumHp: 900, currentHp: 671 },
+        actors: {
+          hero: { phase: "attack" as const, x: 150 },
+          enemy: { phase: "flinch" as const, x: 210 },
+        },
+      },
+    };
+    const hit = {
+      type: "combat-hit" as const,
+      attacker: "hero" as const,
+      target: "enemy" as const,
+      damage: 229,
+      critical: false,
+      remainingHp: 671,
+    };
+    const show = (
+      next: typeof current,
+      events: readonly (typeof hit)[] = [],
+    ) => {
+      presentation.present({
+        previous: current,
+        current: next,
+        interpolation: 0,
+        events,
+      });
+      return {
+        effects: canvas.dataset.activeEffects ?? "",
+        sequence: canvas.dataset.effectSequence ?? "",
+      };
+    };
+    const first = show(current, [hit]);
+    const redraw = show(current);
+    const paused = show({
+      ...current,
+      steps: 12,
+      lifecycle: { ...current.lifecycle, paused: true },
+    });
+    const resumed = show({ ...current, steps: 13, activeTicks: 11 });
+    const continued = show({ ...current, steps: 14, activeTicks: 14 });
+    const expired = show({ ...current, steps: 30, activeTicks: 30 });
+    return { first, redraw, paused, resumed, continued, expired };
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(result.first.effects).toContain("combat-hit");
+  expect(result.redraw.effects).toContain("combat-hit");
+  expect(result.paused.effects).toContain("combat-hit");
+  expect(result.resumed.effects).toContain("combat-hit");
+  expect(result.continued.effects).toContain("combat-hit");
+  expect(result.expired.effects).not.toContain("combat-hit");
+  expect(result.redraw.sequence).toBe(result.first.sequence);
+});
+
+test("presents reference purchase, item-use, and combat feedback", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+
+  const result = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    while (canvas.dataset.assetStatus === "loading")
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const fillTexts: string[] = [];
+    const fillTextDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "fillText",
+    );
+    if (typeof fillTextDescriptor?.value !== "function") {
+      throw new Error("Expected the Canvas fillText method");
+    }
+    const originalFillText = fillTextDescriptor.value as (
+      this: CanvasRenderingContext2D,
+      text: string,
+      x: number,
+      y: number,
+      maxWidth?: number,
+    ) => void;
+    CanvasRenderingContext2D.prototype.fillText = function (
+      text,
+      x,
+      y,
+      maxWidth,
+    ) {
+      fillTexts.push(String(text));
+      originalFillText.call(this, text, x, y, maxWidth);
+    };
+
+    const snapshot = (): string[] => {
+      const texts = [...fillTexts];
+      fillTexts.length = 0;
+      return texts;
+    };
+    try {
+      const armorObservation = {
+        ...base,
+        steps: 10,
+        activeTicks: 10,
+        lifecycle: { ...base.lifecycle, paused: false, tutorialPage: null },
+        player: {
+          ...base.player,
+          gold: 188,
+          armor: {
+            ...base.player.armor,
+            name: "Protector" as const,
+            tier: 1,
+          },
+        },
+        encounters: {
+          ...base.encounters,
+          current: {
+            kind: "shop" as const,
+            shop: "armorsmith" as const,
+            cachedPrice: 204,
+            x: 180,
+            used: true,
+          },
+        },
+      };
+      presentation.present({
+        previous: base,
+        current: armorObservation,
+        interpolation: 0,
+        events: [
+          {
+            type: "shop-purchased" as const,
+            shop: "armorsmith" as const,
+            price: 204,
+          },
+        ],
+      });
+      const armor = snapshot();
+
+      const itemObservation = {
+        ...base,
+        steps: 20,
+        activeTicks: 20,
+        lifecycle: {
+          ...base.lifecycle,
+          phase: "battling" as const,
+          tutorialPage: null,
+        },
+        player: {
+          ...base.player,
+          inventory: { ...base.player.inventory, item: "elixir" as const },
+        },
+        battle: {
+          enemy: { id: "goblin" as const, maximumHp: 900, currentHp: 671 },
+          actors: {
+            hero: { phase: "idle" as const, x: 90 },
+            enemy: { phase: "idle" as const, x: 220 },
+          },
+        },
+        encounters: {
+          ...base.encounters,
+          current: {
+            kind: "battle" as const,
+            enemy: { id: "goblin" as const, maximumHp: 900 },
+            x: 220,
+          },
+        },
+      };
+      presentation.present({
+        previous: armorObservation,
+        current: itemObservation,
+        interpolation: 0,
+        events: [],
+      });
+      const hint = snapshot();
+
+      const usedObservation = {
+        ...itemObservation,
+        steps: 21,
+        activeTicks: 21,
+        player: {
+          ...itemObservation.player,
+          inventory: { ...itemObservation.player.inventory, item: null },
+        },
+      };
+      presentation.present({
+        previous: itemObservation,
+        current: usedObservation,
+        interpolation: 0,
+        events: [
+          {
+            type: "combat-hit" as const,
+            attacker: "hero" as const,
+            target: "enemy" as const,
+            damage: 229,
+            critical: false,
+            remainingHp: 442,
+          },
+          { type: "item-used" as const, item: "elixir" as const },
+        ],
+      });
+      const used = snapshot();
+      return { armor, hint, used };
+    } finally {
+      CanvasRenderingContext2D.prototype.fillText = originalFillText;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(result.armor).toContain("UPGRADE!");
+  expect(result.armor).toContain("-Lost 204G!");
+  expect(result.armor).toContain("Upgrade: Clothing > Protector");
+  expect(result.hint).toContain("You can use Elixir to heal HP!");
+  expect(result.used).toContain("229");
+  expect(result.used).toContain("ITEM USED!");
 });

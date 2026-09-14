@@ -22,3 +22,6 @@ Thumbs.db
 /playwright-report/
 /test-results/
 /.vite/
+
+# Local visual references and investigation notes.
+/.local-references/

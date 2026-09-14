@@ -1,43 +1,47 @@
 {
   "asset": "original-world-atlas",
-  "assetRole": "Runtime atlas that uses original exported character frames and the project-authored fallback atlas for sprites not yet mapped",
+  "assetRole": "Runtime original character sequences and scene images; unavailable visuals are omitted",
   "sourceArtifact": "original/kongregate/MonotouchKong13APPSTORE.swf",
   "sourceArtifactSha256": "0f0630b981172fd2183b3a2ff890d98a178c11bc8e0aa3b5ed1be05c4ddb2c20",
   "originalInputs": [
     {
       "sprite": "hero",
-      "sourceExport": "exports/assets/key-sprites/DefineSprite_497_Hero/1.png",
-      "stagedAsset": "original/key-sprites/DefineSprite_497_Hero/1.png",
+      "sourceExport": "exports/assets/key-sprites/DefineSprite_497_Hero",
+      "stagedAsset": "original/key-sprites/DefineSprite_497_Hero",
       "frameCount": 62
     },
     {
       "sprite": "dragon",
-      "sourceExport": "exports/assets/key-sprites/DefineSprite_397_EnemyDragon/1.png",
-      "stagedAsset": "original/key-sprites/DefineSprite_397_EnemyDragon/1.png",
+      "sourceExport": "exports/assets/key-sprites/DefineSprite_397_EnemyDragon",
+      "stagedAsset": "original/key-sprites/DefineSprite_397_EnemyDragon",
       "frameCount": 53
     },
     {
       "sprite": "goblin",
-      "sourceExport": "exports/assets/key-sprites/DefineSprite_421_EnemyGoblin/1.png",
-      "stagedAsset": "original/key-sprites/DefineSprite_421_EnemyGoblin/1.png",
+      "sourceExport": "exports/assets/key-sprites/DefineSprite_421_EnemyGoblin",
+      "stagedAsset": "original/key-sprites/DefineSprite_421_EnemyGoblin",
       "frameCount": 53
     },
     {
       "sprite": "golem",
-      "sourceExport": "exports/assets/key-sprites/DefineSprite_446_EnemyGolem/1.png",
-      "stagedAsset": "original/key-sprites/DefineSprite_446_EnemyGolem/1.png",
+      "sourceExport": "exports/assets/key-sprites/DefineSprite_446_EnemyGolem",
+      "stagedAsset": "original/key-sprites/DefineSprite_446_EnemyGolem",
       "frameCount": 57
     },
     {
       "sprite": "wolf",
-      "sourceExport": "exports/assets/key-sprites/DefineSprite_477_EnemyWolf/1.png",
-      "stagedAsset": "original/key-sprites/DefineSprite_477_EnemyWolf/1.png",
+      "sourceExport": "exports/assets/key-sprites/DefineSprite_477_EnemyWolf",
+      "stagedAsset": "original/key-sprites/DefineSprite_477_EnemyWolf",
       "frameCount": 55
     }
   ],
-  "fallbackAsset": "world-atlas.svg",
   "extractionTool": "FFDec 26.2.1",
   "rightsOrLicense": "Original Trigger Knight assets. Copyright remains with Mintsphere and other applicable rights holders; this repository does not grant a separate public license.",
-  "reviewDate": "2026-09-12",
-  "transformations": "Original PNG exports are drawn with aspect ratio preserved inside the existing 64x96 presentation cells."
+  "reviewDate": "2026-09-14",
+  "transformations": "Original PNG bytes are unchanged. Numbered files remain grouped by entity. Canvas uses a fixed shadow origin per entity, preserves the exported frame canvas, and mirrors enemies to face the hero.",
+  "animationReview": {
+    "source": "Visual inspection of all staged entity PNGs and the local original gameplay recording",
+    "mapping": "src/browser/sprite-animation.ts",
+    "limitations": "Pose ranges are derived visual mappings. Cadence and death fades are presentation choices, not recovered Flash timing. Incorrect-entity and shadow-only frames are excluded by the mapping."
+  }
 }
