@@ -275,10 +275,12 @@ provenance. The runtime asset policy is:
 - Keep decompiled ActionScript, generated behavioral research, and other
   unapproved research outputs outside production.
 
-The Canvas presentation already loads staged original character frames, scene
-layers, and font exports. The authored atlas remains a fallback for visual
-families that have not been mapped to an original export yet. The browser font
-roles are a project mapping; exact original text-field usage remains unverified.
+The Canvas presentation plays staged original character sequences in numeric
+file order and scrolls original scene layers. Missing or failed images are
+omitted. It does not load replacement artwork. Animation ranges and exclusions
+live in `src/browser/sprite-animation.ts`; playback cadence and the death fade
+are presentation choices, not confirmed original timing. The browser font roles
+are also a project mapping; exact original text-field usage remains unverified.
 
 This project policy does not transfer copyright or grant a public license. Any
 distribution of original assets remains subject to the rights holder's terms.

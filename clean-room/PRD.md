@@ -15,7 +15,9 @@ The behavioral specification in `research/` is the source of truth for original-
 
 ### Original asset policy
 
-The browser presentation uses original visual and font assets where available. The
+The browser presentation uses original visual and font assets where available.
+Missing or failed visual assets are omitted, with no replacement artwork or
+procedural asset fallback. Text and controls remain usable without artwork. The
 original sound exports remain source and provenance records; this clean-room
 implementation uses independently authored sound effects under
 `src/assets/sound-effects/`. The preserved SWF in `original/` and its recorded

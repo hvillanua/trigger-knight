@@ -1,58 +1,80 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   createVisualAtlas,
   ORIGINAL_SCENE_ASSET_URLS,
   ORIGINAL_SPRITE_URLS,
-  VISUAL_SPRITES,
-  WORLD_ATLAS_URL,
+  ORIGINAL_ANIMATION_URLS,
 } from "../../src/browser/visual-atlas.js";
 
 describe("approved visual atlas", () => {
-  it("covers every player-facing actor, shop, item, and scenery family", () => {
-    expect(Object.keys(VISUAL_SPRITES).sort()).toEqual([
-      "armor",
-      "armorsmith",
-      "bladesmith",
-      "cloud",
-      "divine-edge",
-      "dragon",
-      "effect",
-      "elixir",
-      "fence",
-      "goblin",
-      "gold-voucher",
-      "golem",
-      "grims-shop",
-      "hero",
-      "moon",
-      "mountain",
-      "pharmacy",
-      "pine",
-      "road-marker",
-      "rock",
-      "sign",
-      "soul-shrine",
-      "spark",
-      "tree",
-      "voucher-store",
-      "weapon",
-      "wolf",
-    ]);
-    for (const sprite of Object.values(VISUAL_SPRITES)) {
-      expect(typeof sprite.x).toBe("number");
-      expect(typeof sprite.y).toBe("number");
-      expect(sprite.width).toBe(64);
-      expect(sprite.height).toBe(96);
-    }
-  });
-
-  it("records a fallback state when the optional browser image API is absent", () => {
+  it("leaves artwork absent when the browser image API is unavailable", () => {
     const atlas = createVisualAtlas(() => undefined);
 
-    expect(WORLD_ATLAS_URL).toContain("world-atlas.svg");
-    expect(atlas.status).toBe("fallback");
-    expect(atlas.image).toBeUndefined();
+    expect(atlas.status).toBe("unavailable");
+    expect(atlas.originalImages).toEqual({});
+  });
+
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("loads numbered entity frames without requesting generated artwork", () => {
+    const requests: string[] = [];
+    vi.stubGlobal(
+      "Image",
+      class {
+        onload?: () => void;
+        onerror?: () => void;
+        set src(url: string) {
+          requests.push(url);
+          queueMicrotask(() => this.onload?.());
+        }
+      },
+    );
+    createVisualAtlas(() => undefined);
+    expect(requests.some((url) => url.includes("world-atlas.svg"))).toBe(false);
+    expect(ORIGINAL_ANIMATION_URLS.hero[9]).toMatch(/\/10.png/);
+    expect(ORIGINAL_ANIMATION_URLS.hero).toHaveLength(62);
+    expect(requests).toContain(ORIGINAL_ANIMATION_URLS.hero[16]);
+  });
+
+  it("settles failed assets without substituting another image", async () => {
+    vi.stubGlobal(
+      "Image",
+      class {
+        onerror?: () => void;
+        set src(_url: string) {
+          queueMicrotask(() => this.onerror?.());
+        }
+      },
+    );
+    const statuses: string[] = [];
+    const atlas = createVisualAtlas((status) => statuses.push(status));
+    await Promise.resolve();
+    expect(statuses).toEqual(["unavailable"]);
+    expect(
+      atlas.originalFrames.hero?.every((image) => image === undefined),
+    ).toBe(true);
+  });
+
+  it("keeps a failed frame empty while neighboring frames remain available", async () => {
+    vi.stubGlobal(
+      "Image",
+      class {
+        onload?: () => void;
+        onerror?: () => void;
+        set src(url: string) {
+          queueMicrotask(() =>
+            url.includes("_Hero/18.png") ? this.onerror?.() : this.onload?.(),
+          );
+        }
+      },
+    );
+    const atlas = createVisualAtlas(() => undefined);
+    await Promise.resolve();
+    expect(atlas.status).toBe("partial");
+    expect(atlas.originalFrames.hero?.[16]).toBeDefined();
+    expect(atlas.originalFrames.hero?.[17]).toBeUndefined();
+    expect(atlas.originalFrames.hero?.[18]).toBeDefined();
   });
 
   it("maps the original character and scene exports into runtime assets", () => {

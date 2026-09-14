@@ -87,12 +87,24 @@ interface PresentationFrame {
   events: readonly GameEvent[];
 }
 
+interface PresentationTransition {
+  previous: Readonly<GameObservation>;
+  current: Readonly<GameObservation>;
+  events: readonly GameEvent[];
+}
+
 interface PresentationPort {
   present(frame: PresentationFrame): void;
+  presentTransition?(transition: PresentationTransition): void;
 }
 ```
 
 The presentation may interpolate between observations, but only `current` is authoritative for displayed values and action eligibility. Visual animation never calls gameplay rules or decides when damage, purchases, rewards, or other domain transitions occur.
+
+The browser session may call `presentTransition` once for each public logical
+transition before a display render. Adapters can use it to retain exact public
+transition timing when several logical steps are rendered together; it does not
+draw, expose hidden state, or change gameplay.
 
 #### Runtime asset inputs
 
@@ -104,7 +116,14 @@ records; original production files are staged under `src/assets/original/` and
 carry neighboring provenance metadata linking them to the source artifact hash
 or export identifier, extraction details, rights or license, and review date.
 Authored sound files carry equivalent generator, hash, rights, and review
-metadata. Asset files must not carry gameplay decisions or hidden state. The
+metadata. Missing or failed visual assets are omitted without substitute art.
+Character playback uses public active ticks and phases, preserves each entity's
+exported frame canvas and a fixed origin, and never advances gameplay. Unverified
+pose timing and visual transitions remain presentation choices. Event feedback is
+retained only in the presentation adapter for bounded visual lifetimes, and its
+particle placement is deterministic from the public event key without consuming
+gameplay randomness.
+Asset files must not carry gameplay decisions or hidden state. The
 presentation boundary does not permit decompiled ActionScript, generated
 behavioral research, or direct imports from archival source roots. Font files
 may be reused when staged with their recorded rights status; an embedded SWF
