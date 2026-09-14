@@ -910,6 +910,120 @@ test("uses the staged original hit animation frames", async ({ page }) => {
   expect(frames).toContain("hit-2");
 });
 
+test("omits a missing original hit frame without substituting a burst", async ({
+  page,
+}) => {
+  await page.route("**/assets/original/images/119.png", (route) =>
+    route.abort(),
+  );
+  await page.goto("/?manual=1");
+
+  const result = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    while (canvas.dataset.assetStatus === "loading")
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+    let arcCount = 0;
+    const fillTexts: string[] = [];
+    const arcDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "arc",
+    );
+    const fillTextDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "fillText",
+    );
+    if (
+      typeof arcDescriptor?.value !== "function" ||
+      typeof fillTextDescriptor?.value !== "function"
+    ) {
+      throw new Error("Expected Canvas drawing methods");
+    }
+    const originalArc = arcDescriptor.value as CanvasRenderingContext2D["arc"];
+    const originalFillText = fillTextDescriptor.value as (
+      this: CanvasRenderingContext2D,
+      text: string,
+      x: number,
+      y: number,
+      maxWidth?: number,
+    ) => void;
+    CanvasRenderingContext2D.prototype.arc = function (...args) {
+      arcCount += 1;
+      originalArc.apply(this, args);
+    };
+    CanvasRenderingContext2D.prototype.fillText = function (
+      text,
+      x,
+      y,
+      maxWidth,
+    ) {
+      if (String(text) === "229") fillTexts.push(String(text));
+      originalFillText.call(this, text, x, y, maxWidth);
+    };
+    try {
+      const current = {
+        ...base,
+        steps: 10,
+        activeTicks: 10,
+        lifecycle: {
+          ...base.lifecycle,
+          phase: "battling" as const,
+          paused: false,
+          tutorialPage: null,
+        },
+        battle: {
+          enemy: { id: "goblin" as const, maximumHp: 900, currentHp: 671 },
+          actors: {
+            hero: { phase: "attack" as const, x: 150 },
+            enemy: { phase: "flinch" as const, x: 210 },
+          },
+        },
+        encounters: {
+          ...base.encounters,
+          current: {
+            kind: "battle" as const,
+            enemy: { id: "goblin" as const, maximumHp: 900 },
+            x: 210,
+          },
+        },
+      };
+      presentation.present({
+        previous: base,
+        current,
+        interpolation: 0,
+        events: [
+          {
+            type: "combat-hit" as const,
+            attacker: "hero" as const,
+            target: "enemy" as const,
+            damage: 229,
+            critical: false,
+            remainingHp: 671,
+          },
+        ],
+      });
+      return { assetStatus: canvas.dataset.assetStatus, arcCount, fillTexts };
+    } finally {
+      CanvasRenderingContext2D.prototype.arc = originalArc;
+      CanvasRenderingContext2D.prototype.fillText = originalFillText;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(result.assetStatus).toBe("partial");
+  expect(result.arcCount).toBe(0);
+  expect(result.fillTexts).toContain("229");
+});
+
 test("retains the equipment-change strip through batched transitions", async ({
   page,
 }) => {

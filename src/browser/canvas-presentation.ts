@@ -1424,16 +1424,7 @@ function drawEffect(
   const lifetime = effectLifetime(effect.event);
   switch (effect.event.type) {
     case "combat-hit":
-      if (!drawOriginalHitEffect(context, atlas, point, age)) {
-        drawBurst(
-          context,
-          point,
-          effect.event.critical ? "#ffe9a6" : "#f7f1df",
-          effect.event.critical ? 24 : 17,
-          age,
-          lifetime,
-        );
-      }
+      drawOriginalHitEffect(context, atlas, point, age);
       drawFloatingText(
         context,
         formatNumber(effect.event.damage),
@@ -1447,9 +1438,7 @@ function drawEffect(
       );
       break;
     case "combat-lethal-hit":
-      if (!drawOriginalHitEffect(context, atlas, point, age)) {
-        drawBurst(context, point, "#ffb4a8", 30, age, lifetime);
-      }
+      drawOriginalHitEffect(context, atlas, point, age);
       drawFloatingText(context, "DEFEATED", point, age, lifetime, {
         fill: "#ffb4a8",
         font: `700 10px ${CANVAS_FONT_FAMILIES.displayMedium}`,
