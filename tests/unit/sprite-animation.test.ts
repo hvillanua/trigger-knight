@@ -16,6 +16,93 @@ describe("original sprite playback", () => {
     ).toEqual([...Array.from({ length: 17 }, (_, i) => i + 17), 17, 18]);
     expect(actorFrameNumber("hero", "attack", 100)).toBe(55);
   });
+  it("anchors phase clips to public transition ticks when renders are batched", () => {
+    const engine = createTestGameplayEngine();
+    const base = engine.observe(
+      engine.createRun({
+        ruleset: ORIGINAL_V13_RULESET_ID,
+        seed: "batched-animation",
+        initialProfile: { schemaVersion: 1, scoreMultiplier: 1 },
+      }),
+    );
+    const active = {
+      ...base,
+      lifecycle: { ...base.lifecycle, paused: false, tutorialPage: null },
+    };
+    const attackAtTwo = {
+      ...active,
+      steps: 2,
+      activeTicks: 2,
+      lifecycle: { ...active.lifecycle, phase: "battling" as const },
+      battle: {
+        enemy: { id: "goblin" as const, maximumHp: 900, currentHp: 900 },
+        actors: {
+          hero: { phase: "attack" as const, x: 190 },
+          enemy: { phase: "idle" as const, x: 250 },
+        },
+      },
+    };
+    const flinchAtThree = {
+      ...attackAtTwo,
+      steps: 3,
+      activeTicks: 3,
+      battle: {
+        ...attackAtTwo.battle,
+        actors: {
+          ...attackAtTwo.battle.actors,
+          hero: { phase: "flinch" as const, x: 190 },
+        },
+      },
+    };
+    const attackAtFour = {
+      ...flinchAtThree,
+      steps: 4,
+      activeTicks: 4,
+      battle: {
+        ...flinchAtThree.battle,
+        actors: {
+          ...flinchAtThree.battle.actors,
+          hero: { phase: "attack" as const, x: 190 },
+        },
+      },
+    };
+    const everyTransition = new ActorAnimation();
+    everyTransition.present(active);
+    everyTransition.presentTransition(active, attackAtTwo);
+    everyTransition.present(attackAtTwo);
+    everyTransition.presentTransition(attackAtTwo, flinchAtThree);
+    everyTransition.presentTransition(flinchAtThree, attackAtFour);
+    everyTransition.present(attackAtFour);
+
+    const batchedTransition = new ActorAnimation();
+    batchedTransition.present(active);
+    batchedTransition.presentTransition(active, attackAtTwo);
+    batchedTransition.presentTransition(attackAtTwo, flinchAtThree);
+    batchedTransition.presentTransition(flinchAtThree, attackAtFour);
+    batchedTransition.present(attackAtFour);
+
+    expect(everyTransition.hero.frame).toBe(34);
+    expect(batchedTransition.hero.frame).toBe(everyTransition.hero.frame);
+
+    const paused = {
+      ...attackAtFour,
+      steps: 5,
+      lifecycle: { ...attackAtFour.lifecycle, paused: true },
+    };
+    batchedTransition.presentTransition(attackAtFour, paused);
+    batchedTransition.present(paused);
+    expect(batchedTransition.hero.frame).toBe(34);
+
+    const resumed = {
+      ...paused,
+      steps: 6,
+      activeTicks: 5,
+      lifecycle: { ...paused.lifecycle, paused: false },
+    };
+    batchedTransition.presentTransition(paused, resumed);
+    batchedTransition.present(resumed);
+    expect(batchedTransition.hero.frame).toBe(35);
+  });
   it("never plays the hero contamination in the wolf export", () => {
     for (const phase of Object.keys(ACTOR_CLIPS.wolf) as Array<
       keyof typeof ACTOR_CLIPS.wolf

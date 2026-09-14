@@ -107,7 +107,11 @@ export type {
   GameplayTraceDifference,
   GameplayTraceIdentityDifference,
 } from "./gameplay-execution.js";
-export type { PresentationFrame, PresentationPort } from "./presentation.js";
+export type {
+  PresentationFrame,
+  PresentationPort,
+  PresentationTransition,
+} from "./presentation.js";
 export type {
   SoundCue,
   SoundInitializationResult,

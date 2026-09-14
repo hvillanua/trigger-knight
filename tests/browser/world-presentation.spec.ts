@@ -617,6 +617,180 @@ test("keeps event feedback visible between logical event frames", async ({
   expect(result.redraw.sequence).toBe(result.first.sequence);
 });
 
+test("retains the equipment-change strip through batched transitions", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+
+  const result = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    while (canvas.dataset.assetStatus === "loading")
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const fillTexts: string[] = [];
+    const fillTextDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "fillText",
+    );
+    if (typeof fillTextDescriptor?.value !== "function") {
+      throw new Error("Expected the Canvas fillText method");
+    }
+    const originalFillText = fillTextDescriptor.value as (
+      this: CanvasRenderingContext2D,
+      text: string,
+      x: number,
+      y: number,
+      maxWidth?: number,
+    ) => void;
+    CanvasRenderingContext2D.prototype.fillText = function (
+      text,
+      x,
+      y,
+      maxWidth,
+    ) {
+      fillTexts.push(String(text));
+      originalFillText.call(this, text, x, y, maxWidth);
+    };
+
+    const snapshot = (): string[] => {
+      const texts = [...fillTexts];
+      fillTexts.length = 0;
+      return texts;
+    };
+    try {
+      const purchase = {
+        type: "shop-purchased" as const,
+        shop: "armorsmith" as const,
+        price: 204,
+      };
+      const purchased = {
+        ...base,
+        steps: 10,
+        activeTicks: 10,
+        lifecycle: { ...base.lifecycle, paused: false, tutorialPage: null },
+        player: {
+          ...base.player,
+          gold: 188,
+          armor: { ...base.player.armor, name: "Protector" as const, tier: 1 },
+        },
+        encounters: {
+          ...base.encounters,
+          current: {
+            kind: "shop" as const,
+            shop: "armorsmith" as const,
+            cachedPrice: 204,
+            x: 180,
+            used: true,
+          },
+        },
+      };
+      const next = { ...purchased, steps: 11, activeTicks: 11 };
+      const later = { ...purchased, steps: 12, activeTicks: 12 };
+      presentation.presentTransition({
+        previous: base,
+        current: purchased,
+        events: [purchase],
+      });
+      presentation.present({
+        previous: base,
+        current: purchased,
+        interpolation: 0,
+        events: [purchase],
+      });
+      const first = snapshot();
+
+      presentation.presentTransition({
+        previous: purchased,
+        current: next,
+        events: [],
+      });
+      presentation.presentTransition({
+        previous: next,
+        current: later,
+        events: [],
+      });
+      presentation.present({
+        previous: next,
+        current: later,
+        interpolation: 0,
+        events: [purchase],
+      });
+      const batched = snapshot();
+
+      const paused = {
+        ...later,
+        steps: 13,
+        lifecycle: { ...later.lifecycle, paused: true },
+      };
+      presentation.presentTransition({
+        previous: later,
+        current: paused,
+        events: [],
+      });
+      presentation.present({
+        previous: later,
+        current: paused,
+        interpolation: 0,
+        events: [],
+      });
+      const pausedEffects = canvas.dataset.activeEffects ?? "";
+
+      const resumed = {
+        ...later,
+        steps: 14,
+        activeTicks: 13,
+      };
+      presentation.presentTransition({
+        previous: paused,
+        current: resumed,
+        events: [],
+      });
+      presentation.present({
+        previous: paused,
+        current: resumed,
+        interpolation: 0,
+        events: [],
+      });
+      const resumedTexts = snapshot();
+
+      const expired = { ...resumed, steps: 60, activeTicks: 60 };
+      presentation.present({
+        previous: resumed,
+        current: expired,
+        interpolation: 0,
+        events: [],
+      });
+      return {
+        first,
+        batched,
+        pausedEffects,
+        resumedTexts,
+        expired: snapshot(),
+      };
+    } finally {
+      CanvasRenderingContext2D.prototype.fillText = originalFillText;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(result.first, "first").toContain("Upgrade: Clothing > Protector");
+  expect(result.batched, "batched").toContain("Upgrade: Clothing > Protector");
+  expect(result.resumedTexts, "resumed").toContain(
+    "Upgrade: Clothing > Protector",
+  );
+  expect(result.pausedEffects).toContain("shop-purchased");
+  expect(result.expired).not.toContain("Upgrade: Clothing > Protector");
+});
+
 test("presents reference purchase, item-use, and combat feedback", async ({
   page,
 }) => {

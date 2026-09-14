@@ -87,12 +87,24 @@ interface PresentationFrame {
   events: readonly GameEvent[];
 }
 
+interface PresentationTransition {
+  previous: Readonly<GameObservation>;
+  current: Readonly<GameObservation>;
+  events: readonly GameEvent[];
+}
+
 interface PresentationPort {
   present(frame: PresentationFrame): void;
+  presentTransition?(transition: PresentationTransition): void;
 }
 ```
 
 The presentation may interpolate between observations, but only `current` is authoritative for displayed values and action eligibility. Visual animation never calls gameplay rules or decides when damage, purchases, rewards, or other domain transitions occur.
+
+The browser session may call `presentTransition` once for each public logical
+transition before a display render. Adapters can use it to retain exact public
+transition timing when several logical steps are rendered together; it does not
+draw, expose hidden state, or change gameplay.
 
 #### Runtime asset inputs
 

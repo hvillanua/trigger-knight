@@ -7,6 +7,7 @@ import type {
   GameplayTrace,
   PresentationFrame,
   PresentationPort,
+  PresentationTransition,
   RunConfig,
 } from "../application/contracts.js";
 import { completedRunSettlementFromState } from "../application/completed-run.js";
@@ -54,6 +55,18 @@ function createFrame(
   });
 }
 
+function createTransition(
+  previous: Readonly<GameObservation>,
+  current: Readonly<GameObservation>,
+  events: readonly GameEvent[],
+): PresentationTransition {
+  return Object.freeze({
+    previous,
+    current,
+    events: Object.freeze([...events]),
+  });
+}
+
 /** Owns authoritative state while exposing only public values to the browser. */
 export function createBrowserGameplaySession(
   engine: GameplayEngine,
@@ -95,6 +108,9 @@ export function createBrowserGameplaySession(
       const checkpoint = execution.dispatch(commands);
       observation = checkpoint.observation;
       events = checkpoint.events;
+      presentation?.presentTransition?.(
+        createTransition(previousObservation, observation, checkpoint.events),
+      );
       if (presentation !== undefined) {
         pendingPresentationEvents.push(...checkpoint.events);
       }

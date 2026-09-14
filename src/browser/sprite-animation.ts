@@ -61,16 +61,13 @@ export class ActorAnimation {
   hero: ActorPose = { id: "hero", phase: "running", frame: 17, alpha: 1 };
   enemy: ActorPose | undefined;
 
-  runningX(distance: number): number {
-    return Math.max(
-      50,
-      this.#returnX - Math.max(0, distance - this.#returnDistance),
-    );
-  }
-
-  present(current: Readonly<GameObservation>): void {
-    const previous = this.#previous;
-    const reset = previous === undefined || current.steps < previous.steps;
+  /** Records a public transition before a display render can be coalesced. */
+  presentTransition(
+    previous: Readonly<GameObservation>,
+    current: Readonly<GameObservation>,
+  ): void {
+    const prior = this.#previous ?? previous;
+    const reset = this.#previous === undefined || current.steps < prior.steps;
     if (reset) {
       this.#heroStart = current.activeTicks;
       this.#enemyStart = current.activeTicks;
@@ -81,45 +78,96 @@ export class ActorAnimation {
       this.#returnX = previous.battle.actors.hero.x;
       this.#returnDistance = previous.distance;
     }
-    const heroPhase =
+
+    const previousHeroPhase = this.#heroPhase(previous);
+    const currentHeroPhase = this.#heroPhase(current);
+    if (currentHeroPhase !== previousHeroPhase) {
+      this.#heroStart = current.activeTicks;
+    }
+
+    const previousEnemy = this.#enemyIdentity(previous);
+    const currentEnemy = this.#enemyIdentity(current);
+    if (
+      currentEnemy !== undefined &&
+      (previousEnemy === undefined ||
+        previousEnemy.id !== currentEnemy.id ||
+        previousEnemy.phase !== currentEnemy.phase ||
+        (previous.battle === null && current.battle !== null))
+    ) {
+      this.#enemyStart = current.activeTicks;
+    }
+
+    this.#previous = current;
+  }
+
+  runningX(distance: number): number {
+    return Math.max(
+      50,
+      this.#returnX - Math.max(0, distance - this.#returnDistance),
+    );
+  }
+
+  present(current: Readonly<GameObservation>): void {
+    const previous = this.#previous;
+    if (previous === undefined) {
+      this.#heroStart = current.activeTicks;
+      this.#enemyStart = current.activeTicks;
+      this.#returnX = 50;
+      this.#returnDistance = current.distance;
+      this.#previous = current;
+    } else if (current !== previous) {
+      this.presentTransition(previous, current);
+    }
+    this.#updatePose(current);
+  }
+
+  #pose(id: ActorSpriteId, phase: ActorVisualPhase, age: number): ActorPose {
+    const normalizedAge = Math.max(0, age);
+    return {
+      id,
+      phase,
+      frame: actorFrameNumber(id, phase, normalizedAge),
+      alpha: phase === "dead" ? Math.max(0, 1 - normalizedAge / 12) : 1,
+    };
+  }
+
+  #heroPhase(current: Readonly<GameObservation>): ActorVisualPhase {
+    return (
       current.battle?.actors.hero.phase ??
-      (current.lifecycle.phase === "ended" ? "dead" : "running");
-    if (heroPhase !== this.hero.phase) this.#heroStart = current.activeTicks;
+      (current.lifecycle.phase === "ended" ? "dead" : "running")
+    );
+  }
+
+  #enemyIdentity(
+    current: Readonly<GameObservation>,
+  ): { readonly id: EnemyId; readonly phase: CombatActorPhase } | undefined {
+    const id =
+      current.battle?.enemy.id ??
+      (current.encounters.current?.kind === "battle"
+        ? current.encounters.current.enemy.id
+        : undefined);
+    if (id === undefined) return undefined;
+    return {
+      id,
+      phase: current.battle?.actors.enemy.phase ?? "idle",
+    };
+  }
+
+  #updatePose(current: Readonly<GameObservation>): void {
+    const heroPhase = this.#heroPhase(current);
     this.hero = this.#pose(
       "hero",
       heroPhase,
       current.activeTicks - this.#heroStart,
     );
-    const enemyId =
-      current.battle?.enemy.id ??
-      (current.encounters.current?.kind === "battle"
-        ? current.encounters.current.enemy.id
-        : undefined);
-    if (enemyId === undefined) {
-      this.enemy = undefined;
-    } else {
-      const phase = current.battle?.actors.enemy.phase ?? "idle";
-      if (
-        this.enemy?.id !== enemyId ||
-        this.enemy.phase !== phase ||
-        (previous?.battle === null && current.battle !== null)
-      )
-        this.#enemyStart = current.activeTicks;
-      this.enemy = this.#pose(
-        enemyId,
-        phase,
-        current.activeTicks - this.#enemyStart,
-      );
-    }
-    this.#previous = current;
-  }
-
-  #pose(id: ActorSpriteId, phase: ActorVisualPhase, age: number): ActorPose {
-    return {
-      id,
-      phase,
-      frame: actorFrameNumber(id, phase, age),
-      alpha: phase === "dead" ? Math.max(0, 1 - age / 12) : 1,
-    };
+    const enemy = this.#enemyIdentity(current);
+    this.enemy =
+      enemy === undefined
+        ? undefined
+        : this.#pose(
+            enemy.id,
+            enemy.phase,
+            current.activeTicks - this.#enemyStart,
+          );
   }
 }

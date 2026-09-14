@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type {
   PresentationFrame,
   PresentationPort,
+  PresentationTransition,
   RunConfig,
 } from "../../src/application/contracts.js";
 import { createBrowserGameplaySession } from "../../src/browser/gameplay-session.js";
@@ -156,6 +157,45 @@ describe("browser gameplay session", () => {
       { type: "step-advanced", step: 2 },
     ]);
     expect(session.readDiagnostics().checkpoints).toHaveLength(3);
+  });
+
+  it("notifies presentation of each public transition before a batched render", () => {
+    const present = vi.fn<(frame: PresentationFrame) => void>();
+    const presentTransition =
+      vi.fn<(transition: PresentationTransition) => void>();
+    const session = createBrowserGameplaySession(
+      gameplayEngine,
+      config,
+      { present, presentTransition },
+      { renderOnDispatch: false },
+    );
+
+    session.dispatch([{ type: "dismiss-tutorial" }]);
+    session.dispatch([]);
+
+    expect(presentTransition).toHaveBeenCalledTimes(2);
+    expect(
+      presentTransition.mock.calls.map(([transition]) => ({
+        previous: transition.previous.steps,
+        current: transition.current.steps,
+        events: transition.events,
+      })),
+    ).toEqual([
+      {
+        previous: 0,
+        current: 1,
+        events: [
+          { type: "tutorial-dismissed", page: 0 },
+          { type: "step-advanced", step: 1 },
+        ],
+      },
+      {
+        previous: 1,
+        current: 2,
+        events: [{ type: "step-advanced", step: 2 }],
+      },
+    ]);
+    expect(present).toHaveBeenCalledTimes(1);
   });
 
   it("keeps the committed lifespan death trace fixed during later presentation", () => {

@@ -5,6 +5,7 @@ import type {
   InventoryItemId,
   PresentationFrame,
   PresentationPort,
+  PresentationTransition,
   ShopId,
   TutorialPage,
 } from "../application/contracts.js";
@@ -49,6 +50,8 @@ interface EffectRecord {
   readonly event: GameEvent;
   readonly key: string;
   readonly startActiveTicks: number;
+  readonly anchor: WorldPoint;
+  readonly message: string | undefined;
 }
 
 const NO_VISUAL_EFFECTS: readonly EffectRecord[] = Object.freeze([]);
@@ -803,40 +806,26 @@ function contextMessage(
   observation: Readonly<GameObservation>,
   previous: Readonly<GameObservation>,
   events: readonly GameEvent[],
+  retainedEffect: Readonly<EffectRecord> | undefined,
 ): string | null {
+  if (retainedEffect !== undefined) {
+    if (
+      observation.battle !== null &&
+      observation.player.inventory.item !== null &&
+      retainedEffect.event.type !== "item-use-rejected"
+    ) {
+      const item = observation.player.inventory.item;
+      return item === "elixir"
+        ? `You can use ${itemName(item)} to heal HP!`
+        : `You can use ${itemName(item)} during battle!`;
+    }
+    return retainedEffect.message ?? null;
+  }
   for (let index = events.length - 1; index >= 0; index -= 1) {
     const event = events[index];
     if (event === undefined) continue;
-    switch (event.type) {
-      case "shop-purchased":
-        switch (event.shop) {
-          case "bladesmith":
-            return `Upgrade: ${previous.player.weapon.name} > ${observation.player.weapon.name}`;
-          case "armorsmith":
-            return `Upgrade: ${previous.player.armor.name} > ${observation.player.armor.name}`;
-          case "soul-shrine":
-            return "Lifespan restored!";
-          case "pharmacy":
-            return "Elixir acquired!";
-          case "grims-shop":
-            return "Divine Edge acquired!";
-          case "voucher-store":
-            return "Gold Voucher acquired!";
-        }
-        break;
-      case "item-used":
-        return "ITEM USED!";
-      case "battle-reward":
-        return `Reward: +${formatNumber(event.gold)}G`;
-      case "purchase-rejected":
-        return event.reason === "insufficient-gold"
-          ? "Insufficient gold"
-          : "Purchase unavailable";
-      case "item-use-rejected":
-        return "ITEM UNAVAILABLE";
-      default:
-        break;
-    }
+    const message = eventContextMessage(event, observation, previous);
+    if (message !== null) return message;
   }
   if (
     observation.battle !== null &&
@@ -848,6 +837,54 @@ function contextMessage(
       : `You can use ${itemName(item)} during battle!`;
   }
   return null;
+}
+
+function eventContextMessage(
+  event: GameEvent,
+  observation: Readonly<GameObservation>,
+  previous: Readonly<GameObservation>,
+): string | null {
+  switch (event.type) {
+    case "shop-purchased":
+      switch (event.shop) {
+        case "bladesmith":
+          return `Upgrade: ${previous.player.weapon.name} > ${observation.player.weapon.name}`;
+        case "armorsmith":
+          return `Upgrade: ${previous.player.armor.name} > ${observation.player.armor.name}`;
+        case "soul-shrine":
+          return "Lifespan restored!";
+        case "pharmacy":
+          return "Elixir acquired!";
+        case "grims-shop":
+          return "Divine Edge acquired!";
+        case "voucher-store":
+          return "Gold Voucher acquired!";
+      }
+      break;
+    case "item-used":
+      return "ITEM USED!";
+    case "battle-reward":
+      return `Reward: +${formatNumber(event.gold)}G`;
+    case "purchase-rejected":
+      return event.reason === "insufficient-gold"
+        ? "Insufficient gold"
+        : "Purchase unavailable";
+    case "item-use-rejected":
+      return "ITEM UNAVAILABLE";
+    default:
+      break;
+  }
+  return null;
+}
+
+function latestRetainedEffect(
+  effects: readonly EffectRecord[],
+): Readonly<EffectRecord> | undefined {
+  for (let index = effects.length - 1; index >= 0; index -= 1) {
+    const effect = effects[index];
+    if (effect?.message !== undefined) return effect;
+  }
+  return undefined;
 }
 
 function drawContextPrompt(
@@ -982,8 +1019,9 @@ function drawMessageStrip(
   observation: Readonly<GameObservation>,
   previous: Readonly<GameObservation>,
   events: readonly GameEvent[],
+  retainedEffect: Readonly<EffectRecord> | undefined,
 ): void {
-  const message = contextMessage(observation, previous, events);
+  const message = contextMessage(observation, previous, events, retainedEffect);
   if (message === null) return;
   const camera = observation.camera;
   drawUiImage(
@@ -1015,11 +1053,19 @@ function drawGameplayHud(
   atlas: VisualAtlas,
   events: readonly GameEvent[],
   pointer: WorldPoint | undefined,
+  retainedEffect: Readonly<EffectRecord> | undefined,
 ): void {
   drawGoldAndLifespan(context, atlas, observation);
   drawBottomHud(context, atlas, observation);
   drawContextPrompt(context, atlas, observation, pointer);
-  drawMessageStrip(context, atlas, observation, previous, events);
+  drawMessageStrip(
+    context,
+    atlas,
+    observation,
+    previous,
+    events,
+    retainedEffect,
+  );
 }
 
 function effectAnchor(
@@ -1106,6 +1152,7 @@ function effectLifetime(event: GameEvent): number {
     case "encounter-promoted":
       return 14;
     case "shop-purchased":
+      return 45;
     case "item-used":
       return 24;
     case "battle-reward":
@@ -1320,7 +1367,7 @@ function drawEffect(
   frame: Readonly<PresentationFrame>,
   effect: EffectRecord,
 ): void {
-  const point = effectAnchor(frame, effect.event);
+  const point = effect.anchor;
   const age = effectAge(frame, effect);
   const lifetime = effectLifetime(effect.event);
   switch (effect.event.type) {
@@ -1868,6 +1915,7 @@ export class CanvasPresentation implements PresentationPort {
   #activeEffects: readonly EffectRecord[] = Object.freeze([]);
   #effectHistory = new Map<string, EffectRecord>();
   #seenEffectKeys = new Set<string>();
+  #registeredEffectEvents = new Set<GameEvent>();
   #effectSequence = 0;
   #lastFrameStep: number | undefined;
   #lastDrawnVisualSignature: string | undefined;
@@ -1921,6 +1969,11 @@ export class CanvasPresentation implements PresentationPort {
     this.#draw();
   }
 
+  presentTransition(transition: PresentationTransition): void {
+    this.#animation.presentTransition(transition.previous, transition.current);
+    this.#registerTransition(transition);
+  }
+
   present(frame: PresentationFrame): void {
     this.#animation.present(frame.current);
     const previousFrame = this.#frame;
@@ -1941,7 +1994,8 @@ export class CanvasPresentation implements PresentationPort {
       events: Object.freeze([...frame.events]),
     });
     this.#frame = normalizedFrame;
-    this.#registerEffects(normalizedFrame);
+    this.#registerTransition(normalizedFrame);
+    this.#pruneEffects(normalizedFrame);
     const visibleEffects = this.#reducedMotion
       ? NO_VISUAL_EFFECTS
       : this.#activeEffects;
@@ -2133,19 +2187,28 @@ export class CanvasPresentation implements PresentationPort {
     return layer;
   }
 
-  #registerEffects(frame: Readonly<PresentationFrame>): void {
+  #registerTransition(transition: PresentationTransition): void {
     if (
       this.#lastFrameStep !== undefined &&
-      frame.current.steps < this.#lastFrameStep
+      transition.current.steps < this.#lastFrameStep
     ) {
       this.#effectHistory.clear();
       this.#seenEffectKeys.clear();
+      this.#registeredEffectEvents.clear();
       this.#effectSequence = 0;
     }
 
-    frame.events.forEach((event, index) => {
+    const frame = Object.freeze({
+      previous: transition.previous,
+      current: transition.current,
+      interpolation: 1,
+      events: transition.events,
+    });
+    transition.events.forEach((event, index) => {
       if (!isVisualEffectEvent(event)) return;
-      const key = `${frame.current.steps}:${index}:${describeEvent(event)}`;
+      if (this.#registeredEffectEvents.has(event)) return;
+      this.#registeredEffectEvents.add(event);
+      const key = `${transition.current.steps}:${index}:${describeEvent(event)}`;
       if (!this.#seenEffectKeys.has(key)) {
         this.#seenEffectKeys.add(key);
         this.#effectSequence += 1;
@@ -2154,12 +2217,23 @@ export class CanvasPresentation implements PresentationPort {
           Object.freeze({
             event,
             key,
-            startActiveTicks: frame.current.activeTicks,
+            startActiveTicks: transition.current.activeTicks,
+            anchor: effectAnchor(frame, event),
+            message:
+              eventContextMessage(
+                event,
+                transition.current,
+                transition.previous,
+              ) ?? undefined,
           }),
         );
       }
     });
 
+    this.#lastFrameStep = transition.current.steps;
+  }
+
+  #pruneEffects(frame: Readonly<PresentationFrame>): void {
     const active: EffectRecord[] = [];
     for (const [key, effect] of this.#effectHistory) {
       if (effectAge(frame, effect) <= effectLifetime(effect.event)) {
@@ -2169,7 +2243,6 @@ export class CanvasPresentation implements PresentationPort {
       }
     }
     this.#activeEffects = Object.freeze(active);
-    this.#lastFrameStep = frame.current.steps;
   }
 
   #draw(): void {
@@ -2247,6 +2320,7 @@ export class CanvasPresentation implements PresentationPort {
         this.#atlas,
         this.#frame.events,
         this.#pointerWorld,
+        latestRetainedEffect(this.#activeEffects),
       );
     }
     context.restore();

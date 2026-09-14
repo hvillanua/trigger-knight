@@ -23,6 +23,7 @@ import type {
   PolicyDescriptor,
   PresentationFrame,
   PresentationPort,
+  PresentationTransition,
   ProfileInput,
   RandomState,
   RuleSetId,
@@ -101,6 +102,9 @@ describe("public application contracts", () => {
     }>();
     expectTypeOf<PresentationPort["present"]>().toEqualTypeOf<
       (frame: PresentationFrame) => void
+    >();
+    expectTypeOf<PresentationPort["presentTransition"]>().toEqualTypeOf<
+      ((transition: PresentationTransition) => void) | undefined
     >();
   });
 
