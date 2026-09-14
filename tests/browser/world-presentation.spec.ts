@@ -429,6 +429,128 @@ test("anchors targeted lethal effects to the targeted public actor", async ({
   expect(result.enemyTarget.enemy).toBeGreaterThan(result.enemyTarget.hero);
 });
 
+test("anchors battle rewards to the hero when combat returns to running", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+
+  const rewardTextXs = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    while (canvas.dataset.assetStatus === "loading")
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const rewardTextXs: number[] = [];
+    const fillTextDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "fillText",
+    );
+    if (typeof fillTextDescriptor?.value !== "function") {
+      throw new Error("Expected the Canvas fillText method");
+    }
+    const originalFillText = fillTextDescriptor.value as (
+      this: CanvasRenderingContext2D,
+      text: string,
+      x: number,
+      y: number,
+      maxWidth?: number,
+    ) => void;
+    CanvasRenderingContext2D.prototype.fillText = function (
+      text,
+      x,
+      y,
+      maxWidth,
+    ) {
+      if (text === "+100G") rewardTextXs.push(x);
+      originalFillText.call(this, text, x, y, maxWidth);
+    };
+
+    try {
+      const battle = {
+        ...base,
+        steps: 1,
+        activeTicks: 1,
+        lifecycle: {
+          ...base.lifecycle,
+          phase: "battling" as const,
+          paused: false,
+          tutorialPage: null,
+        },
+        battle: {
+          enemy: { id: "goblin" as const, maximumHp: 900, currentHp: 0 },
+          actors: {
+            hero: { phase: "idle" as const, x: 190 },
+            enemy: { phase: "dead" as const, x: 310 },
+          },
+        },
+        encounters: {
+          ...base.encounters,
+          current: {
+            kind: "battle" as const,
+            enemy: { id: "goblin" as const, maximumHp: 900 },
+            x: 310,
+          },
+        },
+      };
+      const running = {
+        ...base,
+        steps: 2,
+        activeTicks: 2,
+        lifecycle: {
+          ...base.lifecycle,
+          phase: "running" as const,
+          paused: false,
+          tutorialPage: null,
+        },
+        battle: null,
+        encounters: { ...base.encounters, current: null },
+      };
+      const reward = {
+        type: "battle-reward" as const,
+        enemy: "goblin" as const,
+        gold: 100,
+        score: 100,
+        profileExp: 10,
+        dragonKilled: false,
+      };
+
+      presentation.present({
+        previous: base,
+        current: battle,
+        interpolation: 1,
+        events: [],
+      });
+      presentation.presentTransition({
+        previous: battle,
+        current: running,
+        events: [reward],
+      });
+      presentation.present({
+        previous: battle,
+        current: running,
+        interpolation: 1,
+        events: [reward],
+      });
+      return rewardTextXs;
+    } finally {
+      CanvasRenderingContext2D.prototype.fillText = originalFillText;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(rewardTextXs.length).toBeGreaterThan(0);
+  expect(rewardTextXs.every((x) => x === 190)).toBe(true);
+});
+
 test("interpolates original scenery from public distance", async ({ page }) => {
   await page.goto("/?manual=1");
 
