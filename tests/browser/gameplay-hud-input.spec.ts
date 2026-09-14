@@ -49,6 +49,45 @@ test("routes keyboard bindings once and ignores held-key repeats", async ({
   ]);
 });
 
+test("keeps active-run controls visible and clear of the live HUD", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+
+  const geometry = await page.evaluate(() => {
+    const stage = document.querySelector<HTMLElement>(".gameplay-stage");
+    const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
+    const pause = document.querySelector<HTMLElement>("#toggle-pause");
+    const quit = document.querySelector<HTMLElement>("#gameplay-main-menu");
+    if (stage === null || canvas === null || pause === null || quit === null) {
+      throw new Error("Missing gameplay controls");
+    }
+    const stageBox = stage.getBoundingClientRect();
+    const pauseBox = pause.getBoundingClientRect();
+    const quitBox = quit.getBoundingClientRect();
+    const hudHit = document.elementFromPoint(
+      stageBox.right - stageBox.width * 0.04,
+      stageBox.bottom - stageBox.height * 0.04,
+    );
+    return {
+      pauseVisible: getComputedStyle(pause).visibility !== "hidden",
+      quitVisible: getComputedStyle(quit).visibility !== "hidden",
+      pauseTopRatio: (pauseBox.top - stageBox.top) / stageBox.height,
+      quitTopRatio: (quitBox.top - stageBox.top) / stageBox.height,
+      hudHitId: hudHit instanceof HTMLElement ? hudHit.id : null,
+      canvasId: canvas.id,
+    };
+  });
+
+  expect(geometry.pauseVisible).toBe(true);
+  expect(geometry.quitVisible).toBe(true);
+  expect(geometry.pauseTopRatio).toBeGreaterThan(0.26);
+  expect(geometry.quitTopRatio).toBeGreaterThan(0.4);
+  expect(geometry.quitTopRatio).toBeLessThan(0.7);
+  expect(geometry.hudHitId).toBe(geometry.canvasId);
+});
+
 test("keeps shortcuts active from focused gameplay buttons", async ({
   page,
 }) => {
@@ -183,6 +222,78 @@ test("uses the projected Canvas shop target for one touch-style activation", asy
   await expect(page.locator("#game-feedback")).toContainText("Purchased");
   await expect(page.locator("#game-canvas")).toHaveAttribute(
     "data-purchase-eligible",
+    "false",
+  );
+});
+
+test("uses the Canvas item prompt for one touch-style battle activation", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+
+  const found = await page.evaluate(() => {
+    const advance = document.querySelector<HTMLButtonElement>("#advance-run");
+    const dismiss =
+      document.querySelector<HTMLButtonElement>("#dismiss-tutorial");
+    const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
+    if (advance === null || dismiss === null || canvas === null) {
+      throw new Error("Missing controls");
+    }
+    for (let index = 0; index < 4_000; index += 1) {
+      if (!dismiss.disabled) dismiss.click();
+      if (canvas.dataset.itemEligible === "true") return true;
+      advance.click();
+    }
+    return false;
+  });
+  expect(found).toBe(true);
+
+  await page.evaluate(() => {
+    const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
+    if (canvas === null) throw new Error("Missing game canvas");
+    const rect = canvas.getBoundingClientRect();
+    const camera = canvas.dataset.worldCamera?.split(",").map(Number);
+    const projection = canvas.dataset.projectionViewport
+      ?.split(",")
+      .map(Number);
+    if (camera === undefined || projection === undefined) {
+      throw new Error("Missing public Canvas projection");
+    }
+    const scale = projection[2]! / camera[2]!;
+    const backingX = projection[0]! + (110 - camera[0]!) * scale;
+    const backingY = projection[1]! + (176 - camera[1]!) * scale;
+    const styles = getComputedStyle(canvas);
+    const borderLeft = Number.parseFloat(styles.borderLeftWidth) || 0;
+    const borderTop = Number.parseFloat(styles.borderTopWidth) || 0;
+    const clientX =
+      rect.left + borderLeft + (backingX / canvas.width) * canvas.clientWidth;
+    const clientY =
+      rect.top + borderTop + (backingY / canvas.height) * canvas.clientHeight;
+    canvas.dispatchEvent(
+      new PointerEvent("pointermove", {
+        bubbles: true,
+        clientX,
+        clientY,
+        pointerId: 8,
+        pointerType: "touch",
+      }),
+    );
+    canvas.dispatchEvent(
+      new PointerEvent("pointerup", {
+        bubbles: true,
+        button: 0,
+        clientX,
+        clientY,
+        pointerId: 8,
+        pointerType: "touch",
+      }),
+    );
+  });
+
+  await expect(page.locator("#game-feedback")).toContainText("Used Elixir");
+  await expect(page.locator("#game-canvas")).toHaveAttribute(
+    "data-item-eligible",
     "false",
   );
 });

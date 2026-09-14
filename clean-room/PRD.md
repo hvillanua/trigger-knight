@@ -60,6 +60,8 @@ The original coordinate scale is retained as abstract world units for the `origi
 
 The original 30 fps timing remains a 30 Hz gameplay simulation requirement because mechanics are frame-based. Rendering may run at the display refresh rate and interpolate between logical ticks; changing render cadence must not change gameplay outcomes. The presentation should use the original game visual and font assets where available and the approved independently authored sound effects; asset loading and playback must remain outside authoritative gameplay state.
 
+When reviewed references provide evidence, the initial title screen, player-status screen, gameplay HUD, tutorial and pause overlays, prompts, and run-result screen should keep the original 480x320 composition, art placement, bands, icons, and layer order as their presentation baseline. Responsive projection and parallel accessible text may scale or letterbox that composition, but they must continue to describe only public gameplay state. Visual details and animation timing without evidence remain documented implementation decisions rather than claims about original behavior.
+
 ### 3. Separate gameplay behavior from presentation
 
 All gameplay rules and state transitions must be executable independently of rendering, audio, browser input, persistence, or browser timing APIs.

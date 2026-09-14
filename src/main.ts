@@ -100,8 +100,10 @@ const advanceButton = manualClock
   ? document.createElement("button")
   : undefined;
 const gameplayControls = requiredElement<HTMLElement>(".gameplay-controls");
+const gameplayStage = requiredElement<HTMLElement>(".gameplay-stage");
 if (advanceButton !== undefined) {
   advanceButton.id = "advance-run";
+  advanceButton.className = "stage-action";
   advanceButton.type = "button";
   advanceButton.textContent = "Advance run";
   gameplayControls.prepend(advanceButton);
@@ -109,6 +111,7 @@ if (advanceButton !== undefined) {
 const pauseButton = requiredElement<HTMLButtonElement>("#toggle-pause");
 const fullscreenButton =
   requiredElement<HTMLButtonElement>("#toggle-fullscreen");
+const fullscreenLabel = requiredElement<HTMLElement>("#fullscreen-label");
 const fullscreenStatus = requiredElement<HTMLElement>("#fullscreen-status");
 const purchaseButton = requiredElement<HTMLButtonElement>(
   "#purchase-current-encounter",
@@ -167,6 +170,15 @@ const armorCollection = requiredElement<HTMLUListElement>("#armor-collection");
 const collectionProgress = requiredElement<HTMLElement>(
   "#collections-progress",
 );
+const playerStatusLevel = requiredElement<HTMLElement>("#player-status-level");
+const playerStatusXp = requiredElement<HTMLElement>("#player-status-xp");
+const equipmentPreview = requiredElement<HTMLElement>("#equipment-preview");
+const playerStatusChallenges = requiredElement<HTMLUListElement>(
+  "#player-status-challenges",
+);
+const playerStatusProgress = requiredElement<HTMLElement>(
+  "#player-status-progress",
+);
 const achievementList = requiredElement<HTMLUListElement>("#achievement-list");
 const achievementProgress = requiredElement<HTMLElement>(
   "#achievements-progress",
@@ -179,6 +191,9 @@ const settingsBindingPrompt = requiredElement<HTMLElement>(
 const settingsForm = requiredElement<HTMLFormElement>("#settings-form");
 const tutorialPreference = requiredElement<HTMLInputElement>(
   "#tutorial-preference",
+);
+const titleTutorialToggle = requiredElement<HTMLInputElement>(
+  "#title-tutorial-toggle",
 );
 const soundMuted = requiredElement<HTMLInputElement>("#sound-muted");
 const soundVolume = requiredElement<HTMLInputElement>("#sound-volume");
@@ -334,10 +349,11 @@ function fullscreenStatusText(state: FullscreenState): string {
 }
 
 function renderFullscreen(change: FullscreenStateChange): void {
+  const label = change.active ? "Exit fullscreen" : "Enter fullscreen";
   fullscreenButton.disabled = !change.supported;
-  fullscreenButton.textContent = change.active
-    ? "Exit fullscreen"
-    : "Enter fullscreen";
+  fullscreenLabel.textContent = label;
+  fullscreenButton.setAttribute("aria-label", label);
+  fullscreenButton.title = label;
   fullscreenButton.setAttribute("aria-pressed", String(change.active));
   fullscreenStatus.textContent = fullscreenStatusText(change.state);
   fullscreenStatus.dataset.state = change.state;
@@ -406,14 +422,40 @@ function renderEquipmentList(
   list.replaceChildren(
     ...entries.map((entry) => {
       const item = document.createElement("li");
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "equipment-slot";
       const state = entry.discovered ? "Discovered" : "Not discovered";
       item.dataset.tier = String(entry.tier);
       item.dataset.discovered = String(entry.discovered);
-      item.setAttribute(
+      button.dataset.equipmentName = entry.name;
+      button.dataset.equipmentTier = String(entry.tier);
+      button.dataset.discovered = String(entry.discovered);
+      button.setAttribute(
         "aria-label",
         `Tier ${entry.tier}, ${entry.name}, ${state}`,
       );
-      item.textContent = `Tier ${entry.tier}: ${entry.name} · ${state}`;
+      button.title = `${entry.name} · ${state}`;
+      button.textContent = entry.discovered ? "■" : "□";
+      item.append(
+        button,
+        document.createTextNode(` Tier ${entry.tier}: ${entry.name}`),
+      );
+      return item;
+    }),
+  );
+}
+
+function renderPlayerStatus(view: Readonly<ProfileOverviewView>): void {
+  equipmentPreview.dataset.state = "empty";
+  playerStatusLevel.textContent = `Level ${view.level} (x${view.scoreMultiplier} Score)`;
+  playerStatusXp.textContent = `${view.xp} XP`;
+  playerStatusProgress.textContent = `Game Progress - ${Math.round((view.collections.totalDiscovered / view.collections.total) * 100)}%`;
+  playerStatusChallenges.replaceChildren(
+    ...view.achievements.map((achievement) => {
+      const item = document.createElement("li");
+      item.dataset.unlocked = String(achievement.unlocked);
+      item.textContent = `${achievementLabel(achievement.id)} ${achievement.unlocked ? "■" : "□"}`;
       return item;
     }),
   );
@@ -423,6 +465,7 @@ function renderProfileScreens(profile: Readonly<ProfileState>): void {
   const view = createProfileOverviewView(profile);
   renderEquipmentList(weaponCollection, view.collections.weapons);
   renderEquipmentList(armorCollection, view.collections.armor);
+  renderPlayerStatus(view);
   collectionProgress.textContent =
     `${view.collections.totalDiscovered}/${view.collections.total} equipment discoveries · ` +
     `${view.progress.collectionPoints} collection points`;
@@ -446,12 +489,36 @@ function renderProfileScreens(profile: Readonly<ProfileState>): void {
     `${view.progress.totalPoints} total points`;
 }
 
+function showEquipmentPreview(target: EventTarget | null): void {
+  if (!(target instanceof HTMLButtonElement)) return;
+  const name = target.dataset.equipmentName;
+  const tier = target.dataset.equipmentTier;
+  const discovered = target.dataset.discovered === "true";
+  if (name === undefined || tier === undefined) return;
+  equipmentPreview.dataset.state = "selected";
+  equipmentPreview.textContent = discovered
+    ? `${name}, tier ${tier}. This equipment is available in future runs.`
+    : `${name}, tier ${tier}. This equipment has not been discovered yet.`;
+}
+
+for (const list of [weaponCollection, armorCollection]) {
+  list.addEventListener("pointerover", (event) => {
+    showEquipmentPreview(event.target);
+  });
+  list.addEventListener("focusin", (event) => {
+    showEquipmentPreview(event.target);
+  });
+  list.addEventListener("click", (event) => {
+    showEquipmentPreview(event.target);
+  });
+}
+
 const tutorialContent: Readonly<
   Record<TutorialPage, Readonly<{ title: string; copy: string }>>
 > = Object.freeze({
   0: {
     title: "Basic survival",
-    copy: "Keep moving and watch your lifespan. The run ends when it is depleted.",
+    copy: "Guide the Knight to survive as long as possible using only a single click every time! Game will end if your lifespan or HP becomes 0. Getting hit by the Enemy reduces your HP, while Lifespan reduces gradually over time.",
   },
   1: {
     title: "Encounter and building interaction",
@@ -581,6 +648,7 @@ function renderKeyboardHints(
 
 function syncControls(observation: Readonly<GameObservation>): void {
   const ended = observation.lifecycle.phase === "ended";
+  gameplayStage.dataset.paused = String(observation.lifecycle.paused);
   dismissTutorialButton.disabled =
     ended || !observation.actions.canDismissTutorial;
   if (advanceButton !== undefined) advanceButton.disabled = ended;
@@ -604,7 +672,9 @@ function settingsStatusText(result: SettingsLoadResult): string {
 }
 
 function renderSettings(settings: Readonly<BrowserSettings>): void {
-  tutorialPreference.checked = currentProfile.tutorialPreference === "enabled";
+  const tutorialsEnabled = currentProfile.tutorialPreference === "enabled";
+  tutorialPreference.checked = tutorialsEnabled;
+  titleTutorialToggle.checked = tutorialsEnabled;
   soundMuted.checked = settings.sound.muted;
   soundVolume.value = String(settings.sound.volume);
   soundVolumeValue.value = `${Math.round(settings.sound.volume * 100)}%`;
@@ -1074,9 +1144,19 @@ canvas.addEventListener("pointerup", (event) => {
   if (event.pointerType === "mouse" && event.button !== 0) return;
   if (currentScreen !== "gameplay") return;
   const observation = latestObservation;
+  if (observation === undefined) return;
+  if (
+    observation.battle !== null &&
+    observation.player.inventory.item !== null &&
+    observation.actions.canUseCarriedItem
+  ) {
+    event.preventDefault();
+    canvas.focus({ preventScroll: true });
+    dispatch(commandsForItemUseActivation());
+    return;
+  }
   const current = observation?.encounters.current;
   if (
-    observation === undefined ||
     current?.kind !== "shop" ||
     !observation.actions.canPurchaseCurrentEncounter
   ) {
@@ -1154,6 +1234,10 @@ requiredElement<HTMLButtonElement>("#title-settings").addEventListener(
   "click",
   () => runUiAction("activate", showSettings),
 );
+titleTutorialToggle.addEventListener("change", () => {
+  tutorialPreference.checked = titleTutorialToggle.checked;
+  settingsForm.requestSubmit();
+});
 requiredElement<HTMLButtonElement>("#gameplay-main-menu").addEventListener(
   "click",
   () => runUiAction("cancel", showTitle),
@@ -1243,6 +1327,7 @@ settingsForm.addEventListener("submit", (event) => {
         ? "binding-conflict"
         : "invalid-record",
     );
+    renderSettings(currentSettings);
     soundEffects.presentUiAction("cancel");
     return;
   }
@@ -1255,6 +1340,7 @@ settingsForm.addEventListener("submit", (event) => {
         `Tutorial preference could not be saved. Storage status: ${latest.error.code}`,
         latest.error.code,
       );
+      renderSettings(currentSettings);
       soundEffects.presentUiAction("cancel");
       return;
     }
@@ -1267,6 +1353,7 @@ settingsForm.addEventListener("submit", (event) => {
         `Tutorial preference could not be saved. Storage status: ${profileSave.error.code}`,
         profileSave.error.code,
       );
+      renderSettings(currentSettings);
       soundEffects.presentUiAction("cancel");
       return;
     }
@@ -1281,6 +1368,7 @@ settingsForm.addEventListener("submit", (event) => {
       `Settings could not be saved. Storage status: ${settingsSave.error.code}`,
       settingsSave.error.code,
     );
+    renderSettings(currentSettings);
     soundEffects.presentUiAction("cancel");
     return;
   }
@@ -1288,6 +1376,7 @@ settingsForm.addEventListener("submit", (event) => {
   soundEffects.setPreferences(currentSettings.sound);
   keyboardRouter.replaceBindings(currentSettings.bindings);
   bindingCapture.replaceBindings(currentSettings.bindings);
+  renderSettings(currentSettings);
   renderKeyboardHints(currentSettings.bindings);
   settingsBindingPrompt.textContent =
     "Choose Remap, then press a supported key. Press Escape to cancel.";

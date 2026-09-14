@@ -24,16 +24,39 @@
         tabindex="-1"
         hidden
       >
-        <h2 id="title-screen-heading">Main menu</h2>
-        <p id="title-profile-summary">Loading profile…</p>
-        <div class="controls" aria-label="Main menu actions">
-          <button id="start-run" type="button">Start run</button>
-          <button id="title-collections" type="button">View collections</button>
-          <button id="title-achievements" type="button">
-            View achievements
+        <h2 id="title-screen-heading" class="visually-hidden">Main menu</h2>
+        <div class="title-hero-art" aria-hidden="true"></div>
+        <div class="title-logo" aria-hidden="true"></div>
+        <div class="title-actions controls" aria-label="Main menu actions">
+          <button id="start-run" type="button" aria-label="Start run">
+            START RUN
           </button>
-          <button id="title-settings" type="button">Settings</button>
+          <button
+            id="title-collections"
+            type="button"
+            aria-label="View collections"
+          >
+            PLAYER STATUS
+          </button>
+          <button
+            id="title-achievements"
+            type="button"
+            aria-label="View achievements"
+          >
+            ACHIEVEMENTS
+          </button>
+          <button id="title-settings" type="button" aria-label="Settings">
+            SETTINGS
+          </button>
         </div>
+        <p id="title-profile-summary" class="title-profile-summary">
+          Loading profile…
+        </p>
+        <label class="title-tutorial-toggle">
+          <input id="title-tutorial-toggle" type="checkbox" />
+          Tutorial
+        </label>
+        <p class="title-footer">M/S to mute Music/SFX, P to Pause</p>
       </section>
 
       <section
@@ -45,7 +68,7 @@
         <h2 id="gameplay-heading" class="visually-hidden">Gameplay</h2>
         <section
           id="gameplay-hud"
-          class="gameplay-hud"
+          class="gameplay-hud accessible-hud"
           aria-label="Current run information"
         >
           <div class="hud-grid">
@@ -146,86 +169,117 @@
             aria-atomic="true"
           ></p>
         </section>
-        <canvas
-          id="game-canvas"
-          role="img"
-          aria-label="Trigger Knight game view"
-          aria-describedby="gameplay-hud game-feedback"
-          tabindex="0"
+        <div class="gameplay-stage">
+          <canvas
+            id="game-canvas"
+            role="img"
+            aria-label="Trigger Knight game view"
+            aria-describedby="gameplay-hud game-feedback"
+            tabindex="0"
+          >
+            Trigger Knight requires a browser with Canvas 2D support.
+          </canvas>
+          <section
+            id="tutorial-panel"
+            class="player-panel tutorial-panel accessible-stage-panel"
+            aria-labelledby="tutorial-heading"
+            aria-live="polite"
+          >
+            <p id="tutorial-page-label">Tutorial page 1 of 6</p>
+            <h2 id="tutorial-heading">Basic survival</h2>
+            <p id="tutorial-copy">
+              Guide the Knight to survive as long as possible using only a
+              single click every time! Game will end if your lifespan or HP
+              becomes 0. Getting hit by the Enemy reduces your HP, while
+              Lifespan reduces gradually over time.
+            </p>
+            <button id="dismiss-tutorial" type="button">
+              Dismiss tutorial
+            </button>
+          </section>
+          <section
+            id="pause-panel"
+            class="player-panel pause-panel accessible-stage-panel"
+            aria-labelledby="pause-heading"
+            hidden
+          >
+            <h2 id="pause-heading">Run paused</h2>
+            <p>
+              Resume when you are ready. Paused steps do not advance gameplay.
+            </p>
+          </section>
+          <div class="controls gameplay-controls" aria-label="Gameplay actions">
+            <button
+              id="toggle-pause"
+              class="stage-control stage-resume"
+              type="button"
+              aria-pressed="false"
+            >
+              Pause
+            </button>
+            <button
+              id="toggle-fullscreen"
+              class="stage-control stage-fullscreen"
+              type="button"
+              aria-pressed="false"
+              aria-describedby="fullscreen-status"
+            >
+              <span id="fullscreen-label" class="visually-hidden">
+                Enter fullscreen
+              </span>
+            </button>
+            <button
+              id="purchase-current-encounter"
+              class="stage-action"
+              type="button"
+              aria-describedby="hud-context-description hud-context-warning"
+              disabled
+            >
+              Purchase current shop
+            </button>
+            <button
+              id="use-carried-item"
+              class="stage-action"
+              type="button"
+              aria-describedby="hud-context-description"
+              disabled
+            >
+              Use carried item
+            </button>
+            <button
+              id="gameplay-main-menu"
+              class="stage-control stage-quit"
+              type="button"
+            >
+              Main menu
+            </button>
+          </div>
+          <p
+            id="fullscreen-status"
+            class="help-text accessible-stage-status"
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            Fullscreen is available.
+          </p>
+        </div>
+        <p
+          class="status accessible-hud"
+          id="game-status"
+          data-testid="game-status"
         >
-          Trigger Knight requires a browser with Canvas 2D support.
-        </canvas>
-        <p class="status" id="game-status" data-testid="game-status">Step 0</p>
-        <section class="profile-summary" aria-labelledby="profile-heading">
+          Step 0
+        </p>
+        <section
+          class="profile-summary accessible-hud"
+          aria-labelledby="profile-heading"
+        >
           <h2 id="profile-heading">Committed profile</h2>
           <p id="profile-summary" data-testid="profile-summary">
             Loading profile…
           </p>
         </section>
-        <section
-          id="tutorial-panel"
-          class="player-panel tutorial-panel"
-          aria-labelledby="tutorial-heading"
-          aria-live="polite"
-        >
-          <p id="tutorial-page-label">Tutorial page 1 of 6</p>
-          <h2 id="tutorial-heading">Basic survival</h2>
-          <p id="tutorial-copy">
-            Keep moving and watch your lifespan. The run ends when it is
-            depleted.
-          </p>
-          <button id="dismiss-tutorial" type="button">Dismiss tutorial</button>
-        </section>
-        <section
-          id="pause-panel"
-          class="player-panel pause-panel"
-          aria-labelledby="pause-heading"
-          hidden
-        >
-          <h2 id="pause-heading">Run paused</h2>
-          <p>
-            Resume when you are ready. Paused steps do not advance gameplay.
-          </p>
-        </section>
-        <div class="controls gameplay-controls" aria-label="Gameplay actions">
-          <button id="toggle-pause" type="button" aria-pressed="false">
-            Pause
-          </button>
-          <button
-            id="toggle-fullscreen"
-            type="button"
-            aria-pressed="false"
-            aria-describedby="fullscreen-status"
-          >
-            Enter fullscreen
-          </button>
-          <button
-            id="purchase-current-encounter"
-            type="button"
-            aria-describedby="hud-context-description hud-context-warning"
-            disabled
-          >
-            Purchase current shop
-          </button>
-          <button
-            id="use-carried-item"
-            type="button"
-            aria-describedby="hud-context-description"
-            disabled
-          >
-            Use carried item
-          </button>
-          <button id="gameplay-main-menu" type="button">Main menu</button>
-        </div>
-        <p
-          id="fullscreen-status"
-          class="help-text"
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          Fullscreen is available.
-        </p>
       </section>
 
       <section
@@ -323,10 +377,27 @@
         hidden
       >
         <div class="screen-heading-row">
-          <h2 id="collections-heading">Collections</h2>
+          <h2 id="collections-heading">PLAYER STATUS</h2>
           <button id="collections-back" type="button">Back</button>
         </div>
-        <p id="collections-progress"></p>
+        <div class="player-status-layout">
+          <div class="player-status-hero" aria-hidden="true"></div>
+          <div class="player-status-content">
+            <p id="player-status-level" class="player-status-level"></p>
+            <p id="player-status-xp" class="player-status-xp"></p>
+            <div class="player-status-rule" aria-hidden="true"></div>
+            <p id="collections-progress" class="player-status-progress"></p>
+            <p class="player-status-hint">Hover to see Equip</p>
+            <div
+              id="equipment-preview"
+              class="equipment-preview"
+              role="status"
+              aria-live="polite"
+            >
+              Select an equipment slot to see its details.
+            </div>
+          </div>
+        </div>
         <div class="collection-columns">
           <section aria-labelledby="weapons-heading">
             <h3 id="weapons-heading">Weapons</h3>
@@ -337,6 +408,14 @@
             <ul id="armor-collection" class="discovery-list"></ul>
           </section>
         </div>
+        <section
+          class="player-status-challenges"
+          aria-labelledby="player-status-challenges-heading"
+        >
+          <h3 id="player-status-challenges-heading">Challenges</h3>
+          <ul id="player-status-challenges" class="challenge-list"></ul>
+          <p id="player-status-progress"></p>
+        </section>
       </section>
 
       <section
