@@ -4,6 +4,8 @@ test("keeps the reference-backed screens composed and interactive", async ({
   page,
 }, testInfo) => {
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+  await page.keyboard.press("p");
   await page.getByRole("button", { name: "Main menu", exact: true }).click();
 
   const titleAssets = await page.locator("#title-screen").evaluate(() => {
@@ -84,7 +86,7 @@ test("keeps the reference-backed screens composed and interactive", async ({
     contentType: "image/png",
   });
 
-  await page.getByRole("button", { name: "Pause", exact: true }).click();
+  await page.keyboard.press("p");
   await expect(
     page.getByRole("button", { name: "Resume", exact: true }),
   ).toBeVisible();
@@ -99,6 +101,8 @@ test("keeps the title actions inside the stage at narrow widths", async ({
 }) => {
   await page.setViewportSize({ width: 320, height: 700 });
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+  await page.keyboard.press("p");
   await page.getByRole("button", { name: "Main menu", exact: true }).click();
 
   const stage = page.locator("#title-screen");

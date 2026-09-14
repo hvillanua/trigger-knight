@@ -5,6 +5,8 @@ test("initializes sound from interaction and reports cue delivery", async ({
 }) => {
   await page.goto("/?manual=1");
 
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+  await page.keyboard.press("p");
   await page.getByRole("button", { name: "Main menu", exact: true }).click();
   await expect(page.locator("#title-screen")).toBeVisible();
   await expect

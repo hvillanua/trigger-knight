@@ -285,6 +285,8 @@ test("keeps assembled screens readable and operable at representative sizes", as
         ).toBeLessThanOrEqual(layout.clientWidth + 1);
       }
 
+      await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+      await page.keyboard.press("p");
       await page
         .getByRole("button", { name: "Main menu", exact: true })
         .click();

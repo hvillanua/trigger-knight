@@ -21,6 +21,7 @@ import {
   createVisualAtlas,
   type VisualAtlas,
   type VisualAtlasStatus,
+  type OriginalEffectImageId,
   type OriginalUiImageId,
   type VisualSpriteId,
 } from "./visual-atlas.js";
@@ -110,6 +111,16 @@ const ITEM_UI_ICONS: Readonly<Record<InventoryItemId, OriginalUiImageId>> =
     "divine-edge": "divine-edge-icon",
     "gold-voucher": "voucher-icon",
   });
+
+const ORIGINAL_HIT_FRAME_IDS: readonly OriginalEffectImageId[] = Object.freeze([
+  "hit-1",
+  "hit-2",
+  "hit-3",
+  "hit-4",
+  "hit-5",
+  "hit-6",
+  "hit-7",
+]);
 
 function describeEvent(event: GameEvent): string {
   switch (event.type) {
@@ -408,28 +419,29 @@ function drawBackground(
   drawSceneImage(context, atlas, "sky", camera.x, camera.y, 960, 320);
 }
 
-function drawMovingBackground(
+function drawMovingBackgroundLayer(
   context: CanvasRenderingContext2D,
   camera: Readonly<GameObservation["camera"]>,
   distance: number,
   atlas: VisualAtlas,
+  layer: Readonly<{
+    readonly id: "mountains" | "ground";
+    readonly speed: number;
+    readonly y: number;
+    readonly height: number;
+  }>,
 ): void {
-  for (const layer of [
-    { id: "mountains" as const, speed: 0.18, y: 82, height: 120 },
-    { id: "ground" as const, speed: 1, y: 164, height: 188 },
-  ]) {
-    const offset = positiveModulo(distance * layer.speed, 960);
-    for (let x = camera.x - offset; x < camera.x + camera.width; x += 960) {
-      drawSceneImage(
-        context,
-        atlas,
-        layer.id,
-        x,
-        camera.y + layer.y,
-        960,
-        layer.height,
-      );
-    }
+  const offset = positiveModulo(distance * layer.speed, 960);
+  for (let x = camera.x - offset; x < camera.x + camera.width; x += 960) {
+    drawSceneImage(
+      context,
+      atlas,
+      layer.id,
+      x,
+      camera.y + layer.y,
+      960,
+      layer.height,
+    );
   }
 }
 
@@ -508,7 +520,16 @@ function drawOriginalBuilding(
   }
 }
 
-function drawShop(
+function drawShopBuilding(
+  context: CanvasRenderingContext2D,
+  atlas: VisualAtlas,
+  x: number,
+  groundY: number,
+): void {
+  drawOriginalBuilding(context, atlas, x, groundY);
+}
+
+function drawShopDetails(
   context: CanvasRenderingContext2D,
   atlas: VisualAtlas,
   x: number,
@@ -517,8 +538,6 @@ function drawShop(
   available: boolean,
   used: boolean,
 ): void {
-  drawOriginalBuilding(context, atlas, x, groundY);
-
   const product = SHOP_PRODUCTS[shop];
   drawAtlasSprite(context, atlas, product, x + 24, groundY - 22, {
     scale: 0.32,
@@ -1147,9 +1166,9 @@ function isVisualEffectEvent(event: GameEvent): boolean {
 function effectLifetime(event: GameEvent): number {
   switch (event.type) {
     case "combat-hit":
-      return 12;
+      return 8;
     case "combat-lethal-hit":
-      return 16;
+      return 8;
     case "combat-phase-changed":
       return 1;
     case "battle-started":
@@ -1308,6 +1327,35 @@ function drawBurst(
   context.restore();
 }
 
+function drawOriginalHitEffect(
+  context: CanvasRenderingContext2D,
+  atlas: VisualAtlas,
+  point: WorldPoint,
+  age: number,
+): boolean {
+  // FXHit's eighth timeline frame is intentionally blank.
+  if (age >= ORIGINAL_HIT_FRAME_IDS.length) return true;
+  const frameIndex = Math.min(
+    ORIGINAL_HIT_FRAME_IDS.length - 1,
+    Math.max(0, Math.floor(age)),
+  );
+  const image = atlas.effectImages[ORIGINAL_HIT_FRAME_IDS[frameIndex]!];
+  if (!imageReady(image)) return false;
+  context.save();
+  try {
+    context.drawImage(
+      image,
+      point.x - image.naturalWidth / 2,
+      point.y - image.naturalHeight / 2,
+    );
+  } catch {
+    context.restore();
+    return false;
+  }
+  context.restore();
+  return true;
+}
+
 function effectSeed(key: string): number {
   let hash = 0;
   for (let index = 0; index < key.length; index += 1) {
@@ -1376,14 +1424,7 @@ function drawEffect(
   const lifetime = effectLifetime(effect.event);
   switch (effect.event.type) {
     case "combat-hit":
-      drawBurst(
-        context,
-        point,
-        effect.event.critical ? "#ffe9a6" : "#f7f1df",
-        effect.event.critical ? 24 : 17,
-        age,
-        lifetime,
-      );
+      drawOriginalHitEffect(context, atlas, point, age);
       drawFloatingText(
         context,
         formatNumber(effect.event.damage),
@@ -1397,7 +1438,7 @@ function drawEffect(
       );
       break;
     case "combat-lethal-hit":
-      drawBurst(context, point, "#ffb4a8", 30, age, lifetime);
+      drawOriginalHitEffect(context, atlas, point, age);
       drawFloatingText(context, "DEFEATED", point, age, lifetime, {
         fill: "#ffb4a8",
         font: `700 10px ${CANVAS_FONT_FAMILIES.displayMedium}`,
@@ -1847,7 +1888,23 @@ function drawDynamicWorld(
     frame.current.distance,
     frame.interpolation,
   );
-  drawMovingBackground(context, camera, distance, atlas);
+  const current = frame.current.encounters.current;
+  const x = currentEncounterX(frame);
+  drawMovingBackgroundLayer(context, camera, distance, atlas, {
+    id: "mountains",
+    speed: 0.18,
+    y: 82,
+    height: 120,
+  });
+  if (current?.kind === "shop" && x !== null) {
+    drawShopBuilding(context, atlas, x, groundY);
+  }
+  drawMovingBackgroundLayer(context, camera, distance, atlas, {
+    id: "ground",
+    speed: 1,
+    y: 164,
+    height: 188,
+  });
   const pose = (actor: ActorPose): ActorPose =>
     reducedMotion
       ? { ...actor, frame: actorFrameNumber(actor.id, actor.phase, 0) }
@@ -1880,11 +1937,9 @@ function drawDynamicWorld(
     );
   }
 
-  const current = frame.current.encounters.current;
-  const x = currentEncounterX(frame);
   if (current !== null && x !== null) {
     if (current.kind === "shop") {
-      drawShop(
+      drawShopDetails(
         context,
         atlas,
         x,
