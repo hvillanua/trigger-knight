@@ -228,6 +228,45 @@ test("handles fullscreen entry, exit, resize, and denied or unsupported hosts", 
   }
 });
 
+test("keeps the fullscreen stage within the viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 640, height: 360 });
+  await page.goto("/?manual=1");
+
+  await page.getByRole("button", { name: "Enter fullscreen" }).click();
+  await expect(page.locator("#gameplay-screen")).toBeVisible();
+
+  const layout = await page.evaluate(() => {
+    const screen = document.querySelector<HTMLElement>("#gameplay-screen");
+    const stage = document.querySelector<HTMLElement>(".gameplay-stage");
+    if (screen === null || stage === null) {
+      throw new Error("Missing fullscreen layout elements");
+    }
+
+    const screenRect = screen.getBoundingClientRect();
+    const stageRect = stage.getBoundingClientRect();
+    return {
+      screen: {
+        clientHeight: screen.clientHeight,
+        scrollHeight: screen.scrollHeight,
+      },
+      stage: {
+        bottom: stageRect.bottom,
+        top: stageRect.top,
+      },
+      viewport: {
+        bottom: window.innerHeight,
+        top: screenRect.top,
+      },
+    };
+  });
+
+  expect(layout.screen.scrollHeight).toBeLessThanOrEqual(
+    layout.screen.clientHeight + 1,
+  );
+  expect(layout.stage.top).toBeGreaterThanOrEqual(layout.viewport.top - 1);
+  expect(layout.stage.bottom).toBeLessThanOrEqual(layout.viewport.bottom + 1);
+});
+
 test("keeps assembled screens readable and operable at representative sizes", async ({
   browser,
 }) => {
