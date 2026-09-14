@@ -1071,10 +1071,14 @@ function drawGameplayHud(
 function effectAnchor(
   frame: Readonly<PresentationFrame>,
   event: GameEvent,
+  runningX = HERO_RUNNING_X,
 ): WorldPoint {
   const camera = frame.current.camera;
   const groundY = camera.y + camera.height * GROUND_RATIO;
-  const heroX = battleActorX(frame, "hero") ?? camera.x + HERO_RUNNING_X;
+  const heroX =
+    frame.current.battle === null
+      ? camera.x + runningX
+      : (battleActorX(frame, "hero", runningX) ?? camera.x + runningX);
   const enemyX = battleActorX(frame, "enemy") ?? camera.x + 390;
   const encounterX =
     currentEncounterX(frame) ??
@@ -1971,7 +1975,10 @@ export class CanvasPresentation implements PresentationPort {
 
   presentTransition(transition: PresentationTransition): void {
     this.#animation.presentTransition(transition.previous, transition.current);
-    this.#registerTransition(transition);
+    this.#registerTransition(
+      transition,
+      this.#animation.runningX(transition.current.distance),
+    );
   }
 
   present(frame: PresentationFrame): void {
@@ -1994,7 +2001,16 @@ export class CanvasPresentation implements PresentationPort {
       events: Object.freeze([...frame.events]),
     });
     this.#frame = normalizedFrame;
-    this.#registerTransition(normalizedFrame);
+    this.#registerTransition(
+      normalizedFrame,
+      this.#animation.runningX(
+        interpolate(
+          normalizedFrame.previous.distance,
+          normalizedFrame.current.distance,
+          normalizedFrame.interpolation,
+        ),
+      ),
+    );
     this.#pruneEffects(normalizedFrame);
     const visibleEffects = this.#reducedMotion
       ? NO_VISUAL_EFFECTS
@@ -2187,7 +2203,10 @@ export class CanvasPresentation implements PresentationPort {
     return layer;
   }
 
-  #registerTransition(transition: PresentationTransition): void {
+  #registerTransition(
+    transition: PresentationTransition,
+    runningX = this.#animation.runningX(transition.current.distance),
+  ): void {
     if (
       this.#lastFrameStep !== undefined &&
       transition.current.steps < this.#lastFrameStep
@@ -2218,7 +2237,7 @@ export class CanvasPresentation implements PresentationPort {
             event,
             key,
             startActiveTicks: transition.current.activeTicks,
-            anchor: effectAnchor(frame, event),
+            anchor: effectAnchor(frame, event, runningX),
             message:
               eventContextMessage(
                 event,
