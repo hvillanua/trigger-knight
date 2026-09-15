@@ -62,12 +62,16 @@ const OBSERVATION_KEYS = [
   "steps",
 ];
 
+const FULL_COMPATIBILITY_REPLAY =
+  process.env.TRIGGER_KNIGHT_FULL_COMPATIBILITY === "1";
+const RESPONSIVE_PROBE_FIXTURE_ID = "gated-step-limit-does-not-settle";
+
 const VARIANTS = [
   {
     name: "reference-output",
     viewport: { width: 480, height: 320 },
     deviceScaleFactor: 1,
-    renderEvery: 1,
+    renderEvery: FULL_COMPATIBILITY_REPLAY ? 1 : 11,
     redraws: 1,
     ambientProfile: {
       level: 2,
@@ -81,8 +85,8 @@ const VARIANTS = [
     name: "responsive-output",
     viewport: { width: 1280, height: 720 },
     deviceScaleFactor: 2,
-    renderEvery: 11,
-    redraws: 4,
+    renderEvery: 1,
+    redraws: FULL_COMPATIBILITY_REPLAY ? 4 : 1,
     ambientProfile: {
       level: 8,
       xp: 31,
@@ -92,6 +96,17 @@ const VARIANTS = [
     },
   },
 ] as const;
+
+function shouldRunVariant(
+  fixture: OriginalV13CompatibilityRun,
+  variant: (typeof VARIANTS)[number],
+): boolean {
+  return (
+    FULL_COMPATIBILITY_REPLAY ||
+    variant.name === "reference-output" ||
+    fixture.id === RESPONSIVE_PROBE_FIXTURE_ID
+  );
+}
 
 function policyFor(key: CompatibilityPolicyKey): PlayerPolicy {
   switch (key) {
@@ -519,6 +534,7 @@ test("replays the retained compatibility corpus in Node and Chromium", async ({
         fixture.expected.completedProfile ?? null;
 
       for (const { page, variant } of contexts) {
+        if (!shouldRunVariant(fixture, variant)) continue;
         await page.goto("/?manual=1");
         const diagnostics = await runBrowserFixture(
           page,

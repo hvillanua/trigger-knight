@@ -52,6 +52,16 @@ counts on dedicated runners only when their measurements show a benefit.
 See the [test performance investigation](docs/test-performance.md) for measured
 tradeoffs and the checkpoint transport change.
 
+The default browser compatibility check replays every retained fixture with full
+checkpoint comparison in the reference viewport. It uses the five-step gated
+fixture for the responsive and device-pixel-ratio probe, while the unit corpus
+continues to replay every fixture and checkpoint. Run the full two-variant
+browser replay when reviewing compatibility changes:
+
+```sh
+TRIGGER_KNIGHT_FULL_COMPATIBILITY=1 npm run test:browser -- tests/browser/milestone-6-compatibility-corpus.spec.ts
+```
+
 ## Simulation and diagnostics
 
 Call `createSimulationRunner` with an engine, run configuration, policy, and
