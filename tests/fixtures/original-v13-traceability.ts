@@ -376,7 +376,7 @@ export const originalV13Traceability = Object.freeze([
       ),
       evidence(
         "tests/browser/milestone-4-combat-loop.spec.ts",
-        "complete ${scenario.terminalReason} run matches Node across Canvas output settings",
+        "bounded combat transitions match Node across Canvas output settings",
       ),
     ],
   },

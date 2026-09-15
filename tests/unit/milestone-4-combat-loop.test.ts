@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { EnemySnapshot, GameEvent } from "../../src/domain/contracts.js";
+import { createCombatPolicy } from "../../src/simulation/combat-policy.js";
 import { combatLoopScenarios, runCombatLoop } from "../helpers/combat-loop.js";
 import { createTestGameplayEngine } from "../helpers/gameplay-engine.js";
 
@@ -39,12 +40,40 @@ function expectEnemy(enemy: EnemySnapshot, day: number) {
   });
 }
 
+function expectCombatPolicyDecisions(
+  trace: ReturnType<typeof runCombatLoop>["trace"],
+): void {
+  const policy = createCombatPolicy();
+  const agent = policy.createAgent();
+  const replayAgent = policy.createAgent();
+  const expected = trace.checkpoints
+    .slice(1)
+    .map((checkpoint) => checkpoint.commands);
+  const decisions = [];
+  const replayDecisions = [];
+
+  for (let index = 1; index < trace.checkpoints.length; index += 1) {
+    const previous = trace.checkpoints[index - 1]!;
+    decisions.push(agent.decide(previous.observation, previous.events));
+    replayDecisions.push(
+      replayAgent.decide(previous.observation, previous.events),
+    );
+  }
+
+  expect(decisions).toEqual(expected);
+  expect(replayDecisions).toEqual(expected);
+}
+
 describe("Milestone 4 complete combat loop", () => {
   it.each(combatLoopScenarios)(
     "preserves per-step invariants through $terminalReason death",
     (scenario) => {
       const { trace, result } = runCombatLoop(scenario.seed);
       const first = trace.checkpoints[0]!;
+      if (scenario.terminalReason === "combat") {
+        expectCombatPolicyDecisions(trace);
+      }
+      expect(result.policy).toEqual(createCombatPolicy().descriptor);
       let earned = 0;
       let spent = 0;
       let experience = 0;
@@ -54,6 +83,7 @@ describe("Milestone 4 complete combat loop", () => {
       let shopsSinceReward = 0;
       let cycles = 0;
       let fundedPurchase = false;
+      let rewardProfileExp = 0;
       const enemies = new Set<string>();
       const items = new Set<string>();
       const shops = new Set<string>();
@@ -69,6 +99,13 @@ describe("Milestone 4 complete combat loop", () => {
         const { state, events, observation, checkpointHash } =
           trace.checkpoints[index]!;
         const previous = trace.checkpoints[index - 1]!.state;
+        expect(
+          events.some(
+            (event) =>
+              event.type === "purchase-rejected" ||
+              event.type === "item-use-rejected",
+          ),
+        ).toBe(false);
         expect(state.player.hp.current).toBeGreaterThanOrEqual(0);
         expect(state.player.hp.current).toBeLessThanOrEqual(
           state.player.hp.maximum,
@@ -180,6 +217,7 @@ describe("Milestone 4 complete combat loop", () => {
               expect(state.encounters.current).toBeNull();
               expect(state.random).toEqual(previous.random);
               earned += event.gold;
+              rewardProfileExp += event.profileExp;
               experience += event.profileExp;
               dragons += Number(event.dragonKilled);
               rewards++;
@@ -202,11 +240,20 @@ describe("Milestone 4 complete combat loop", () => {
         terminalReason: scenario.terminalReason,
         steps: scenario.steps,
       });
+      expect(result.metrics).toMatchObject({
+        "combat.battles-started": battles,
+        "combat.rewards": rewards,
+        "combat.reward-gold": earned,
+        "combat.reward-profile-exp": rewardProfileExp,
+        "purchases.gold-spent": spent,
+        "progression.profile-exp-earned": rewardProfileExp,
+      });
       expect(battles).toBeGreaterThan(1);
       expect(rewards).toBeGreaterThan(1);
       expect(cycles).toBeGreaterThan(1);
       expect(fundedPurchase).toBe(true);
       if (scenario.terminalReason === "combat") {
+        expect(rewards).toBe(29);
         expect([...enemies].sort()).toEqual([
           "dragon",
           "goblin",

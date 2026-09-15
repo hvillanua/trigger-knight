@@ -9,6 +9,30 @@ combat-loop and milestone 6 compatibility-corpus browser specs. Each block now
 crosses the Playwright connection as JSON text and is parsed in Node before the
 existing full comparison. No production code changed.
 
+Issue #136 removes repeated long executions from the focused combat checks. The
+policy assertions now inspect the existing full combat traces in the Milestone 4
+unit test. The browser combat spec keeps one completed lifespan run and uses a
+3,000-step combat probe for the two output settings. The probe reaches tutorial
+dismissal, a shop purchase, battle start, a reward, and item use, and still
+compares every checkpoint. The full combat-death run remains in the compatibility
+corpus with its fixed Node and Chromium baseline.
+
+The focused measurements below use one Vitest or Playwright worker in this
+workspace. They are comparable wall-clock readings from the same commands before
+and after the consolidation, not full-suite benchmarks.
+
+| Selection                        |  Before |   After |
+| -------------------------------- | ------: | ------: |
+| Three linked unit files          | 14.99 s | 12.01 s |
+| Milestone 4 combat browser spec  | 36.09 s | 12.14 s |
+| Milestone 6 compatibility corpus | 20.71 s | 20.68 s |
+
+The compatibility corpus timing is unchanged in scope and varies with browser
+startup and host load. Its assertions remain the fixed baseline check for all
+retained fixtures. Use the focused commands in the README for the normal review
+path, and set `TRIGGER_KNIGHT_FULL_COMPATIBILITY=1` when a compatibility change
+needs both output variants for every retained fixture.
+
 Measurements were taken on September 12–13, 2026, in WSL2 on a Ryzen 7 7700X
 with 16 logical CPUs and about 15 GiB of WSL memory. This measures Linux processes
 in WSL2; it does not measure native Windows scheduling, fan noise, temperature,

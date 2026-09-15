@@ -62,6 +62,19 @@ browser replay when reviewing compatibility changes:
 TRIGGER_KNIGHT_FULL_COMPATIBILITY=1 npm run test:browser -- tests/browser/milestone-6-compatibility-corpus.spec.ts
 ```
 
+The Milestone 4 browser check runs the lifespan policy to completion once. Its
+combat policy probe stops after 3,000 steps, after tutorial dismissal, shop
+purchase, battle start, reward, and item-use transitions, and compares every
+checkpoint across two viewport, DPR, render-cadence, and redraw settings. The
+full combat-death run remains in the compatibility corpus. For the focused
+checks used by issue #136, run:
+
+```sh
+npm run test:unit -- tests/unit/milestone-4-combat-loop.test.ts tests/unit/combat-policy-runs.test.ts tests/unit/milestone-6-compatibility-corpus.test.ts --maxWorkers=1
+npm run test:browser -- tests/browser/milestone-4-combat-loop.spec.ts --workers=1
+npm run test:browser -- tests/browser/milestone-6-compatibility-corpus.spec.ts --workers=1
+```
+
 ## Simulation and diagnostics
 
 Call `createSimulationRunner` with an engine, run configuration, policy, and
