@@ -15,6 +15,7 @@ export const combatLoopScenarios = [
 ] as const;
 
 export const combatLoopMaxSteps = 30_000;
+export const combatLoopPresentationProbeMaxSteps = 3_000;
 
 export function combatLoopConfig(seed: string): RunConfig {
   return {
@@ -28,7 +29,7 @@ export function combatLoopConfig(seed: string): RunConfig {
   };
 }
 
-export function runCombatLoop(seed: string) {
+export function runCombatLoop(seed: string, maxSteps = combatLoopMaxSteps) {
   let trace: GameplayTrace | undefined;
   const engine = createGameplayEngine(ruleSetRegistry);
   const result = createSimulationRunner(engine, {
@@ -38,8 +39,8 @@ export function runCombatLoop(seed: string) {
   }).run({
     config: combatLoopConfig(seed),
     policy: createCombatPolicy(),
-    maxSteps: combatLoopMaxSteps,
+    maxSteps,
   });
-  if (trace === undefined) throw new Error("Expected complete combat trace");
+  if (trace === undefined) throw new Error("Expected retained combat trace");
   return { trace, result };
 }
