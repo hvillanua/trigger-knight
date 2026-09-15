@@ -87,6 +87,12 @@ test("hides pause and main-menu controls during an active run", async ({
   expect(geometry.hudHitId).toBe(geometry.canvasId);
 });
 
+test("hides the physical cursor over the gameplay canvas", async ({ page }) => {
+  await page.goto("/?manual=1");
+
+  await expect(page.locator("#game-canvas")).toHaveCSS("cursor", "none");
+});
+
 test("dismisses the first tutorial dialog from any stage click", async ({
   page,
 }) => {

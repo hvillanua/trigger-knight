@@ -56,6 +56,9 @@ function runSimulation(
     ruleset: request.config.ruleset,
     seed: request.config.seed,
     initialProfile,
+    ...(request.config.startImmediately === undefined
+      ? {}
+      : { startImmediately: request.config.startImmediately }),
   });
   const initialProfileFingerprint = fingerprintCanonicalJson(initialProfile);
   const trace = createCanonicalTraceHasher();

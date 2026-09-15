@@ -34,6 +34,81 @@ test("loads original runtime assets and produces a readable world screenshot", a
   expect(screenshot.byteLength).toBeGreaterThan(1_000);
 });
 
+test("clips the lifespan fill inside its original frame", async ({ page }) => {
+  await page.goto("/?manual=1");
+
+  const fillClipCount = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    while (canvas.dataset.assetStatus === "loading")
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+    let clipCount = 0;
+    let clipsBeforeFill = 0;
+    const clipDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "clip",
+    );
+    const drawImageDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "drawImage",
+    );
+    if (
+      typeof clipDescriptor?.value !== "function" ||
+      typeof drawImageDescriptor?.value !== "function"
+    ) {
+      throw new Error("Expected Canvas 2D methods");
+    }
+    const originalClip = clipDescriptor.value as () => void;
+    const originalDrawImage =
+      drawImageDescriptor.value as CanvasRenderingContext2D["drawImage"];
+    CanvasRenderingContext2D.prototype.clip = function () {
+      clipCount += 1;
+      originalClip.call(this);
+    };
+    CanvasRenderingContext2D.prototype.drawImage = function (
+      image: CanvasImageSource,
+      ...args: number[]
+    ) {
+      if (image instanceof HTMLImageElement && image.src.includes("/251.png")) {
+        clipsBeforeFill = clipCount;
+      }
+      originalDrawImage.apply(this, [image, ...args] as Parameters<
+        typeof originalDrawImage
+      >);
+    };
+    try {
+      const current = {
+        ...base,
+        steps: base.steps + 1,
+        lifecycle: { ...base.lifecycle, paused: false, tutorialPage: null },
+      };
+      presentation.present({
+        previous: base,
+        current,
+        interpolation: 1,
+        events: [],
+      });
+      return clipsBeforeFill;
+    } finally {
+      CanvasRenderingContext2D.prototype.clip = originalClip;
+      CanvasRenderingContext2D.prototype.drawImage = originalDrawImage;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(fillClipCount).toBeGreaterThan(2);
+});
+
 test("omits the building when its original image is unavailable", async ({
   page,
 }) => {
@@ -270,6 +345,346 @@ test("draws the original shop between the middle and front background planes", a
   }, "/src/browser/canvas-presentation.ts");
 
   expect(layers.slice(0, 3)).toEqual(["mountains", "building", "ground"]);
+});
+
+test("leaves shop offers to the cursor prompt without an extra scene marker", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+
+  const result = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    while (canvas.dataset.assetStatus === "loading")
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const productDraws: number[][] = [];
+    const markerStyles: string[] = [];
+    const drawImageDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "drawImage",
+    );
+    const strokeDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "stroke",
+    );
+    if (
+      typeof drawImageDescriptor?.value !== "function" ||
+      typeof strokeDescriptor?.value !== "function"
+    ) {
+      throw new Error("Expected Canvas 2D methods");
+    }
+    const originalDrawImage =
+      drawImageDescriptor.value as CanvasRenderingContext2D["drawImage"];
+    const originalStroke = strokeDescriptor.value as () => void;
+    CanvasRenderingContext2D.prototype.drawImage = function (
+      image: CanvasImageSource,
+      ...args: number[]
+    ) {
+      if (
+        image instanceof HTMLImageElement &&
+        image.src.includes("/198.png") &&
+        args.length === 2
+      ) {
+        productDraws.push(args);
+      }
+      originalDrawImage.apply(this, [image, ...args] as Parameters<
+        typeof originalDrawImage
+      >);
+    };
+    CanvasRenderingContext2D.prototype.stroke = function () {
+      if (typeof this.strokeStyle === "string") {
+        markerStyles.push(this.strokeStyle);
+      }
+      originalStroke.call(this);
+    };
+    try {
+      const current = {
+        ...base,
+        steps: base.steps + 1,
+        lifecycle: { ...base.lifecycle, paused: false, tutorialPage: null },
+        encounters: {
+          ...base.encounters,
+          current: {
+            kind: "shop" as const,
+            shop: "pharmacy" as const,
+            cachedPrice: 150,
+            x: 180,
+            used: false,
+          },
+        },
+        actions: { ...base.actions, canPurchaseCurrentEncounter: false },
+      };
+      presentation.present({
+        previous: base,
+        current,
+        interpolation: 1,
+        events: [],
+      });
+      return {
+        cursorMarkerDraws: markerStyles.filter((style) => style === "#ef2a2a")
+          .length,
+        productDraws: productDraws.length,
+        sceneMarkerDraws: markerStyles.filter((style) => style === "#ffb4a8")
+          .length,
+      };
+    } finally {
+      CanvasRenderingContext2D.prototype.drawImage = originalDrawImage;
+      CanvasRenderingContext2D.prototype.stroke = originalStroke;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(result.productDraws).toBe(0);
+  expect(result.sceneMarkerDraws).toBe(0);
+  expect(result.cursorMarkerDraws).toBeGreaterThan(0);
+});
+
+test("uses reference event icons and the staggered compact status icons", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+
+  const result = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    while (canvas.dataset.assetStatus === "loading")
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const calls: { id: string; args: number[] }[] = [];
+    const queueOperations: string[] = [];
+    const slotFrameStrokes: string[] = [];
+    const drawImageDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "drawImage",
+    );
+    const strokeDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "stroke",
+    );
+    const strokeTextDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "strokeText",
+    );
+    if (
+      typeof drawImageDescriptor?.value !== "function" ||
+      typeof strokeDescriptor?.value !== "function" ||
+      typeof strokeTextDescriptor?.value !== "function"
+    ) {
+      throw new Error("Expected Canvas 2D methods");
+    }
+    const originalDrawImage =
+      drawImageDescriptor.value as CanvasRenderingContext2D["drawImage"];
+    const originalStroke = strokeDescriptor.value as () => void;
+    const originalStrokeText = strokeTextDescriptor.value as (
+      text: string,
+      x: number,
+      y: number,
+    ) => void;
+    CanvasRenderingContext2D.prototype.drawImage = function (
+      image: CanvasImageSource,
+      ...args: number[]
+    ) {
+      if (image instanceof HTMLImageElement) {
+        const id = image.src.match(/\/(\d+)\.(?:png|jpg)(?:$|[?#])/);
+        if (id !== null) {
+          calls.push({ id: id[1]!, args });
+          queueOperations.push(`image:${id[1]}`);
+        }
+      }
+      originalDrawImage.apply(this, [image, ...args] as Parameters<
+        typeof originalDrawImage
+      >);
+    };
+    CanvasRenderingContext2D.prototype.stroke = function () {
+      if (this.strokeStyle === "#2a0000") {
+        slotFrameStrokes.push(this.strokeStyle);
+      }
+      originalStroke.call(this);
+    };
+    CanvasRenderingContext2D.prototype.strokeText = function (
+      text: string,
+      x: number,
+      y: number,
+    ) {
+      if (text === "Now" || text === "Next") {
+        queueOperations.push(`text:${text}`);
+      }
+      originalStrokeText.call(this, text, x, y);
+    };
+    try {
+      const current = {
+        ...base,
+        steps: base.steps + 1,
+        lifecycle: {
+          ...base.lifecycle,
+          paused: false,
+          tutorialPage: null,
+          phase: "battling" as const,
+        },
+        battle: {
+          enemy: { id: "goblin" as const, maximumHp: 900, currentHp: 720 },
+          actors: {
+            hero: { phase: "idle" as const, x: 50 },
+            enemy: { phase: "idle" as const, x: 300 },
+          },
+        },
+        encounters: {
+          ...base.encounters,
+          current: {
+            kind: "battle" as const,
+            enemy: { id: "goblin" as const, maximumHp: 900 },
+            x: 300,
+          },
+          upcoming: [
+            {
+              kind: "shop" as const,
+              shop: "armorsmith" as const,
+              cachedPrice: 204,
+            },
+            {
+              kind: "shop" as const,
+              shop: "bladesmith" as const,
+              cachedPrice: 236,
+            },
+            { kind: "battle" as const },
+          ],
+        },
+      };
+      presentation.present({
+        previous: base,
+        current,
+        interpolation: 1,
+        events: [],
+      });
+      return {
+        calls,
+        queueOperations,
+        slotFrameStrokes,
+      };
+    } finally {
+      CanvasRenderingContext2D.prototype.drawImage = originalDrawImage;
+      CanvasRenderingContext2D.prototype.stroke = originalStroke;
+      CanvasRenderingContext2D.prototype.strokeText = originalStrokeText;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  const ids = result.calls.map(({ id }) => id);
+  expect(ids.filter((id) => id === "179")).toHaveLength(2);
+  expect(ids).toContain("170");
+  expect(ids).toContain("168");
+  expect(ids).not.toContain("156");
+  expect(ids).not.toContain("158");
+  expect(result.calls).toContainEqual({ id: "197", args: [235, 266, 16, 16] });
+  expect(result.calls).toContainEqual({ id: "199", args: [255, 282, 16, 16] });
+  expect(result.calls).toContainEqual({ id: "198", args: [275, 298, 16, 16] });
+  expect(result.slotFrameStrokes).toContain("#2a0000");
+  expect(result.queueOperations.indexOf("text:Now")).toBeGreaterThan(
+    result.queueOperations.lastIndexOf("image:179"),
+  );
+  expect(result.queueOperations.indexOf("text:Next")).toBeGreaterThan(
+    result.queueOperations.lastIndexOf("image:179"),
+  );
+});
+
+test("animates an available action prompt with the original mouse frames", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+
+  const pointerIds = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    while (canvas.dataset.assetStatus === "loading")
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const ids: string[] = [];
+    const drawImageDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "drawImage",
+    );
+    if (typeof drawImageDescriptor?.value !== "function") {
+      throw new Error("Expected Canvas drawImage method");
+    }
+    const originalDrawImage =
+      drawImageDescriptor.value as CanvasRenderingContext2D["drawImage"];
+    CanvasRenderingContext2D.prototype.drawImage = function (
+      image: CanvasImageSource,
+      ...args: number[]
+    ) {
+      if (image instanceof HTMLImageElement) {
+        const match = image.src.match(/\/(19|21)\.png(?:$|[?#])/);
+        if (match !== null) ids.push(match[1]!);
+      }
+      originalDrawImage.apply(this, [image, ...args] as Parameters<
+        typeof originalDrawImage
+      >);
+    };
+    try {
+      const current = {
+        ...base,
+        steps: 2,
+        lifecycle: { ...base.lifecycle, paused: false, tutorialPage: null },
+        encounters: {
+          ...base.encounters,
+          current: {
+            kind: "shop" as const,
+            shop: "pharmacy" as const,
+            cachedPrice: 150,
+            x: 180,
+            used: false,
+          },
+        },
+        actions: { ...base.actions, canPurchaseCurrentEncounter: true },
+      };
+      presentation.present({
+        previous: base,
+        current,
+        interpolation: 1,
+        events: [],
+      });
+      presentation.present({
+        previous: current,
+        current: { ...current, steps: 4 },
+        interpolation: 1,
+        events: [],
+      });
+      return ids;
+    } finally {
+      CanvasRenderingContext2D.prototype.drawImage = originalDrawImage;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(pointerIds).toEqual(expect.arrayContaining(["19", "21"]));
 });
 
 test("covers every public enemy, shop, and actor phase in Canvas presentation", async ({

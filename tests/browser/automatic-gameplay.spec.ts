@@ -10,7 +10,7 @@ declare global {
   }
 }
 
-async function installFrames(page: Page): Promise<void> {
+async function installFrames(page: Page, url = "/"): Promise<void> {
   await page.addInitScript(() => {
     let nextId = 0;
     const callbacks = new Map<number, FrameRequestCallback>();
@@ -27,7 +27,7 @@ async function installFrames(page: Page): Promise<void> {
       pending.forEach((callback) => callback(time));
     };
   });
-  await page.goto("/");
+  await page.goto(url);
   await expect(page.locator("#game-canvas")).toHaveAttribute(
     "data-renderer",
     "canvas-2d",
@@ -51,6 +51,27 @@ test("normal play advances automatically with no manual control", async ({
       ),
     )
     .toBeGreaterThan(0);
+});
+
+test("starts walking on the first logical opportunity after Start run", async ({
+  page,
+}) => {
+  await installFrames(page, "/?manual=1");
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+  await page.keyboard.press("p");
+  await page.getByRole("button", { name: "Main menu", exact: true }).click();
+  await page.getByRole("button", { name: "Start run" }).click();
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+
+  const observation = await page.evaluate(
+    () =>
+      window.triggerKnightDiagnostics?.read().checkpoints.at(-1)?.observation,
+  );
+  expect(observation).toMatchObject({
+    activeTicks: 1,
+    distance: 1,
+    steps: 1,
+  });
 });
 
 test("scheduled browser input and interpolated rendering match headless execution", async ({

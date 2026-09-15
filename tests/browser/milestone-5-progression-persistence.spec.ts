@@ -247,6 +247,7 @@ test("a migrated profile is committed before result presentation and survives na
       advance.click();
     }
   });
+  await page.locator("#game-canvas").click({ position: { x: 240, y: 160 } });
 
   const result = page.locator("#run-result");
   await expect(result).toHaveAttribute("data-result-state", "committed");

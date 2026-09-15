@@ -144,12 +144,21 @@ export interface RuleSetStepResult {
   readonly events: readonly GameEvent[];
 }
 
+/** Optional flags applied while creating a fresh run. */
+export interface RunCreationOptions {
+  readonly startImmediately?: boolean;
+}
+
 /** Pure gameplay implementation selected by one stable ruleset identity. */
 export interface RuleSetImplementation {
   readonly id: RuleSetId;
   readonly constants: RuleSetConstants;
   readonly compatibilityDecisions: RuleSetCompatibilityDecisions;
-  createRun(seed: string, initialProfile: Readonly<ProfileInput>): RunState;
+  createRun(
+    seed: string,
+    initialProfile: Readonly<ProfileInput>,
+    options?: Readonly<RunCreationOptions>,
+  ): RunState;
   step(
     state: Readonly<RunState>,
     commands: readonly GameCommand[],
@@ -449,7 +458,11 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
   constants: originalV13Constants,
   compatibilityDecisions: originalV13CompatibilityDecisions,
 
-  createRun(seed: string, initialProfile: Readonly<ProfileInput>): RunState {
+  createRun(
+    seed: string,
+    initialProfile: Readonly<ProfileInput>,
+    options: Readonly<RunCreationOptions> = {},
+  ): RunState {
     const profile = normalizeProfile(initialProfile);
     const player = createOriginalV13InitialPlayerState();
     const lifespan = Object.freeze({
@@ -467,7 +480,9 @@ export const originalV13RuleSet: RuleSetImplementation = Object.freeze({
     return createRunState(
       ORIGINAL_V13_RULESET_ID,
       initializedEncounters.random,
-      originalV13Constants.pregameDelaySteps,
+      options.startImmediately === true
+        ? 0
+        : originalV13Constants.pregameDelaySteps,
       profile.scoreMultiplier,
       originalV13Constants.movement.initialSpeed,
       lifespan,

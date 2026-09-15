@@ -43,12 +43,19 @@ export type OriginalUiImageId =
   | "gold-bag"
   | "pointer"
   | "pointer-click"
-  | "weapon-icon"
-  | "armor-icon"
+  | "session-over-pointer"
+  | "weapon-upgrade-icon"
+  | "armor-upgrade-icon"
   | "shrine-icon"
   | "elixir-icon"
   | "divine-edge-icon"
-  | "voucher-icon";
+  | "voucher-icon"
+  | "weapon-event-icon"
+  | "armor-event-icon"
+  | "monster-icon"
+  | "weapon-stats-icon"
+  | "item-stats-icon"
+  | "armor-stats-icon";
 
 export const ORIGINAL_SPRITE_URLS: Readonly<
   Partial<Record<VisualSpriteId, string>>
@@ -122,20 +129,50 @@ export const ORIGINAL_UI_IMAGE_URLS: Readonly<
   pointer: new URL("../assets/original/images/19.png", import.meta.url).href,
   "pointer-click": new URL("../assets/original/images/21.png", import.meta.url)
     .href,
-  "weapon-icon": new URL("../assets/original/images/156.png", import.meta.url)
-    .href,
-  "armor-icon": new URL("../assets/original/images/158.png", import.meta.url)
-    .href,
+  "session-over-pointer": new URL(
+    "../assets/original/images/12.png",
+    import.meta.url,
+  ).href,
+  "weapon-upgrade-icon": new URL(
+    "../assets/original/images/156.png",
+    import.meta.url,
+  ).href,
+  "armor-upgrade-icon": new URL(
+    "../assets/original/images/158.png",
+    import.meta.url,
+  ).href,
   "shrine-icon": new URL("../assets/original/images/172.png", import.meta.url)
     .href,
-  "elixir-icon": new URL("../assets/original/images/198.png", import.meta.url)
+  "elixir-icon": new URL("../assets/original/images/160.png", import.meta.url)
     .href,
   "divine-edge-icon": new URL(
-    "../assets/original/images/179.png",
+    "../assets/original/images/162.png",
     import.meta.url,
   ).href,
   "voucher-icon": new URL("../assets/original/images/164.png", import.meta.url)
     .href,
+  "weapon-event-icon": new URL(
+    "../assets/original/images/168.png",
+    import.meta.url,
+  ).href,
+  "armor-event-icon": new URL(
+    "../assets/original/images/170.png",
+    import.meta.url,
+  ).href,
+  "monster-icon": new URL("../assets/original/images/179.png", import.meta.url)
+    .href,
+  "weapon-stats-icon": new URL(
+    "../assets/original/images/197.png",
+    import.meta.url,
+  ).href,
+  "item-stats-icon": new URL(
+    "../assets/original/images/198.png",
+    import.meta.url,
+  ).href,
+  "armor-stats-icon": new URL(
+    "../assets/original/images/199.png",
+    import.meta.url,
+  ).href,
 });
 
 const frameUrls = import.meta.glob<string>(

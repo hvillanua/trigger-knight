@@ -41,6 +41,7 @@ function assertKeys(
   value: NormalizedRecord,
   expected: readonly string[],
   label: string,
+  optional: readonly string[] = [],
 ): void {
   const actual = Object.keys(value).sort();
   const sortedExpected = [...expected].sort();
@@ -51,10 +52,8 @@ function assertKeys(
     );
   }
 
-  if (
-    actual.length !== sortedExpected.length ||
-    actual.some((key, index) => key !== sortedExpected[index])
-  ) {
+  const allowed = new Set([...expected, ...optional]);
+  if (actual.some((key) => !allowed.has(key))) {
     throw new TypeError(`${label} contains unsupported fields`);
   }
 }
@@ -71,6 +70,7 @@ function normalizeRunConfigInput(input: unknown): RunConfig {
     normalized,
     ["initialProfile", "ruleset", "seed"],
     "Simulation config",
+    ["startImmediately"],
   );
 
   if (
@@ -84,10 +84,20 @@ function normalizeRunConfigInput(input: unknown): RunConfig {
     throw new TypeError("Simulation config seed must be a string");
   }
 
+  if (
+    normalized.startImmediately !== undefined &&
+    typeof normalized.startImmediately !== "boolean"
+  ) {
+    throw new TypeError("Simulation config startImmediately must be a boolean");
+  }
+
   return Object.freeze({
     ruleset: normalized.ruleset,
     seed: normalized.seed,
     initialProfile: normalizeProfileInput(normalized.initialProfile),
+    ...(normalized.startImmediately === undefined
+      ? {}
+      : { startImmediately: normalized.startImmediately }),
   });
 }
 

@@ -6,6 +6,7 @@ import {
   ORIGINAL_SCENE_ASSET_URLS,
   ORIGINAL_SPRITE_URLS,
   ORIGINAL_ANIMATION_URLS,
+  ORIGINAL_UI_IMAGE_URLS,
 } from "../../src/browser/visual-atlas.js";
 
 describe("approved visual atlas", () => {
@@ -110,5 +111,17 @@ describe("approved visual atlas", () => {
     for (const url of Object.values(ORIGINAL_EFFECT_IMAGE_URLS)) {
       expect(url).toContain("/assets/original/images/");
     }
+  });
+
+  it("keeps event artwork separate from the compact status artwork", () => {
+    expect(ORIGINAL_UI_IMAGE_URLS["session-over-pointer"]).toContain("/12.png");
+    expect(ORIGINAL_UI_IMAGE_URLS.pointer).toContain("/19.png");
+    expect(ORIGINAL_UI_IMAGE_URLS["pointer-click"]).toContain("/21.png");
+    expect(ORIGINAL_UI_IMAGE_URLS["weapon-event-icon"]).toContain("/168.png");
+    expect(ORIGINAL_UI_IMAGE_URLS["armor-event-icon"]).toContain("/170.png");
+    expect(ORIGINAL_UI_IMAGE_URLS["monster-icon"]).toContain("/179.png");
+    expect(ORIGINAL_UI_IMAGE_URLS["weapon-stats-icon"]).toContain("/197.png");
+    expect(ORIGINAL_UI_IMAGE_URLS["item-stats-icon"]).toContain("/198.png");
+    expect(ORIGINAL_UI_IMAGE_URLS["armor-stats-icon"]).toContain("/199.png");
   });
 });

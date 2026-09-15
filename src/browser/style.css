@@ -736,6 +736,7 @@ body {
 .gameplay-stage canvas {
   width: 100%;
   height: 100%;
+  cursor: none;
   border: 1px solid transparent;
   border-radius: 0;
   box-shadow: none;
@@ -826,6 +827,11 @@ body {
 
 .gameplay-stage:not([data-paused="true"]) .gameplay-controls .stage-resume,
 .gameplay-stage:not([data-paused="true"]) .gameplay-controls .stage-quit {
+  display: none;
+}
+
+.gameplay-stage[data-phase="ended"] .gameplay-controls #advance-run,
+.gameplay-stage[data-phase="ended"] .gameplay-controls .stage-fullscreen {
   display: none;
 }
 

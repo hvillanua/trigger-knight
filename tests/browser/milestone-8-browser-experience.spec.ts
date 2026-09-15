@@ -93,7 +93,7 @@ async function advanceUntilResult(
   maxSteps: number,
   purchase: boolean,
 ) {
-  return page.evaluate(
+  const summary = await page.evaluate(
     ({ maxSteps: stepLimit, purchase: purchaseShops }) => {
       const advance = document.querySelector<HTMLButtonElement>("#advance-run");
       const purchase = document.querySelector<HTMLButtonElement>(
@@ -101,13 +101,13 @@ async function advanceUntilResult(
       );
       const dismiss =
         document.querySelector<HTMLButtonElement>("#dismiss-tutorial");
-      const result = document.querySelector<HTMLElement>("#run-result");
+      const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
       const diagnostics = window.triggerKnightDiagnostics;
       if (
         advance === null ||
         purchase === null ||
         dismiss === null ||
-        result === null
+        canvas === null
       ) {
         throw new Error("Missing manual run controls");
       }
@@ -120,7 +120,7 @@ async function advanceUntilResult(
         }
         if (advance.disabled) break;
         advance.click();
-        if (result.dataset.resultState === "committed") break;
+        if (canvas.dataset.visualScene === "ended") break;
       }
       const trace = diagnostics?.read();
       if (trace === undefined) throw new Error("Missing browser diagnostics");
@@ -134,6 +134,7 @@ async function advanceUntilResult(
         currentEncounter:
           trace.checkpoints.at(-1)?.observation.encounters.current,
         seed: trace.config.seed,
+        ended: canvas.dataset.visualScene === "ended",
         eventTypes: trace.checkpoints.flatMap(({ events }) =>
           events.map(({ type }) => type),
         ),
@@ -141,6 +142,10 @@ async function advanceUntilResult(
     },
     { maxSteps, purchase },
   );
+  if (summary.ended || summary.terminalReason !== null) {
+    await page.locator("#game-canvas").click({ position: { x: 240, y: 160 } });
+  }
+  return summary;
 }
 
 async function readDiagnostics(page: Page): Promise<GameplayTrace> {
@@ -428,6 +433,53 @@ test("reduced motion keeps timing and committed results durable", async ({
   } finally {
     await Promise.all([normalContext.close(), reducedContext.close()]);
   }
+});
+
+test("holds the original session-over screen until a stage click", async ({
+  page,
+}, testInfo) => {
+  test.setTimeout(60_000);
+  await seedDisabledTutorialProfile(page);
+  await page.goto("/?manual=1&seed=milestone-2-lifecycle-2");
+
+  const ended = await page.evaluate(() => {
+    const advance = document.querySelector<HTMLButtonElement>("#advance-run");
+    const dismiss =
+      document.querySelector<HTMLButtonElement>("#dismiss-tutorial");
+    if (advance === null || dismiss === null) {
+      throw new Error("Missing manual run controls");
+    }
+    if (!dismiss.disabled) dismiss.click();
+    for (let step = 0; step < 2_600; step += 1) {
+      if (advance.disabled) break;
+      advance.click();
+      if (
+        document.querySelector<HTMLCanvasElement>("#game-canvas")?.dataset
+          .visualScene === "ended"
+      ) {
+        return true;
+      }
+    }
+    return false;
+  });
+
+  expect(ended).toBe(true);
+  const canvas = page.locator("#game-canvas");
+  await expect(canvas).toHaveAttribute("data-visual-scene", "ended");
+  await expect(page.locator("#toggle-fullscreen")).toBeHidden();
+  await expect(page.locator("#run-result")).toBeHidden();
+  const screenshot = await canvas.screenshot();
+  await testInfo.attach("session-over.png", {
+    body: screenshot,
+    contentType: "image/png",
+  });
+  expect(screenshot.byteLength).toBeGreaterThan(1_000);
+
+  await canvas.click({ position: { x: 240, y: 160 } });
+  await expect(page.locator("#run-result")).toHaveAttribute(
+    "data-result-state",
+    "committed",
+  );
 });
 
 test("completes both gameplay death paths and starts another real browser run", async ({

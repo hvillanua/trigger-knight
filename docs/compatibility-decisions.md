@@ -88,6 +88,11 @@ does not count as active gameplay; the first active tick follows its completion.
 Implementation and evidence: [run-state.ts](../src/domain/run-state.ts),
 [lifecycle tests](../tests/unit/gameplay-lifecycle.test.ts).
 
+The ruleset default remains the researched 60-step gate. The browser supplies
+the explicit `RunConfig.startImmediately` choice for a player-triggered Start
+run action, so the first active opportunity follows tutorial dismissal without
+changing the default used by headless compatibility runs.
+
 ## Battle entry and actor positions
 
 The [core-loop research](../research/mechanics.md#state-and-core-loop) and
