@@ -2,6 +2,7 @@ import type {
   CommittedRunResultView,
   RunTerminalReason,
 } from "../application/contracts.js";
+import { profileExperienceAtProgress } from "../domain/profile.js";
 
 /** @playerVisible Public values shown while a completed save is unavailable. */
 export interface PendingCompletedRunView {
@@ -38,14 +39,24 @@ function numberLabel(value: number): string {
   return String(value);
 }
 
+const SCORE_COUNT_DURATION_MS = 2_500;
+
 /** @playerVisible Renders only the committed public result. */
 export class CompletedRunPresentation {
   readonly #root: HTMLElement;
+  readonly #scoreCard: HTMLElement;
+  readonly #details: HTMLElement;
   readonly #saveStatus: HTMLElement;
   readonly #saveError: HTMLElement;
   readonly #terminalReason: HTMLElement;
   readonly #score: HTMLElement;
   readonly #scoreCount: HTMLElement;
+  readonly #scoreLabel: HTMLElement;
+  readonly #cardHighScore: HTMLElement;
+  readonly #newHighScore: HTMLElement;
+  readonly #levelLabel: HTMLElement;
+  readonly #experience: HTMLElement;
+  readonly #experienceFill: HTMLElement;
   readonly #skipScoreCount: HTMLButtonElement;
   readonly #profileLevel: HTMLElement;
   readonly #profileXp: HTMLElement;
@@ -64,15 +75,32 @@ export class CompletedRunPresentation {
   readonly #onRetry: () => void;
   readonly #onNextRun: () => void;
   #scoreFrame: number | undefined;
+  #finalExperience:
+    | Readonly<{
+        readonly level: number;
+        readonly xp: number;
+        readonly threshold: number;
+        readonly scoreMultiplier: number;
+      }>
+    | undefined;
   #reducedMotion = false;
 
   constructor(root: HTMLElement, options: CompletedRunPresentationOptions) {
     this.#root = root;
+    this.#scoreCard = requiredElement(root, ".result-score-card");
+    this.#details = requiredElement(root, "#result-details");
     this.#saveStatus = requiredElement(root, "#result-save-status");
     this.#saveError = requiredElement(root, "#result-save-error");
     this.#terminalReason = requiredElement(root, "#result-terminal-reason");
     this.#score = requiredElement(root, "#result-score");
     this.#scoreCount = requiredElement(root, "#result-score-count");
+    this.#scoreLabel = requiredElement(root, "#result-score-label");
+    this.#scoreLabel.textContent = "SCORE GET";
+    this.#cardHighScore = requiredElement(root, "#result-card-high-score");
+    this.#newHighScore = requiredElement(root, "#result-new-high-score");
+    this.#levelLabel = requiredElement(root, "#result-level-label");
+    this.#experience = requiredElement(root, "#result-experience");
+    this.#experienceFill = requiredElement(root, "#result-xp-fill");
     this.#skipScoreCount = requiredElement(root, "#skip-score-count");
     this.#profileLevel = requiredElement(root, "#result-profile-level");
     this.#profileXp = requiredElement(root, "#result-profile-xp");
@@ -96,6 +124,7 @@ export class CompletedRunPresentation {
     this.#nextRun = requiredElement(root, "#next-run");
     this.#onRetry = options.onRetry;
     this.#onNextRun = options.onNextRun;
+    this.#details.inert = true;
 
     this.#skipScoreCount.addEventListener("click", () => {
       this.#finishScoreCount();
@@ -122,6 +151,10 @@ export class CompletedRunPresentation {
     this.#cancelScoreCount();
     this.#root.hidden = true;
     this.#root.dataset.resultState = "hidden";
+    this.#scoreCard.dataset.scoreState = "idle";
+    this.#finalExperience = undefined;
+    this.#details.inert = true;
+    this.#skipScoreCount.hidden = true;
     this.#root.removeAttribute("aria-busy");
   }
 
@@ -133,6 +166,7 @@ export class CompletedRunPresentation {
     this.#root.dataset.resultState = "committed";
     this.#root.dataset.completionStatus = status;
     this.#root.setAttribute("aria-busy", "false");
+    this.#details.inert = true;
     this.#saveStatus.textContent = "Progress saved.";
     this.#saveError.textContent = "";
     this.#saveError.hidden = true;
@@ -144,7 +178,7 @@ export class CompletedRunPresentation {
     this.#retry.hidden = true;
     this.#nextRun.hidden = false;
     this.#nextRun.disabled = false;
-    this.#beginScoreCount(result.run.score);
+    this.#beginScoreCount(result);
   }
 
   showPending(
@@ -152,10 +186,12 @@ export class CompletedRunPresentation {
     status: "failed" | "uncertain",
     errorCode: string,
   ): void {
+    this.#cancelScoreCount();
     this.#root.hidden = false;
     this.#root.dataset.resultState = status;
     this.#root.dataset.completionStatus = status;
     this.#root.setAttribute("aria-busy", "false");
+    this.#details.inert = false;
     this.#saveStatus.textContent =
       status === "uncertain"
         ? "Progress save is pending; retry before starting another run."
@@ -164,6 +200,13 @@ export class CompletedRunPresentation {
     this.#saveError.hidden = false;
     this.#terminalReason.textContent = terminalReasonLabel(run.terminalReason);
     this.#score.textContent = numberLabel(run.score);
+    this.#scoreCard.dataset.scoreState = "pending";
+    this.#levelLabel.textContent = "Level —";
+    this.#experience.textContent = "—/— EXP";
+    this.#experienceFill.style.width = "0%";
+    this.#finalExperience = undefined;
+    this.#cardHighScore.textContent = "Highscore : —";
+    this.#newHighScore.hidden = true;
     this.#scoreCount.textContent = "Not counted";
     this.#scoreCount.dataset.state = "not-counted";
     this.#skipScoreCount.hidden = true;
@@ -179,6 +222,17 @@ export class CompletedRunPresentation {
     this.#profileXp.textContent = numberLabel(profile.xp);
     this.#profileMultiplier.textContent = numberLabel(profile.scoreMultiplier);
     this.#profileHighScore.textContent = numberLabel(profile.highScore);
+    this.#cardHighScore.textContent = `Highscore : ${profile.highScore}`;
+    this.#newHighScore.hidden =
+      result.progression.highScore.after <= result.progression.highScore.before;
+    const finalExperience = Object.freeze({
+      level: profile.level,
+      xp: profile.xp,
+      threshold: profile.experienceThreshold,
+      scoreMultiplier: profile.scoreMultiplier,
+    });
+    this.#renderExperience(finalExperience);
+    this.#finalExperience = finalExperience;
     this.#levelChange.textContent = `${result.progression.level.before} → ${result.progression.level.after}`;
     this.#xpChange.textContent = `${result.progression.xp.before} → ${result.progression.xp.after} (+${result.run.profileExpEarned})`;
     this.#multiplierChange.textContent = `${result.progression.scoreMultiplier.before} → ${result.progression.scoreMultiplier.after}`;
@@ -223,20 +277,31 @@ export class CompletedRunPresentation {
     this.#progress.textContent = "Not saved";
   }
 
-  #beginScoreCount(score: number): void {
+  #beginScoreCount(result: CommittedRunResultView): void {
     this.#cancelScoreCount();
+    const score = result.run.score;
     if (score <= 0 || this.#reducedMotion) {
       this.#finishScoreCount();
       return;
     }
 
+    this.#scoreCard.dataset.scoreState = "counting";
     this.#scoreCount.textContent = "0";
     this.#scoreCount.dataset.state = "counting";
     this.#skipScoreCount.hidden = false;
     const startedAt = performance.now();
     const animate = (now: number): void => {
-      const progress = Math.min(1, (now - startedAt) / 500);
+      const progress = Math.min(1, (now - startedAt) / SCORE_COUNT_DURATION_MS);
       this.#scoreCount.textContent = numberLabel(Math.floor(score * progress));
+      this.#renderExperience(
+        profileExperienceAtProgress(
+          result.progression.level.before,
+          result.progression.xp.before,
+          result.progression.scoreMultiplier.before,
+          result.run.profileExpEarned,
+          progress,
+        ),
+      );
       if (progress >= 1) {
         this.#finishScoreCount();
         return;
@@ -250,7 +315,26 @@ export class CompletedRunPresentation {
     this.#cancelScoreCount();
     this.#scoreCount.textContent = this.#score.textContent ?? "0";
     this.#scoreCount.dataset.state = "complete";
+    this.#scoreCard.dataset.scoreState = "complete";
+    if (this.#finalExperience !== undefined) {
+      this.#renderExperience(this.#finalExperience);
+    }
     this.#skipScoreCount.hidden = true;
+  }
+
+  #renderExperience(
+    view: Readonly<{
+      readonly level: number;
+      readonly xp: number;
+      readonly threshold: number;
+      readonly scoreMultiplier: number;
+    }>,
+  ): void {
+    const safeThreshold = Math.max(1, view.threshold);
+    const safeXp = Math.max(0, view.xp);
+    this.#levelLabel.textContent = `Level ${view.level} (x${view.scoreMultiplier} Score)`;
+    this.#experience.textContent = `${safeXp}/${safeThreshold} EXP`;
+    this.#experienceFill.style.width = `${Math.min(100, (safeXp / safeThreshold) * 100)}%`;
   }
 
   #cancelScoreCount(): void {

@@ -12,6 +12,7 @@ import {
   PROFILE_DEFINED_ACHIEVEMENT_COUNT,
   PROFILE_EQUIPMENT_TIER_COUNT,
   normalizeProfile,
+  profileExperienceThreshold,
   settleCompletedRun,
 } from "../domain/profile.js";
 import { fingerprintCanonicalJson } from "./canonical-json.js";
@@ -27,6 +28,7 @@ export interface CompletedRunRequest {
 export interface CommittedProfileView {
   readonly level: number;
   readonly xp: number;
+  readonly experienceThreshold: number;
   readonly scoreMultiplier: number;
   readonly highScore: number;
   readonly collections: Readonly<{
@@ -102,6 +104,7 @@ function createCommittedProfileView(
   return Object.freeze({
     level: profile.level,
     xp: profile.xp,
+    experienceThreshold: profileExperienceThreshold(profile.level),
     scoreMultiplier: profile.scoreMultiplier,
     highScore: profile.highScore,
     collections: Object.freeze({
