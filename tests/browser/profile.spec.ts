@@ -148,6 +148,18 @@ test("shows a committed result and starts the next run from its profile", async 
   await expect(page.locator("#result-level-label")).toContainText("Level");
   await expect(page.locator("#result-experience")).toHaveText(/^\d+\/\d+ EXP$/);
   await expect(page.locator(".result-score-actions")).toBeHidden();
+  await expect(
+    page.getByRole("button", { name: "Skip score count" }),
+  ).toBeVisible();
+  await expect
+    .poll(() =>
+      page
+        .locator("#result-details")
+        .evaluate((element) => (element as HTMLElement).inert),
+    )
+    .toBe(true);
+  await page.locator("#result-view-collections").focus();
+  await expect(page.locator("#result-view-collections")).not.toBeFocused();
   const scoreCardGeometry = await page.evaluate(() => {
     const card = document.querySelector<HTMLElement>(".result-score-card");
     const track = document.querySelector<HTMLElement>(".result-xp-track");
@@ -190,14 +202,6 @@ test("shows a committed result and starts the next run from its profile", async 
   expect(scoreCardGeometry.parchment).toContain("529.jpg");
   expect(scoreCardGeometry.silhouette).toContain("533.png");
   expect(scoreCardGeometry.twitter).toContain("596.png");
-  await expect(
-    page.getByRole("button", { name: "View collections" }),
-  ).toBeEnabled();
-  await page.getByRole("button", { name: "View collections" }).click();
-  await expect(page.locator("#collections-screen")).toBeVisible();
-  await page.getByRole("button", { name: "Back", exact: true }).click();
-  await expect(result).toBeVisible();
-
   const savedRecord = await page.evaluate((key) => {
     const raw = localStorage.getItem(key);
     if (raw === null) {
@@ -246,7 +250,16 @@ test("shows a committed result and starts the next run from its profile", async 
     await reloadedPage.close();
   }
 
-  await page.getByRole("button", { name: "Skip score count" }).click();
+  const skipScoreCount = page.getByRole("button", {
+    name: "Skip score count",
+  });
+  await skipScoreCount.focus();
+  await expect(skipScoreCount).toBeFocused();
+  await skipScoreCount.click();
+  await expect(page.locator("#result-score-count")).toHaveAttribute(
+    "data-state",
+    "complete",
+  );
   await expect(page.locator(".result-score-actions")).toBeVisible();
   expect(
     await page.evaluate(

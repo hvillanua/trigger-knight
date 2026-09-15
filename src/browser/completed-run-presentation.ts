@@ -2,6 +2,10 @@ import type {
   CommittedRunResultView,
   RunTerminalReason,
 } from "../application/contracts.js";
+import {
+  profileExperienceAtProgress,
+  type ProfileExperienceView,
+} from "../domain/profile.js";
 
 /** @playerVisible Public values shown while a completed save is unavailable. */
 export interface PendingCompletedRunView {
@@ -44,6 +48,7 @@ const SCORE_COUNT_DURATION_MS = 2_500;
 export class CompletedRunPresentation {
   readonly #root: HTMLElement;
   readonly #scoreCard: HTMLElement;
+  readonly #details: HTMLElement;
   readonly #saveStatus: HTMLElement;
   readonly #saveError: HTMLElement;
   readonly #terminalReason: HTMLElement;
@@ -73,13 +78,13 @@ export class CompletedRunPresentation {
   readonly #onRetry: () => void;
   readonly #onNextRun: () => void;
   #scoreFrame: number | undefined;
-  #finalExperience:
-    Readonly<{ readonly xp: number; readonly threshold: number }> | undefined;
+  #finalExperience: ProfileExperienceView | undefined;
   #reducedMotion = false;
 
   constructor(root: HTMLElement, options: CompletedRunPresentationOptions) {
     this.#root = root;
     this.#scoreCard = requiredElement(root, ".result-score-card");
+    this.#details = requiredElement(root, "#result-details");
     this.#saveStatus = requiredElement(root, "#result-save-status");
     this.#saveError = requiredElement(root, "#result-save-error");
     this.#terminalReason = requiredElement(root, "#result-terminal-reason");
@@ -115,6 +120,7 @@ export class CompletedRunPresentation {
     this.#nextRun = requiredElement(root, "#next-run");
     this.#onRetry = options.onRetry;
     this.#onNextRun = options.onNextRun;
+    this.#details.inert = true;
 
     this.#skipScoreCount.addEventListener("click", () => {
       this.#finishScoreCount();
@@ -143,6 +149,8 @@ export class CompletedRunPresentation {
     this.#root.dataset.resultState = "hidden";
     this.#scoreCard.dataset.scoreState = "idle";
     this.#finalExperience = undefined;
+    this.#details.inert = true;
+    this.#skipScoreCount.hidden = true;
     this.#root.removeAttribute("aria-busy");
   }
 
@@ -154,6 +162,7 @@ export class CompletedRunPresentation {
     this.#root.dataset.resultState = "committed";
     this.#root.dataset.completionStatus = status;
     this.#root.setAttribute("aria-busy", "false");
+    this.#details.inert = true;
     this.#saveStatus.textContent = "Progress saved.";
     this.#saveError.textContent = "";
     this.#saveError.hidden = true;
@@ -178,6 +187,7 @@ export class CompletedRunPresentation {
     this.#root.dataset.resultState = status;
     this.#root.dataset.completionStatus = status;
     this.#root.setAttribute("aria-busy", "false");
+    this.#details.inert = false;
     this.#saveStatus.textContent =
       status === "uncertain"
         ? "Progress save is pending; retry before starting another run."
@@ -208,18 +218,17 @@ export class CompletedRunPresentation {
     this.#profileXp.textContent = numberLabel(profile.xp);
     this.#profileMultiplier.textContent = numberLabel(profile.scoreMultiplier);
     this.#profileHighScore.textContent = numberLabel(profile.highScore);
-    this.#levelLabel.textContent = `Level ${profile.level} (x${profile.scoreMultiplier} Score)`;
     this.#cardHighScore.textContent = `Highscore : ${profile.highScore}`;
     this.#newHighScore.hidden =
       result.progression.highScore.after <= result.progression.highScore.before;
-    this.#renderExperience(
-      result.progression.xp.before,
-      profile.experienceThreshold,
-    );
-    this.#finalExperience = Object.freeze({
+    const finalExperience = Object.freeze({
+      level: profile.level,
       xp: profile.xp,
       threshold: profile.experienceThreshold,
+      scoreMultiplier: profile.scoreMultiplier,
     });
+    this.#renderExperience(finalExperience);
+    this.#finalExperience = finalExperience;
     this.#levelChange.textContent = `${result.progression.level.before} → ${result.progression.level.after}`;
     this.#xpChange.textContent = `${result.progression.xp.before} → ${result.progression.xp.after} (+${result.run.profileExpEarned})`;
     this.#multiplierChange.textContent = `${result.progression.scoreMultiplier.before} → ${result.progression.scoreMultiplier.after}`;
@@ -267,9 +276,6 @@ export class CompletedRunPresentation {
   #beginScoreCount(result: CommittedRunResultView): void {
     this.#cancelScoreCount();
     const score = result.run.score;
-    const startingXp = result.progression.xp.before;
-    const endingXp = result.progression.xp.after;
-    const experienceThreshold = result.profile.experienceThreshold;
     if (score <= 0 || this.#reducedMotion) {
       this.#finishScoreCount();
       return;
@@ -284,8 +290,13 @@ export class CompletedRunPresentation {
       const progress = Math.min(1, (now - startedAt) / SCORE_COUNT_DURATION_MS);
       this.#scoreCount.textContent = numberLabel(Math.floor(score * progress));
       this.#renderExperience(
-        Math.round(startingXp + (endingXp - startingXp) * progress),
-        experienceThreshold,
+        profileExperienceAtProgress(
+          result.progression.level.before,
+          result.progression.xp.before,
+          result.progression.scoreMultiplier.before,
+          result.run.profileExpEarned,
+          progress,
+        ),
       );
       if (progress >= 1) {
         this.#finishScoreCount();
@@ -302,17 +313,15 @@ export class CompletedRunPresentation {
     this.#scoreCount.dataset.state = "complete";
     this.#scoreCard.dataset.scoreState = "complete";
     if (this.#finalExperience !== undefined) {
-      this.#renderExperience(
-        this.#finalExperience.xp,
-        this.#finalExperience.threshold,
-      );
+      this.#renderExperience(this.#finalExperience);
     }
     this.#skipScoreCount.hidden = true;
   }
 
-  #renderExperience(xp: number, threshold: number): void {
-    const safeThreshold = Math.max(1, threshold);
-    const safeXp = Math.max(0, xp);
+  #renderExperience(view: ProfileExperienceView): void {
+    const safeThreshold = Math.max(1, view.threshold);
+    const safeXp = Math.max(0, view.xp);
+    this.#levelLabel.textContent = `Level ${view.level} (x${view.scoreMultiplier} Score)`;
     this.#experience.textContent = `${safeXp}/${safeThreshold} EXP`;
     this.#experienceFill.style.width = `${Math.min(100, (safeXp / safeThreshold) * 100)}%`;
   }

@@ -1666,6 +1666,41 @@ body {
   visibility: hidden;
 }
 
+.run-result .result-score-card #skip-score-count {
+  position: absolute;
+  top: 85%;
+  right: 7.5cqw;
+  z-index: 6;
+  display: block;
+  width: 38%;
+  min-width: 0;
+  height: 4.5833cqw;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: #726d67;
+  background: transparent;
+  font-family: "Trigger Knight Calibri", sans-serif;
+  font-size: 4.1667cqw;
+  font-weight: 700;
+  line-height: 1;
+  text-align: right;
+  white-space: nowrap;
+  text-shadow:
+    -1px -1px 0 #f7f1df,
+    1px -1px 0 #f7f1df,
+    -1px 1px 0 #f7f1df,
+    1px 1px 0 #f7f1df;
+}
+
+.run-result .result-score-card #skip-score-count:hover,
+.run-result .result-score-card #skip-score-count:focus-visible {
+  color: #236e8c;
+  background: rgb(8 11 20 / 8%);
+}
+
 .result-details {
   position: absolute;
   inset: 0;
@@ -1673,10 +1708,6 @@ body {
   overflow: hidden;
   opacity: 0;
   pointer-events: none;
-}
-
-.result-details button {
-  pointer-events: auto;
 }
 
 .result-support-actions {

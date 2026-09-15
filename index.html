@@ -343,8 +343,16 @@
             </button>
             <span class="result-more-games" aria-hidden="true">MORE GAMES</span>
           </div>
+          <button
+            id="skip-score-count"
+            type="button"
+            aria-label="Skip score count"
+            hidden
+          >
+            <span aria-hidden="true">SKIP</span>
+          </button>
         </div>
-        <div class="result-details">
+        <div id="result-details" class="result-details" inert>
           <p id="result-save-status" aria-live="polite"></p>
           <p id="result-save-error" class="error" hidden></p>
           <dl class="result-summary">
@@ -361,9 +369,6 @@
               <dd>Shown on score card</dd>
             </div>
           </dl>
-          <button id="skip-score-count" type="button" hidden>
-            Skip score count
-          </button>
           <dl class="result-summary progression-summary">
             <div>
               <dt>Committed level</dt>

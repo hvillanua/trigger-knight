@@ -26,6 +26,13 @@ const PROFILE_EXP_PER_TRANSFER = 3;
 const PROFILE_LEVEL_THRESHOLD_BASE = 100;
 const PROFILE_LEVEL_THRESHOLD_PER_LEVEL = 30;
 
+export interface ProfileExperienceView {
+  readonly level: number;
+  readonly xp: number;
+  readonly threshold: number;
+  readonly scoreMultiplier: number;
+}
+
 export interface ProfileProgress {
   readonly weaponCount: number;
   readonly armorCount: number;
@@ -43,6 +50,79 @@ export function profileExperienceThreshold(level: number): number {
   return (
     PROFILE_LEVEL_THRESHOLD_BASE + level * PROFILE_LEVEL_THRESHOLD_PER_LEVEL
   );
+}
+
+interface AdvancedProfileExperience {
+  readonly level: number;
+  readonly xp: number;
+  readonly scoreMultiplier: number;
+}
+
+function advanceProfileExperience(
+  level: number,
+  xp: number,
+  scoreMultiplier: number,
+  earned: number,
+): AdvancedProfileExperience {
+  let currentLevel = level;
+  let currentXp = xp;
+  let currentMultiplier = scoreMultiplier;
+  let remainingExperience = earned;
+
+  while (remainingExperience > 0) {
+    const transferred = Math.min(PROFILE_EXP_PER_TRANSFER, remainingExperience);
+    currentXp += transferred;
+    remainingExperience -= transferred;
+
+    const threshold = profileExperienceThreshold(currentLevel);
+    if (currentXp > threshold) {
+      currentLevel += 1;
+      currentXp = 0;
+      currentMultiplier = 1 + currentLevel / 10;
+    }
+  }
+
+  return Object.freeze({
+    level: currentLevel,
+    xp: currentXp,
+    scoreMultiplier: currentMultiplier,
+  });
+}
+
+/** Projects the public profile EXP display at a deterministic animation point. */
+export function profileExperienceAtProgress(
+  level: number,
+  xp: number,
+  scoreMultiplier: number,
+  earned: number,
+  progress: number,
+): ProfileExperienceView {
+  if (
+    !Number.isSafeInteger(level) ||
+    level < 1 ||
+    !Number.isSafeInteger(xp) ||
+    xp < 0 ||
+    !Number.isFinite(scoreMultiplier) ||
+    scoreMultiplier < 0 ||
+    !Number.isSafeInteger(earned) ||
+    earned < 0 ||
+    !Number.isFinite(progress)
+  ) {
+    throw new TypeError("Invalid profile EXP animation input");
+  }
+
+  const normalizedProgress = Math.min(1, Math.max(0, progress));
+  const visibleEarned = Math.floor(earned * normalizedProgress);
+  const advanced = advanceProfileExperience(
+    level,
+    xp,
+    scoreMultiplier,
+    visibleEarned,
+  );
+  return Object.freeze({
+    ...advanced,
+    threshold: profileExperienceThreshold(advanced.level),
+  });
 }
 
 /** Creates independent defaults without inferring any past gameplay. */
@@ -274,20 +354,15 @@ export function settleCompletedRun(
   let level = profile.level;
   let xp = profile.xp;
   let scoreMultiplier = profile.scoreMultiplier;
-  let remainingExperience = run.profileExpEarned;
-
-  while (remainingExperience > 0) {
-    const transferred = Math.min(PROFILE_EXP_PER_TRANSFER, remainingExperience);
-    xp += transferred;
-    remainingExperience -= transferred;
-
-    const threshold = profileExperienceThreshold(level);
-    if (xp > threshold) {
-      level += 1;
-      xp = 0;
-      scoreMultiplier = 1 + level / 10;
-    }
-  }
+  const advanced = advanceProfileExperience(
+    level,
+    xp,
+    scoreMultiplier,
+    run.profileExpEarned,
+  );
+  level = advanced.level;
+  xp = advanced.xp;
+  scoreMultiplier = advanced.scoreMultiplier;
 
   return Object.freeze({
     ...profile,

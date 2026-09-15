@@ -9,6 +9,7 @@ import type {
 import type { RunResult } from "../../src/application/contracts.js";
 import {
   createFreshProfile,
+  profileExperienceAtProgress,
   settleCompletedRun,
 } from "../../src/domain/profile.js";
 import { createTestGameplayEngine } from "../helpers/gameplay-engine.js";
@@ -47,6 +48,42 @@ function profileWith(patch: Partial<ProfileState>): ProfileState {
 }
 
 describe("completed-run profile settlement", () => {
+  it("animates a threshold crossing with matching level and threshold", () => {
+    const samples = [0, 0.25, 0.5, 0.75, 1].map((progress) =>
+      profileExperienceAtProgress(1, 129, 1.75, 4, progress),
+    );
+
+    expect(samples).toEqual([
+      { level: 1, xp: 129, threshold: 130, scoreMultiplier: 1.75 },
+      { level: 1, xp: 130, threshold: 130, scoreMultiplier: 1.75 },
+      { level: 2, xp: 0, threshold: 160, scoreMultiplier: 1.2 },
+      { level: 2, xp: 0, threshold: 160, scoreMultiplier: 1.2 },
+      { level: 2, xp: 1, threshold: 160, scoreMultiplier: 1.2 },
+    ]);
+  });
+
+  it("animates multiple level-ups without changing the visible level backward", () => {
+    const samples = [0, 0.2, 0.4, 0.6, 0.8, 1].map((progress) =>
+      profileExperienceAtProgress(1, 0, 1, 486, progress),
+    );
+
+    expect(samples.at(-1)).toEqual({
+      level: 4,
+      xp: 0,
+      threshold: 220,
+      scoreMultiplier: 1.4,
+    });
+    for (let index = 1; index < samples.length; index += 1) {
+      const previous = samples[index - 1]!;
+      const current = samples[index]!;
+      expect(current.level).toBeGreaterThanOrEqual(previous.level);
+      if (current.level === previous.level) {
+        expect(current.xp).toBeGreaterThanOrEqual(previous.xp);
+        expect(current.threshold).toBe(previous.threshold);
+      }
+    }
+  });
+
   it.each(["lifespan", "combat"] as const)(
     "settles a %s death from authoritative run earnings",
     (terminalReason) => {
