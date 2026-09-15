@@ -97,6 +97,7 @@ describe("committed run result", () => {
       profile: {
         level: 2,
         xp: 0,
+        experienceThreshold: 160,
         scoreMultiplier: 1.2,
         highScore: 500,
         collections: {

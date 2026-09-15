@@ -527,6 +527,7 @@ test("completes both gameplay death paths and starts another real browser run", 
       await expect(page.locator("#result-terminal-reason")).toHaveText(
         scenario.reason === "combat" ? "Combat defeat" : "Lifespan depleted",
       );
+      await expect(page.locator(".result-score-actions")).toBeVisible();
 
       await page
         .getByRole("button", { name: "Main menu", exact: true })

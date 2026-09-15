@@ -35,6 +35,16 @@ export interface ProfileProgress {
   readonly totalProgress: number;
 }
 
+/** Returns the committed EXP ceiling shown for a profile level. */
+export function profileExperienceThreshold(level: number): number {
+  if (!Number.isSafeInteger(level) || level < 1) {
+    throw new RangeError("Profile level must be a safe integer >= 1");
+  }
+  return (
+    PROFILE_LEVEL_THRESHOLD_BASE + level * PROFILE_LEVEL_THRESHOLD_PER_LEVEL
+  );
+}
+
 /** Creates independent defaults without inferring any past gameplay. */
 export function createFreshProfile(): ProfileState {
   return Object.freeze({
@@ -271,8 +281,7 @@ export function settleCompletedRun(
     xp += transferred;
     remainingExperience -= transferred;
 
-    const threshold =
-      PROFILE_LEVEL_THRESHOLD_BASE + level * PROFILE_LEVEL_THRESHOLD_PER_LEVEL;
+    const threshold = profileExperienceThreshold(level);
     if (xp > threshold) {
       level += 1;
       xp = 0;

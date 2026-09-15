@@ -1379,3 +1379,323 @@ body {
   margin: 0.25rem 0 0;
   font-size: 0.62rem;
 }
+
+/* The original score screen is a fixed 480x320 composition. Container query
+ * units keep its artwork and typography aligned when the stage scales down. */
+#run-result,
+#run-result * {
+  cursor:
+    url("../assets/original/images/12.png") 4 2,
+    none;
+}
+
+#run-result.run-result {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  aspect-ratio: 3 / 2;
+  padding: 0;
+  overflow: hidden;
+  color: #080b14;
+  background-color: #e5c98f;
+  background-image: url("../assets/original/images/529.jpg");
+  background-size: 100% 100%;
+}
+
+.result-score-card {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  container-type: inline-size;
+}
+
+.result-score-silhouette {
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  background: #333;
+  pointer-events: none;
+  -webkit-mask-image: url("../assets/original/images/533.png");
+  mask-image: url("../assets/original/images/533.png");
+  -webkit-mask-position: 0 0;
+  mask-position: 0 0;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-mode: alpha;
+  mask-mode: alpha;
+}
+
+.result-score-twitter {
+  position: absolute;
+  top: 4.1667cqw;
+  left: 4.1667cqw;
+  z-index: 3;
+  width: 6.25cqw;
+  height: 6.25cqw;
+  background: url("../assets/original/images/596.png") center / 100% 100%
+    no-repeat;
+  pointer-events: none;
+}
+
+.result-score-progression {
+  position: absolute;
+  top: 2.9167cqw;
+  right: 2.5cqw;
+  z-index: 3;
+  width: 43.3333cqw;
+  height: 9.375cqw;
+  margin: 0;
+  color: #080b14;
+  font-family: "Trigger Knight Calibri 12", sans-serif;
+  font-size: 2.5cqw;
+  font-weight: 700;
+  line-height: 1;
+  text-align: right;
+}
+
+.result-score-progression p {
+  margin: 0;
+}
+
+#result-level-label {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 100%;
+  white-space: nowrap;
+}
+
+.result-xp-bracket {
+  position: absolute;
+  top: 1.4583cqw;
+  left: 0;
+  width: 100%;
+  height: 4.1667cqw;
+}
+
+.result-xp-bracket::before,
+.result-xp-bracket::after {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2.5cqw;
+  content: "";
+}
+
+.result-xp-bracket::before {
+  left: 0;
+  border-top: 1px solid #080b14;
+  border-bottom: 1px solid #080b14;
+  border-left: 1px solid #080b14;
+}
+
+.result-xp-bracket::after {
+  right: 0;
+  border-top: 1px solid #080b14;
+  border-right: 1px solid #080b14;
+  border-bottom: 1px solid #080b14;
+}
+
+.result-xp-track {
+  position: absolute;
+  top: 1.4583cqw;
+  left: 5.7692%;
+  width: 88.4615%;
+  height: 1.6667cqw;
+}
+
+#result-xp-fill {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: #080b14;
+}
+
+#result-experience {
+  position: absolute;
+  top: 4.375cqw;
+  left: 5.7692%;
+  width: auto;
+  color: #666;
+  font-size: 2.5cqw;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.result-score-copy {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  color: #080b14;
+  font-family: "Trigger Knight Calibri", sans-serif;
+  font-weight: 700;
+  text-align: center;
+}
+
+.result-score-copy p {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  margin: 0;
+  line-height: 1;
+}
+
+#result-score-label {
+  top: 24.375%;
+  font-size: 4.1667cqw;
+  text-shadow:
+    -1px -1px 0 #f7f1df,
+    1px -1px 0 #f7f1df,
+    -1px 1px 0 #f7f1df,
+    1px 1px 0 #f7f1df;
+}
+
+#run-result #result-score-count {
+  top: 28.75%;
+  color: #f7f1df;
+  font-size: 8.3333cqw;
+  text-shadow:
+    -2px -2px 0 #080b14,
+    2px -2px 0 #080b14,
+    -2px 2px 0 #080b14,
+    2px 2px 0 #080b14;
+}
+
+#result-card-high-score,
+#result-new-high-score {
+  color: #080b14;
+  font-size: 2.9167cqw;
+  text-shadow:
+    -1px -1px 0 #f7f1df,
+    1px -1px 0 #f7f1df,
+    -1px 1px 0 #f7f1df,
+    1px 1px 0 #f7f1df;
+}
+
+#result-card-high-score {
+  top: 42.5%;
+}
+
+#result-new-high-score {
+  top: 47%;
+}
+
+#result-calculation {
+  position: absolute;
+  bottom: 10.625%;
+  left: 1.4583cqw;
+  z-index: 4;
+  width: 48.5417%;
+  margin: 0;
+  color: #080b14;
+  font-family: "Trigger Knight Calibri", sans-serif;
+  font-size: 6.25cqw;
+  font-weight: 700;
+  line-height: 1;
+  text-align: left;
+  text-shadow:
+    -1px -1px 0 #f7f1df,
+    1px -1px 0 #f7f1df,
+    -1px 1px 0 #f7f1df,
+    1px 1px 0 #f7f1df;
+}
+
+#result-calculation::before {
+  position: absolute;
+  top: 52%;
+  right: 1.4583cqw;
+  left: -1.4583cqw;
+  z-index: -1;
+  height: 4.0625cqw;
+  content: "";
+  background: #f7f1df;
+}
+
+.run-result .result-score-actions {
+  position: absolute;
+  top: 56.875%;
+  right: 7.5cqw;
+  z-index: 5;
+  display: grid;
+  width: 38%;
+  margin: 0;
+  gap: 0;
+  justify-items: stretch;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: repeat(4, 4.5833cqw);
+}
+
+.run-result .result-score-actions button,
+.run-result .result-more-games {
+  min-width: 0;
+  min-height: 0;
+  height: 4.5833cqw;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: #726d67;
+  background: transparent;
+  font-family: "Trigger Knight Calibri", sans-serif;
+  font-size: 4.1667cqw;
+  font-weight: 700;
+  line-height: 1;
+  text-align: right;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  text-shadow:
+    -1px -1px 0 #f7f1df,
+    1px -1px 0 #f7f1df,
+    -1px 1px 0 #f7f1df,
+    1px 1px 0 #f7f1df;
+}
+
+.run-result .result-score-actions button:hover,
+.run-result .result-score-actions button:focus-visible {
+  color: #236e8c;
+  background: rgb(8 11 20 / 8%);
+}
+
+.result-score-card[data-score-state="counting"] .result-score-actions,
+.result-score-card[data-score-state="pending"] .result-score-actions {
+  visibility: hidden;
+}
+
+.result-details {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.result-details button {
+  pointer-events: auto;
+}
+
+.result-support-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.run-result[data-result-state="failed"] .result-details,
+.run-result[data-result-state="uncertain"] .result-details {
+  inset: 5%;
+  overflow: auto;
+  padding: 1rem;
+  border: 1px solid #080b14;
+  background: rgb(247 241 223 / 94%);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.run-result[data-result-state="failed"] .result-details button,
+.run-result[data-result-state="uncertain"] .result-details button {
+  pointer-events: auto;
+}

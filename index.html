@@ -289,83 +289,132 @@
         tabindex="-1"
         hidden
       >
-        <h2 id="result-heading">Run result</h2>
-        <p id="result-save-status" aria-live="polite"></p>
-        <p id="result-save-error" class="error" hidden></p>
-        <dl class="result-summary">
-          <div>
-            <dt>Ended by</dt>
-            <dd id="result-terminal-reason">—</dd>
+        <h2 id="result-heading" class="visually-hidden">Run result</h2>
+        <div class="result-score-card" data-score-state="idle">
+          <div class="result-score-silhouette" aria-hidden="true"></div>
+          <div class="result-score-twitter" aria-hidden="true"></div>
+          <section
+            class="result-score-progression"
+            aria-label="Committed profile progression"
+          >
+            <p id="result-level-label">Level —</p>
+            <div class="result-xp-bracket" aria-hidden="true">
+              <span class="result-xp-track">
+                <span id="result-xp-fill"></span>
+              </span>
+            </div>
+            <p id="result-experience">—/— EXP</p>
+          </section>
+          <div class="result-score-copy">
+            <p id="result-score-label">SCORE GET</p>
+            <p id="result-score-count" data-state="not-counted">—</p>
+            <p id="result-card-high-score">Highscore : —</p>
+            <p id="result-new-high-score" hidden>NEW HIGH SCORE!</p>
           </div>
-          <div>
-            <dt>Final score</dt>
-            <dd id="result-score">—</dd>
+          <p id="result-calculation">CALCULATION</p>
+          <div
+            id="result-score-actions"
+            class="controls result-score-actions"
+            aria-label="Score result actions"
+          >
+            <button
+              id="next-run"
+              type="button"
+              aria-label="Start next run"
+              disabled
+            >
+              <span aria-hidden="true">RUN AGAIN</span>
+            </button>
+            <button
+              id="result-view-achievements"
+              type="button"
+              aria-label="View achievements"
+              disabled
+            >
+              <span aria-hidden="true">ACHIEVEMENTS</span>
+            </button>
+            <button
+              id="result-main-menu"
+              type="button"
+              aria-label="Main menu"
+              disabled
+            >
+              <span aria-hidden="true">MAIN MENU</span>
+            </button>
+            <span class="result-more-games" aria-hidden="true">MORE GAMES</span>
           </div>
-          <div>
-            <dt>Optional score count</dt>
-            <dd id="result-score-count" data-state="not-counted">—</dd>
-          </div>
-        </dl>
-        <button id="skip-score-count" type="button" hidden>
-          Skip score count
-        </button>
-        <dl class="result-summary progression-summary">
-          <div>
-            <dt>Committed level</dt>
-            <dd id="result-profile-level">—</dd>
-          </div>
-          <div>
-            <dt>Committed XP</dt>
-            <dd id="result-profile-xp">—</dd>
-          </div>
-          <div>
-            <dt>Committed multiplier</dt>
-            <dd id="result-profile-multiplier">—</dd>
-          </div>
-          <div>
-            <dt>Committed high score</dt>
-            <dd id="result-profile-high-score">—</dd>
-          </div>
-          <div>
-            <dt>Level change</dt>
-            <dd id="result-level-change">—</dd>
-          </div>
-          <div>
-            <dt>XP change</dt>
-            <dd id="result-xp-change">—</dd>
-          </div>
-          <div>
-            <dt>Multiplier change</dt>
-            <dd id="result-multiplier-change">—</dd>
-          </div>
-          <div>
-            <dt>High-score change</dt>
-            <dd id="result-high-score-change">—</dd>
-          </div>
-        </dl>
-        <p>
-          <strong>Collections:</strong> <span id="result-collections">—</span>
-        </p>
-        <p><strong>Progress:</strong> <span id="result-progress">—</span></p>
-        <p>
-          <strong>Achievements:</strong>
-          <span id="result-achievement-count">—</span>
-        </p>
-        <ul id="result-achievements"></ul>
-        <div class="controls">
-          <button id="retry-completed-run" type="button" hidden>
-            Retry save
+        </div>
+        <div class="result-details">
+          <p id="result-save-status" aria-live="polite"></p>
+          <p id="result-save-error" class="error" hidden></p>
+          <dl class="result-summary">
+            <div>
+              <dt>Ended by</dt>
+              <dd id="result-terminal-reason">—</dd>
+            </div>
+            <div>
+              <dt>Final score</dt>
+              <dd id="result-score">—</dd>
+            </div>
+            <div>
+              <dt>Optional score count</dt>
+              <dd>Shown on score card</dd>
+            </div>
+          </dl>
+          <button id="skip-score-count" type="button" hidden>
+            Skip score count
           </button>
-          <button id="next-run" type="button" disabled>Start next run</button>
-          <button id="result-view-collections" type="button" disabled>
-            View collections
-          </button>
-          <button id="result-view-achievements" type="button" disabled>
-            View achievements
-          </button>
-          <button id="result-main-menu" type="button" disabled>
-            Main menu
-          </button>
+          <dl class="result-summary progression-summary">
+            <div>
+              <dt>Committed level</dt>
+              <dd id="result-profile-level">—</dd>
+            </div>
+            <div>
+              <dt>Committed XP</dt>
+              <dd id="result-profile-xp">—</dd>
+            </div>
+            <div>
+              <dt>Committed multiplier</dt>
+              <dd id="result-profile-multiplier">—</dd>
+            </div>
+            <div>
+              <dt>Committed high score</dt>
+              <dd id="result-profile-high-score">—</dd>
+            </div>
+            <div>
+              <dt>Level change</dt>
+              <dd id="result-level-change">—</dd>
+            </div>
+            <div>
+              <dt>XP change</dt>
+              <dd id="result-xp-change">—</dd>
+            </div>
+            <div>
+              <dt>Multiplier change</dt>
+              <dd id="result-multiplier-change">—</dd>
+            </div>
+            <div>
+              <dt>High-score change</dt>
+              <dd id="result-high-score-change">—</dd>
+            </div>
+          </dl>
+          <p>
+            <strong>Collections:</strong> <span id="result-collections">—</span>
+          </p>
+          <p><strong>Progress:</strong> <span id="result-progress">—</span></p>
+          <p>
+            <strong>Achievements:</strong>
+            <span id="result-achievement-count">—</span>
+          </p>
+          <ul id="result-achievements"></ul>
+          <div class="controls result-support-actions">
+            <button id="retry-completed-run" type="button" hidden>
+              Retry save
+            </button>
+            <button id="result-view-collections" type="button" disabled>
+              View collections
+            </button>
+          </div>
         </div>
       </section>
 

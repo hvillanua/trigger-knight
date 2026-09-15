@@ -138,13 +138,58 @@ test("shows a committed result and starts the next run from its profile", async 
   await expect(page.locator("#result-save-status")).toHaveText(
     "Progress saved.",
   );
-  await expect(
-    page.getByRole("button", { name: "Start next run" }),
-  ).toBeEnabled();
   await expect(page.locator("#result-score-count")).toHaveAttribute(
     "data-state",
     "counting",
   );
+  await expect(page.locator(".result-score-card")).toBeVisible();
+  await expect(page.locator("#result-score-label")).toHaveText("SCORE GET");
+  await expect(page.locator("#result-calculation")).toHaveText("CALCULATION");
+  await expect(page.locator("#result-level-label")).toContainText("Level");
+  await expect(page.locator("#result-experience")).toHaveText(/^\d+\/\d+ EXP$/);
+  await expect(page.locator(".result-score-actions")).toBeHidden();
+  const scoreCardGeometry = await page.evaluate(() => {
+    const card = document.querySelector<HTMLElement>(".result-score-card");
+    const track = document.querySelector<HTMLElement>(".result-xp-track");
+    const fill = document.querySelector<HTMLElement>("#result-xp-fill");
+    const result = document.querySelector<HTMLElement>("#run-result");
+    const silhouette = document.querySelector<HTMLElement>(
+      ".result-score-silhouette",
+    );
+    const twitter = document.querySelector<HTMLElement>(
+      ".result-score-twitter",
+    );
+    if (
+      card === null ||
+      track === null ||
+      fill === null ||
+      result === null ||
+      silhouette === null ||
+      twitter === null
+    ) {
+      throw new Error("Missing score card geometry");
+    }
+    const rect = (element: Element) => {
+      const { width, height, right } = element.getBoundingClientRect();
+      return { width, height, right };
+    };
+    return {
+      card: rect(card),
+      track: rect(track),
+      fill: rect(fill),
+      parchment: getComputedStyle(result).backgroundImage,
+      silhouette: getComputedStyle(silhouette).webkitMaskImage,
+      twitter: getComputedStyle(twitter).backgroundImage,
+    };
+  });
+  expect(scoreCardGeometry.card.width).toBeCloseTo(480);
+  expect(scoreCardGeometry.card.height).toBeCloseTo(320);
+  expect(scoreCardGeometry.fill.right).toBeLessThanOrEqual(
+    scoreCardGeometry.track.right,
+  );
+  expect(scoreCardGeometry.parchment).toContain("529.jpg");
+  expect(scoreCardGeometry.silhouette).toContain("533.png");
+  expect(scoreCardGeometry.twitter).toContain("596.png");
   await expect(
     page.getByRole("button", { name: "View collections" }),
   ).toBeEnabled();
@@ -202,6 +247,7 @@ test("shows a committed result and starts the next run from its profile", async 
   }
 
   await page.getByRole("button", { name: "Skip score count" }).click();
+  await expect(page.locator(".result-score-actions")).toBeVisible();
   expect(
     await page.evaluate(
       (key) => localStorage.getItem(key),
@@ -261,9 +307,7 @@ test("keeps a failed completed-run save visible until retry succeeds", async ({
   await expect(page.locator("#result-save-status")).toContainText(
     "Progress was not saved",
   );
-  await expect(
-    page.getByRole("button", { name: "Start next run" }),
-  ).toBeDisabled();
+  await expect(page.locator("#next-run")).toBeDisabled();
 
   await page.getByRole("button", { name: "Retry save" }).click();
 
