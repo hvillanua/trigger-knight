@@ -5,7 +5,6 @@ import type {
   PresentationFrame,
   PresentationPort,
   PresentationTransition,
-  ShopId,
   TutorialPage,
 } from "../application/contracts.js";
 import {
@@ -20,10 +19,27 @@ import {
   type VisualAtlas,
   type VisualAtlasStatus,
   type OriginalActionEffectId,
-  type OriginalEffectImageId,
   type OriginalUiImageId,
   type VisualSpriteId,
 } from "./visual-atlas.js";
+import {
+  actionPointerImageId as drawingActionPointerImageId,
+  calculateEffectAnchor,
+  drawClippedHealthFill as drawClippedHealthFillAsset,
+  drawClippedLifespanFill as drawClippedLifespanFillAsset,
+  drawHealthBar as drawHealthBarAsset,
+  drawOriginalActionEffect as drawOriginalActionEffectAsset,
+  drawOriginalClickEffect as drawOriginalClickEffectAsset,
+  drawOriginalFlashEffect as drawOriginalFlashEffectAsset,
+  drawOriginalHitEffect as drawOriginalHitEffectAsset,
+  drawScenery,
+  drawSceneImage as drawSceneImageAsset,
+  drawUiImageAsset,
+  encounterQueueItems,
+  imageReady as drawingImageReady,
+  originalEventVisual,
+  type WorldPoint,
+} from "./canvas-drawing.js";
 import {
   calculateBackingStoreSize,
   calculateWorldProjection,
@@ -57,19 +73,11 @@ interface EffectRecord {
 
 const NO_VISUAL_EFFECTS: readonly EffectRecord[] = Object.freeze([]);
 
-interface WorldPoint {
-  readonly x: number;
-  readonly y: number;
-}
-
 const GROUND_RATIO = 0.73;
 const HERO_RUNNING_X = 50;
 const GAMEPLAY_HUD_BOTTOM = 251;
 const MESSAGE_STRIP_Y = GAMEPLAY_HUD_BOTTOM - 15;
-const BACKGROUND_TILE_WIDTH = 960;
-const BACKGROUND_TILE_OVERLAP = 1;
 const MOUSE_EFFECT_LIFETIME = 60;
-const ORIGINAL_ACTION_EFFECT_SCALE = 1.5;
 const ORIGINAL_ACTION_EFFECT_LIFETIME = 30;
 const ORIGINAL_FLASH_EFFECT_LIFETIME = 10;
 const SESSION_OVER_FRAME_COUNT = 5;
@@ -93,32 +101,12 @@ const CANVAS_FONT_FAMILIES = Object.freeze({
   serifSmall: `"${ORIGINAL_FONT_FAMILIES.calisto224}", "${ORIGINAL_FONT_FAMILIES.calibri12}", system-ui, sans-serif`,
 });
 
-const SHOP_UI_ICONS: Readonly<Record<ShopId, OriginalUiImageId>> =
-  Object.freeze({
-    bladesmith: "weapon-event-icon",
-    armorsmith: "armor-event-icon",
-    "soul-shrine": "shrine-icon",
-    pharmacy: "elixir-icon",
-    "grims-shop": "divine-edge-icon",
-    "voucher-store": "voucher-icon",
-  });
-
 const ITEM_UI_ICONS: Readonly<Record<InventoryItemId, OriginalUiImageId>> =
   Object.freeze({
     elixir: "item-stats-icon",
     "divine-edge": "divine-edge-icon",
     "gold-voucher": "voucher-icon",
   });
-
-const ORIGINAL_HIT_FRAME_IDS: readonly OriginalEffectImageId[] = Object.freeze([
-  "hit-1",
-  "hit-2",
-  "hit-3",
-  "hit-4",
-  "hit-5",
-  "hit-6",
-  "hit-7",
-]);
 
 function describeEvent(event: GameEvent): string {
   switch (event.type) {
@@ -179,10 +167,6 @@ function interpolate(
   amount: number,
 ): number {
   return previous + (current - previous) * amount;
-}
-
-function positiveModulo(value: number, divisor: number): number {
-  return ((value % divisor) + divisor) % divisor;
 }
 
 function mapCanvasPointer(
@@ -263,18 +247,12 @@ function battleActorX(
   );
 }
 
-function imageReady(
-  image: HTMLImageElement | undefined,
-): image is HTMLImageElement {
-  return image !== undefined && image.complete && image.naturalWidth > 0;
-}
-
 function uiImageReady(
   atlas: VisualAtlas,
   imageId: OriginalUiImageId,
 ): HTMLImageElement | undefined {
   const image = atlas.uiImages[imageId];
-  return imageReady(image) ? image : undefined;
+  return drawingImageReady(image) ? image : undefined;
 }
 
 function drawUiImage(
@@ -287,20 +265,15 @@ function drawUiImage(
   height?: number,
   alpha = 1,
 ): boolean {
-  const image = uiImageReady(atlas, imageId);
-  if (image === undefined) return false;
-  const targetWidth = width ?? image.naturalWidth;
-  const targetHeight = height ?? image.naturalHeight;
-  context.save();
-  context.globalAlpha = alpha;
-  try {
-    context.drawImage(image, x, y, targetWidth, targetHeight);
-  } catch {
-    context.restore();
-    return false;
-  }
-  context.restore();
-  return true;
+  return drawUiImageAsset(
+    context,
+    uiImageReady(atlas, imageId),
+    x,
+    y,
+    width,
+    height,
+    alpha,
+  );
 }
 
 function drawOutlinedText(
@@ -332,18 +305,14 @@ function drawOutlinedText(
   context.restore();
 }
 
-const ACTION_POINTER_FRAME_STEPS = 12;
-
 function actionPointerFrame(observation: Readonly<GameObservation>): 0 | 1 {
-  return Math.floor(observation.steps / ACTION_POINTER_FRAME_STEPS) % 2 === 0
-    ? 0
-    : 1;
+  return drawingActionPointerImageId(observation) === "pointer" ? 0 : 1;
 }
 
 function actionPointerImageId(
   observation: Readonly<GameObservation>,
 ): "pointer" | "pointer-click" {
-  return actionPointerFrame(observation) === 0 ? "pointer" : "pointer-click";
+  return drawingActionPointerImageId(observation);
 }
 
 function drawActionPointer(
@@ -387,7 +356,7 @@ function drawAtlasSprite(
       : icon !== undefined
         ? atlas.uiImages[icon]
         : atlas.originalImages[spriteId];
-  if (!imageReady(originalImage)) return false;
+  if (!drawingImageReady(originalImage)) return false;
   const scale = options.scale ?? 1;
   // Each entity's frames share a padded registration canvas. These anchors are
   // the bottom center of the embedded shadow; never fit or recenter a pose.
@@ -416,61 +385,19 @@ function drawAtlasSprite(
   return true;
 }
 
-function drawSceneImage(
-  context: CanvasRenderingContext2D,
-  atlas: VisualAtlas,
-  assetId: "sky" | "ground" | "mountains",
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-): boolean {
-  const image = atlas.sceneImages[assetId];
-  if (!imageReady(image)) return false;
-  try {
-    context.drawImage(image, x, y, width, height);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 function drawBackground(
   context: CanvasRenderingContext2D,
   camera: Readonly<GameObservation["camera"]>,
   atlas: VisualAtlas,
 ): void {
-  drawSceneImage(context, atlas, "sky", camera.x, camera.y, 960, 320);
-}
-
-function drawMovingBackgroundLayer(
-  context: CanvasRenderingContext2D,
-  camera: Readonly<GameObservation["camera"]>,
-  distance: number,
-  atlas: VisualAtlas,
-  layer: Readonly<{
-    readonly id: "mountains" | "ground";
-    readonly speed: number;
-    readonly y: number;
-    readonly height: number;
-  }>,
-): void {
-  const offset = positiveModulo(distance * layer.speed, BACKGROUND_TILE_WIDTH);
-  for (
-    let x = camera.x - offset;
-    x < camera.x + camera.width;
-    x += BACKGROUND_TILE_WIDTH
-  ) {
-    drawSceneImage(
-      context,
-      atlas,
-      layer.id,
-      x,
-      camera.y + layer.y,
-      BACKGROUND_TILE_WIDTH + BACKGROUND_TILE_OVERLAP,
-      layer.height,
-    );
-  }
+  drawSceneImageAsset(
+    context,
+    atlas.sceneImages.sky,
+    camera.x,
+    camera.y,
+    960,
+    320,
+  );
 }
 
 function drawHero(
@@ -507,74 +434,7 @@ function drawHealthBar(
   current: number,
   maximum: number,
 ): void {
-  const ratio = maximum <= 0 ? 0 : clamp(current / maximum, 0, 1);
-  context.save();
-  context.fillStyle = "#7e0101";
-  context.fillRect(x - 25, y - 3, 50, 6);
-  context.fillStyle = "#ffff00";
-  context.fillRect(x - 25, y - 3, 50 * ratio, 6);
-  context.strokeStyle = "#545401";
-  context.lineWidth = 1;
-  context.strokeRect(x - 25.5, y - 3.5, 51, 7);
-  context.restore();
-}
-
-function drawOriginalBuilding(
-  context: CanvasRenderingContext2D,
-  atlas: VisualAtlas,
-  x: number,
-  groundY: number,
-): boolean {
-  const image = atlas.sceneImages.building;
-  if (!imageReady(image)) return false;
-  // The export contains the building's registration padding. Preserve that
-  // canvas at runtime scale so its embedded footprint remains authoritative.
-  const width = image.naturalWidth;
-  const height = image.naturalHeight;
-  try {
-    context.drawImage(image, x - width / 2, groundY - height, width, height);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function drawShopBuilding(
-  context: CanvasRenderingContext2D,
-  atlas: VisualAtlas,
-  x: number,
-  groundY: number,
-): void {
-  drawOriginalBuilding(context, atlas, x, groundY);
-}
-
-function drawEncounterIcon(
-  context: CanvasRenderingContext2D,
-  atlas: VisualAtlas,
-  encounter: Readonly<GameObservation["encounters"]["upcoming"][number]>,
-  x: number,
-  y: number,
-): void {
-  if (encounter.kind === "shop") {
-    drawUiImage(context, atlas, SHOP_UI_ICONS[encounter.shop], x, y);
-    return;
-  }
-  drawUiImage(context, atlas, "monster-icon", x, y);
-}
-
-function drawCurrentEncounterIcon(
-  context: CanvasRenderingContext2D,
-  atlas: VisualAtlas,
-  encounter: Readonly<GameObservation["encounters"]["current"]>,
-  x: number,
-  y: number,
-): void {
-  if (encounter === null) return;
-  if (encounter.kind === "shop") {
-    drawEncounterIcon(context, atlas, encounter, x, y);
-    return;
-  }
-  drawUiImage(context, atlas, "monster-icon", x, y);
+  drawHealthBarAsset(context, x, y, current, maximum);
 }
 
 function drawEncounterSlotFrame(
@@ -622,43 +482,15 @@ function drawClippedLifespanFill(
   frameHeight: number,
   ratio: number,
 ): void {
-  const horizontalScale = frameWidth / 309;
-  const verticalScale = frameHeight / 14;
-  const sourceFillWidth = 305;
-  const sourceFillHeight = 10;
-  const fillWidth = sourceFillWidth * horizontalScale * clamp(ratio, 0, 1);
-  const fillHeight = sourceFillHeight * verticalScale;
-  if (fillWidth <= 0) return;
-
-  context.save();
-  context.beginPath();
-  // InterfaceLifespan2 masks the fill with its 305px horizontal rectangle;
-  // the diagonal ends come from the staged fill bitmap itself.
-  context.rect(
-    frameX + 2 * horizontalScale,
-    frameY,
-    sourceFillWidth * horizontalScale,
-    frameHeight,
-  );
-  context.clip();
-  context.beginPath();
-  context.rect(
-    frameX + 2 * horizontalScale,
-    frameY + 2 * verticalScale,
-    fillWidth,
-    fillHeight,
-  );
-  context.clip();
-  drawUiImage(
+  drawClippedLifespanFillAsset(
     context,
-    atlas,
-    "lifespan-fill",
-    frameX + 2 * horizontalScale,
-    frameY + 2 * verticalScale,
-    sourceFillWidth * horizontalScale,
-    fillHeight,
+    atlas.uiImages["lifespan-fill"],
+    frameX,
+    frameY,
+    frameWidth,
+    frameHeight,
+    ratio,
   );
-  context.restore();
 }
 
 function drawClippedHealthFill(
@@ -668,19 +500,13 @@ function drawClippedHealthFill(
   frameY: number,
   ratio: number,
 ): void {
-  const fillWidth = 97 * ratio;
-  if (fillWidth <= 0) return;
-
-  context.save();
-  context.beginPath();
-  context.moveTo(frameX + 5, frameY + 3);
-  context.lineTo(frameX + 89, frameY + 3);
-  context.lineTo(frameX + 96, frameY + 10);
-  context.lineTo(frameX + 10, frameY + 10);
-  context.closePath();
-  context.clip();
-  drawUiImage(context, atlas, "hp-fill", frameX + 2, frameY + 2, fillWidth, 9);
-  context.restore();
+  drawClippedHealthFillAsset(
+    context,
+    atlas.uiImages["hp-fill"],
+    frameX,
+    frameY,
+    ratio,
+  );
 }
 
 function drawLifeBar(
@@ -735,17 +561,27 @@ function drawEncounterQueue(
   const slotWidth = 46;
   const current = observation.encounters.current;
   const entries = observation.encounters.upcoming.slice(0, 4);
+  const queueItems = encounterQueueItems(observation);
   drawEncounterSlotFrame(context, x - 1, y);
   if (current !== null) {
-    drawCurrentEncounterIcon(context, atlas, current, x, y);
+    const currentItem = queueItems[0];
+    if (currentItem !== undefined) {
+      drawUiImage(
+        context,
+        atlas,
+        currentItem.imageId,
+        currentItem.x,
+        currentItem.y,
+      );
+    }
     if (entries.length > 0) {
       drawEncounterArrow(context, x + 38, y + 18);
     }
-    if (current.kind === "shop") {
+    if (current.kind === "shop" && currentItem !== undefined) {
       drawOutlinedText(
         context,
-        `${formatNumber(current.cachedPrice)}G`,
-        x + 17,
+        `${formatNumber(currentItem.price ?? current.cachedPrice)}G`,
+        currentItem.x + 17,
         y + 52,
         {
           font: `600 10px ${CANVAS_FONT_FAMILIES.serifSmall}`,
@@ -756,16 +592,19 @@ function drawEncounterQueue(
     }
   }
   entries.forEach((entry, index) => {
-    const entryX = x + (index + 1) * slotWidth;
-    drawEncounterIcon(context, atlas, entry, entryX, y);
+    const itemIndex = current === null ? index : index + 1;
+    const item = queueItems[itemIndex];
+    if (item !== undefined) {
+      drawUiImage(context, atlas, item.imageId, item.x, item.y);
+    }
     if (index < entries.length - 1) {
       drawEncounterArrow(context, x + 38 + index * slotWidth, y + 18);
     }
-    if (entry.kind === "shop") {
+    if (entry.kind === "shop" && item !== undefined) {
       drawOutlinedText(
         context,
-        `${formatNumber(entry.cachedPrice)}G`,
-        entryX + 17,
+        `${formatNumber(item.price ?? entry.cachedPrice)}G`,
+        item.x + 17,
         y + 52,
         {
           font: `600 10px ${CANVAS_FONT_FAMILIES.serifSmall}`,
@@ -1200,41 +1039,13 @@ function effectAnchor(
     frame.previous.encounters.current?.x ??
     camera.x + HERO_RUNNING_X;
 
-  switch (event.type) {
-    case "combat-hit":
-    case "combat-lethal-hit":
-      return {
-        x: event.target === "hero" ? heroX : enemyX,
-        y: groundY - 53,
-      };
-    case "combat-phase-changed":
-      return {
-        x: event.actor === "hero" ? heroX : enemyX,
-        y: groundY - 50,
-      };
-    case "battle-started":
-      return { x: enemyX, y: groundY - 54 };
-    case "encounter-promoted":
-      return { x: encounterX, y: groundY - 40 };
-    case "shop-purchased":
-    case "item-used":
-      return { x: heroX, y: groundY - 30 };
-    case "purchase-rejected":
-    case "shop-departed":
-      return { x: encounterX, y: groundY - 50 };
-    case "item-use-rejected":
-      return { x: heroX, y: groundY - 55 };
-    case "battle-reward":
-    case "equipment-discovered":
-    case "achievement-unlocked":
-    case "lifespan-death":
-    case "run-ended":
-      return { x: heroX, y: groundY - 58 };
-    case "pause-toggled":
-    case "tutorial-dismissed":
-    case "step-advanced":
-      return { x: camera.x + camera.width / 2, y: camera.y + 108 };
-  }
+  return calculateEffectAnchor(event, {
+    camera,
+    groundY,
+    heroX,
+    enemyX,
+    encounterX,
+  });
 }
 
 const VISUAL_EFFECT_EVENT_TYPES: ReadonlySet<GameEvent["type"]> = new Set([
@@ -1447,27 +1258,7 @@ function drawOriginalHitEffect(
   point: WorldPoint,
   age: number,
 ): boolean {
-  // FXHit's eighth timeline frame is intentionally blank.
-  if (age >= ORIGINAL_HIT_FRAME_IDS.length) return true;
-  const frameIndex = Math.min(
-    ORIGINAL_HIT_FRAME_IDS.length - 1,
-    Math.max(0, Math.floor(age)),
-  );
-  const image = atlas.effectImages[ORIGINAL_HIT_FRAME_IDS[frameIndex]!];
-  if (!imageReady(image)) return false;
-  context.save();
-  try {
-    context.drawImage(
-      image,
-      point.x - image.naturalWidth / 2,
-      point.y - image.naturalHeight / 2,
-    );
-  } catch {
-    context.restore();
-    return false;
-  }
-  context.restore();
-  return true;
+  return drawOriginalHitEffectAsset(context, atlas.effectImages, point, age);
 }
 
 function drawOriginalClickEffect(
@@ -1476,56 +1267,12 @@ function drawOriginalClickEffect(
   point: WorldPoint,
   age: number,
 ): boolean {
-  if (age >= atlas.clickEffectFrames.length) return true;
-  const frameIndex = Math.min(
-    atlas.clickEffectFrames.length - 1,
-    Math.max(0, Math.floor(age)),
+  return drawOriginalClickEffectAsset(
+    context,
+    atlas.clickEffectFrames,
+    point,
+    age,
   );
-  const image = atlas.clickEffectFrames[frameIndex];
-  if (!imageReady(image)) return false;
-  context.save();
-  try {
-    context.drawImage(
-      image,
-      point.x - image.naturalWidth / 2,
-      point.y - image.naturalHeight / 2,
-    );
-  } catch {
-    context.restore();
-    return false;
-  }
-  context.restore();
-  return true;
-}
-
-function drawOriginalTimelineFrame(
-  context: CanvasRenderingContext2D,
-  frames: readonly (HTMLImageElement | undefined)[],
-  point: WorldPoint,
-  age: number,
-  scale: number,
-): boolean {
-  if (age >= frames.length) return true;
-  const frameIndex = Math.min(frames.length - 1, Math.max(0, Math.floor(age)));
-  const image = frames[frameIndex];
-  if (!imageReady(image)) return false;
-  const width = image.naturalWidth * scale;
-  const height = image.naturalHeight * scale;
-  context.save();
-  try {
-    context.drawImage(
-      image,
-      point.x - width / 2,
-      point.y - height / 2,
-      width,
-      height,
-    );
-  } catch {
-    context.restore();
-    return false;
-  }
-  context.restore();
-  return true;
 }
 
 function drawOriginalActionEffect(
@@ -1535,12 +1282,11 @@ function drawOriginalActionEffect(
   point: WorldPoint,
   age: number,
 ): boolean {
-  return drawOriginalTimelineFrame(
+  return drawOriginalActionEffectAsset(
     context,
     atlas.actionEffectFrames[effect],
     point,
     age,
-    ORIGINAL_ACTION_EFFECT_SCALE,
   );
 }
 
@@ -1550,15 +1296,11 @@ function drawOriginalFlashEffect(
   camera: Readonly<GameObservation["camera"]>,
   age: number,
 ): boolean {
-  return drawOriginalTimelineFrame(
+  return drawOriginalFlashEffectAsset(
     context,
     atlas.flashEffectFrames,
-    {
-      x: camera.x + camera.width / 2,
-      y: camera.y + camera.height / 2,
-    },
+    camera,
     age,
-    1,
   );
 }
 
@@ -1628,6 +1370,7 @@ function drawEffect(
   const point = effect.anchor;
   const age = effectAge(frame, effect);
   const lifetime = effectLifetime(effect.event);
+  const originalVisual = originalEventVisual(effect.event);
   if (effect.clickAnchor !== undefined) {
     drawOriginalClickEffect(
       context,
@@ -1664,21 +1407,15 @@ function drawEffect(
     case "encounter-promoted":
       break;
     case "shop-purchased": {
-      if (effect.event.shop === "soul-shrine") {
+      if (originalVisual === "flash") {
         if (age < ORIGINAL_FLASH_EFFECT_LIFETIME) {
           drawOriginalFlashEffect(context, atlas, frame.current.camera, age);
         }
         break;
       }
-      drawOriginalActionEffect(
-        context,
-        atlas,
-        effect.event.shop === "armorsmith" || effect.event.shop === "bladesmith"
-          ? "upgrade"
-          : "buy",
-        point,
-        age,
-      );
+      if (originalVisual === "buy" || originalVisual === "upgrade") {
+        drawOriginalActionEffect(context, atlas, originalVisual, point, age);
+      }
       if (
         effect.event.shop === "armorsmith" ||
         effect.event.shop === "bladesmith"
@@ -1714,7 +1451,9 @@ function drawEffect(
       );
       break;
     case "item-used":
-      drawOriginalActionEffect(context, atlas, "item", point, age);
+      if (originalVisual === "item") {
+        drawOriginalActionEffect(context, atlas, originalVisual, point, age);
+      }
       break;
     case "purchase-rejected":
     case "item-use-rejected":
@@ -2117,21 +1856,14 @@ function drawDynamicWorld(
   );
   const current = frame.current.encounters.current;
   const x = currentEncounterX(frame);
-  drawMovingBackgroundLayer(context, camera, distance, atlas, {
-    id: "mountains",
-    speed: 0.18,
-    y: 82,
-    height: 120,
-  });
-  if (current?.kind === "shop" && x !== null) {
-    drawShopBuilding(context, atlas, x, groundY);
-  }
-  drawMovingBackgroundLayer(context, camera, distance, atlas, {
-    id: "ground",
-    speed: 1,
-    y: 164,
-    height: 188,
-  });
+  drawScenery(
+    context,
+    camera,
+    distance,
+    atlas.sceneImages,
+    current?.kind === "shop" ? x : null,
+    groundY,
+  );
   const pose = (actor: ActorPose): ActorPose =>
     reducedMotion
       ? { ...actor, frame: actorFrameNumber(actor.id, actor.phase, 0) }
