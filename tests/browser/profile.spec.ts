@@ -260,6 +260,7 @@ test("shows a committed result and starts the next run from its profile", async 
     "data-state",
     "complete",
   );
+  await expect(skipScoreCount).toBeHidden();
   await expect(page.locator(".result-score-actions")).toBeVisible();
   expect(
     await page.evaluate(
@@ -320,6 +321,9 @@ test("keeps a failed completed-run save visible until retry succeeds", async ({
   await expect(page.locator("#result-save-status")).toContainText(
     "Progress was not saved",
   );
+  await expect(
+    page.getByRole("button", { name: "Skip score count" }),
+  ).toBeHidden();
   await expect(page.locator("#next-run")).toBeDisabled();
 
   await page.getByRole("button", { name: "Retry save" }).click();

@@ -426,6 +426,9 @@ test("reduced motion keeps timing and committed results durable", async ({
       "data-state",
       "complete",
     );
+    await expect(
+      reducedPage.getByRole("button", { name: "Skip score count" }),
+    ).toBeHidden();
     await expect(reducedPage.locator("#result-save-status")).toHaveText(
       "Progress saved.",
     );
@@ -528,6 +531,9 @@ test("completes both gameplay death paths and starts another real browser run", 
         scenario.reason === "combat" ? "Combat defeat" : "Lifespan depleted",
       );
       await expect(page.locator(".result-score-actions")).toBeVisible();
+      await expect(
+        page.getByRole("button", { name: "Skip score count" }),
+      ).toBeHidden();
 
       await page
         .getByRole("button", { name: "Main menu", exact: true })

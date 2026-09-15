@@ -1671,7 +1671,6 @@ body {
   top: 85%;
   right: 7.5cqw;
   z-index: 6;
-  display: block;
   width: 38%;
   min-width: 0;
   height: 4.5833cqw;
@@ -1699,6 +1698,10 @@ body {
 .run-result .result-score-card #skip-score-count:focus-visible {
   color: #236e8c;
   background: rgb(8 11 20 / 8%);
+}
+
+.run-result .result-score-card #skip-score-count[hidden] {
+  display: none;
 }
 
 .result-details {
