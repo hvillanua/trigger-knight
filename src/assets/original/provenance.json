@@ -27,6 +27,41 @@
       "use": "Original scene, interface, effect, and embedded image exports"
     },
     {
+      "path": "effects/DefineSprite_311_MouseEffect",
+      "source": "original/kongregate/MonotouchKong13APPSTORE.swf",
+      "exportIdentifier": "DefineSprite (characterId 311, export name MouseEffect)",
+      "fileCount": 60,
+      "use": "Original click-feedback animation frames"
+    },
+    {
+      "path": "effects/DefineSprite_118_FXBuy",
+      "source": "original/kongregate/MonotouchKong13APPSTORE.swf",
+      "exportIdentifier": "DefineSprite (characterId 118, export name FXBuy)",
+      "fileCount": 30,
+      "use": "Original purchase feedback animation frames"
+    },
+    {
+      "path": "effects/DefineSprite_151_FXItem",
+      "source": "original/kongregate/MonotouchKong13APPSTORE.swf",
+      "exportIdentifier": "DefineSprite (characterId 151, export name FXItem)",
+      "fileCount": 30,
+      "use": "Original item-use feedback animation frames"
+    },
+    {
+      "path": "effects/DefineSprite_153_FXUpgrade",
+      "source": "original/kongregate/MonotouchKong13APPSTORE.swf",
+      "exportIdentifier": "DefineSprite (characterId 153, export name FXUpgrade)",
+      "fileCount": 30,
+      "use": "Original equipment-upgrade feedback animation frames"
+    },
+    {
+      "path": "effects/DefineSprite_369_Effect-Flash",
+      "source": "original/kongregate/MonotouchKong13APPSTORE.swf",
+      "exportIdentifier": "DefineSprite (characterId 369, export name Effect-Flash)",
+      "fileCount": 10,
+      "use": "Original lifespan-restoration flash animation frames"
+    },
+    {
       "path": "sounds",
       "source": "exports/assets/raw/sounds",
       "fileCount": 17,
@@ -40,6 +75,6 @@
     }
   ],
   "rightsOrLicense": "Original Trigger Knight assets. The staged font exports are included by explicit project direction, but their redistribution rights are unverified. Embedded notices identify Microsoft, Monotype, Miniml/Craig Kroeger, and other applicable rights holders. Copyright remains with applicable rights holders; this repository does not grant a separate public license.",
-  "reviewDate": "2026-09-12",
+  "reviewDate": "2026-09-15",
   "transformations": "No transformations. Files retain their recorded export bytes."
 }

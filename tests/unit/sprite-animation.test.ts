@@ -151,6 +151,162 @@ describe("original sprite playback", () => {
     present(active);
     expect(animation.hero.frame).toBe(17);
   });
+  it("adds a small source-shaped vertical wander from public active ticks", () => {
+    const engine = createTestGameplayEngine();
+    const base = engine.observe(
+      engine.createRun({
+        ruleset: ORIGINAL_V13_RULESET_ID,
+        seed: "vertical-animation",
+        initialProfile: { schemaVersion: 1, scoreMultiplier: 1 },
+      }),
+    );
+    const active = {
+      ...base,
+      lifecycle: { ...base.lifecycle, paused: false, tutorialPage: null },
+    };
+    const animation = new ActorAnimation();
+    animation.present(active);
+    const offsets = [animation.runningY()];
+    for (let tick = 1; tick <= 180; tick += 1) {
+      animation.present({ ...active, steps: tick, activeTicks: tick });
+      offsets.push(animation.runningY());
+    }
+
+    expect(offsets[0]).toBe(0);
+    expect(Math.max(...offsets)).toBeGreaterThan(0);
+    expect(Math.max(...offsets)).toBeLessThanOrEqual(14);
+    expect(
+      new Set(offsets.map((offset) => offset.toFixed(4))).size,
+    ).toBeGreaterThan(2);
+
+    const frozen = animation.runningY();
+    animation.present({
+      ...active,
+      steps: 181,
+      activeTicks: 180,
+      lifecycle: { ...active.lifecycle, paused: true },
+    });
+    expect(animation.runningY()).toBe(frozen);
+  });
+  it("fades the hero using the original under-25 lifespan sequence", () => {
+    const engine = createTestGameplayEngine();
+    const base = engine.observe(
+      engine.createRun({
+        ruleset: ORIGINAL_V13_RULESET_ID,
+        seed: "lifespan-fade",
+        initialProfile: { schemaVersion: 1, scoreMultiplier: 1 },
+      }),
+    );
+    const active = {
+      ...base,
+      lifecycle: {
+        ...base.lifecycle,
+        paused: false,
+        tutorialPage: null,
+        pregameStepsRemaining: 0,
+        activeGameplay: true,
+      },
+    };
+    const animation = new ActorAnimation();
+
+    animation.present({ ...active, lifespan: { whole: 25, fraction: 0 } });
+    expect(animation.hero.alpha).toBe(1);
+
+    animation.present({
+      ...active,
+      steps: 1,
+      activeTicks: 1,
+      lifespan: { whole: 24, fraction: 74 },
+    });
+    expect(animation.hero.alpha).toBe(0.99);
+
+    animation.present({
+      ...active,
+      steps: 2,
+      activeTicks: 2,
+      lifespan: { whole: 12, fraction: 34 },
+    });
+    expect(animation.hero.alpha).toBe(0.49);
+
+    animation.present({
+      ...active,
+      steps: 3,
+      activeTicks: 3,
+      lifespan: { whole: 0, fraction: 99 },
+    });
+    expect(animation.hero.alpha).toBe(0.04);
+
+    animation.present({
+      ...active,
+      steps: 4,
+      activeTicks: 4,
+      lifespan: { whole: -1, fraction: 99 },
+      lifecycle: {
+        ...active.lifecycle,
+        phase: "ended" as const,
+        terminalReason: "lifespan" as const,
+        activeGameplay: false,
+      },
+    });
+    expect(animation.hero.alpha).toBe(0);
+  });
+  it("keeps lifespan fade state when running transitions are batched before battle", () => {
+    const engine = createTestGameplayEngine();
+    const base = engine.observe(
+      engine.createRun({
+        ruleset: ORIGINAL_V13_RULESET_ID,
+        seed: "batched-lifespan-fade",
+        initialProfile: { schemaVersion: 1, scoreMultiplier: 1 },
+      }),
+    );
+    const active = {
+      ...base,
+      lifecycle: {
+        ...base.lifecycle,
+        phase: "running" as const,
+        paused: false,
+        tutorialPage: null,
+        pregameStepsRemaining: 0,
+        activeGameplay: true,
+      },
+      lifespan: { whole: 50, fraction: 0 },
+    };
+    const runningLow = {
+      ...active,
+      steps: 1,
+      activeTicks: 1,
+      lifespan: { whole: 12, fraction: 34 },
+    };
+    const battleLow = {
+      ...runningLow,
+      steps: 2,
+      activeTicks: 2,
+      lifecycle: { ...runningLow.lifecycle, phase: "battling" as const },
+      battle: {
+        enemy: { id: "goblin" as const, maximumHp: 900, currentHp: 900 },
+        actors: {
+          hero: { phase: "idle" as const, x: 190 },
+          enemy: { phase: "idle" as const, x: 250 },
+        },
+      },
+    };
+
+    const everyTransition = new ActorAnimation();
+    everyTransition.present(active);
+    everyTransition.presentTransition(active, runningLow);
+    everyTransition.present(runningLow);
+    everyTransition.presentTransition(runningLow, battleLow);
+    everyTransition.present(battleLow);
+
+    const batchedTransition = new ActorAnimation();
+    batchedTransition.present(active);
+    batchedTransition.presentTransition(active, runningLow);
+    batchedTransition.presentTransition(runningLow, battleLow);
+    batchedTransition.present(battleLow);
+
+    expect(batchedTransition.hero.alpha).toBe(everyTransition.hero.alpha);
+    expect(batchedTransition.hero.alpha).toBe(0.49);
+  });
   it("keeps the last battle position when running resumes, then scrolls back with travel", () => {
     const engine = createTestGameplayEngine();
     const base = engine.observe(
@@ -222,5 +378,41 @@ describe("original sprite playback", () => {
       battle,
     });
     expect(animation.enemy?.alpha).toBe(0);
+  });
+  it("recoils dead actors from their public battle position during the fade", () => {
+    const engine = createTestGameplayEngine();
+    const base = engine.observe(
+      engine.createRun({
+        ruleset: ORIGINAL_V13_RULESET_ID,
+        seed: "death-stagger",
+        initialProfile: { schemaVersion: 1, scoreMultiplier: 1 },
+      }),
+    );
+    const animation = new ActorAnimation();
+    const battle = {
+      enemy: { id: "goblin" as const, maximumHp: 10, currentHp: 0 },
+      actors: {
+        hero: { phase: "idle" as const, x: 190 },
+        enemy: { phase: "dead" as const, x: 250 },
+      },
+    };
+    const dead = {
+      ...base,
+      steps: 1,
+      activeTicks: 1,
+      lifecycle: { ...base.lifecycle, phase: "battling" as const },
+      battle,
+    };
+    animation.present(base);
+    animation.present(dead);
+    expect(animation.deathStaggerX("enemy")).toBe(0);
+    animation.present({ ...dead, steps: 2, activeTicks: 2 });
+    const first = animation.deathStaggerX("enemy");
+    animation.present({ ...dead, steps: 3, activeTicks: 3 });
+    const second = animation.deathStaggerX("enemy");
+
+    expect(first).toBeGreaterThanOrEqual(10);
+    expect(first).toBeLessThanOrEqual(16);
+    expect(second).toBeGreaterThan(first);
   });
 });

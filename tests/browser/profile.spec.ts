@@ -131,6 +131,7 @@ test("shows a committed result and starts the next run from its profile", async 
       advance.click();
     }
   });
+  await page.locator("#game-canvas").click({ position: { x: 240, y: 160 } });
 
   const result = page.locator("#run-result");
   await expect(result).toHaveAttribute("data-result-state", "committed");
@@ -253,6 +254,7 @@ test("keeps a failed completed-run save visible until retry succeeds", async ({
       advance.click();
     }
   });
+  await page.locator("#game-canvas").click({ position: { x: 240, y: 160 } });
 
   const result = page.locator("#run-result");
   await expect(result).toHaveAttribute("data-result-state", "failed");

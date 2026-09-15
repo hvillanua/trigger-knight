@@ -301,6 +301,7 @@ describe("public application contracts", () => {
       readonly ruleset: RuleSetId;
       readonly seed: string;
       readonly initialProfile: ProfileInput;
+      readonly startImmediately?: boolean;
     }>();
     expectTypeOf<RunState>().toMatchTypeOf<{
       readonly schemaVersion: 17;

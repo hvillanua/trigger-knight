@@ -1,5 +1,4 @@
 import type {
-  EnemyId,
   GameEvent,
   GameObservation,
   InventoryItemId,
@@ -11,7 +10,6 @@ import type {
 } from "../application/contracts.js";
 import {
   describeGameEvent,
-  enemyName,
   itemDescription,
   itemName,
   shopDescription,
@@ -21,6 +19,7 @@ import {
   createVisualAtlas,
   type VisualAtlas,
   type VisualAtlasStatus,
+  type OriginalActionEffectId,
   type OriginalEffectImageId,
   type OriginalUiImageId,
   type VisualSpriteId,
@@ -52,6 +51,7 @@ interface EffectRecord {
   readonly key: string;
   readonly startActiveTicks: number;
   readonly anchor: WorldPoint;
+  readonly clickAnchor: WorldPoint | undefined;
   readonly message: string | undefined;
 }
 
@@ -64,9 +64,23 @@ interface WorldPoint {
 
 const GROUND_RATIO = 0.73;
 const HERO_RUNNING_X = 50;
-const GAMEPLAY_HUD_TOP = 8;
 const GAMEPLAY_HUD_BOTTOM = 251;
 const MESSAGE_STRIP_Y = GAMEPLAY_HUD_BOTTOM - 15;
+const BACKGROUND_TILE_WIDTH = 960;
+const BACKGROUND_TILE_OVERLAP = 1;
+const MOUSE_EFFECT_LIFETIME = 60;
+const ORIGINAL_ACTION_EFFECT_SCALE = 1.5;
+const ORIGINAL_ACTION_EFFECT_LIFETIME = 30;
+const ORIGINAL_FLASH_EFFECT_LIFETIME = 10;
+const SESSION_OVER_FRAME_COUNT = 5;
+const SESSION_OVER_FRAME_MS = 1000 / 30;
+const SESSION_OVER_ANIMATION_DURATION_MS =
+  (SESSION_OVER_FRAME_COUNT - 1) * SESSION_OVER_FRAME_MS;
+const SESSION_OVER_TOP_START_OFFSET = -45;
+const SESSION_OVER_TOP_END_OFFSET = 0;
+const SESSION_OVER_BOTTOM_START_OFFSET = 330;
+const SESSION_OVER_BOTTOM_END_OFFSET = 280;
+const SESSION_OVER_BAND_HEIGHT = 41;
 // Project presentation roles. The original SWF text-field mapping remains unresolved.
 const CANVAS_FONT_FAMILIES = Object.freeze({
   body: `"${ORIGINAL_FONT_FAMILIES.calibri}", "${ORIGINAL_FONT_FAMILIES.calibri14}", system-ui, sans-serif`,
@@ -79,26 +93,10 @@ const CANVAS_FONT_FAMILIES = Object.freeze({
   serifSmall: `"${ORIGINAL_FONT_FAMILIES.calisto224}", "${ORIGINAL_FONT_FAMILIES.calibri12}", system-ui, sans-serif`,
 });
 
-const SHOP_PRODUCTS: Readonly<Record<ShopId, VisualSpriteId>> = Object.freeze({
-  bladesmith: "weapon",
-  armorsmith: "armor",
-  "soul-shrine": "soul-shrine",
-  pharmacy: "elixir",
-  "grims-shop": "divine-edge",
-  "voucher-store": "gold-voucher",
-});
-
-const ENEMY_SPRITES: Readonly<Record<EnemyId, VisualSpriteId>> = Object.freeze({
-  goblin: "goblin",
-  golem: "golem",
-  wolf: "wolf",
-  dragon: "dragon",
-});
-
 const SHOP_UI_ICONS: Readonly<Record<ShopId, OriginalUiImageId>> =
   Object.freeze({
-    bladesmith: "weapon-icon",
-    armorsmith: "armor-icon",
+    bladesmith: "weapon-event-icon",
+    armorsmith: "armor-event-icon",
     "soul-shrine": "shrine-icon",
     pharmacy: "elixir-icon",
     "grims-shop": "divine-edge-icon",
@@ -107,7 +105,7 @@ const SHOP_UI_ICONS: Readonly<Record<ShopId, OriginalUiImageId>> =
 
 const ITEM_UI_ICONS: Readonly<Record<InventoryItemId, OriginalUiImageId>> =
   Object.freeze({
-    elixir: "elixir-icon",
+    elixir: "item-stats-icon",
     "divine-edge": "divine-edge-icon",
     "gold-voucher": "voucher-icon",
   });
@@ -169,12 +167,6 @@ function formatProjectionValue(value: number): string {
 
 function formatNumber(value: number): string {
   return value.toLocaleString("en-US");
-}
-
-function formatLifespan(
-  lifespan: Readonly<{ whole: number; fraction: number }>,
-): string {
-  return `${lifespan.whole}.${String(lifespan.fraction).padStart(2, "0")}%`;
 }
 
 function clamp(value: number, minimum: number, maximum: number): number {
@@ -340,6 +332,38 @@ function drawOutlinedText(
   context.restore();
 }
 
+const ACTION_POINTER_FRAME_STEPS = 12;
+
+function actionPointerFrame(observation: Readonly<GameObservation>): 0 | 1 {
+  return Math.floor(observation.steps / ACTION_POINTER_FRAME_STEPS) % 2 === 0
+    ? 0
+    : 1;
+}
+
+function actionPointerImageId(
+  observation: Readonly<GameObservation>,
+): "pointer" | "pointer-click" {
+  return actionPointerFrame(observation) === 0 ? "pointer" : "pointer-click";
+}
+
+function drawActionPointer(
+  context: CanvasRenderingContext2D,
+  atlas: VisualAtlas,
+  observation: Readonly<GameObservation>,
+  x: number,
+  y: number,
+): void {
+  drawUiImage(
+    context,
+    atlas,
+    actionPointerImageId(observation),
+    x - 9,
+    y - 10,
+    18,
+    22,
+  );
+}
+
 function drawAtlasSprite(
   context: CanvasRenderingContext2D,
   atlas: VisualAtlas,
@@ -349,8 +373,8 @@ function drawAtlasSprite(
   options: SpriteOptions = {},
 ): boolean {
   const iconIds: Partial<Record<VisualSpriteId, OriginalUiImageId>> = {
-    weapon: "weapon-icon",
-    armor: "armor-icon",
+    weapon: "weapon-upgrade-icon",
+    armor: "armor-upgrade-icon",
     "soul-shrine": "shrine-icon",
     elixir: "elixir-icon",
     "divine-edge": "divine-edge-icon",
@@ -431,15 +455,19 @@ function drawMovingBackgroundLayer(
     readonly height: number;
   }>,
 ): void {
-  const offset = positiveModulo(distance * layer.speed, 960);
-  for (let x = camera.x - offset; x < camera.x + camera.width; x += 960) {
+  const offset = positiveModulo(distance * layer.speed, BACKGROUND_TILE_WIDTH);
+  for (
+    let x = camera.x - offset;
+    x < camera.x + camera.width;
+    x += BACKGROUND_TILE_WIDTH
+  ) {
     drawSceneImage(
       context,
       atlas,
       layer.id,
       x,
       camera.y + layer.y,
-      960,
+      BACKGROUND_TILE_WIDTH + BACKGROUND_TILE_OVERLAP,
       layer.height,
     );
   }
@@ -481,22 +509,13 @@ function drawHealthBar(
 ): void {
   const ratio = maximum <= 0 ? 0 : clamp(current / maximum, 0, 1);
   context.save();
-  context.fillStyle = "#080b14";
-  context.fillRect(x - 42, y - 5, 84, 10);
-  context.fillStyle =
-    ratio > 0.5 ? "#82c99b" : ratio > 0.25 ? "#f4d58d" : "#e96d7a";
-  context.fillRect(x - 39, y - 2, 78 * ratio, 4);
-  context.strokeStyle = "#bac6df";
+  context.fillStyle = "#7e0101";
+  context.fillRect(x - 25, y - 3, 50, 6);
+  context.fillStyle = "#ffff00";
+  context.fillRect(x - 25, y - 3, 50 * ratio, 6);
+  context.strokeStyle = "#545401";
   context.lineWidth = 1;
-  context.strokeRect(x - 42, y - 5, 84, 10);
-  context.fillStyle = "#f7f1df";
-  context.font = `600 8px ${CANVAS_FONT_FAMILIES.body}`;
-  context.textAlign = "center";
-  context.fillText(
-    `${formatNumber(current)} / ${formatNumber(maximum)}`,
-    x,
-    y - 9,
-  );
+  context.strokeRect(x - 25.5, y - 3.5, 51, 7);
   context.restore();
 }
 
@@ -529,41 +548,6 @@ function drawShopBuilding(
   drawOriginalBuilding(context, atlas, x, groundY);
 }
 
-function drawShopDetails(
-  context: CanvasRenderingContext2D,
-  atlas: VisualAtlas,
-  x: number,
-  groundY: number,
-  shop: ShopId,
-  available: boolean,
-  used: boolean,
-): void {
-  const product = SHOP_PRODUCTS[shop];
-  drawAtlasSprite(context, atlas, product, x + 24, groundY - 22, {
-    scale: 0.32,
-    alpha: available ? 1 : 0.6,
-  });
-  context.save();
-  context.fillStyle = available ? "#f4d58d" : "#8994ae";
-  context.font = `700 9px ${CANVAS_FONT_FAMILIES.serif}`;
-  context.textAlign = "center";
-  context.fillText(shopName(shop), x, groundY + 13);
-  context.fillStyle = "#bac6df";
-  context.font = `500 8px ${CANVAS_FONT_FAMILIES.serifSmall}`;
-  context.fillText(shopDescription(shop), x, groundY + 25);
-  if (!available || used) {
-    context.strokeStyle = used ? "#8994ae" : "#ffb4a8";
-    context.lineWidth = 4;
-    context.beginPath();
-    context.moveTo(x - 20, groundY - 72);
-    context.lineTo(x + 20, groundY - 35);
-    context.moveTo(x + 20, groundY - 72);
-    context.lineTo(x - 20, groundY - 35);
-    context.stroke();
-  }
-  context.restore();
-}
-
 function drawEncounterIcon(
   context: CanvasRenderingContext2D,
   atlas: VisualAtlas,
@@ -572,10 +556,10 @@ function drawEncounterIcon(
   y: number,
 ): void {
   if (encounter.kind === "shop") {
-    drawUiImage(context, atlas, SHOP_UI_ICONS[encounter.shop], x, y, 28, 28);
+    drawUiImage(context, atlas, SHOP_UI_ICONS[encounter.shop], x, y);
     return;
   }
-  drawAtlasSprite(context, atlas, "weapon", x + 14, y + 28, { scale: 0.35 });
+  drawUiImage(context, atlas, "monster-icon", x, y);
 }
 
 function drawCurrentEncounterIcon(
@@ -590,16 +574,113 @@ function drawCurrentEncounterIcon(
     drawEncounterIcon(context, atlas, encounter, x, y);
     return;
   }
-  drawAtlasSprite(
+  drawUiImage(context, atlas, "monster-icon", x, y);
+}
+
+function drawEncounterSlotFrame(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+): void {
+  context.save();
+  context.strokeStyle = "#2a0000";
+  context.lineWidth = 1;
+  context.beginPath();
+  context.moveTo(x, y);
+  context.lineTo(x + 28, y);
+  context.lineTo(x + 36, y + 8);
+  context.lineTo(x + 36, y + 35);
+  context.lineTo(x + 8, y + 35);
+  context.lineTo(x, y + 27);
+  context.closePath();
+  context.stroke();
+  context.restore();
+}
+
+function drawEncounterArrow(
+  context: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+): void {
+  context.save();
+  context.fillStyle = "#080b14";
+  context.beginPath();
+  context.moveTo(x, y - 11);
+  context.lineTo(x + 11, y);
+  context.lineTo(x, y + 11);
+  context.closePath();
+  context.fill();
+  context.restore();
+}
+
+function drawClippedLifespanFill(
+  context: CanvasRenderingContext2D,
+  atlas: VisualAtlas,
+  frameX: number,
+  frameY: number,
+  frameWidth: number,
+  frameHeight: number,
+  ratio: number,
+): void {
+  const horizontalScale = frameWidth / 309;
+  const verticalScale = frameHeight / 14;
+  const sourceFillWidth = 305;
+  const sourceFillHeight = 10;
+  const fillWidth = sourceFillWidth * horizontalScale * clamp(ratio, 0, 1);
+  const fillHeight = sourceFillHeight * verticalScale;
+  if (fillWidth <= 0) return;
+
+  context.save();
+  context.beginPath();
+  // InterfaceLifespan2 masks the fill with its 305px horizontal rectangle;
+  // the diagonal ends come from the staged fill bitmap itself.
+  context.rect(
+    frameX + 2 * horizontalScale,
+    frameY,
+    sourceFillWidth * horizontalScale,
+    frameHeight,
+  );
+  context.clip();
+  context.beginPath();
+  context.rect(
+    frameX + 2 * horizontalScale,
+    frameY + 2 * verticalScale,
+    fillWidth,
+    fillHeight,
+  );
+  context.clip();
+  drawUiImage(
     context,
     atlas,
-    ENEMY_SPRITES[encounter.enemy.id],
-    x + 14,
-    y + 28,
-    {
-      scale: 0.35,
-    },
+    "lifespan-fill",
+    frameX + 2 * horizontalScale,
+    frameY + 2 * verticalScale,
+    sourceFillWidth * horizontalScale,
+    fillHeight,
   );
+  context.restore();
+}
+
+function drawClippedHealthFill(
+  context: CanvasRenderingContext2D,
+  atlas: VisualAtlas,
+  frameX: number,
+  frameY: number,
+  ratio: number,
+): void {
+  const fillWidth = 97 * ratio;
+  if (fillWidth <= 0) return;
+
+  context.save();
+  context.beginPath();
+  context.moveTo(frameX + 5, frameY + 3);
+  context.lineTo(frameX + 89, frameY + 3);
+  context.lineTo(frameX + 96, frameY + 10);
+  context.lineTo(frameX + 10, frameY + 10);
+  context.closePath();
+  context.clip();
+  drawUiImage(context, atlas, "hp-fill", frameX + 2, frameY + 2, fillWidth, 9);
+  context.restore();
 }
 
 function drawLifeBar(
@@ -609,26 +690,39 @@ function drawLifeBar(
   lifespan: Readonly<GameObservation["lifespan"]>,
 ): void {
   const ratio = clamp((lifespan.whole + lifespan.fraction / 100) / 100, 0, 1);
-  const x = camera.x + 162;
-  const y = camera.y + GAMEPLAY_HUD_TOP;
-  drawUiImage(context, atlas, "lifespan-fill", x + 2, y + 2, 305 * ratio, 10);
+  const x = camera.x + 160;
+  const y = camera.y + 10;
+  drawClippedLifespanFill(context, atlas, x, y, 309, 14, ratio);
   drawUiImage(context, atlas, "lifespan-frame", x, y, 309, 14);
-  drawOutlinedText(context, "LIFESPAN", camera.x + 237, camera.y + 28, {
-    font: `700 14px ${CANVAS_FONT_FAMILIES.displayMedium}`,
+  // These fields mirror InterfaceLifespan2's separate Calibri text fields.
+  // Their baselines account for each font's ascent so the visible tops sit
+  // around the center of the 14px lifespan frame.
+  drawOutlinedText(context, "LIFESPAN", x + 57, y + 21, {
+    font: `700 20px ${CANVAS_FONT_FAMILIES.body}`,
     align: "center",
     lineWidth: 2,
   });
+  drawOutlinedText(context, String(lifespan.whole), x + 260, y + 29, {
+    font: `700 32px ${CANVAS_FONT_FAMILIES.body}`,
+    align: "right",
+    lineWidth: 3,
+  });
   drawOutlinedText(
     context,
-    formatLifespan(lifespan),
-    camera.x + 451,
-    camera.y + 31,
+    String(lifespan.fraction).padStart(2, "0"),
+    x + 270,
+    y + 21,
     {
-      font: `700 19px ${CANVAS_FONT_FAMILIES.displayMedium}`,
-      align: "right",
-      lineWidth: 3,
+      font: `700 20px ${CANVAS_FONT_FAMILIES.body}`,
+      align: "center",
+      lineWidth: 2,
     },
   );
+  drawOutlinedText(context, "%", x + 294, y + 28, {
+    font: `700 30px ${CANVAS_FONT_FAMILIES.body}`,
+    align: "center",
+    lineWidth: 3,
+  });
 }
 
 function drawEncounterQueue(
@@ -636,78 +730,60 @@ function drawEncounterQueue(
   atlas: VisualAtlas,
   observation: Readonly<GameObservation>,
 ): void {
-  const x = observation.camera.x + 288;
-  const y = observation.camera.y + 36;
-  const slotWidth = 38;
-  context.save();
-  context.fillStyle = "#080b14";
-  context.font = `600 8px ${CANVAS_FONT_FAMILIES.serifSmall}`;
-  context.textAlign = "center";
-  context.fillText("Now", x + 16, y + 8);
-  context.fillText("Next", x + 62, y + 8);
-  context.restore();
-
+  const x = observation.camera.x + 298;
+  const y = observation.camera.y + 44;
+  const slotWidth = 46;
   const current = observation.encounters.current;
   const entries = observation.encounters.upcoming.slice(0, 4);
+  drawEncounterSlotFrame(context, x - 1, y);
   if (current !== null) {
-    drawCurrentEncounterIcon(context, atlas, current, x, y + 11);
+    drawCurrentEncounterIcon(context, atlas, current, x, y);
     if (entries.length > 0) {
-      drawOutlinedText(context, "▶", x + 35, y + 30, {
-        font: `700 12px ${CANVAS_FONT_FAMILIES.body}`,
-        align: "center",
-        lineWidth: 2,
-      });
+      drawEncounterArrow(context, x + 38, y + 18);
     }
     if (current.kind === "shop") {
       drawOutlinedText(
         context,
         `${formatNumber(current.cachedPrice)}G`,
-        x + 14,
-        y + 48,
+        x + 17,
+        y + 52,
         {
-          font: `600 8px ${CANVAS_FONT_FAMILIES.bodySmall}`,
+          font: `600 10px ${CANVAS_FONT_FAMILIES.serifSmall}`,
           align: "center",
           lineWidth: 2,
         },
       );
     }
-  } else {
-    context.save();
-    context.strokeStyle = "#080b14";
-    context.lineWidth = 1;
-    context.strokeRect(x, y + 11, 28, 28);
-    context.restore();
   }
   entries.forEach((entry, index) => {
-    const slotX = x + index * slotWidth;
-    const entryX = slotX + slotWidth;
-    if (entry.kind === "shop") {
-      drawEncounterIcon(context, atlas, entry, entryX, y + 11);
-    } else {
-      drawAtlasSprite(context, atlas, "weapon", entryX + 14, y + 39, {
-        scale: 0.35,
-      });
-    }
+    const entryX = x + (index + 1) * slotWidth;
+    drawEncounterIcon(context, atlas, entry, entryX, y);
     if (index < entries.length - 1) {
-      drawOutlinedText(context, "▶", slotX + 31, y + 30, {
-        font: `700 12px ${CANVAS_FONT_FAMILIES.body}`,
-        align: "center",
-        lineWidth: 2,
-      });
+      drawEncounterArrow(context, x + 38 + index * slotWidth, y + 18);
     }
     if (entry.kind === "shop") {
       drawOutlinedText(
         context,
         `${formatNumber(entry.cachedPrice)}G`,
-        entryX + 14,
-        y + 48,
+        entryX + 17,
+        y + 52,
         {
-          font: `600 8px ${CANVAS_FONT_FAMILIES.bodySmall}`,
+          font: `600 10px ${CANVAS_FONT_FAMILIES.serifSmall}`,
           align: "center",
           lineWidth: 2,
         },
       );
     }
+  });
+  drawOutlinedText(context, "Now", x + 4, y + 4, {
+    font: `600 11px ${CANVAS_FONT_FAMILIES.serifSmall}`,
+    align: "center",
+    lineWidth: 2,
+  });
+  drawOutlinedText(context, "Next", x + 50, y + 4, {
+    font: `600 11px ${CANVAS_FONT_FAMILIES.serifSmall}`,
+    align: "center",
+    lineWidth: 2,
   });
 }
 
@@ -720,7 +796,12 @@ function drawBottomHud(
   const y = camera.y + GAMEPLAY_HUD_BOTTOM;
   drawUiImage(context, atlas, "bottom-strip", camera.x, y, 480, 69);
 
-  drawUiImage(context, atlas, "portrait", camera.x - 1, y + 1, 126, 75);
+  context.save();
+  context.beginPath();
+  context.rect(camera.x, y, 112, 69);
+  context.clip();
+  drawUiImage(context, atlas, "portrait", camera.x - 1, y, 116, 69);
+  context.restore();
 
   const hpRatio =
     observation.player.hp.maximum <= 0
@@ -730,11 +811,11 @@ function drawBottomHud(
           0,
           1,
         );
-  const hpX = camera.x + 126;
-  const hpY = y + 22;
-  drawUiImage(context, atlas, "hp-fill", hpX, hpY, 97 * hpRatio, 9);
+  const hpX = camera.x + 112;
+  const hpY = y + 34;
+  drawClippedHealthFill(context, atlas, hpX, hpY - 2, hpRatio);
   drawUiImage(context, atlas, "hp-frame", hpX, hpY - 2, 101, 13);
-  drawOutlinedText(context, "HP", hpX + 7, hpY + 7, {
+  drawOutlinedText(context, "HP", hpX + 7, hpY + 4, {
     font: `700 9px ${CANVAS_FONT_FAMILIES.displayMedium}`,
     lineWidth: 2,
   });
@@ -742,7 +823,7 @@ function drawBottomHud(
     context,
     `${formatNumber(observation.player.hp.current)}/${formatNumber(observation.player.hp.maximum)}`,
     hpX + 100,
-    hpY + 9,
+    hpY + 17,
     {
       font: `700 10px ${CANVAS_FONT_FAMILIES.displayMedium}`,
       align: "right",
@@ -756,21 +837,29 @@ function drawBottomHud(
     string,
   ])[] = [
     [
-      "weapon-icon",
+      "weapon-stats-icon",
       `${observation.player.weapon.name} [${formatNumber(observation.player.weapon.attack)} ATK]`,
     ],
-    ["armor-icon", observation.player.armor.name],
+    ["armor-stats-icon", observation.player.armor.name],
     [
       inventoryItem === null ? null : ITEM_UI_ICONS[inventoryItem],
       inventoryItem === null ? "—" : itemName(inventoryItem),
     ],
   ];
   equipmentRows.forEach(([icon, label], index) => {
-    const rowY = y + 26 + index * 13;
+    const rowY = y + 15 + index * 16;
     if (icon !== null) {
-      drawUiImage(context, atlas, icon, camera.x + 218, rowY - 8, 16, 16);
+      drawUiImage(
+        context,
+        atlas,
+        icon,
+        camera.x + 235 + index * 20,
+        rowY,
+        16,
+        16,
+      );
     }
-    drawOutlinedText(context, label, camera.x + 238, rowY + 3, {
+    drawOutlinedText(context, label, camera.x + 252 + index * 20, rowY + 12, {
       font: `600 8px ${CANVAS_FONT_FAMILIES.bodySmall}`,
       lineWidth: 2,
     });
@@ -898,10 +987,16 @@ function eventContextMessage(
 
 function latestRetainedEffect(
   effects: readonly EffectRecord[],
+  frame: Readonly<PresentationFrame>,
 ): Readonly<EffectRecord> | undefined {
   for (let index = effects.length - 1; index >= 0; index -= 1) {
     const effect = effects[index];
-    if (effect?.message !== undefined) return effect;
+    if (
+      effect?.message !== undefined &&
+      effectAge(frame, effect) <= effectLifetime(effect.event)
+    ) {
+      return effect;
+    }
   }
   return undefined;
 }
@@ -941,11 +1036,11 @@ function drawContextPrompt(
 
   if (current?.kind === "shop") {
     const eligible = observation.actions.canPurchaseCurrentEncounter;
-    if (eligible) {
-      drawUiImage(context, atlas, "pointer-click", x - 9, y - 10, 18, 22);
-    } else {
+    if (!eligible) {
       drawNoAction();
+      return;
     }
+    drawActionPointer(context, atlas, observation, x, y);
     drawOutlinedText(context, shopName(current.shop), x, y - 24, {
       font: `700 9px ${CANVAS_FONT_FAMILIES.serifSmall}`,
       align: "center",
@@ -989,11 +1084,11 @@ function drawContextPrompt(
     observation.player.inventory.item !== null
   ) {
     const canUseItem = observation.actions.canUseCarriedItem;
-    if (canUseItem) {
-      drawUiImage(context, atlas, "pointer-click", x - 9, y - 10, 18, 22);
-    } else {
+    if (!canUseItem) {
       drawNoAction();
+      return;
     }
+    drawActionPointer(context, atlas, observation, x, y);
     drawOutlinedText(context, "Battle", x, y - 22, {
       font: `700 9px ${CANVAS_FONT_FAMILIES.serifSmall}`,
       align: "center",
@@ -1013,12 +1108,10 @@ function drawContextPrompt(
     );
     drawOutlinedText(
       context,
-      canUseItem
-        ? itemDescription(observation.player.inventory.item).replace(
-            /\. Usable during battle\.$/,
-            "",
-          )
-        : "(Unavailable)",
+      itemDescription(observation.player.inventory.item).replace(
+        /\. Usable during battle\.$/,
+        "",
+      ),
       x,
       y + 19,
       {
@@ -1073,10 +1166,13 @@ function drawGameplayHud(
   events: readonly GameEvent[],
   pointer: WorldPoint | undefined,
   retainedEffect: Readonly<EffectRecord> | undefined,
+  drawPrompt = true,
 ): void {
   drawGoldAndLifespan(context, atlas, observation);
   drawBottomHud(context, atlas, observation);
-  drawContextPrompt(context, atlas, observation, pointer);
+  if (drawPrompt) {
+    drawContextPrompt(context, atlas, observation, pointer);
+  }
   drawMessageStrip(
     context,
     atlas,
@@ -1122,7 +1218,7 @@ function effectAnchor(
       return { x: encounterX, y: groundY - 40 };
     case "shop-purchased":
     case "item-used":
-      return { x: heroX, y: groundY - 6 };
+      return { x: heroX, y: groundY - 30 };
     case "purchase-rejected":
     case "shop-departed":
       return { x: encounterX, y: groundY - 50 };
@@ -1144,10 +1240,8 @@ function effectAnchor(
 const VISUAL_EFFECT_EVENT_TYPES: ReadonlySet<GameEvent["type"]> = new Set([
   "achievement-unlocked",
   "battle-reward",
-  "battle-started",
   "combat-hit",
   "combat-lethal-hit",
-  "encounter-promoted",
   "equipment-discovered",
   "item-use-rejected",
   "item-used",
@@ -1175,9 +1269,9 @@ function effectLifetime(event: GameEvent): number {
     case "encounter-promoted":
       return 14;
     case "shop-purchased":
-      return 45;
+      return ORIGINAL_ACTION_EFFECT_LIFETIME;
     case "item-used":
-      return 24;
+      return ORIGINAL_ACTION_EFFECT_LIFETIME;
     case "battle-reward":
     case "equipment-discovered":
     case "achievement-unlocked":
@@ -1198,6 +1292,13 @@ function effectLifetime(event: GameEvent): number {
   }
 }
 
+function effectRetentionLifetime(effect: Readonly<EffectRecord>): number {
+  return Math.max(
+    effectLifetime(effect.event),
+    effect.clickAnchor === undefined ? 0 : MOUSE_EFFECT_LIFETIME,
+  );
+}
+
 function effectAge(
   frame: Readonly<PresentationFrame>,
   effect: Readonly<EffectRecord>,
@@ -1208,6 +1309,18 @@ function effectAge(
   );
   return (
     activeTickAge + (frame.current.lifecycle.paused ? 0 : frame.interpolation)
+  );
+}
+
+function clickEffectAge(
+  frame: Readonly<PresentationFrame>,
+  effect: Readonly<EffectRecord>,
+): number {
+  const age = effectAge(frame, effect);
+  if (frame.current.activeTicks !== effect.startActiveTicks) return age;
+  return Math.max(
+    0,
+    age - (frame.current.lifecycle.paused ? 0 : frame.interpolation),
   );
 }
 
@@ -1277,6 +1390,7 @@ function visualFrameSignature(
   const currentKey = JSON.stringify(current);
   return JSON.stringify([
     frame.current.activeTicks,
+    actionPointerFrame(frame.current),
     previousKey,
     currentKey,
     previousKey === currentKey ? null : frame.interpolation,
@@ -1356,6 +1470,98 @@ function drawOriginalHitEffect(
   return true;
 }
 
+function drawOriginalClickEffect(
+  context: CanvasRenderingContext2D,
+  atlas: VisualAtlas,
+  point: WorldPoint,
+  age: number,
+): boolean {
+  if (age >= atlas.clickEffectFrames.length) return true;
+  const frameIndex = Math.min(
+    atlas.clickEffectFrames.length - 1,
+    Math.max(0, Math.floor(age)),
+  );
+  const image = atlas.clickEffectFrames[frameIndex];
+  if (!imageReady(image)) return false;
+  context.save();
+  try {
+    context.drawImage(
+      image,
+      point.x - image.naturalWidth / 2,
+      point.y - image.naturalHeight / 2,
+    );
+  } catch {
+    context.restore();
+    return false;
+  }
+  context.restore();
+  return true;
+}
+
+function drawOriginalTimelineFrame(
+  context: CanvasRenderingContext2D,
+  frames: readonly (HTMLImageElement | undefined)[],
+  point: WorldPoint,
+  age: number,
+  scale: number,
+): boolean {
+  if (age >= frames.length) return true;
+  const frameIndex = Math.min(frames.length - 1, Math.max(0, Math.floor(age)));
+  const image = frames[frameIndex];
+  if (!imageReady(image)) return false;
+  const width = image.naturalWidth * scale;
+  const height = image.naturalHeight * scale;
+  context.save();
+  try {
+    context.drawImage(
+      image,
+      point.x - width / 2,
+      point.y - height / 2,
+      width,
+      height,
+    );
+  } catch {
+    context.restore();
+    return false;
+  }
+  context.restore();
+  return true;
+}
+
+function drawOriginalActionEffect(
+  context: CanvasRenderingContext2D,
+  atlas: VisualAtlas,
+  effect: OriginalActionEffectId,
+  point: WorldPoint,
+  age: number,
+): boolean {
+  return drawOriginalTimelineFrame(
+    context,
+    atlas.actionEffectFrames[effect],
+    point,
+    age,
+    ORIGINAL_ACTION_EFFECT_SCALE,
+  );
+}
+
+function drawOriginalFlashEffect(
+  context: CanvasRenderingContext2D,
+  atlas: VisualAtlas,
+  camera: Readonly<GameObservation["camera"]>,
+  age: number,
+): boolean {
+  return drawOriginalTimelineFrame(
+    context,
+    atlas.flashEffectFrames,
+    {
+      x: camera.x + camera.width / 2,
+      y: camera.y + camera.height / 2,
+    },
+    age,
+    1,
+  );
+}
+
 function effectSeed(key: string): number {
   let hash = 0;
   for (let index = 0; index < key.length; index += 1) {
@@ -1422,18 +1628,26 @@ function drawEffect(
   const point = effect.anchor;
   const age = effectAge(frame, effect);
   const lifetime = effectLifetime(effect.event);
+  if (effect.clickAnchor !== undefined) {
+    drawOriginalClickEffect(
+      context,
+      atlas,
+      effect.clickAnchor,
+      clickEffectAge(frame, effect),
+    );
+  }
   switch (effect.event.type) {
     case "combat-hit":
       drawOriginalHitEffect(context, atlas, point, age);
       drawFloatingText(
         context,
-        formatNumber(effect.event.damage),
+        `${formatNumber(effect.event.damage)}${effect.event.critical ? "!!" : ""}`,
         point,
         age,
         lifetime,
         {
           fill: effect.event.critical ? "#ffe9a6" : "#f7f1df",
-          font: `700 ${effect.event.critical ? 13 : 11}px ${CANVAS_FONT_FAMILIES.displayMedium}`,
+          font: `700 14px ${CANVAS_FONT_FAMILIES.compact}`,
         },
       );
       break;
@@ -1448,19 +1662,27 @@ function drawEffect(
       break;
     case "battle-started":
     case "encounter-promoted":
-      drawParticles(context, point, "#d16a7e", 20, age, lifetime, effect.key);
-      drawBurst(context, point, "#d16a7e", 25, age, lifetime);
       break;
     case "shop-purchased": {
+      if (effect.event.shop === "soul-shrine") {
+        if (age < ORIGINAL_FLASH_EFFECT_LIFETIME) {
+          drawOriginalFlashEffect(context, atlas, frame.current.camera, age);
+        }
+        break;
+      }
+      drawOriginalActionEffect(
+        context,
+        atlas,
+        effect.event.shop === "armorsmith" || effect.event.shop === "bladesmith"
+          ? "upgrade"
+          : "buy",
+        point,
+        age,
+      );
       if (
         effect.event.shop === "armorsmith" ||
         effect.event.shop === "bladesmith"
       ) {
-        drawParticles(context, point, "#ffe04f", 24, age, lifetime, effect.key);
-        drawFloatingText(context, "UPGRADE!", point, age, lifetime, {
-          fill: "#ffe04f",
-          font: `700 13px ${CANVAS_FONT_FAMILIES.displayMedium}`,
-        });
         drawFloatingText(
           context,
           `-Lost ${formatNumber(effect.event.price)}G!`,
@@ -1475,24 +1697,10 @@ function drawEffect(
             font: `600 9px ${CANVAS_FONT_FAMILIES.bodySmall}`,
           },
         );
-      } else {
-        drawParticles(context, point, "#ffe9a6", 20, age, lifetime, effect.key);
       }
-      drawAtlasSprite(
-        context,
-        atlas,
-        SHOP_PRODUCTS[effect.event.shop],
-        point.x,
-        point.y + 26,
-        {
-          scale: 0.42,
-          alpha: 1 - clamp(age / lifetime, 0, 1),
-        },
-      );
       break;
     }
     case "battle-reward":
-      drawParticles(context, point, "#ffe9a6", 20, age, lifetime, effect.key);
       drawFloatingText(
         context,
         `+${formatNumber(effect.event.gold)}G`,
@@ -1504,28 +1712,9 @@ function drawEffect(
           font: `700 11px ${CANVAS_FONT_FAMILIES.displayMedium}`,
         },
       );
-      drawAtlasSprite(context, atlas, "gold-voucher", point.x, point.y + 26, {
-        scale: 0.42,
-        alpha: 1 - clamp(age / lifetime, 0, 1),
-      });
       break;
     case "item-used":
-      drawParticles(context, point, "#59d9ff", 24, age, lifetime, effect.key);
-      drawFloatingText(context, "ITEM USED!", point, age, lifetime, {
-        fill: "#59d9ff",
-        font: `700 12px ${CANVAS_FONT_FAMILIES.displayMedium}`,
-      });
-      drawAtlasSprite(
-        context,
-        atlas,
-        effect.event.item,
-        point.x,
-        point.y + 28,
-        {
-          scale: 0.45,
-          alpha: 1 - clamp(age / lifetime, 0, 1),
-        },
-      );
+      drawOriginalActionEffect(context, atlas, "item", point, age);
       break;
     case "purchase-rejected":
     case "item-use-rejected":
@@ -1672,7 +1861,7 @@ function drawTutorialSurvivalIllustrations(
     0,
     1,
   );
-  drawUiImage(context, atlas, "hp-fill", hpX + 24, hpY + 45, 97 * hpRatio, 9);
+  drawClippedHealthFill(context, atlas, hpX + 23, hpY + 43, hpRatio);
   drawUiImage(context, atlas, "hp-frame", hpX + 23, hpY + 43, 101, 13);
   drawOutlinedText(context, "HP", hpX + 34, hpY + 54, {
     font: `700 10px ${CANVAS_FONT_FAMILIES.displayMedium}`,
@@ -1699,53 +1888,7 @@ function drawTutorialSurvivalIllustrations(
 
   const queueX = panelX + 288;
   const queueY = panelY + 181;
-  context.save();
-  context.fillStyle = "#63cde4";
-  context.fillRect(queueX, queueY, 150, 94);
-  context.strokeStyle = "#080b14";
-  context.lineWidth = 1;
-  context.strokeRect(queueX, queueY, 150, 94);
-  context.restore();
-  const lifespanRatio = clamp(
-    (observation.lifespan.whole + observation.lifespan.fraction / 100) / 100,
-    0,
-    1,
-  );
-  drawUiImage(
-    context,
-    atlas,
-    "lifespan-fill",
-    queueX + 3,
-    queueY + 4,
-    144 * lifespanRatio,
-    5,
-  );
-  drawUiImage(context, atlas, "lifespan-frame", queueX + 2, queueY + 3, 146, 7);
-  drawOutlinedText(
-    context,
-    formatLifespan(observation.lifespan),
-    queueX + 143,
-    queueY + 22,
-    {
-      font: `700 14px ${CANVAS_FONT_FAMILIES.displayMedium}`,
-      align: "right",
-      lineWidth: 2,
-    },
-  );
-  drawOutlinedText(context, "Next", queueX + 20, queueY + 40, {
-    font: `600 9px ${CANVAS_FONT_FAMILIES.serifSmall}`,
-    align: "center",
-    lineWidth: 2,
-  });
-  observation.encounters.upcoming.slice(0, 3).forEach((entry, index) => {
-    drawEncounterIcon(
-      context,
-      atlas,
-      entry,
-      queueX + 4 + index * 44,
-      queueY + 48,
-    );
-  });
+  drawUiImage(context, atlas, "tutorial-lifespan-crop", queueX, queueY);
 }
 
 function drawTutorialOverlay(
@@ -1874,6 +2017,90 @@ function drawPauseOverlay(
   );
 }
 
+function drawSessionOver(
+  context: CanvasRenderingContext2D,
+  atlas: VisualAtlas,
+  observation: Readonly<GameObservation>,
+  pointer: WorldPoint | undefined,
+  animationProgress: number,
+): void {
+  const camera = observation.camera;
+  const progress = clamp(animationProgress, 0, 1);
+  const topBandY = interpolate(
+    camera.y + SESSION_OVER_TOP_START_OFFSET,
+    camera.y + SESSION_OVER_TOP_END_OFFSET,
+    progress,
+  );
+  const bottomBandY = interpolate(
+    camera.y + SESSION_OVER_BOTTOM_START_OFFSET,
+    camera.y + SESSION_OVER_BOTTOM_END_OFFSET,
+    progress,
+  );
+  context.save();
+  context.fillStyle = "#000000";
+  context.fillRect(camera.x, topBandY, camera.width, SESSION_OVER_BAND_HEIGHT);
+  context.fillRect(
+    camera.x,
+    bottomBandY,
+    camera.width,
+    camera.y + camera.height - bottomBandY,
+  );
+  context.restore();
+
+  if (progress >= 1) {
+    drawOutlinedText(
+      context,
+      "SESSION OVER",
+      camera.x + camera.width / 2,
+      camera.y + 32,
+      {
+        font: `700 28px ${CANVAS_FONT_FAMILIES.displayMedium}`,
+        align: "center",
+        fill: "#080b14",
+        stroke: "#f7f1df",
+        lineWidth: 2,
+      },
+    );
+    drawOutlinedText(
+      context,
+      observation.lifecycle.terminalReason === "combat"
+        ? "You are killed by the Enemy."
+        : "Your lifespan reaches 0%",
+      camera.x + 12,
+      camera.y + 300,
+      {
+        font: `700 16px ${CANVAS_FONT_FAMILIES.displayMedium}`,
+        fill: "#080b14",
+        stroke: "#f7f1df",
+        lineWidth: 2,
+      },
+    );
+    drawOutlinedText(
+      context,
+      "Protip #17 Keep losing? Try again.",
+      camera.x + camera.width - 12,
+      camera.y + 300,
+      {
+        font: `700 11px ${CANVAS_FONT_FAMILIES.compact}`,
+        align: "right",
+        fill: "#f7f1df",
+        stroke: "#080b14",
+        lineWidth: 2,
+      },
+    );
+  }
+
+  if (pointer !== undefined) {
+    drawUiImage(
+      context,
+      atlas,
+      "session-over-pointer",
+      pointer.x - 4,
+      pointer.y - 2,
+    );
+  }
+}
+
 function drawDynamicWorld(
   context: CanvasRenderingContext2D,
   frame: Readonly<PresentationFrame>,
@@ -1915,52 +2142,38 @@ function drawDynamicWorld(
       context,
       atlas,
       camera.x + animation.runningX(distance),
-      groundY,
+      groundY + (reducedMotion ? 0 : animation.runningY()),
       pose(animation.hero),
     );
   } else {
+    const deathStaggerX = (id: "hero" | "enemy"): number =>
+      reducedMotion ? 0 : animation.deathStaggerX(id);
     const heroX =
-      battleActorX(
+      (battleActorX(
         frame,
         "hero",
         animation.runningX(frame.previous.distance),
-      ) ?? camera.x + HERO_RUNNING_X;
-    const enemyX = battleActorX(frame, "enemy") ?? camera.x + 390;
+      ) ?? camera.x + HERO_RUNNING_X) + deathStaggerX("hero");
+    const enemyX =
+      (battleActorX(frame, "enemy") ?? camera.x + 390) + deathStaggerX("enemy");
     drawHero(context, atlas, heroX, groundY, pose(animation.hero));
     drawEnemy(context, atlas, enemyX, groundY, pose(animation.enemy!));
     drawHealthBar(
       context,
       enemyX,
-      groundY - 106,
+      groundY - 70,
       battle.enemy.currentHp,
       battle.enemy.maximumHp,
     );
   }
 
-  if (current !== null && x !== null) {
-    if (current.kind === "shop") {
-      drawShopDetails(
-        context,
-        atlas,
-        x,
-        groundY,
-        current.shop,
-        frame.current.actions.canPurchaseCurrentEncounter,
-        current.used,
-      );
-    } else if (battle === null) {
-      drawEnemy(context, atlas, x, groundY, pose(animation.enemy!));
-      context.save();
-      context.fillStyle = "#f7f1df";
-      context.font = `700 9px ${CANVAS_FONT_FAMILIES.bodySmall}`;
-      context.textAlign = "center";
-      context.fillText(
-        `Approaching ${enemyName(current.enemy.id)}`,
-        x,
-        groundY + 28,
-      );
-      context.restore();
-    }
+  if (
+    current !== null &&
+    x !== null &&
+    current.kind === "battle" &&
+    battle === null
+  ) {
+    drawEnemy(context, atlas, x, groundY, pose(animation.enemy!));
   }
 }
 
@@ -1983,6 +2196,9 @@ export class CanvasPresentation implements PresentationPort {
   #staticLayer: HTMLCanvasElement | undefined;
   #staticLayerKey: string | undefined;
   #pointerWorld: WorldPoint | undefined;
+  #sessionOverAnimationStep: number | undefined;
+  #sessionOverAnimationProgress = 1;
+  #sessionOverAnimationFrame: number | undefined;
 
   constructor(canvas: HTMLCanvasElement) {
     this.#canvas = canvas;
@@ -2023,6 +2239,10 @@ export class CanvasPresentation implements PresentationPort {
   setReducedMotion(reducedMotion: boolean): void {
     if (this.#reducedMotion === reducedMotion) return;
     this.#reducedMotion = reducedMotion;
+    if (reducedMotion && this.#sessionOverAnimationFrame !== undefined) {
+      this.#cancelSessionOverAnimation();
+      this.#sessionOverAnimationProgress = 1;
+    }
     this.#canvas.dataset.reducedMotion = String(reducedMotion);
     this.#lastDrawnVisualSignature = undefined;
     this.#draw();
@@ -2115,7 +2335,6 @@ export class CanvasPresentation implements PresentationPort {
       frame.current.battle?.enemy.id ??
         (current?.kind === "battle" ? current.enemy.id : ""),
       current?.kind === "shop" ? current.shop : "",
-      current?.kind === "shop" ? SHOP_PRODUCTS[current.shop] : "",
     ]
       .filter(Boolean)
       .join(",");
@@ -2169,10 +2388,15 @@ export class CanvasPresentation implements PresentationPort {
     frame: Readonly<PresentationFrame>,
     projection: ReturnType<typeof calculateWorldProjection>,
   ): HTMLCanvasElement {
+    const camera = frame.current.camera;
     const key = JSON.stringify([
       this.#canvas.width,
       this.#canvas.height,
-      visualObservationSignature(frame.current),
+      camera.x,
+      camera.y,
+      camera.width,
+      camera.height,
+      frame.current.day,
       this.#atlas.status,
     ]);
     if (this.#staticLayer !== undefined && this.#staticLayerKey === key) {
@@ -2262,6 +2486,7 @@ export class CanvasPresentation implements PresentationPort {
     transition: PresentationTransition,
     runningX = this.#animation.runningX(transition.current.distance),
   ): void {
+    this.#updateSessionOverAnimation(transition.previous, transition.current);
     if (
       this.#lastFrameStep !== undefined &&
       transition.current.steps < this.#lastFrameStep
@@ -2293,6 +2518,10 @@ export class CanvasPresentation implements PresentationPort {
             key,
             startActiveTicks: transition.current.activeTicks,
             anchor: effectAnchor(frame, event, runningX),
+            clickAnchor:
+              event.type === "shop-purchased" || event.type === "item-used"
+                ? (this.#pointerWorld ?? effectAnchor(frame, event, runningX))
+                : undefined,
             message:
               eventContextMessage(
                 event,
@@ -2307,10 +2536,64 @@ export class CanvasPresentation implements PresentationPort {
     this.#lastFrameStep = transition.current.steps;
   }
 
+  #updateSessionOverAnimation(
+    previous: Readonly<GameObservation>,
+    current: Readonly<GameObservation>,
+  ): void {
+    if (current.lifecycle.phase === "ended") {
+      if (
+        previous.lifecycle.phase !== "ended" &&
+        this.#sessionOverAnimationStep !== current.steps
+      ) {
+        this.#beginSessionOverAnimation(current.steps);
+      }
+      return;
+    }
+
+    if (this.#sessionOverAnimationStep !== undefined) {
+      this.#cancelSessionOverAnimation();
+      this.#sessionOverAnimationStep = undefined;
+      this.#sessionOverAnimationProgress = 1;
+    }
+  }
+
+  #beginSessionOverAnimation(step: number): void {
+    this.#cancelSessionOverAnimation();
+    this.#sessionOverAnimationStep = step;
+    if (this.#reducedMotion) {
+      this.#sessionOverAnimationProgress = 1;
+      return;
+    }
+
+    const startedAt = performance.now();
+    this.#sessionOverAnimationProgress = 0;
+    const animate = (now: number): void => {
+      this.#sessionOverAnimationProgress = clamp(
+        (now - startedAt) / SESSION_OVER_ANIMATION_DURATION_MS,
+        0,
+        1,
+      );
+      this.#draw();
+      if (this.#sessionOverAnimationProgress >= 1) {
+        this.#sessionOverAnimationFrame = undefined;
+        return;
+      }
+      this.#sessionOverAnimationFrame = requestAnimationFrame(animate);
+    };
+    this.#sessionOverAnimationFrame = requestAnimationFrame(animate);
+  }
+
+  #cancelSessionOverAnimation(): void {
+    if (this.#sessionOverAnimationFrame !== undefined) {
+      cancelAnimationFrame(this.#sessionOverAnimationFrame);
+      this.#sessionOverAnimationFrame = undefined;
+    }
+  }
+
   #pruneEffects(frame: Readonly<PresentationFrame>): void {
     const active: EffectRecord[] = [];
     for (const [key, effect] of this.#effectHistory) {
-      if (effectAge(frame, effect) <= effectLifetime(effect.event)) {
+      if (effectAge(frame, effect) <= effectRetentionLifetime(effect)) {
         active.push(effect);
       } else {
         this.#effectHistory.delete(key);
@@ -2370,32 +2653,60 @@ export class CanvasPresentation implements PresentationPort {
     const visibleEffects = this.#reducedMotion
       ? NO_VISUAL_EFFECTS
       : this.#activeEffects;
-    drawDynamicWorld(
-      context,
-      this.#frame,
-      this.#atlas,
-      this.#animation,
-      this.#reducedMotion,
-    );
-    if (this.#frame.current.lifecycle.paused) {
-      drawPauseOverlay(context, this.#frame.current);
-    } else if (this.#frame.current.lifecycle.tutorialPage !== null) {
-      drawTutorialOverlay(context, this.#atlas, this.#frame.current);
-    }
-    drawEffects(context, this.#atlas, this.#frame, visibleEffects);
-    if (
-      !this.#frame.current.lifecycle.paused &&
-      this.#frame.current.lifecycle.tutorialPage === null
-    ) {
+    const ended = this.#frame.current.lifecycle.phase === "ended";
+    if (ended) {
+      drawDynamicWorld(
+        context,
+        this.#frame,
+        this.#atlas,
+        this.#animation,
+        this.#reducedMotion,
+      );
       drawGameplayHud(
         context,
         this.#frame.current,
         this.#frame.previous,
         this.#atlas,
         this.#frame.events,
-        this.#pointerWorld,
-        latestRetainedEffect(this.#activeEffects),
+        undefined,
+        latestRetainedEffect(this.#activeEffects, this.#frame),
+        false,
       );
+      drawSessionOver(
+        context,
+        this.#atlas,
+        this.#frame.current,
+        this.#pointerWorld,
+        this.#sessionOverAnimationProgress,
+      );
+    } else {
+      drawDynamicWorld(
+        context,
+        this.#frame,
+        this.#atlas,
+        this.#animation,
+        this.#reducedMotion,
+      );
+      if (this.#frame.current.lifecycle.paused) {
+        drawPauseOverlay(context, this.#frame.current);
+      } else if (this.#frame.current.lifecycle.tutorialPage !== null) {
+        drawTutorialOverlay(context, this.#atlas, this.#frame.current);
+      }
+      drawEffects(context, this.#atlas, this.#frame, visibleEffects);
+      if (
+        !this.#frame.current.lifecycle.paused &&
+        this.#frame.current.lifecycle.tutorialPage === null
+      ) {
+        drawGameplayHud(
+          context,
+          this.#frame.current,
+          this.#frame.previous,
+          this.#atlas,
+          this.#frame.events,
+          this.#pointerWorld,
+          latestRetainedEffect(this.#activeEffects, this.#frame),
+        );
+      }
     }
     context.restore();
     this.#lastDrawnVisualSignature = visualFrameSignature(

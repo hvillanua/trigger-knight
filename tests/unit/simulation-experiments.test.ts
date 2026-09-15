@@ -87,6 +87,26 @@ describe("serializable simulation experiments", () => {
     );
   });
 
+  it("retains an explicit immediate-start run option", () => {
+    const manifest = normalizeSimulationManifest({
+      schemaVersion: 1,
+      requests: [
+        {
+          config: {
+            ruleset: ORIGINAL_V13_RULESET_ID,
+            seed: "immediate-start",
+            initialProfile: { schemaVersion: 1, scoreMultiplier: 1 },
+            startImmediately: true,
+          },
+          policy: { id: "non-progressing", version: "1", config: {} },
+          maxSteps: 1,
+        },
+      ],
+    });
+
+    expect(manifest.requests[0]!.config.startImmediately).toBe(true);
+  });
+
   it.each([
     { schemaVersion: 2, requests: [] },
     { schemaVersion: 1, requests: [{ ...input("bad"), maxSteps: 0 }] },

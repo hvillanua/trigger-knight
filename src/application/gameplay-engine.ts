@@ -13,6 +13,8 @@ export interface RunConfig {
   readonly ruleset: RuleSetId;
   readonly seed: string;
   readonly initialProfile: ProfileInput;
+  /** Optional startup behavior for a newly created run. */
+  readonly startImmediately?: boolean;
 }
 
 export interface StepResult {
@@ -33,9 +35,17 @@ export function createGameplayEngine(
 ): GameplayEngine {
   return Object.freeze({
     createRun(config: RunConfig): RunState {
+      const options =
+        config.startImmediately === undefined
+          ? undefined
+          : { startImmediately: config.startImmediately };
       return registry
         .resolve(config.ruleset)
-        .createRun(config.seed, normalizeProfile(config.initialProfile));
+        .createRun(
+          config.seed,
+          normalizeProfile(config.initialProfile),
+          options,
+        );
     },
 
     step(

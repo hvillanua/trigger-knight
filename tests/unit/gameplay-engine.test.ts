@@ -145,6 +145,26 @@ describe("gameplay engine", () => {
     expect(Object.isFrozen(observation.camera)).toBe(true);
   });
 
+  it("starts immediately only when the host explicitly requests it", () => {
+    const state = gameplayEngine.createRun({
+      ...config,
+      startImmediately: true,
+    });
+
+    expect(state.lifecycle.pregameStepsRemaining).toBe(0);
+    const result = gameplayEngine.step(state, [{ type: "dismiss-tutorial" }]);
+
+    expect(result.state).toMatchObject({
+      steps: 1,
+      activeTicks: 1,
+      distance: 1,
+      lifecycle: {
+        tutorialPage: null,
+        pregameStepsRemaining: 0,
+      },
+    });
+  });
+
   it("repeats one authoritative transition without mutating its inputs", () => {
     const state = gameplayEngine.createRun(config);
     const commands: readonly GameCommand[] = Object.freeze([

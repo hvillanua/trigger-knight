@@ -646,6 +646,14 @@ function renderKeyboardHints(
 function syncControls(observation: Readonly<GameObservation>): void {
   const ended = observation.lifecycle.phase === "ended";
   gameplayStage.dataset.paused = String(observation.lifecycle.paused);
+  gameplayStage.dataset.phase = observation.lifecycle.phase;
+  if (observation.lifecycle.tutorialPage === null) {
+    delete gameplayStage.dataset.tutorialPage;
+  } else {
+    gameplayStage.dataset.tutorialPage = String(
+      observation.lifecycle.tutorialPage,
+    );
+  }
   dismissTutorialButton.disabled =
     ended || !observation.actions.canDismissTutorial;
   if (advanceButton !== undefined) advanceButton.disabled = ended;
@@ -769,6 +777,7 @@ interface ActiveRun {
   clock: BrowserGameplayClock | undefined;
   settlement: Readonly<CompletedRunSettlementInput> | undefined;
   commit: CompletedRunResult | undefined;
+  sessionOverDismissed: boolean;
 }
 
 let activeRun: ActiveRun | undefined;
@@ -817,7 +826,7 @@ function commitCompletedRun(record: ActiveRun): void {
     initialProfile: record.initialProfile,
     run: record.settlement,
   });
-  renderCompletion(record);
+  if (record.sessionOverDismissed) renderCompletion(record);
 }
 
 const resultPresentation = new CompletedRunPresentation(resultRoot, {
@@ -833,11 +842,27 @@ const resultPresentation = new CompletedRunPresentation(resultRoot, {
       commit !== undefined &&
       (commit.status === "committed" || commit.status === "already-committed")
     ) {
-      startRun(commit.profile);
+      startRun(commit.profile, { startImmediately: true });
       presentUiAction("activate");
     }
   },
 });
+
+function dismissSessionOver(): void {
+  const record = activeRun;
+  if (
+    currentScreen !== "gameplay" ||
+    record === undefined ||
+    record.settlement === undefined ||
+    record.commit === undefined ||
+    latestObservation?.lifecycle.phase !== "ended"
+  ) {
+    return;
+  }
+  record.sessionOverDismissed = true;
+  renderCompletion(record);
+  presentUiAction("activate");
+}
 
 function syncReducedMotion(): void {
   const reducedMotion = reducedMotionQuery?.matches ?? false;
@@ -938,7 +963,15 @@ function beginBindingCapture(action: InputAction): void {
   bindingInputs[action].focus();
 }
 
-function startRun(profile: ProfileState, focus = true): void {
+interface StartRunOptions {
+  readonly focus?: boolean;
+  readonly startImmediately?: boolean;
+}
+
+function startRun(
+  profile: ProfileState,
+  { focus = true, startImmediately = false }: StartRunOptions = {},
+): void {
   activeRun?.clock?.stop();
   runNumber += 1;
   const record: ActiveRun = {
@@ -948,6 +981,7 @@ function startRun(profile: ProfileState, focus = true): void {
     clock: undefined,
     settlement: undefined,
     commit: undefined,
+    sessionOverDismissed: false,
   };
   activeRun = record;
   soundEffects.setSession(record.completionId);
@@ -982,13 +1016,15 @@ function startRun(profile: ProfileState, focus = true): void {
       : runNumber === 1
         ? devSeedOverride
         : `${devSeedOverride}-${runNumber}`;
+  const config = {
+    ruleset: ORIGINAL_V13_RULESET_ID,
+    seed,
+    initialProfile: profile,
+    ...(startImmediately ? { startImmediately: true } : {}),
+  };
   record.session = createBrowserGameplaySession(
     gameplayEngine,
-    Object.freeze({
-      ruleset: ORIGINAL_V13_RULESET_ID,
-      seed,
-      initialProfile: profile,
-    }),
+    Object.freeze(config),
     presentation,
     {
       retainDiagnostics: import.meta.env.DEV,
@@ -1131,6 +1167,13 @@ document.addEventListener("keydown", (event) => {
 
   const observation = latestObservation;
   if (observation === undefined) return;
+  if (observation.lifecycle.phase === "ended") {
+    if (!nativeActivationCode(event.code)) return;
+    event.preventDefault();
+    canvas.focus({ preventScroll: true });
+    dismissSessionOver();
+    return;
+  }
   const commands = keyboardRouter.commandsFor(event.code, observation.actions);
   if (commands.length === 0) return;
   event.preventDefault();
@@ -1142,6 +1185,12 @@ gameplayStage.addEventListener("pointerup", (event) => {
   if (currentScreen !== "gameplay") return;
   if (event.target instanceof HTMLButtonElement) return;
   const observation = latestObservation;
+  if (observation !== undefined && observation.lifecycle.phase === "ended") {
+    event.preventDefault();
+    canvas.focus({ preventScroll: true });
+    dismissSessionOver();
+    return;
+  }
   if (
     observation !== undefined &&
     observation.lifecycle.tutorialPage !== null &&
@@ -1158,6 +1207,7 @@ canvas.addEventListener("pointerup", (event) => {
   if (currentScreen !== "gameplay") return;
   const observation = latestObservation;
   if (observation === undefined) return;
+  if (observation.lifecycle.phase === "ended") return;
   if (observation.lifecycle.tutorialPage !== null) return;
   if (
     observation.battle !== null &&
@@ -1211,7 +1261,9 @@ fullscreenButton.addEventListener("click", () => {
 requiredElement<HTMLButtonElement>("#start-run").addEventListener(
   "click",
   () => {
-    runUiAction("activate", () => startRun(currentProfile));
+    runUiAction("activate", () =>
+      startRun(currentProfile, { startImmediately: true }),
+    );
   },
 );
 requiredElement<HTMLButtonElement>("#title-collections").addEventListener(
@@ -1411,4 +1463,4 @@ const resizeObserver = new ResizeObserver(([entry]) => {
 });
 resizeObserver.observe(canvas);
 
-startRun(currentProfile, false);
+startRun(currentProfile, { focus: false, startImmediately: true });
