@@ -1,5 +1,6 @@
 import path from "node:path";
 import process from "node:process";
+import { pathToFileURL } from "node:url";
 
 import ts from "typescript";
 
@@ -25,14 +26,12 @@ function readProjectArgument(arguments_) {
   return arguments_[projectIndex + 1];
 }
 
-function reportDiagnostics(diagnostics, currentDirectory) {
-  process.stderr.write(
-    ts.formatDiagnosticsWithColorAndContext(diagnostics, {
-      getCanonicalFileName: (fileName) => fileName,
-      getCurrentDirectory: () => currentDirectory,
-      getNewLine: () => "\n",
-    }),
-  );
+function formatDiagnostics(diagnostics, currentDirectory) {
+  return ts.formatDiagnosticsWithColorAndContext(diagnostics, {
+    getCanonicalFileName: (fileName) => fileName,
+    getCurrentDirectory: () => currentDirectory,
+    getNewLine: () => "\n",
+  });
 }
 
 function hasJSDocTag(declaration, tagName) {
@@ -58,15 +57,22 @@ function isDependencySourceFile(sourceFile) {
   return sourceFile.fileName.split(/[\\/]/).includes("node_modules");
 }
 
-const projectArgument = readProjectArgument(process.argv.slice(2));
-const projectPath = path.resolve(process.cwd(), projectArgument);
-const projectDirectory = path.dirname(projectPath);
-const configResult = ts.readConfigFile(projectPath, ts.sys.readFile);
+export function checkPublicContracts({
+  cwd = process.cwd(),
+  project = "tsconfig.json",
+} = {}) {
+  const currentDirectory = path.resolve(cwd);
+  const projectPath = path.resolve(currentDirectory, project);
+  const projectDirectory = path.dirname(projectPath);
+  const configResult = ts.readConfigFile(projectPath, ts.sys.readFile);
 
-if (configResult.error) {
-  reportDiagnostics([configResult.error], process.cwd());
-  process.exitCode = 1;
-} else {
+  if (configResult.error) {
+    return {
+      diagnostics: formatDiagnostics([configResult.error], currentDirectory),
+      exitCode: 1,
+    };
+  }
+
   const parsedConfig = ts.parseJsonConfigFileContent(
     configResult.config,
     ts.sys,
@@ -76,143 +82,162 @@ if (configResult.error) {
   );
 
   if (parsedConfig.errors.length > 0) {
-    reportDiagnostics(parsedConfig.errors, process.cwd());
-    process.exitCode = 1;
-  } else {
-    const program = ts.createProgram({
-      rootNames: parsedConfig.fileNames,
-      options: parsedConfig.options,
-    });
-    const checker = program.getTypeChecker();
-    const projectSourceFiles = new Set(
-      program
-        .getSourceFiles()
-        .filter((sourceFile) => !isDependencySourceFile(sourceFile)),
+    return {
+      diagnostics: formatDiagnostics(parsedConfig.errors, currentDirectory),
+      exitCode: 1,
+    };
+  }
+
+  const program = ts.createProgram({
+    rootNames: parsedConfig.fileNames,
+    options: parsedConfig.options,
+  });
+  const checker = program.getTypeChecker();
+  const projectSourceFiles = new Set(
+    program
+      .getSourceFiles()
+      .filter((sourceFile) => !isDependencySourceFile(sourceFile)),
+  );
+
+  function resolveMergedDeclarations(declaration) {
+    const symbol = declaration.name
+      ? checker.getSymbolAtLocation(declaration.name)
+      : undefined;
+
+    return (symbol?.declarations ?? [declaration]).filter(
+      (candidate) =>
+        isContractDeclaration(candidate) &&
+        projectSourceFiles.has(candidate.getSourceFile()),
+    );
+  }
+
+  function resolveDeclarations(typeName) {
+    let symbol = checker.getSymbolAtLocation(typeName);
+
+    if (symbol && symbol.flags & ts.SymbolFlags.Alias) {
+      symbol = checker.getAliasedSymbol(symbol);
+    }
+
+    return (symbol?.declarations ?? []).filter(
+      (declaration) =>
+        isContractDeclaration(declaration) &&
+        projectSourceFiles.has(declaration.getSourceFile()),
+    );
+  }
+
+  const playerVisibleDeclarations = [];
+
+  for (const sourceFile of projectSourceFiles) {
+    for (const statement of sourceFile.statements) {
+      if (
+        isContractDeclaration(statement) &&
+        hasJSDocTag(statement, PLAYER_VISIBLE_TAG)
+      ) {
+        playerVisibleDeclarations.push(statement);
+      }
+    }
+  }
+
+  for (const [relativeFile, declaration] of PLAYER_VISIBLE_BOUNDARY_ROOTS) {
+    const sourceFile = program.getSourceFile(
+      path.resolve(projectDirectory, relativeFile),
+    );
+    const rootDeclaration = sourceFile?.statements.find(
+      (statement) =>
+        isContractDeclaration(statement) &&
+        declarationName(statement) === declaration,
     );
 
-    function resolveMergedDeclarations(declaration) {
-      const symbol = declaration.name
-        ? checker.getSymbolAtLocation(declaration.name)
-        : undefined;
-
-      return (symbol?.declarations ?? [declaration]).filter(
-        (candidate) =>
-          isContractDeclaration(candidate) &&
-          projectSourceFiles.has(candidate.getSourceFile()),
-      );
+    if (
+      rootDeclaration &&
+      !playerVisibleDeclarations.includes(rootDeclaration)
+    ) {
+      playerVisibleDeclarations.push(rootDeclaration);
     }
+  }
 
-    function resolveDeclarations(typeName) {
-      let symbol = checker.getSymbolAtLocation(typeName);
+  const violations = [];
 
-      if (symbol && symbol.flags & ts.SymbolFlags.Alias) {
-        symbol = checker.getAliasedSymbol(symbol);
-      }
+  for (const rootDeclaration of playerVisibleDeclarations) {
+    const rootDeclarations = resolveMergedDeclarations(rootDeclaration);
+    const visited = new Set(rootDeclarations);
 
-      return (symbol?.declarations ?? []).filter(
-        (declaration) =>
-          isContractDeclaration(declaration) &&
-          projectSourceFiles.has(declaration.getSourceFile()),
-      );
-    }
+    function inspectDeclaration(declaration, typePath) {
+      function inspectNode(node) {
+        let typeName;
 
-    const playerVisibleDeclarations = [];
-
-    for (const sourceFile of projectSourceFiles) {
-      for (const statement of sourceFile.statements) {
-        if (
-          isContractDeclaration(statement) &&
-          hasJSDocTag(statement, PLAYER_VISIBLE_TAG)
-        ) {
-          playerVisibleDeclarations.push(statement);
+        if (ts.isTypeReferenceNode(node)) {
+          typeName = node.typeName;
+        } else if (ts.isExpressionWithTypeArguments(node)) {
+          typeName = node.expression;
         }
-      }
-    }
 
-    for (const [relativeFile, declaration] of PLAYER_VISIBLE_BOUNDARY_ROOTS) {
-      const sourceFile = program.getSourceFile(
-        path.resolve(projectDirectory, relativeFile),
-      );
-      const rootDeclaration = sourceFile?.statements.find(
-        (statement) =>
-          isContractDeclaration(statement) &&
-          declarationName(statement) === declaration,
-      );
+        if (typeName) {
+          for (const referencedDeclaration of resolveDeclarations(typeName)) {
+            const nextPath = [
+              ...typePath,
+              declarationName(referencedDeclaration),
+            ];
 
-      if (
-        rootDeclaration &&
-        !playerVisibleDeclarations.includes(rootDeclaration)
-      ) {
-        playerVisibleDeclarations.push(rootDeclaration);
-      }
-    }
-
-    const violations = [];
-
-    for (const rootDeclaration of playerVisibleDeclarations) {
-      const rootDeclarations = resolveMergedDeclarations(rootDeclaration);
-      const visited = new Set(rootDeclarations);
-
-      function inspectDeclaration(declaration, typePath) {
-        function inspectNode(node) {
-          let typeName;
-
-          if (ts.isTypeReferenceNode(node)) {
-            typeName = node.typeName;
-          } else if (ts.isExpressionWithTypeArguments(node)) {
-            typeName = node.expression;
-          }
-
-          if (typeName) {
-            for (const referencedDeclaration of resolveDeclarations(typeName)) {
-              const nextPath = [
-                ...typePath,
-                declarationName(referencedDeclaration),
-              ];
-
-              if (!hasJSDocTag(referencedDeclaration, PLAYER_VISIBLE_TAG)) {
-                violations.push({
-                  path: nextPath,
-                  root: rootDeclaration,
-                });
-              } else if (!visited.has(referencedDeclaration)) {
-                visited.add(referencedDeclaration);
-                inspectDeclaration(referencedDeclaration, nextPath);
-              }
+            if (!hasJSDocTag(referencedDeclaration, PLAYER_VISIBLE_TAG)) {
+              violations.push({
+                path: nextPath,
+                root: rootDeclaration,
+              });
+            } else if (!visited.has(referencedDeclaration)) {
+              visited.add(referencedDeclaration);
+              inspectDeclaration(referencedDeclaration, nextPath);
             }
           }
-
-          ts.forEachChild(node, inspectNode);
         }
 
-        ts.forEachChild(declaration, inspectNode);
+        ts.forEachChild(node, inspectNode);
       }
 
-      for (const declaration of rootDeclarations) {
-        inspectDeclaration(declaration, [declarationName(rootDeclaration)]);
-      }
+      ts.forEachChild(declaration, inspectNode);
     }
 
-    const uniqueViolations = new Map(
-      violations.map((violation) => [violation.path.join(" -> "), violation]),
-    );
+    for (const declaration of rootDeclarations) {
+      inspectDeclaration(declaration, [declarationName(rootDeclaration)]);
+    }
+  }
 
-    for (const violation of uniqueViolations.values()) {
+  const uniqueViolations = new Map(
+    violations.map((violation) => [violation.path.join(" -> "), violation]),
+  );
+  const diagnostics = [...uniqueViolations.values()]
+    .map((violation) => {
       const sourceFile = violation.root.getSourceFile();
       const { line, character } = sourceFile.getLineAndCharacterOfPosition(
         violation.root.getStart(sourceFile),
       );
-      const relativeFile = path.relative(process.cwd(), sourceFile.fileName);
+      const relativeFile = path.relative(currentDirectory, sourceFile.fileName);
 
-      process.stderr.write(
+      return (
         `${relativeFile}:${line + 1}:${character + 1} ` +
-          `Player-visible type reaches an unapproved project type: ` +
-          `${violation.path.join(" -> ")}\n`,
+        `Player-visible type reaches an unapproved project type: ` +
+        `${violation.path.join(" -> ")}\n`
       );
-    }
+    })
+    .join("");
 
-    if (uniqueViolations.size > 0) {
-      process.exitCode = 1;
-    }
-  }
+  return {
+    diagnostics,
+    exitCode: uniqueViolations.size > 0 ? 1 : 0,
+  };
+}
+
+function isMainModule() {
+  return (
+    process.argv[1] !== undefined &&
+    pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url
+  );
+}
+
+if (isMainModule()) {
+  const result = checkPublicContracts({
+    project: readProjectArgument(process.argv.slice(2)),
+  });
+  process.stderr.write(result.diagnostics);
+  process.exitCode = result.exitCode;
 }

@@ -1,8 +1,11 @@
 import { spawnSync } from "node:child_process";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { describe, expect, it } from "vitest";
+import { ESLint } from "eslint";
+import { cruise } from "dependency-cruiser";
+import extractDepcruiseOptions from "dependency-cruiser/config-utl/extract-depcruise-options";
+import { beforeAll, describe, expect, it } from "vitest";
 
 const repositoryRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -12,7 +15,7 @@ const dependencyCruiser = path.join(
   repositoryRoot,
   "node_modules/dependency-cruiser/bin/dependency-cruise.mjs",
 );
-const eslint = path.join(repositoryRoot, "node_modules/eslint/bin/eslint.js");
+const eslintConfig = path.join(repositoryRoot, "eslint.config.mjs");
 const publicContractChecker = path.join(
   repositoryRoot,
   "build/check-public-contracts.mjs",
@@ -23,7 +26,51 @@ const dependencyConfig = path.join(
 );
 const fixtures = path.join(repositoryRoot, "tests/architecture/fixtures");
 
-function cruiseFixture(name: string) {
+interface ContractCheckerModule {
+  checkPublicContracts(options?: { cwd?: string; project?: string }): {
+    diagnostics: string;
+    exitCode: number;
+  };
+}
+
+let contractChecker: ContractCheckerModule | undefined;
+let dependencyCruiseOptions:
+  Awaited<ReturnType<typeof extractDepcruiseOptions>> | undefined;
+let eslint: ESLint | undefined;
+
+beforeAll(async () => {
+  contractChecker = (await import(
+    pathToFileURL(publicContractChecker).href
+  )) as ContractCheckerModule;
+  dependencyCruiseOptions = await extractDepcruiseOptions(dependencyConfig);
+  eslint = new ESLint({
+    cwd: repositoryRoot,
+    overrideConfigFile: eslintConfig,
+  });
+});
+
+async function cruiseFixture(name: string) {
+  if (!dependencyCruiseOptions) {
+    throw new Error("dependency-cruiser options were not initialized");
+  }
+
+  const result = await cruise(["src"], {
+    ...dependencyCruiseOptions,
+    baseDir: path.join(fixtures, name),
+    outputType: "err",
+  });
+  if (typeof result.output !== "string") {
+    throw new Error("dependency-cruiser did not return text output");
+  }
+
+  return {
+    status: result.exitCode,
+    stdout: result.output,
+    stderr: "",
+  };
+}
+
+function cruiseFixtureCli(name: string) {
   return spawnSync(
     process.execPath,
     [dependencyCruiser, "--config", dependencyConfig, "src"],
@@ -34,19 +81,48 @@ function cruiseFixture(name: string) {
   );
 }
 
-function lintDomain(source: string) {
-  return spawnSync(
-    process.execPath,
-    [eslint, "--stdin", "--stdin-filename", "src/domain/example.mjs"],
-    {
-      cwd: repositoryRoot,
-      encoding: "utf8",
-      input: source,
-    },
-  );
+async function lintDomain(source: string) {
+  if (!eslint) {
+    throw new Error("ESLint was not initialized");
+  }
+
+  const results = await eslint.lintText(source, {
+    filePath: "src/domain/example.mjs",
+  });
+  const diagnostics = results
+    .flatMap((result) =>
+      result.messages.map(
+        ({ message, severity }) =>
+          `${severity === 2 ? "error" : "warning"}: ${message}`,
+      ),
+    )
+    .join("\n");
+
+  return {
+    status: results.some((result) => result.errorCount > 0) ? 1 : 0,
+    stdout: diagnostics,
+    stderr: "",
+  };
 }
 
 function checkPublicContractFixture(name: string) {
+  if (!contractChecker) {
+    throw new Error("public-contract checker was not initialized");
+  }
+
+  const result = contractChecker.checkPublicContracts({
+    cwd: path.join(fixtures, name),
+    project: "tsconfig.json",
+  });
+
+  return {
+    status: result.exitCode,
+    stdout: "",
+    stderr: result.diagnostics,
+  };
+}
+
+function checkPublicContractFixtureCli(name: string) {
   return spawnSync(
     process.execPath,
     [publicContractChecker, "--project", "tsconfig.json"],
@@ -58,8 +134,8 @@ function checkPublicContractFixture(name: string) {
 }
 
 describe("architectural dependency rules", () => {
-  it("accepts dependencies that point inward", () => {
-    const result = cruiseFixture("valid-inward");
+  it("accepts dependencies that point inward", async () => {
+    const result = await cruiseFixture("valid-inward");
 
     expect(result.stderr).toBe("");
     expect(result.status).toBe(0);
@@ -96,11 +172,19 @@ describe("architectural dependency rules", () => {
       "forbidden-ruleset-composition",
       "application-does-not-compose-ruleset-registry",
     ],
-  ])("rejects %s", (_description, fixture, rule) => {
-    const result = cruiseFixture(fixture);
+  ])("rejects %s", async (_description, fixture, rule) => {
+    const result = await cruiseFixture(fixture);
 
     expect(result.status).not.toBe(0);
     expect(result.stdout + result.stderr).toContain(rule);
+  });
+
+  it("keeps the dependency-cruiser CLI path covered", () => {
+    const result = cruiseFixtureCli("valid-inward");
+
+    expect(result.stderr).toBe("");
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("no dependency violations found");
   });
 });
 
@@ -114,15 +198,15 @@ describe("authoritative domain API rules", () => {
     ["unlisted browser file APIs", "export const reader = FileReader;"],
     ["unlisted Node paths", "export const directory = __dirname;"],
     ["unlisted Node scheduling", "export const schedule = setImmediate;"],
-  ])("rejects %s", (_description, source) => {
-    const result = lintDomain(source);
+  ])("rejects %s", async (_description, source) => {
+    const result = await lintDomain(source);
 
     expect(result.status).not.toBe(0);
     expect(result.stdout + result.stderr).toContain("error");
   });
 
-  it("accepts explicit randomness supplied to domain code", () => {
-    const result = lintDomain(
+  it("accepts explicit randomness supplied to domain code", async () => {
+    const result = await lintDomain(
       "export const roll = (nextRandom) => nextRandom();",
     );
 
@@ -162,5 +246,14 @@ describe("player-visible contract rules", () => {
       "GameObservation -> MergeHiddenState",
     );
     expect(result.stdout + result.stderr).toContain("SoundPort -> RunState");
+  });
+
+  it("keeps the public-contract CLI path covered", () => {
+    const result = checkPublicContractFixtureCli("forbidden-public-contract");
+
+    expect(result.status).not.toBe(0);
+    expect(result.stdout + result.stderr).toContain(
+      "PlayerObservation -> EncounterObservation -> EnemySnapshot",
+    );
   });
 });
