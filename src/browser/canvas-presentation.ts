@@ -2388,10 +2388,15 @@ export class CanvasPresentation implements PresentationPort {
     frame: Readonly<PresentationFrame>,
     projection: ReturnType<typeof calculateWorldProjection>,
   ): HTMLCanvasElement {
+    const camera = frame.current.camera;
     const key = JSON.stringify([
       this.#canvas.width,
       this.#canvas.height,
-      visualObservationSignature(frame.current),
+      camera.x,
+      camera.y,
+      camera.width,
+      camera.height,
+      frame.current.day,
       this.#atlas.status,
     ]);
     if (this.#staticLayer !== undefined && this.#staticLayerKey === key) {
