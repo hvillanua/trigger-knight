@@ -95,6 +95,37 @@ function isPlainRecord(value: object): boolean {
   return prototype === Object.prototype || prototype === null;
 }
 
+const MAX_ARRAY_INDEX = 2 ** 32 - 1;
+
+function isArrayIndexKey(key: string): boolean {
+  if (key === "0" || key[0] !== "0") {
+    const numericKey = Number(key);
+    return (
+      Number.isInteger(numericKey) &&
+      numericKey >= 0 &&
+      numericKey < MAX_ARRAY_INDEX &&
+      String(numericKey) === key
+    );
+  }
+
+  return false;
+}
+
+/** Matches JSON.stringify order after normalizeCanonicalJson's object copy. */
+function canonicalObjectKeys(value: object): string[] {
+  const integerKeys: string[] = [];
+  const stringKeys: string[] = [];
+
+  for (const key of Object.keys(value)) {
+    (isArrayIndexKey(key) ? integerKeys : stringKeys).push(key);
+  }
+
+  integerKeys.sort((left, right) => Number(left) - Number(right));
+  stringKeys.sort();
+
+  return [...integerKeys, ...stringKeys];
+}
+
 function isArray(value: object): value is readonly unknown[] {
   return Array.isArray(value);
 }
@@ -259,7 +290,7 @@ function stringifyCanonicalValue(
   }
 
   const parts: string[] = [];
-  for (const key of Object.keys(value).sort()) {
+  for (const key of canonicalObjectKeys(value)) {
     const serialized = stringifyCanonicalValue(
       (value as Record<string, unknown>)[key],
       nestedAncestors,
