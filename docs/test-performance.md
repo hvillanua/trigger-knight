@@ -190,3 +190,40 @@ changed TypeScript files, and the focused diagnostics and canonical JSON unit
 tests passed. Environment overrides resolved to the requested values, and the
 CI Playwright configuration resolved to `50%`. The aggregate validation command and pre-push hook were not
 run, and no push or GitHub Actions polling was performed.
+
+## Tooling test startup measurement
+
+Issue #137 moves the architecture checker cases and validation-runner behavior
+checks into the same Node process as Vitest. The tests still run one real CLI
+path for dependency-cruiser, the public-contract checker, and the validation
+runner. The production architecture command and the repository-owned pre-push
+validation gate were not removed or replaced.
+
+Run the focused pair with one worker:
+
+```sh
+npm run test:unit -- tests/unit/architecture-boundaries.test.ts tests/unit/validation-runner.test.ts --maxWorkers=1
+```
+
+The process counts below cover commands launched directly by these test files.
+They exclude Vitest's own worker and npm's wrapper process.
+
+| Focused test                      | Before | After | Before timing | After timing |
+| --------------------------------- | -----: | ----: | ------------: | -----------: |
+| `architecture-boundaries.test.ts` |     18 |     2 |        8.57 s |       3.20 s |
+| `validation-runner.test.ts`       |     11 |     8 |        1.42 s |       1.40 s |
+
+The architecture test previously started seven dependency-cruiser processes,
+nine ESLint processes, and two public-contract checker processes. It now calls
+the dependency-cruiser and ESLint APIs in-process, calls the public-contract
+checker function in-process, and keeps one CLI smoke process for each CLI.
+
+The validation test previously started two runner processes. Those runners
+started seven and two fixture npm commands for the success and failure cases.
+The behavior tests now inject a command function, which proves gate order,
+stop-on-failure, exit status, and diagnostic forwarding without child
+processes. One full CLI smoke test still starts one runner and its seven fixture
+npm commands.
+
+The timings are one-worker wall-clock readings from this workspace on September
+15, 2026. They are comparable focused-test readings, not full-suite benchmarks.

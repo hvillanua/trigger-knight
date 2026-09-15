@@ -42,6 +42,18 @@ installation. The repository-owned pre-push hook is the complete validation gate
 for code-affecting changes. GitHub Actions is intentionally disabled and is not a
 merge gate.
 
+For the architecture and validation-runner tooling tests, use this focused
+command:
+
+```sh
+npm run test:unit -- tests/unit/architecture-boundaries.test.ts tests/unit/validation-runner.test.ts --maxWorkers=1
+```
+
+These tests run checker cases in-process and keep representative CLI smoke
+coverage. The production architecture command and the complete pre-push gate
+remain enabled. See the [tooling test measurements](docs/test-performance.md#tooling-test-startup-measurement)
+for the before-and-after process counts and timings.
+
 Local test runs use at most four workers and at most half the available CPU
 parallelism. Override Vitest with `VITEST_MAX_WORKERS` or
 `npm run test:unit -- --maxWorkers=2`. Override Playwright with
