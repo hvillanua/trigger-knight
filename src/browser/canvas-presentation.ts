@@ -701,12 +701,14 @@ function drawLifeBar(
   drawClippedLifespanFill(context, atlas, x, y, 309, 14, ratio);
   drawUiImage(context, atlas, "lifespan-frame", x, y, 309, 14);
   // These fields mirror InterfaceLifespan2's separate Calibri text fields.
-  drawOutlinedText(context, "LIFESPAN", x + 57, y + 22, {
+  // Their baselines account for each font's ascent so the visible tops sit
+  // around the center of the 14px lifespan frame.
+  drawOutlinedText(context, "LIFESPAN", x + 57, y + 21, {
     font: `700 20px ${CANVAS_FONT_FAMILIES.body}`,
     align: "center",
     lineWidth: 2,
   });
-  drawOutlinedText(context, String(lifespan.whole), x + 260, y + 22, {
+  drawOutlinedText(context, String(lifespan.whole), x + 260, y + 29, {
     font: `700 32px ${CANVAS_FONT_FAMILIES.body}`,
     align: "right",
     lineWidth: 3,
@@ -715,14 +717,14 @@ function drawLifeBar(
     context,
     String(lifespan.fraction).padStart(2, "0"),
     x + 270,
-    y + 23,
+    y + 21,
     {
       font: `700 20px ${CANVAS_FONT_FAMILIES.body}`,
       align: "center",
       lineWidth: 2,
     },
   );
-  drawOutlinedText(context, "%", x + 294, y + 22, {
+  drawOutlinedText(context, "%", x + 294, y + 28, {
     font: `700 30px ${CANVAS_FONT_FAMILIES.body}`,
     align: "center",
     lineWidth: 3,

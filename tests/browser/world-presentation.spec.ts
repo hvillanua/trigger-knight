@@ -163,25 +163,25 @@ test("clips the lifespan fill inside its original frame", async ({ page }) => {
     expect.objectContaining({
       text: "LIFESPAN",
       x: 217,
-      y: 32,
+      y: 31,
       font: expect.stringContaining("20px"),
     }),
     expect.objectContaining({
       text: "51",
       x: 420,
-      y: 32,
+      y: 39,
       font: expect.stringContaining("32px"),
     }),
     expect.objectContaining({
       text: "19",
       x: 430,
-      y: 33,
+      y: 31,
       font: expect.stringContaining("20px"),
     }),
     expect.objectContaining({
       text: "%",
       x: 454,
-      y: 32,
+      y: 38,
       font: expect.stringContaining("30px"),
     }),
   ]);
