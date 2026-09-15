@@ -742,6 +742,20 @@ body {
   box-shadow: none;
 }
 
+.gameplay-stage,
+.gameplay-stage * {
+  cursor: none;
+}
+
+#title-screen,
+#title-screen *,
+.gameplay-stage[data-tutorial-page],
+.gameplay-stage[data-tutorial-page] * {
+  cursor:
+    url("../assets/original/images/12.png") 4 2,
+    none;
+}
+
 .accessible-hud,
 .accessible-stage-status {
   position: absolute !important;

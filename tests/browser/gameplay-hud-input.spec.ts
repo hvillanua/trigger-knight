@@ -89,8 +89,46 @@ test("hides pause and main-menu controls during an active run", async ({
 
 test("hides the physical cursor over the gameplay canvas", async ({ page }) => {
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
 
   await expect(page.locator("#game-canvas")).toHaveCSS("cursor", "none");
+});
+
+test("uses the original hand cursor on the title and tutorial screens", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+
+  const cursorsWhileTutorial = await page.evaluate(() => {
+    const stage = document.querySelector<HTMLElement>(".gameplay-stage");
+    const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
+    if (stage === null || canvas === null)
+      throw new Error("Missing gameplay stage");
+    return {
+      stage: getComputedStyle(stage).cursor,
+      canvas: getComputedStyle(canvas).cursor,
+    };
+  });
+  expect(cursorsWhileTutorial.stage).toContain("/12.png");
+  expect(cursorsWhileTutorial.canvas).toContain("/12.png");
+
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+  await page.keyboard.press("p");
+  await page.getByRole("button", { name: "Main menu", exact: true }).click();
+  await expect(page.locator("#title-screen")).toBeVisible();
+
+  const titleCursors = await page.evaluate(() => {
+    const title = document.querySelector<HTMLElement>("#title-screen");
+    const start = document.querySelector<HTMLButtonElement>("#start-run");
+    if (title === null || start === null)
+      throw new Error("Missing title screen");
+    return {
+      title: getComputedStyle(title).cursor,
+      start: getComputedStyle(start).cursor,
+    };
+  });
+  expect(titleCursors.title).toContain("/12.png");
+  expect(titleCursors.start).toContain("/12.png");
 });
 
 test("dismisses the first tutorial dialog from any stage click", async ({

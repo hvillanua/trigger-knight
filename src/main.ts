@@ -647,6 +647,13 @@ function syncControls(observation: Readonly<GameObservation>): void {
   const ended = observation.lifecycle.phase === "ended";
   gameplayStage.dataset.paused = String(observation.lifecycle.paused);
   gameplayStage.dataset.phase = observation.lifecycle.phase;
+  if (observation.lifecycle.tutorialPage === null) {
+    delete gameplayStage.dataset.tutorialPage;
+  } else {
+    gameplayStage.dataset.tutorialPage = String(
+      observation.lifecycle.tutorialPage,
+    );
+  }
   dismissTutorialButton.disabled =
     ended || !observation.actions.canDismissTutorial;
   if (advanceButton !== undefined) advanceButton.disabled = ended;
