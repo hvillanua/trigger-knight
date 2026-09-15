@@ -432,7 +432,12 @@ describe("Milestone 3 economy verification", () => {
   it("matches a browser session and a headless policy trace for the same schedule", () => {
     const seed = "m3-parity-schedule";
     const headless = runPolicy(seed);
-    const browser = createBrowserGameplaySession(gameplayEngine, config(seed));
+    const browser = createBrowserGameplaySession(
+      gameplayEngine,
+      config(seed),
+      undefined,
+      { retainDiagnostics: true },
+    );
 
     for (const checkpoint of headless.trace.checkpoints.slice(1)) {
       browser.dispatch(checkpoint.commands);

@@ -1,3 +1,31 @@
+## Issue #138: gameplay stepping and diagnostic canonicalization
+
+The ordinary gameplay execution now keeps only the current checkpoint. It copies
+and recursively freezes commands, state, observations, and events without sorting
+their keys on every step. The complete host diagnostic trace is retained only when
+`retainDiagnostics: true` is passed. Browser development enables that option
+explicitly, while production browser sessions and headless runs without `onTrace`
+do not retain the full trace. The simulation result still computes its required
+versioned `traceHash` for every run; `onTrace` additionally opts into retained
+checkpoints and complete trace delivery.
+
+The focused benchmark below used the same 512-step direct execution workload, six
+post-warmup samples, explicit garbage collection, and the same WSL2 host before and
+after the change. The readings are comparable engineering measurements, not a
+full-suite benchmark or a statistical estimate.
+
+| Execution mode           | Stepping before | Stepping after | Heap delta after stepping, before | Heap delta after stepping, after |
+| ------------------------ | --------------: | -------------: | --------------------------------: | -------------------------------: |
+| Diagnostics not retained |       17.736 ms |      12.139 ms |                          19,944 B |                         13,455 B |
+| Diagnostics retained     |       17.775 ms |      12.254 ms |                       1,921,331 B |                      1,639,468 B |
+
+The retained mode also measured diagnostic reads at 37.058 ms before and 36.546
+ms after, with post-read heap deltas of 1,929,277 B and 1,645,353 B. The retained
+trace remains complete and uses the existing canonical encodings and hashes. The
+tradeoff is that callers requesting diagnostics still pay the intentional memory
+and serialization cost, while ordinary stepping avoids retaining and repeatedly
+copying the full trace.
+
 The local defaults are now four Vitest workers and four Playwright workers,
 capped further on smaller machines. On the measured machine, the complete browser
 suite fell from 110.39 seconds with the original eight-worker setup to 81.53
@@ -123,8 +151,9 @@ runs.
 Coverage remains intact. The tests retain every checkpoint, both output variants,
 the command schedules, independent browser result hashing, checkpoint and trace
 hash comparisons, profile settlements, and all public observation, event, and
-presentation assertions. Checkpoint values already pass through canonical JSON
-normalization, which rejects unsupported values and normalizes negative zero.
+presentation assertions. Checkpoint values still pass through the canonical JSON
+compatibility checks, which reject unsupported values and normalize negative zero;
+ordinary snapshots no longer sort keys until a canonical encoding is requested.
 The new transport neither selects fields nor replaces comparisons with hashes.
 Blocks remain bounded by the existing size.
 

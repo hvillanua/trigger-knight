@@ -37,6 +37,7 @@ function setup() {
     { present },
     {
       renderOnDispatch: false,
+      retainDiagnostics: true,
       onTransition,
       onCompletedRun,
     },
@@ -71,7 +72,9 @@ describe("browser fixed clock", () => {
     "matches every headless checkpoint at %i Hz",
     (hz) => {
       const { clock, session, frame, present, onTransition } = setup();
-      const headless = createGameplayExecution(engine, config);
+      const headless = createGameplayExecution(engine, config, {
+        retainDiagnostics: true,
+      });
       clock.start();
       frame(0);
       clock.enqueue(dismiss);

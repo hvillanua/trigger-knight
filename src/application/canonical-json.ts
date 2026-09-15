@@ -90,9 +90,220 @@ export function normalizeCanonicalJson(value: unknown): CanonicalJsonValue {
   return normalizeValue(value, new Set());
 }
 
+function isPlainRecord(value: object): boolean {
+  const prototype = Object.getPrototypeOf(value) as unknown;
+  return prototype === Object.prototype || prototype === null;
+}
+
+const MAX_ARRAY_INDEX = 2 ** 32 - 1;
+
+function isArrayIndexKey(key: string): boolean {
+  if (key === "0" || key[0] !== "0") {
+    const numericKey = Number(key);
+    return (
+      Number.isInteger(numericKey) &&
+      numericKey >= 0 &&
+      numericKey < MAX_ARRAY_INDEX &&
+      String(numericKey) === key
+    );
+  }
+
+  return false;
+}
+
+/** Matches JSON.stringify order after normalizeCanonicalJson's object copy. */
+function canonicalObjectKeys(value: object): string[] {
+  const integerKeys: string[] = [];
+  const stringKeys: string[] = [];
+
+  for (const key of Object.keys(value)) {
+    (isArrayIndexKey(key) ? integerKeys : stringKeys).push(key);
+  }
+
+  integerKeys.sort((left, right) => Number(left) - Number(right));
+  stringKeys.sort();
+
+  return [...integerKeys, ...stringKeys];
+}
+
+function isArray(value: object): value is readonly unknown[] {
+  return Array.isArray(value);
+}
+
+function isDataProperty(value: object, key: string): boolean {
+  const descriptor = Object.getOwnPropertyDescriptor(value, key);
+  return descriptor !== undefined && Object.hasOwn(descriptor, "value");
+}
+
+function copyAndFreezeValue(
+  value: unknown,
+  ancestors: ReadonlySet<object>,
+): CanonicalJsonValue {
+  if (
+    value === null ||
+    typeof value === "boolean" ||
+    typeof value === "string"
+  ) {
+    return value;
+  }
+
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) {
+      throw new TypeError("Canonical JSON numbers must be finite");
+    }
+
+    return Object.is(value, -0) ? 0 : value;
+  }
+
+  if (typeof value !== "object") {
+    throw new TypeError("Canonical JSON contains an unsupported value");
+  }
+
+  if (ancestors.has(value)) {
+    throw new TypeError("Canonical JSON cannot contain cycles");
+  }
+
+  const nestedAncestors = new Set(ancestors);
+  nestedAncestors.add(value);
+
+  if (isArray(value)) {
+    const keys = Object.keys(value);
+    const propertyNames = Object.getOwnPropertyNames(value).filter(
+      (key) => key !== "length",
+    );
+    let reusable =
+      Object.isFrozen(value) &&
+      Object.getPrototypeOf(value) === Array.prototype &&
+      propertyNames.length === keys.length &&
+      Object.getOwnPropertySymbols(value).length === 0 &&
+      keys.every((key, index) => key === String(index));
+    const copied = new Array<CanonicalJsonValue>(value.length);
+
+    for (let index = 0; index < value.length; index += 1) {
+      if (!Object.hasOwn(value, index)) {
+        throw new TypeError("Canonical JSON arrays cannot contain holes");
+      }
+
+      reusable &&= isDataProperty(value, String(index));
+      const original = value[index];
+      const copiedValue = copyAndFreezeValue(original, nestedAncestors);
+      copied[index] = copiedValue;
+      reusable &&= Object.is(copiedValue, original);
+    }
+
+    if (reusable) {
+      return value as CanonicalJsonValue;
+    }
+
+    return Object.freeze(copied);
+  }
+
+  if (!isPlainRecord(value)) {
+    throw new TypeError("Canonical JSON objects must be plain records");
+  }
+
+  const keys = Object.keys(value);
+  const propertyNames = Object.getOwnPropertyNames(value);
+  let reusable =
+    Object.isFrozen(value) &&
+    Object.getPrototypeOf(value) === Object.prototype &&
+    propertyNames.length === keys.length &&
+    Object.getOwnPropertySymbols(value).length === 0;
+  const copiedValues: CanonicalJsonValue[] = [];
+
+  for (const key of keys) {
+    reusable &&= isDataProperty(value, key);
+    const original = (value as Record<string, unknown>)[key];
+    const copiedValue = copyAndFreezeValue(original, nestedAncestors);
+    copiedValues.push(copiedValue);
+    reusable &&= Object.is(copiedValue, original);
+  }
+
+  if (reusable) {
+    return value as unknown as CanonicalJsonValue;
+  }
+
+  const copied: Record<string, CanonicalJsonValue> = {};
+  for (let index = 0; index < keys.length; index += 1) {
+    Object.defineProperty(copied, keys[index]!, {
+      configurable: true,
+      enumerable: true,
+      value: copiedValues[index],
+      writable: true,
+    });
+  }
+
+  return Object.freeze(copied);
+}
+
+/** Copies and recursively freezes one JSON-compatible value without sorting keys. */
+export function copyAndFreezeJson(value: unknown): CanonicalJsonValue {
+  return copyAndFreezeValue(value, new Set());
+}
+
+function stringifyCanonicalValue(
+  value: unknown,
+  ancestors: ReadonlySet<object>,
+): string {
+  if (
+    value === null ||
+    typeof value === "boolean" ||
+    typeof value === "string"
+  ) {
+    return JSON.stringify(value);
+  }
+
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) {
+      throw new TypeError("Canonical JSON numbers must be finite");
+    }
+
+    return JSON.stringify(Object.is(value, -0) ? 0 : value);
+  }
+
+  if (typeof value !== "object") {
+    throw new TypeError("Canonical JSON contains an unsupported value");
+  }
+
+  if (ancestors.has(value)) {
+    throw new TypeError("Canonical JSON cannot contain cycles");
+  }
+
+  const nestedAncestors = new Set(ancestors);
+  nestedAncestors.add(value);
+
+  if (isArray(value)) {
+    const parts: string[] = [];
+    for (let index = 0; index < value.length; index += 1) {
+      if (!Object.hasOwn(value, index)) {
+        throw new TypeError("Canonical JSON arrays cannot contain holes");
+      }
+
+      parts.push(stringifyCanonicalValue(value[index], nestedAncestors));
+    }
+
+    return `[${parts.join(",")}]`;
+  }
+
+  if (!isPlainRecord(value)) {
+    throw new TypeError("Canonical JSON objects must be plain records");
+  }
+
+  const parts: string[] = [];
+  for (const key of canonicalObjectKeys(value)) {
+    const serialized = stringifyCanonicalValue(
+      (value as Record<string, unknown>)[key],
+      nestedAncestors,
+    );
+    parts.push(`${JSON.stringify(key)}:${serialized}`);
+  }
+
+  return `{${parts.join(",")}}`;
+}
+
 /** Serializes one value with recursively sorted object keys. */
 export function stringifyCanonicalJson(value: unknown): string {
-  return JSON.stringify(normalizeCanonicalJson(value));
+  return stringifyCanonicalValue(value, new Set());
 }
 
 function rotateRight(value: number, places: number): number {

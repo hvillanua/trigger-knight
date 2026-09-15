@@ -5,6 +5,7 @@ import type {
   RunState,
 } from "../domain/contracts.js";
 import {
+  copyAndFreezeJson,
   fingerprintCanonicalJson,
   normalizeCanonicalJson,
 } from "./canonical-json.js";
@@ -75,10 +76,12 @@ export type GameplayTraceComparison =
 export interface GameplayExecution {
   dispatch(commands: readonly GameCommand[]): GameplayCheckpoint;
   readCurrentCheckpoint(): GameplayCheckpoint;
+  /** Reads the complete host trace; throws unless diagnostics were retained. */
   readDiagnostics(): GameplayTrace;
 }
 
 export interface GameplayExecutionOptions {
+  /** Retain the full host diagnostic trace for this execution. Defaults to false. */
   readonly retainDiagnostics?: boolean;
 }
 
@@ -90,8 +93,8 @@ interface CheckpointPayload {
   readonly events: readonly GameEvent[];
 }
 
-function normalizeAs<T>(value: T): T {
-  return normalizeCanonicalJson(value) as unknown as T;
+function snapshotAs<T>(value: T): T {
+  return copyAndFreezeJson(value) as unknown as T;
 }
 
 function payloadFor(checkpoint: GameplayCheckpoint): CheckpointPayload {
@@ -122,10 +125,12 @@ export function createGameplayExecution(
   config: RunConfig,
   options: GameplayExecutionOptions = {},
 ): GameplayExecution {
-  const normalizedConfig = normalizeAs(config);
-  const retainDiagnostics = options.retainDiagnostics ?? true;
-  let state = normalizeAs(engine.createRun(normalizedConfig));
-  let observation = normalizeAs(engine.observe(state));
+  const normalizedConfig = normalizeCanonicalJson(
+    config,
+  ) as unknown as RunConfig;
+  const retainDiagnostics = options.retainDiagnostics ?? false;
+  let state = snapshotAs(engine.createRun(normalizedConfig));
+  let observation = snapshotAs(engine.observe(state));
   let currentCheckpoint = createCheckpoint({
     index: 0,
     commands: Object.freeze([]),
@@ -141,16 +146,16 @@ export function createGameplayExecution(
 
   return Object.freeze({
     dispatch(commands: readonly GameCommand[]): GameplayCheckpoint {
-      const normalizedCommands = normalizeAs(commands);
+      const normalizedCommands = snapshotAs(commands);
       const result = engine.step(state, normalizedCommands);
-      state = normalizeAs(result.state);
-      observation = normalizeAs(engine.observe(state));
+      state = snapshotAs(result.state);
+      observation = snapshotAs(engine.observe(state));
       const checkpoint = createCheckpoint({
         index: currentCheckpoint.index + 1,
         commands: normalizedCommands,
         state,
         observation,
-        events: normalizeAs(result.events),
+        events: snapshotAs(result.events),
       });
       currentCheckpoint = checkpoint;
       if (retainDiagnostics) {

@@ -108,13 +108,18 @@ async function runBrowserCombatScenario(
         devicePixelRatio,
       );
       let renderedFrames = 0;
-      const session = createBrowserGameplaySession(engine, config, {
-        present(frame: PresentationFrame) {
-          if (frame.current.steps % renderEvery !== 0) return;
-          renderedFrames += 1;
-          presentation.present(frame);
+      const session = createBrowserGameplaySession(
+        engine,
+        config,
+        {
+          present(frame: PresentationFrame) {
+            if (frame.current.steps % renderEvery !== 0) return;
+            renderedFrames += 1;
+            presentation.present(frame);
+          },
         },
-      });
+        { retainDiagnostics: true },
+      );
       const policy = createCombatPolicy();
       const agent = policy.createAgent();
       let observation = engine.observe(engine.createRun(config));

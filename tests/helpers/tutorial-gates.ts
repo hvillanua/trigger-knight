@@ -42,15 +42,20 @@ export function runTutorialGateScenario(
   engine: GameplayEngine,
   maxSteps = 2_200,
 ): TutorialGateScenarioResult {
-  const session = createBrowserGameplaySession(engine, {
-    ruleset: ORIGINAL_V13_RULESET_ID,
-    seed: "tutorial-gates-browser-parity",
-    initialProfile: {
-      schemaVersion: 1,
-      scoreMultiplier: 1,
-      tutorialPreference: "enabled",
+  const session = createBrowserGameplaySession(
+    engine,
+    {
+      ruleset: ORIGINAL_V13_RULESET_ID,
+      seed: "tutorial-gates-browser-parity",
+      initialProfile: {
+        schemaVersion: 1,
+        scoreMultiplier: 1,
+        tutorialPreference: "enabled",
+      },
     },
-  });
+    undefined,
+    { retainDiagnostics: true },
+  );
   let observation = session.readDiagnostics().checkpoints[0]!.observation;
   const tutorialPages: number[] = [];
 

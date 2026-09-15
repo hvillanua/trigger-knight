@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   fingerprintCanonicalJson,
+  normalizeCanonicalJson,
   stringifyCanonicalJson,
 } from "../../src/simulation/canonical-json.js";
 
@@ -33,6 +34,17 @@ describe("canonical JSON", () => {
       );
     },
   );
+
+  it("preserves JSON.stringify ordering for integer-index object keys", () => {
+    const value = { "10": "ten", "2": "two", alpha: true };
+
+    expect(stringifyCanonicalJson(value)).toBe(
+      '{"2":"two","10":"ten","alpha":true}',
+    );
+    expect(stringifyCanonicalJson(value)).toBe(
+      JSON.stringify(normalizeCanonicalJson(value)),
+    );
+  });
 
   it("rejects sparse arrays", () => {
     const sparse = new Array<unknown>(1);

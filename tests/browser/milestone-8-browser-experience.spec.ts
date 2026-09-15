@@ -402,12 +402,16 @@ test("reduced motion keeps timing and committed results durable", async ({
     }
     expect(reducedTrace).toEqual(normalTrace);
 
-    const headless = createGameplayExecution(createTestGameplayEngine(), {
-      ruleset: ORIGINAL_V13_RULESET_ID,
-      seed: "m4-policy-3",
-      initialProfile: disabledTutorialProfile,
-      startImmediately: true,
-    });
+    const headless = createGameplayExecution(
+      createTestGameplayEngine(),
+      {
+        ruleset: ORIGINAL_V13_RULESET_ID,
+        seed: "m4-policy-3",
+        initialProfile: disabledTutorialProfile,
+        startImmediately: true,
+      },
+      { retainDiagnostics: true },
+    );
     for (const commands of normalTrace.commands) {
       headless.dispatch(commands);
     }

@@ -37,7 +37,13 @@ test("retains an explicit complete profile with identical browser and headless t
       achievementSlots: [true, false, false, false, false, false],
     },
   };
-  const execution = createGameplayExecution(createTestGameplayEngine(), config);
+  const execution = createGameplayExecution(
+    createTestGameplayEngine(),
+    config,
+    {
+      retainDiagnostics: true,
+    },
+  );
   execution.dispatch([{ type: "dismiss-tutorial" }]);
   for (let i = 0; i < 100; i += 1) execution.dispatch([]);
   await page.goto("/?manual=1");
@@ -55,6 +61,7 @@ test("retains an explicit complete profile with identical browser and headless t
     const execution = createGameplayExecution(
       createGameplayEngine(ruleSetRegistry),
       input,
+      { retainDiagnostics: true },
     );
     execution.dispatch([{ type: "dismiss-tutorial" }]);
     for (let i = 0; i < 100; i += 1) execution.dispatch([]);

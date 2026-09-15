@@ -356,6 +356,24 @@ describe("headless simulation runner", () => {
     expect(second.traceHash).toBe(first.traceHash);
   });
 
+  it("preserves trace hashes for integer-key policy configuration", () => {
+    const numericKeyPolicy: PlayerPolicy = {
+      descriptor: {
+        id: "numeric-key-policy",
+        version: "1",
+        config: { "10": "ten", "2": "two" },
+      },
+      createAgent: () => ({ decide: () => [] }),
+    };
+    const runner = createSimulationRunner(gameplayEngine);
+
+    expect(
+      runner.run(request(numericKeyPolicy, { maxSteps: 1 })).traceHash,
+    ).toBe(
+      "sha256-v1:22793d495410826583efec93a47b3ad7edfe63ea0d384dbd9ef44d395ac8eb09",
+    );
+  });
+
   it("returns batch results in request order without sharing run state", async () => {
     const runner = createSimulationRunner(gameplayEngine);
     const first = request(nonProgressingPolicy, {

@@ -23,10 +23,12 @@ export interface BrowserGameplaySession {
   dispatch(commands: readonly GameCommand[]): BrowserDispatchResult;
   readObservation(): Readonly<GameObservation>;
   render(interpolation: number): void;
+  /** Reads the complete host trace; throws unless diagnostics were retained. */
   readDiagnostics(): GameplayTrace;
 }
 
 export interface BrowserGameplaySessionOptions {
+  /** Full host diagnostics are opt-in and default to false. */
   readonly retainDiagnostics?: boolean;
   readonly renderOnDispatch?: boolean;
   /** Each logical transition, once and in order. Render calls never repeat it. */

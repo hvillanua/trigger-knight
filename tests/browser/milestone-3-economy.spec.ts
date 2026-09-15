@@ -94,6 +94,8 @@ test("matches Node and Chromium traces for a purchasing policy schedule", async 
       const session = sessionModule.createBrowserGameplaySession(
         engine,
         runConfig,
+        undefined,
+        { retainDiagnostics: true },
       );
 
       for (const commands of schedule) {
@@ -162,6 +164,7 @@ test("keeps policy outcomes fixed across Canvas size, DPR, and redraw cadence", 
               engine,
               runConfig,
               new presentationModule.CanvasPresentation(canvas),
+              { retainDiagnostics: true },
             );
 
             for (const commands of schedule) {

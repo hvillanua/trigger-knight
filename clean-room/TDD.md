@@ -192,6 +192,8 @@ The policy descriptor contains a stable identity, an implementation version, and
 
 A distinct observation model for privileged, diagnostic, or otherwise specialized automated agents is deferred. It may be introduced behind a separately named boundary only when a concrete requirement demonstrates that the shared public observation is insufficient. Ordinary `PlayerPolicy` implementations continue to receive the same public gameplay information as browser players.
 
+Full host diagnostic traces are opt-in and are not retained by an ordinary gameplay execution. Browser development composition may request them for diagnostics, and the simulation runner requests them only when its `onTrace` callback is provided. The public `RunResult.traceHash` remains part of every simulation result and is computed independently of retaining the complete checkpoint trace.
+
 Every simulation requires a positive finite `maxSteps`. The budget counts every engine step, including paused or tutorial-gated steps, so a non-progressing policy cannot block a batch indefinitely. Reaching the budget returns `step-limit`; it is a runner termination, not a gameplay death.
 
 Every run starts from its initial configuration and executes continuously to gameplay termination or `step-limit`. Mid-run simulation persistence and resumption are not part of this boundary.

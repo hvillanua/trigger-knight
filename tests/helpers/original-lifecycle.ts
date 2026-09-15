@@ -74,6 +74,7 @@ export function runOriginalLifecycleScenario(
     engine,
     originalLifecycleConfig,
     options.presentation,
+    { retainDiagnostics: true },
   );
 
   for (let step = 1; step <= ORIGINAL_LIFECYCLE_TERMINAL_STEP; step += 1) {
