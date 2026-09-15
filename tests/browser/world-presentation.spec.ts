@@ -109,6 +109,81 @@ test("clips the lifespan fill inside its original frame", async ({ page }) => {
   expect(fillClipCount).toBeGreaterThan(2);
 });
 
+test("clips the health fill inside its original frame", async ({ page }) => {
+  await page.goto("/?manual=1");
+
+  const fillClipCount = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    while (canvas.dataset.assetStatus === "loading")
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+    let clipCount = 0;
+    let clipsBeforeFill = 0;
+    const clipDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "clip",
+    );
+    const drawImageDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "drawImage",
+    );
+    if (
+      typeof clipDescriptor?.value !== "function" ||
+      typeof drawImageDescriptor?.value !== "function"
+    ) {
+      throw new Error("Expected Canvas 2D methods");
+    }
+    const originalClip = clipDescriptor.value as () => void;
+    const originalDrawImage =
+      drawImageDescriptor.value as CanvasRenderingContext2D["drawImage"];
+    CanvasRenderingContext2D.prototype.clip = function () {
+      clipCount += 1;
+      originalClip.call(this);
+    };
+    CanvasRenderingContext2D.prototype.drawImage = function (
+      image: CanvasImageSource,
+      ...args: number[]
+    ) {
+      if (image instanceof HTMLImageElement && image.src.includes("/202.png")) {
+        clipsBeforeFill = clipCount;
+      }
+      originalDrawImage.apply(this, [image, ...args] as Parameters<
+        typeof originalDrawImage
+      >);
+    };
+    try {
+      const current = {
+        ...base,
+        steps: base.steps + 1,
+        lifecycle: { ...base.lifecycle, paused: false, tutorialPage: null },
+      };
+      presentation.present({
+        previous: base,
+        current,
+        interpolation: 1,
+        events: [],
+      });
+      return clipsBeforeFill;
+    } finally {
+      CanvasRenderingContext2D.prototype.clip = originalClip;
+      CanvasRenderingContext2D.prototype.drawImage = originalDrawImage;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(fillClipCount).toBeGreaterThan(4);
+});
+
 test("omits the building when its original image is unavailable", async ({
   page,
 }) => {

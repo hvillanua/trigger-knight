@@ -647,6 +647,28 @@ function drawClippedLifespanFill(
   context.restore();
 }
 
+function drawClippedHealthFill(
+  context: CanvasRenderingContext2D,
+  atlas: VisualAtlas,
+  frameX: number,
+  frameY: number,
+  ratio: number,
+): void {
+  const fillWidth = 97 * ratio;
+  if (fillWidth <= 0) return;
+
+  context.save();
+  context.beginPath();
+  context.moveTo(frameX + 5, frameY + 3);
+  context.lineTo(frameX + 89, frameY + 3);
+  context.lineTo(frameX + 96, frameY + 10);
+  context.lineTo(frameX + 10, frameY + 10);
+  context.closePath();
+  context.clip();
+  drawUiImage(context, atlas, "hp-fill", frameX + 2, frameY + 2, fillWidth, 9);
+  context.restore();
+}
+
 function drawLifeBar(
   context: CanvasRenderingContext2D,
   atlas: VisualAtlas,
@@ -764,7 +786,7 @@ function drawBottomHud(
         );
   const hpX = camera.x + 112;
   const hpY = y + 34;
-  drawUiImage(context, atlas, "hp-fill", hpX, hpY, 97 * hpRatio, 9);
+  drawClippedHealthFill(context, atlas, hpX, hpY - 2, hpRatio);
   drawUiImage(context, atlas, "hp-frame", hpX, hpY - 2, 101, 13);
   drawOutlinedText(context, "HP", hpX + 7, hpY + 4, {
     font: `700 9px ${CANVAS_FONT_FAMILIES.displayMedium}`,
@@ -1713,7 +1735,7 @@ function drawTutorialSurvivalIllustrations(
     0,
     1,
   );
-  drawUiImage(context, atlas, "hp-fill", hpX + 24, hpY + 45, 97 * hpRatio, 9);
+  drawClippedHealthFill(context, atlas, hpX + 23, hpY + 43, hpRatio);
   drawUiImage(context, atlas, "hp-frame", hpX + 23, hpY + 43, 101, 13);
   drawOutlinedText(context, "HP", hpX + 34, hpY + 54, {
     font: `700 10px ${CANVAS_FONT_FAMILIES.displayMedium}`,
