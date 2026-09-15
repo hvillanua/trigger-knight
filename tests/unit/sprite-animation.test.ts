@@ -250,6 +250,63 @@ describe("original sprite playback", () => {
     });
     expect(animation.hero.alpha).toBe(0);
   });
+  it("keeps lifespan fade state when running transitions are batched before battle", () => {
+    const engine = createTestGameplayEngine();
+    const base = engine.observe(
+      engine.createRun({
+        ruleset: ORIGINAL_V13_RULESET_ID,
+        seed: "batched-lifespan-fade",
+        initialProfile: { schemaVersion: 1, scoreMultiplier: 1 },
+      }),
+    );
+    const active = {
+      ...base,
+      lifecycle: {
+        ...base.lifecycle,
+        phase: "running" as const,
+        paused: false,
+        tutorialPage: null,
+        pregameStepsRemaining: 0,
+        activeGameplay: true,
+      },
+      lifespan: { whole: 50, fraction: 0 },
+    };
+    const runningLow = {
+      ...active,
+      steps: 1,
+      activeTicks: 1,
+      lifespan: { whole: 12, fraction: 34 },
+    };
+    const battleLow = {
+      ...runningLow,
+      steps: 2,
+      activeTicks: 2,
+      lifecycle: { ...runningLow.lifecycle, phase: "battling" as const },
+      battle: {
+        enemy: { id: "goblin" as const, maximumHp: 900, currentHp: 900 },
+        actors: {
+          hero: { phase: "idle" as const, x: 190 },
+          enemy: { phase: "idle" as const, x: 250 },
+        },
+      },
+    };
+
+    const everyTransition = new ActorAnimation();
+    everyTransition.present(active);
+    everyTransition.presentTransition(active, runningLow);
+    everyTransition.present(runningLow);
+    everyTransition.presentTransition(runningLow, battleLow);
+    everyTransition.present(battleLow);
+
+    const batchedTransition = new ActorAnimation();
+    batchedTransition.present(active);
+    batchedTransition.presentTransition(active, runningLow);
+    batchedTransition.presentTransition(runningLow, battleLow);
+    batchedTransition.present(battleLow);
+
+    expect(batchedTransition.hero.alpha).toBe(everyTransition.hero.alpha);
+    expect(batchedTransition.hero.alpha).toBe(0.49);
+  });
   it("keeps the last battle position when running resumes, then scrolls back with travel", () => {
     const engine = createTestGameplayEngine();
     const base = engine.observe(

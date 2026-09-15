@@ -1167,6 +1167,13 @@ document.addEventListener("keydown", (event) => {
 
   const observation = latestObservation;
   if (observation === undefined) return;
+  if (observation.lifecycle.phase === "ended") {
+    if (!nativeActivationCode(event.code)) return;
+    event.preventDefault();
+    canvas.focus({ preventScroll: true });
+    dismissSessionOver();
+    return;
+  }
   const commands = keyboardRouter.commandsFor(event.code, observation.actions);
   if (commands.length === 0) return;
   event.preventDefault();

@@ -435,7 +435,7 @@ test("reduced motion keeps timing and committed results durable", async ({
   }
 });
 
-test("holds the original session-over screen until a stage click", async ({
+test("dismisses the original session-over screen with keyboard activation", async ({
   page,
 }, testInfo) => {
   test.setTimeout(60_000);
@@ -475,7 +475,8 @@ test("holds the original session-over screen until a stage click", async ({
   });
   expect(screenshot.byteLength).toBeGreaterThan(1_000);
 
-  await canvas.click({ position: { x: 240, y: 160 } });
+  await canvas.focus();
+  await page.keyboard.press("Enter");
   await expect(page.locator("#run-result")).toHaveAttribute(
     "data-result-state",
     "committed",

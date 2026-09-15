@@ -1356,7 +1356,7 @@ test("slides the session-over bands over the frozen world", async ({
     { y: 0, height: 41 },
     { y: 280, height: 40 },
   ]);
-  expect(animation.actorDraws).toEqual([]);
+  expect(animation.actorDraws.length).toBeGreaterThan(0);
 });
 
 test("uses the original expanding click feedback for successful actions", async ({

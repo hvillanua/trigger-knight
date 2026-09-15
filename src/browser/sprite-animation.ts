@@ -179,6 +179,7 @@ export class ActorAnimation {
           : 0;
     }
 
+    this.#updateHeroLifespanAlpha(current);
     this.#previous = current;
   }
 
@@ -280,6 +281,22 @@ export class ActorAnimation {
     );
   }
 
+  #updateHeroLifespanAlpha(current: Readonly<GameObservation>): void {
+    const heroPhase = this.#heroPhase(current);
+    if (
+      current.lifecycle.phase === "running" &&
+      current.lifecycle.activeGameplay &&
+      heroPhase !== "dead"
+    ) {
+      this.#heroLifespanAlpha = heroLifespanAlpha(current.lifespan);
+    } else if (
+      current.lifecycle.phase === "ended" &&
+      current.lifecycle.terminalReason === "lifespan"
+    ) {
+      this.#heroLifespanAlpha = 0;
+    }
+  }
+
   #enemyIdentity(
     current: Readonly<GameObservation>,
   ): { readonly id: EnemyId; readonly phase: CombatActorPhase } | undefined {
@@ -297,19 +314,7 @@ export class ActorAnimation {
 
   #updatePose(current: Readonly<GameObservation>): void {
     const heroPhase = this.#heroPhase(current);
-    if (
-      current.lifecycle.phase === "running" &&
-      current.lifecycle.activeGameplay &&
-      heroPhase !== "dead"
-    ) {
-      this.#heroLifespanAlpha = heroLifespanAlpha(current.lifespan);
-    } else if (
-      current.lifecycle.phase === "ended" &&
-      current.lifecycle.terminalReason === "lifespan"
-    ) {
-      this.#heroLifespanAlpha = 0;
-    }
-
+    this.#updateHeroLifespanAlpha(current);
     const hero = this.#pose(
       "hero",
       heroPhase,

@@ -1166,10 +1166,13 @@ function drawGameplayHud(
   events: readonly GameEvent[],
   pointer: WorldPoint | undefined,
   retainedEffect: Readonly<EffectRecord> | undefined,
+  drawPrompt = true,
 ): void {
   drawGoldAndLifespan(context, atlas, observation);
   drawBottomHud(context, atlas, observation);
-  drawContextPrompt(context, atlas, observation, pointer);
+  if (drawPrompt) {
+    drawContextPrompt(context, atlas, observation, pointer);
+  }
   drawMessageStrip(
     context,
     atlas,
@@ -2098,31 +2101,6 @@ function drawSessionOver(
   }
 }
 
-function drawSessionOverBackground(
-  context: CanvasRenderingContext2D,
-  frame: Readonly<PresentationFrame>,
-  atlas: VisualAtlas,
-): void {
-  const camera = frame.current.camera;
-  const distance = interpolate(
-    frame.previous.distance,
-    frame.current.distance,
-    frame.interpolation,
-  );
-  drawMovingBackgroundLayer(context, camera, distance, atlas, {
-    id: "mountains",
-    speed: 0.18,
-    y: 82,
-    height: 120,
-  });
-  drawMovingBackgroundLayer(context, camera, distance, atlas, {
-    id: "ground",
-    speed: 1,
-    y: 164,
-    height: 188,
-  });
-}
-
 function drawDynamicWorld(
   context: CanvasRenderingContext2D,
   frame: Readonly<PresentationFrame>,
@@ -2672,7 +2650,24 @@ export class CanvasPresentation implements PresentationPort {
       : this.#activeEffects;
     const ended = this.#frame.current.lifecycle.phase === "ended";
     if (ended) {
-      drawSessionOverBackground(context, this.#frame, this.#atlas);
+      drawDynamicWorld(
+        context,
+        this.#frame,
+        this.#atlas,
+        this.#animation,
+        this.#reducedMotion,
+      );
+      drawEffects(context, this.#atlas, this.#frame, visibleEffects);
+      drawGameplayHud(
+        context,
+        this.#frame.current,
+        this.#frame.previous,
+        this.#atlas,
+        this.#frame.events,
+        undefined,
+        latestRetainedEffect(this.#activeEffects, this.#frame),
+        false,
+      );
       drawSessionOver(
         context,
         this.#atlas,
