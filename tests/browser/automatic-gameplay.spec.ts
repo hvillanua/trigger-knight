@@ -87,12 +87,16 @@ test("scheduled browser input and interpolated rendering match headless executio
     for (let time = 100; time <= 3000; time += 100) window.testFrame(time);
     window.testFrame(3010);
   });
-  const headless = createGameplayExecution(createTestGameplayEngine(), {
-    ruleset: ORIGINAL_V13_RULESET_ID,
-    seed: "browser-run",
-    initialProfile: createFreshProfile(),
-    startImmediately: true,
-  });
+  const headless = createGameplayExecution(
+    createTestGameplayEngine(),
+    {
+      ruleset: ORIGINAL_V13_RULESET_ID,
+      seed: "browser-run",
+      initialProfile: createFreshProfile(),
+      startImmediately: true,
+    },
+    { retainDiagnostics: true },
+  );
   for (let step = 0; step < 90; step += 1)
     headless.dispatch(step === 0 ? [{ type: "dismiss-tutorial" }] : []);
   expect(

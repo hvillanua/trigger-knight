@@ -350,7 +350,7 @@ async function runBrowserFixture(
             presentation.present(frame);
           },
         },
-        { renderOnDispatch: false },
+        { renderOnDispatch: false, retainDiagnostics: true },
       );
       document.body.append(canvas);
 

@@ -138,6 +138,7 @@ test("browser and headless progression agree despite storage and presentation ca
             },
           },
           {
+            retainDiagnostics: true,
             onCompletedRun(run) {
               committed = coordinator.commit({
                 completionId: `${storageKey}-completion`,

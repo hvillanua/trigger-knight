@@ -2,12 +2,15 @@ import { describe, expect, it } from "vitest";
 
 import type {
   GameCommand,
+  GameEvent,
+  GameObservation,
   PlayerPolicy,
   RunConfig,
 } from "../../src/application/contracts.js";
 import {
   compareGameplayTraces,
   compareGameplayTracesForDivergence,
+  createGameplayExecution,
   type GameplayTrace,
 } from "../../src/application/gameplay-execution.js";
 import { createBrowserGameplaySession } from "../../src/browser/gameplay-session.js";
@@ -41,9 +44,102 @@ const noCommandPolicy: PlayerPolicy = Object.freeze({
     }),
 });
 
+function createDiagnosticSession(sessionConfig: RunConfig = config) {
+  return createBrowserGameplaySession(
+    gameplayEngine,
+    sessionConfig,
+    undefined,
+    {
+      retainDiagnostics: true,
+    },
+  );
+}
+
 describe("gameplay diagnostics", () => {
+  it("retains diagnostics only when explicitly enabled", () => {
+    const ordinary = createGameplayExecution(gameplayEngine, config);
+    ordinary.dispatch(noCommands);
+
+    expect(() => ordinary.readDiagnostics()).toThrowError(
+      "Gameplay diagnostics were not retained",
+    );
+
+    const retained = createGameplayExecution(gameplayEngine, config, {
+      retainDiagnostics: true,
+    });
+    retained.dispatch(noCommands);
+
+    expect(retained.readDiagnostics().checkpoints).toHaveLength(2);
+  });
+
+  it("isolates mutable commands and freezes policy and checkpoint values", () => {
+    const execution = createGameplayExecution(gameplayEngine, config, {
+      retainDiagnostics: true,
+    });
+    const command = { type: "dismiss-tutorial" as const };
+    const commands: GameCommand[] = [command];
+    const checkpoint = execution.dispatch(commands);
+
+    commands[0] = { type: "toggle-pause" };
+    expect(checkpoint.commands).toEqual([{ type: "dismiss-tutorial" }]);
+    expect(checkpoint.commands).not.toBe(commands);
+    expect(checkpoint.commands[0]).not.toBe(command);
+    expect(Object.isFrozen(checkpoint.commands)).toBe(true);
+    expect(Object.isFrozen(checkpoint.commands[0])).toBe(true);
+    expect(Object.isFrozen(checkpoint.state)).toBe(true);
+    expect(Object.isFrozen(checkpoint.state.player)).toBe(true);
+    expect(Object.isFrozen(checkpoint.observation)).toBe(true);
+    expect(Object.isFrozen(checkpoint.observation.player)).toBe(true);
+    expect(Object.isFrozen(checkpoint.events)).toBe(true);
+    expect(Object.isFrozen(checkpoint.events[0])).toBe(true);
+
+    expect(() =>
+      (checkpoint.commands as GameCommand[]).push({ type: "toggle-pause" }),
+    ).toThrow();
+    expect(() => Object.assign(checkpoint.state.player, { gold: 0 })).toThrow();
+    expect(() =>
+      Object.assign(checkpoint.observation.player, { gold: 0 }),
+    ).toThrow();
+    expect(() =>
+      (checkpoint.events as GameEvent[]).push({
+        type: "step-advanced",
+        step: 99,
+      }),
+    ).toThrow();
+
+    const observedInputs: Array<{
+      observation: Readonly<GameObservation>;
+      events: readonly GameEvent[];
+    }> = [];
+    const policy: PlayerPolicy = {
+      descriptor: { id: "mutation-attempt", version: "1", config: {} },
+      createAgent: () => ({
+        decide(observation, events) {
+          observedInputs.push({ observation, events });
+          expect(() =>
+            Object.assign(observation.player, { gold: 0 }),
+          ).toThrow();
+          expect(() =>
+            (events as GameEvent[]).push({
+              type: "step-advanced",
+              step: 99,
+            }),
+          ).toThrow();
+          return noCommands;
+        },
+      }),
+    };
+    const traces: GameplayTrace[] = [];
+    createSimulationRunner(gameplayEngine, {
+      onTrace: (trace) => traces.push(trace),
+    }).run({ config, policy, maxSteps: 1 });
+
+    expect(observedInputs).toHaveLength(1);
+    expect(traces[0]?.checkpoints[1]?.state.score).toBe(0);
+  });
+
   it("records equal browser and headless checkpoints for one command schedule", () => {
-    const browser = createBrowserGameplaySession(gameplayEngine, config);
+    const browser = createDiagnosticSession();
     const browserResults = Array.from({ length: 3 }, () =>
       browser.dispatch(noCommands),
     );
@@ -84,7 +180,7 @@ describe("gameplay diagnostics", () => {
   });
 
   it("records equal browser and policy observations during active running", () => {
-    const browser = createBrowserGameplaySession(gameplayEngine, config);
+    const browser = createDiagnosticSession();
     browser.dispatch([{ type: "dismiss-tutorial" }]);
     for (let step = 1; step < 62; step += 1) {
       browser.dispatch(noCommands);
@@ -132,7 +228,7 @@ describe("gameplay diagnostics", () => {
   });
 
   it("identifies the first structured field that differs", () => {
-    const session = createBrowserGameplaySession(gameplayEngine, config);
+    const session = createDiagnosticSession();
     session.dispatch(noCommands);
     session.dispatch(noCommands);
     const expected = session.readDiagnostics();
@@ -165,7 +261,7 @@ describe("gameplay diagnostics", () => {
   });
 
   it("reports a late checkpoint field before a deferred trace hash", () => {
-    const session = createBrowserGameplaySession(gameplayEngine, config);
+    const session = createDiagnosticSession();
     for (let step = 0; step <= COMPATIBILITY_CHECKPOINT_BLOCK_SIZE; step += 1) {
       session.dispatch(noCommands);
     }
@@ -225,7 +321,7 @@ describe("gameplay diagnostics", () => {
   });
 
   it("reports the first command, state, observation, event, or RNG difference", () => {
-    const session = createBrowserGameplaySession(gameplayEngine, config);
+    const session = createDiagnosticSession();
     session.dispatch(noCommands);
     const expected = session.readDiagnostics();
 
@@ -354,7 +450,7 @@ describe("gameplay diagnostics", () => {
   });
 
   it("compares the shared prefix before reporting unequal termination and separates ruleset identity", () => {
-    const session = createBrowserGameplaySession(gameplayEngine, config);
+    const session = createDiagnosticSession();
     session.dispatch(noCommands);
     session.dispatch(noCommands);
     const expected = session.readDiagnostics();
@@ -402,7 +498,7 @@ describe("gameplay diagnostics", () => {
   });
 
   it("reports an initial-state difference at logical step zero", () => {
-    const session = createBrowserGameplaySession(gameplayEngine, config);
+    const session = createDiagnosticSession();
     const expected = session.readDiagnostics();
     const actual = {
       ...expected,

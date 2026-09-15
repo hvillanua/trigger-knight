@@ -1027,6 +1027,7 @@ function startRun(
     Object.freeze(config),
     presentation,
     {
+      // Development-only trace retention keeps ordinary browser runs compact.
       retainDiagnostics: import.meta.env.DEV,
       renderOnDispatch: manualClock,
       onTransition: ({ observation, events }) => {

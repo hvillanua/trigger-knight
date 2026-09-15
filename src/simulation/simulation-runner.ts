@@ -25,6 +25,7 @@ const TRACE_RESULT_INPUT_SCHEMA_VERSION = 2;
 const NO_EVENTS: readonly GameEvent[] = Object.freeze([]);
 
 export interface SimulationRunnerOptions {
+  /** Retains and forwards the complete host trace when provided. */
   readonly onTrace?: (trace: GameplayTrace) => void;
 }
 

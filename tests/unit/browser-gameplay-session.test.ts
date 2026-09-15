@@ -30,6 +30,8 @@ const initialPlayer = {
   inventory: { item: "elixir" },
 } as const;
 
+const diagnosticOptions = Object.freeze({ retainDiagnostics: true });
+
 describe("browser gameplay session", () => {
   it("produces the same public result with replaced or disabled presentation", () => {
     const present = vi.fn<(frame: PresentationFrame) => void>();
@@ -38,8 +40,14 @@ describe("browser gameplay session", () => {
       gameplayEngine,
       config,
       presentation,
+      diagnosticOptions,
     );
-    const unpresented = createBrowserGameplaySession(gameplayEngine, config);
+    const unpresented = createBrowserGameplaySession(
+      gameplayEngine,
+      config,
+      undefined,
+      diagnosticOptions,
+    );
     const commands = Object.freeze([]);
 
     const presentedResult = presented.dispatch(commands);
@@ -99,9 +107,14 @@ describe("browser gameplay session", () => {
 
   it("re-presents one transition at different interpolation values without stepping", () => {
     const present = vi.fn<(frame: PresentationFrame) => void>();
-    const session = createBrowserGameplaySession(gameplayEngine, config, {
-      present,
-    });
+    const session = createBrowserGameplaySession(
+      gameplayEngine,
+      config,
+      {
+        present,
+      },
+      diagnosticOptions,
+    );
     session.dispatch([]);
     const traceBeforePresentation = session.readDiagnostics();
 
@@ -135,7 +148,7 @@ describe("browser gameplay session", () => {
       gameplayEngine,
       config,
       { present },
-      { renderOnDispatch: false },
+      { renderOnDispatch: false, retainDiagnostics: true },
     );
 
     session.dispatch([{ type: "dismiss-tutorial" }]);
@@ -167,7 +180,7 @@ describe("browser gameplay session", () => {
       gameplayEngine,
       config,
       { present, presentTransition },
-      { renderOnDispatch: false },
+      { renderOnDispatch: false, retainDiagnostics: true },
     );
 
     session.dispatch([{ type: "dismiss-tutorial" }]);
@@ -206,6 +219,7 @@ describe("browser gameplay session", () => {
       {
         present,
       },
+      diagnosticOptions,
     );
     session.dispatch([{ type: "dismiss-tutorial" }]);
     for (let step = 1; step < 2_560; step += 1) {
