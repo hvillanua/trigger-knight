@@ -9,6 +9,8 @@ sound inputs. The gameplay and domain code remains a clean-room implementation.
   and Wolf.
 - `images/` contains the original raster image exports, including the scene
   layers and interface art.
+- `effects/DefineSprite_311_MouseEffect/` contains the original 60-frame click
+  feedback animation.
 - `sounds/` contains the original exported music and sound entries.
 - `fonts/` contains the eight original embedded TTF exports used by the browser
   UI and Canvas labels.

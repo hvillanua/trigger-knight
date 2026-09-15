@@ -50,6 +50,7 @@ interface EffectRecord {
   readonly key: string;
   readonly startActiveTicks: number;
   readonly anchor: WorldPoint;
+  readonly clickAnchor: WorldPoint | undefined;
   readonly message: string | undefined;
 }
 
@@ -64,6 +65,9 @@ const GROUND_RATIO = 0.73;
 const HERO_RUNNING_X = 50;
 const GAMEPLAY_HUD_BOTTOM = 251;
 const MESSAGE_STRIP_Y = GAMEPLAY_HUD_BOTTOM - 15;
+const BACKGROUND_TILE_WIDTH = 960;
+const BACKGROUND_TILE_OVERLAP = 1;
+const MOUSE_EFFECT_LIFETIME = 60;
 // Project presentation roles. The original SWF text-field mapping remains unresolved.
 const CANVAS_FONT_FAMILIES = Object.freeze({
   body: `"${ORIGINAL_FONT_FAMILIES.calibri}", "${ORIGINAL_FONT_FAMILIES.calibri14}", system-ui, sans-serif`,
@@ -453,15 +457,19 @@ function drawMovingBackgroundLayer(
     readonly height: number;
   }>,
 ): void {
-  const offset = positiveModulo(distance * layer.speed, 960);
-  for (let x = camera.x - offset; x < camera.x + camera.width; x += 960) {
+  const offset = positiveModulo(distance * layer.speed, BACKGROUND_TILE_WIDTH);
+  for (
+    let x = camera.x - offset;
+    x < camera.x + camera.width;
+    x += BACKGROUND_TILE_WIDTH
+  ) {
     drawSceneImage(
       context,
       atlas,
       layer.id,
       x,
       camera.y + layer.y,
-      960,
+      BACKGROUND_TILE_WIDTH + BACKGROUND_TILE_OVERLAP,
       layer.height,
     );
   }
@@ -625,6 +633,13 @@ function drawClippedLifespanFill(
   if (fillWidth <= 0) return;
 
   context.save();
+  context.beginPath();
+  context.moveTo(frameX + 4 * horizontalScale, frameY + 2 * verticalScale);
+  context.lineTo(frameX + 295 * horizontalScale, frameY + 2 * verticalScale);
+  context.lineTo(frameX + 304 * horizontalScale, frameY + 11 * verticalScale);
+  context.lineTo(frameX + 13 * horizontalScale, frameY + 11 * verticalScale);
+  context.closePath();
+  context.clip();
   context.beginPath();
   context.rect(
     frameX + 2 * horizontalScale,
@@ -958,10 +973,16 @@ function eventContextMessage(
 
 function latestRetainedEffect(
   effects: readonly EffectRecord[],
+  frame: Readonly<PresentationFrame>,
 ): Readonly<EffectRecord> | undefined {
   for (let index = effects.length - 1; index >= 0; index -= 1) {
     const effect = effects[index];
-    if (effect?.message !== undefined) return effect;
+    if (
+      effect?.message !== undefined &&
+      effectAge(frame, effect) <= effectLifetime(effect.event)
+    ) {
+      return effect;
+    }
   }
   return undefined;
 }
@@ -1202,10 +1223,8 @@ function effectAnchor(
 const VISUAL_EFFECT_EVENT_TYPES: ReadonlySet<GameEvent["type"]> = new Set([
   "achievement-unlocked",
   "battle-reward",
-  "battle-started",
   "combat-hit",
   "combat-lethal-hit",
-  "encounter-promoted",
   "equipment-discovered",
   "item-use-rejected",
   "item-used",
@@ -1256,6 +1275,13 @@ function effectLifetime(event: GameEvent): number {
   }
 }
 
+function effectRetentionLifetime(effect: Readonly<EffectRecord>): number {
+  return Math.max(
+    effectLifetime(effect.event),
+    effect.clickAnchor === undefined ? 0 : MOUSE_EFFECT_LIFETIME,
+  );
+}
+
 function effectAge(
   frame: Readonly<PresentationFrame>,
   effect: Readonly<EffectRecord>,
@@ -1266,6 +1292,18 @@ function effectAge(
   );
   return (
     activeTickAge + (frame.current.lifecycle.paused ? 0 : frame.interpolation)
+  );
+}
+
+function clickEffectAge(
+  frame: Readonly<PresentationFrame>,
+  effect: Readonly<EffectRecord>,
+): number {
+  const age = effectAge(frame, effect);
+  if (frame.current.activeTicks !== effect.startActiveTicks) return age;
+  return Math.max(
+    0,
+    age - (frame.current.lifecycle.paused ? 0 : frame.interpolation),
   );
 }
 
@@ -1415,6 +1453,34 @@ function drawOriginalHitEffect(
   return true;
 }
 
+function drawOriginalClickEffect(
+  context: CanvasRenderingContext2D,
+  atlas: VisualAtlas,
+  point: WorldPoint,
+  age: number,
+): boolean {
+  if (age >= atlas.clickEffectFrames.length) return true;
+  const frameIndex = Math.min(
+    atlas.clickEffectFrames.length - 1,
+    Math.max(0, Math.floor(age)),
+  );
+  const image = atlas.clickEffectFrames[frameIndex];
+  if (!imageReady(image)) return false;
+  context.save();
+  try {
+    context.drawImage(
+      image,
+      point.x - image.naturalWidth / 2,
+      point.y - image.naturalHeight / 2,
+    );
+  } catch {
+    context.restore();
+    return false;
+  }
+  context.restore();
+  return true;
+}
+
 function effectSeed(key: string): number {
   let hash = 0;
   for (let index = 0; index < key.length; index += 1) {
@@ -1481,6 +1547,14 @@ function drawEffect(
   const point = effect.anchor;
   const age = effectAge(frame, effect);
   const lifetime = effectLifetime(effect.event);
+  if (effect.clickAnchor !== undefined) {
+    drawOriginalClickEffect(
+      context,
+      atlas,
+      effect.clickAnchor,
+      clickEffectAge(frame, effect),
+    );
+  }
   switch (effect.event.type) {
     case "combat-hit":
       drawOriginalHitEffect(context, atlas, point, age);
@@ -1507,8 +1581,6 @@ function drawEffect(
       break;
     case "battle-started":
     case "encounter-promoted":
-      drawParticles(context, point, "#d16a7e", 20, age, lifetime, effect.key);
-      drawBurst(context, point, "#d16a7e", 25, age, lifetime);
       break;
     case "shop-purchased": {
       if (
@@ -2426,6 +2498,10 @@ export class CanvasPresentation implements PresentationPort {
             key,
             startActiveTicks: transition.current.activeTicks,
             anchor: effectAnchor(frame, event, runningX),
+            clickAnchor:
+              event.type === "shop-purchased" || event.type === "item-used"
+                ? (this.#pointerWorld ?? effectAnchor(frame, event, runningX))
+                : undefined,
             message:
               eventContextMessage(
                 event,
@@ -2443,7 +2519,7 @@ export class CanvasPresentation implements PresentationPort {
   #pruneEffects(frame: Readonly<PresentationFrame>): void {
     const active: EffectRecord[] = [];
     for (const [key, effect] of this.#effectHistory) {
-      if (effectAge(frame, effect) <= effectLifetime(effect.event)) {
+      if (effectAge(frame, effect) <= effectRetentionLifetime(effect)) {
         active.push(effect);
       } else {
         this.#effectHistory.delete(key);
@@ -2532,7 +2608,7 @@ export class CanvasPresentation implements PresentationPort {
           this.#atlas,
           this.#frame.events,
           this.#pointerWorld,
-          latestRetainedEffect(this.#activeEffects),
+          latestRetainedEffect(this.#activeEffects, this.#frame),
         );
       }
     }

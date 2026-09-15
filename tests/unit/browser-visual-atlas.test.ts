@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   createVisualAtlas,
+  ORIGINAL_CLICK_EFFECT_URLS,
   ORIGINAL_EFFECT_IMAGE_URLS,
   ORIGINAL_SCENE_ASSET_URLS,
   ORIGINAL_SPRITE_URLS,
@@ -123,5 +124,15 @@ describe("approved visual atlas", () => {
     expect(ORIGINAL_UI_IMAGE_URLS["weapon-stats-icon"]).toContain("/197.png");
     expect(ORIGINAL_UI_IMAGE_URLS["item-stats-icon"]).toContain("/198.png");
     expect(ORIGINAL_UI_IMAGE_URLS["armor-stats-icon"]).toContain("/199.png");
+  });
+
+  it("maps the original 60-frame click feedback timeline in order", () => {
+    expect(ORIGINAL_CLICK_EFFECT_URLS).toHaveLength(60);
+    expect(ORIGINAL_CLICK_EFFECT_URLS[0]).toContain(
+      "/DefineSprite_311_MouseEffect/1.png",
+    );
+    expect(ORIGINAL_CLICK_EFFECT_URLS.at(-1)).toContain(
+      "/DefineSprite_311_MouseEffect/60.png",
+    );
   });
 });

@@ -430,6 +430,76 @@ test("draws the original shop between the middle and front background planes", a
   expect(layers.slice(0, 3)).toEqual(["mountains", "building", "ground"]);
 });
 
+test("overlaps repeating background tiles at their moving seam", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+
+  const groundTiles = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    while (canvas.dataset.assetStatus === "loading")
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const tiles: { x: number; width: number }[] = [];
+    const drawImageDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "drawImage",
+    );
+    if (typeof drawImageDescriptor?.value !== "function") {
+      throw new Error("Expected the Canvas drawImage method");
+    }
+    const originalDrawImage =
+      drawImageDescriptor.value as CanvasRenderingContext2D["drawImage"];
+    CanvasRenderingContext2D.prototype.drawImage = function (
+      image: CanvasImageSource,
+      ...args: number[]
+    ) {
+      if (
+        image instanceof HTMLImageElement &&
+        image.src.includes("/360.png") &&
+        args.length === 4
+      ) {
+        tiles.push({ x: args[0]!, width: args[2]! });
+      }
+      originalDrawImage.apply(this, [image, ...args] as Parameters<
+        typeof originalDrawImage
+      >);
+    };
+    try {
+      const current = {
+        ...base,
+        steps: base.steps + 1,
+        distance: 760,
+        lifecycle: { ...base.lifecycle, paused: false, tutorialPage: null },
+      };
+      presentation.present({
+        previous: { ...base, distance: 759 },
+        current,
+        interpolation: 1,
+        events: [],
+      });
+      return tiles;
+    } finally {
+      CanvasRenderingContext2D.prototype.drawImage = originalDrawImage;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  const ordered = [...groundTiles].sort((a, b) => a.x - b.x);
+  expect(ordered.length).toBeGreaterThanOrEqual(2);
+  expect(ordered.every(({ width }) => width === 961)).toBe(true);
+  expect(ordered[1]!.x).toBeLessThanOrEqual(ordered[0]!.x + ordered[0]!.width);
+});
+
 test("leaves shop offers to the cursor prompt without an extra scene marker", async ({
   page,
 }) => {
@@ -945,6 +1015,214 @@ test("animates an available action prompt with the original mouse frames", async
     "21",
     "19",
   ]);
+});
+
+test("uses the original expanding click feedback for successful actions", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+
+  const feedback = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    canvas.style.width = "480px";
+    canvas.style.height = "320px";
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    while (canvas.dataset.assetStatus === "loading")
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const calls: { frame: string; args: number[] }[] = [];
+    const drawImageDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "drawImage",
+    );
+    if (typeof drawImageDescriptor?.value !== "function") {
+      throw new Error("Expected the Canvas drawImage method");
+    }
+    const originalDrawImage =
+      drawImageDescriptor.value as CanvasRenderingContext2D["drawImage"];
+    CanvasRenderingContext2D.prototype.drawImage = function (
+      image: CanvasImageSource,
+      ...args: number[]
+    ) {
+      if (
+        image instanceof HTMLImageElement &&
+        image.src.includes("/DefineSprite_311_MouseEffect/")
+      ) {
+        calls.push({
+          frame: image.src.split("/").at(-1)!.split("?")[0]!,
+          args,
+        });
+      }
+      originalDrawImage.apply(this, [image, ...args] as Parameters<
+        typeof originalDrawImage
+      >);
+    };
+    const takeCalls = (): { frame: string; args: number[] }[] => {
+      const snapshot = [...calls];
+      calls.length = 0;
+      return snapshot;
+    };
+    const movePointer = (x: number, y: number): void => {
+      const rect = canvas.getBoundingClientRect();
+      canvas.dispatchEvent(
+        new PointerEvent("pointermove", {
+          bubbles: true,
+          clientX: rect.left + x,
+          clientY: rect.top + y,
+        }),
+      );
+    };
+    try {
+      presentation.present({
+        previous: base,
+        current: base,
+        interpolation: 1,
+        events: [],
+      });
+      movePointer(120, 100);
+      takeCalls();
+
+      const shop = {
+        ...base,
+        steps: 10,
+        activeTicks: 10,
+        lifecycle: {
+          ...base.lifecycle,
+          phase: "running" as const,
+          paused: false,
+          tutorialPage: null,
+        },
+        encounters: {
+          ...base.encounters,
+          current: {
+            kind: "shop" as const,
+            shop: "pharmacy" as const,
+            cachedPrice: 150,
+            x: 180,
+            used: true,
+          },
+        },
+      };
+      presentation.present({
+        previous: base,
+        current: shop,
+        interpolation: 0,
+        events: [
+          {
+            type: "shop-purchased" as const,
+            shop: "pharmacy" as const,
+            price: 150,
+          },
+        ],
+      });
+      const shopFirst = takeCalls();
+
+      const shopNext = { ...shop, steps: 11, activeTicks: 11 };
+      presentation.present({
+        previous: shop,
+        current: shopNext,
+        interpolation: 0,
+        events: [],
+      });
+      const shopSecond = takeCalls();
+
+      const shopLastFrame = {
+        ...shop,
+        steps: 69,
+        activeTicks: 69,
+      };
+      presentation.present({
+        previous: shopNext,
+        current: shopLastFrame,
+        interpolation: 0,
+        events: [],
+      });
+      const shopLast = takeCalls();
+
+      const shopExpired = { ...shop, steps: 71, activeTicks: 71 };
+      presentation.present({
+        previous: shopLastFrame,
+        current: shopExpired,
+        interpolation: 0,
+        events: [],
+      });
+      const expired = takeCalls();
+
+      movePointer(300, 100);
+      takeCalls();
+      const item = {
+        ...base,
+        steps: 72,
+        activeTicks: 72,
+        lifecycle: {
+          ...base.lifecycle,
+          phase: "battling" as const,
+          paused: false,
+          tutorialPage: null,
+        },
+        player: {
+          ...base.player,
+          inventory: { ...base.player.inventory, item: null },
+        },
+        battle: {
+          enemy: { id: "goblin" as const, maximumHp: 900, currentHp: 900 },
+          actors: {
+            hero: { phase: "idle" as const, x: 70 },
+            enemy: { phase: "idle" as const, x: 220 },
+          },
+        },
+        encounters: {
+          ...base.encounters,
+          current: {
+            kind: "battle" as const,
+            enemy: { id: "goblin" as const, maximumHp: 900 },
+            x: 220,
+          },
+        },
+      };
+      presentation.present({
+        previous: shopExpired,
+        current: item,
+        interpolation: 0,
+        events: [{ type: "item-used" as const, item: "elixir" as const }],
+      });
+      const itemFirst = takeCalls();
+      return {
+        shopFirst,
+        shopSecond,
+        shopLast,
+        expired,
+        itemFirst,
+      };
+    } finally {
+      CanvasRenderingContext2D.prototype.drawImage = originalDrawImage;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(feedback.shopFirst.map(({ frame }) => frame)).toContain("1.png");
+  expect(feedback.shopSecond.map(({ frame }) => frame)).toContain("2.png");
+  expect(feedback.shopLast.map(({ frame }) => frame)).toContain("60.png");
+  expect(feedback.expired).toEqual([]);
+  expect(feedback.itemFirst.map(({ frame }) => frame)).toContain("1.png");
+  const shopCall = feedback.shopFirst.find(({ frame }) => frame === "1.png");
+  const itemCall = feedback.itemFirst.find(({ frame }) => frame === "1.png");
+  expect(shopCall?.args[0]).toBeGreaterThan(83);
+  expect(shopCall?.args[0]).toBeLessThan(84);
+  expect(shopCall?.args[1]).toBeGreaterThan(63);
+  expect(shopCall?.args[1]).toBeLessThan(65);
+  expect(itemCall?.args[0]).toBeGreaterThan(264);
+  expect(itemCall?.args[0]).toBeLessThan(265);
+  expect(itemCall?.args[1]).toBeGreaterThan(63);
+  expect(itemCall?.args[1]).toBeLessThan(65);
 });
 
 test("covers every public enemy, shop, and actor phase in Canvas presentation", async ({
@@ -1697,6 +1975,94 @@ test("omits a missing original hit frame without substituting a burst", async ({
   expect(result.assetStatus).toBe("partial");
   expect(result.arcCount).toBe(0);
   expect(result.fillTexts).toContain("229");
+});
+
+test("does not draw a spawn effect when a monster enters the screen", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+
+  const result = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    while (canvas.dataset.assetStatus === "loading")
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+    let arcCount = 0;
+    const arcDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "arc",
+    );
+    if (typeof arcDescriptor?.value !== "function") {
+      throw new Error("Expected the Canvas arc method");
+    }
+    const originalArc = arcDescriptor.value as CanvasRenderingContext2D["arc"];
+    CanvasRenderingContext2D.prototype.arc = function (...args) {
+      arcCount += 1;
+      originalArc.apply(this, args);
+    };
+    try {
+      const current = {
+        ...base,
+        steps: base.steps + 1,
+        activeTicks: base.activeTicks + 1,
+        lifecycle: {
+          ...base.lifecycle,
+          phase: "battling" as const,
+          paused: false,
+          tutorialPage: null,
+        },
+        battle: {
+          enemy: { id: "goblin" as const, maximumHp: 900, currentHp: 900 },
+          actors: {
+            hero: { phase: "idle" as const, x: 70 },
+            enemy: { phase: "move" as const, x: 300 },
+          },
+        },
+        encounters: {
+          ...base.encounters,
+          current: {
+            kind: "battle" as const,
+            enemy: { id: "goblin" as const, maximumHp: 900 },
+            x: 300,
+          },
+        },
+      };
+      presentation.present({
+        previous: base,
+        current,
+        interpolation: 1,
+        events: [
+          {
+            type: "encounter-promoted" as const,
+            encounter: current.encounters.current,
+          },
+          {
+            type: "battle-started" as const,
+            enemy: current.battle.enemy,
+          },
+        ],
+      });
+      return {
+        activeEffects: canvas.dataset.activeEffects ?? "",
+        arcCount,
+      };
+    } finally {
+      CanvasRenderingContext2D.prototype.arc = originalArc;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(result.activeEffects).toBe("");
+  expect(result.arcCount).toBe(0);
 });
 
 test("retains the equipment-change strip through batched transitions", async ({

@@ -1,0 +1,17 @@
+{
+  "assetSet": "original-runtime-assets",
+  "sourceArtifact": "original/kongregate/MonotouchKong13APPSTORE.swf",
+  "sourceArtifactSha256": "0f0630b981172fd2183b3a2ff890d98a178c11bc8e0aa3b5ed1be05c4ddb2c20",
+  "exportIdentifier": "DefineSprite (characterId 311, export name MouseEffect)",
+  "stagedPath": "src/assets/original/effects/DefineSprite_311_MouseEffect",
+  "frameCount": 60,
+  "frameDimensions": "72x72",
+  "extraction": {
+    "tool": "FFDec 26.2.1",
+    "method": "Exported the reviewed MouseEffect sprite timeline as PNG frames",
+    "settings": "-selectid 311 -format sprite:png -export sprite"
+  },
+  "rightsOrLicense": "Original Trigger Knight asset. Redistribution rights are unverified; copyright remains with applicable rights holders and this repository does not grant a separate public license.",
+  "reviewDate": "2026-09-15",
+  "transformations": "No transformations. Files retain their FFDec export bytes."
+}

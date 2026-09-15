@@ -27,6 +27,13 @@
       "use": "Original scene, interface, effect, and embedded image exports"
     },
     {
+      "path": "effects/DefineSprite_311_MouseEffect",
+      "source": "original/kongregate/MonotouchKong13APPSTORE.swf",
+      "exportIdentifier": "DefineSprite (characterId 311, export name MouseEffect)",
+      "fileCount": 60,
+      "use": "Original click-feedback animation frames"
+    },
+    {
       "path": "sounds",
       "source": "exports/assets/raw/sounds",
       "fileCount": 17,

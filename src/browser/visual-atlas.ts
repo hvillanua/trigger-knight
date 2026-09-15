@@ -180,6 +180,22 @@ const frameUrls = import.meta.glob<string>(
   { eager: true, query: "?url&no-inline", import: "default" },
 );
 
+const clickEffectFrameUrls = import.meta.glob<string>(
+  "../assets/original/effects/DefineSprite_311_MouseEffect/*.png",
+  { eager: true, query: "?url&no-inline", import: "default" },
+);
+
+/** Reviewed frames exported from the original MouseEffect click-feedback timeline. */
+export const ORIGINAL_CLICK_EFFECT_URLS: readonly string[] = Object.freeze(
+  Object.entries(clickEffectFrameUrls)
+    .sort(
+      ([a], [b]) =>
+        Number(a.split("/").at(-1)?.split(".")[0]) -
+        Number(b.split("/").at(-1)?.split(".")[0]),
+    )
+    .map(([, url]) => url),
+);
+
 function entityFrames(entity: string): readonly string[] {
   return Object.freeze(
     Object.entries(frameUrls)
@@ -219,6 +235,7 @@ export interface VisualAtlas {
   readonly effectImages: Readonly<
     Partial<Record<OriginalEffectImageId, HTMLImageElement>>
   >;
+  readonly clickEffectFrames: Readonly<(HTMLImageElement | undefined)[]>;
   readonly uiImages: Readonly<
     Partial<Record<OriginalUiImageId, HTMLImageElement>>
   >;
@@ -238,6 +255,10 @@ export function createVisualAtlas(
     {};
   const effectImages: Partial<Record<OriginalEffectImageId, HTMLImageElement>> =
     {};
+  const clickEffectFrames: (HTMLImageElement | undefined)[] = Array.from(
+    { length: ORIGINAL_CLICK_EFFECT_URLS.length },
+    () => undefined,
+  );
   const uiImages: Partial<Record<OriginalUiImageId, HTMLImageElement>> = {};
   if (status === "loading") {
     let pending =
@@ -247,6 +268,7 @@ export function createVisualAtlas(
       ) +
       Object.keys(ORIGINAL_SCENE_ASSET_URLS).length +
       Object.keys(ORIGINAL_EFFECT_IMAGE_URLS).length +
+      ORIGINAL_CLICK_EFFECT_URLS.length +
       Object.keys(ORIGINAL_UI_IMAGE_URLS).length;
     let loaded = 0;
     let failed = 0;
@@ -302,6 +324,11 @@ export function createVisualAtlas(
         effectImages[id] = image;
       });
     }
+    ORIGINAL_CLICK_EFFECT_URLS.forEach((url, index) =>
+      load(url, (image) => {
+        clickEffectFrames[index] = image;
+      }),
+    );
     for (const id of Object.keys(
       ORIGINAL_UI_IMAGE_URLS,
     ) as OriginalUiImageId[]) {
@@ -318,6 +345,7 @@ export function createVisualAtlas(
     originalFrames,
     sceneImages,
     effectImages,
+    clickEffectFrames,
     uiImages,
   });
 }
