@@ -1200,6 +1200,7 @@ canvas.addEventListener("pointerup", (event) => {
   if (currentScreen !== "gameplay") return;
   const observation = latestObservation;
   if (observation === undefined) return;
+  if (observation.lifecycle.phase === "ended") return;
   if (observation.lifecycle.tutorialPage !== null) return;
   if (
     observation.battle !== null &&

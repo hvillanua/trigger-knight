@@ -1087,6 +1087,214 @@ test("animates an available action prompt with the original mouse frames", async
   ]);
 });
 
+test("keeps the original hand cursor moving on the session-over screen", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+
+  const cursorPositions = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    canvas.style.width = "480px";
+    canvas.style.height = "320px";
+    canvas.style.border = "0";
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    while (canvas.dataset.assetStatus === "loading")
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const draws: number[][] = [];
+    const drawImageDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "drawImage",
+    );
+    if (typeof drawImageDescriptor?.value !== "function") {
+      throw new Error("Expected the Canvas drawImage method");
+    }
+    const originalDrawImage =
+      drawImageDescriptor.value as CanvasRenderingContext2D["drawImage"];
+    CanvasRenderingContext2D.prototype.drawImage = function (
+      image: CanvasImageSource,
+      ...args: number[]
+    ) {
+      if (image instanceof HTMLImageElement && image.src.includes("/12.png")) {
+        draws.push(args);
+      }
+      originalDrawImage.apply(this, [image, ...args] as Parameters<
+        typeof originalDrawImage
+      >);
+    };
+    try {
+      const current = {
+        ...base,
+        steps: base.steps + 1,
+        lifecycle: {
+          ...base.lifecycle,
+          phase: "ended" as const,
+          terminalReason: "lifespan" as const,
+          paused: true,
+          tutorialPage: null,
+        },
+        actions: {
+          ...base.actions,
+          canPurchaseCurrentEncounter: false,
+          canUseCarriedItem: false,
+        },
+      };
+      presentation.present({
+        previous: base,
+        current,
+        interpolation: 1,
+        events: [],
+      });
+
+      const rect = canvas.getBoundingClientRect();
+      const moveCursor = (x: number, y: number): number[] => {
+        const before = draws.length;
+        canvas.dispatchEvent(
+          new PointerEvent("pointermove", {
+            bubbles: true,
+            clientX: rect.left + x,
+            clientY: rect.top + y,
+            pointerId: 12,
+            pointerType: "mouse",
+          }),
+        );
+        const draw = draws.slice(before).at(-1);
+        if (draw === undefined) throw new Error("Expected a cursor draw");
+        return draw;
+      };
+
+      return [moveCursor(120, 70), moveCursor(400, 230)];
+    } finally {
+      CanvasRenderingContext2D.prototype.drawImage = originalDrawImage;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(cursorPositions).toEqual([
+    [116, 68, 25, 32],
+    [396, 228, 25, 32],
+  ]);
+});
+
+test("slides the session-over bands over the frozen world", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+
+  const animation = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    canvas.style.width = "480px";
+    canvas.style.height = "320px";
+    canvas.style.border = "0";
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    while (canvas.dataset.assetStatus === "loading")
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const bands: Array<{ y: number; height: number }> = [];
+    const actorDraws: string[] = [];
+    const fillRectDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "fillRect",
+    );
+    const drawImageDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "drawImage",
+    );
+    if (
+      typeof fillRectDescriptor?.value !== "function" ||
+      typeof drawImageDescriptor?.value !== "function"
+    ) {
+      throw new Error("Expected Canvas 2D methods");
+    }
+    const originalFillRect = fillRectDescriptor.value as (
+      this: CanvasRenderingContext2D,
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+    ) => void;
+    const originalDrawImage =
+      drawImageDescriptor.value as CanvasRenderingContext2D["drawImage"];
+    CanvasRenderingContext2D.prototype.fillRect = function (
+      x,
+      y,
+      width,
+      height,
+    ) {
+      if (width === 480 && height !== 320) bands.push({ y, height });
+      originalFillRect.call(this, x, y, width, height);
+    };
+    CanvasRenderingContext2D.prototype.drawImage = function (
+      image: CanvasImageSource,
+      ...args: number[]
+    ) {
+      if (
+        image instanceof HTMLImageElement &&
+        image.src.includes("/key-sprites/")
+      ) {
+        actorDraws.push(image.src);
+      }
+      originalDrawImage.apply(this, [image, ...args] as Parameters<
+        typeof originalDrawImage
+      >);
+    };
+    try {
+      const current = {
+        ...base,
+        steps: base.steps + 1,
+        lifecycle: {
+          ...base.lifecycle,
+          phase: "ended" as const,
+          terminalReason: "combat" as const,
+          paused: true,
+          tutorialPage: null,
+        },
+      };
+      presentation.present({
+        previous: base,
+        current,
+        interpolation: 1,
+        events: [],
+      });
+      const initial = bands.slice(-2);
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      return { initial, final: bands.slice(-2), actorDraws };
+    } finally {
+      CanvasRenderingContext2D.prototype.fillRect = originalFillRect;
+      CanvasRenderingContext2D.prototype.drawImage = originalDrawImage;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(animation.initial).toEqual([
+    { y: -45, height: 41 },
+    { y: 330, height: -10 },
+  ]);
+  expect(animation.final).toEqual([
+    { y: 0, height: 41 },
+    { y: 280, height: 40 },
+  ]);
+  expect(animation.actorDraws).toEqual([]);
+});
+
 test("uses the original expanding click feedback for successful actions", async ({
   page,
 }) => {

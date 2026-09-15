@@ -72,6 +72,15 @@ const MOUSE_EFFECT_LIFETIME = 60;
 const ORIGINAL_ACTION_EFFECT_SCALE = 1.5;
 const ORIGINAL_ACTION_EFFECT_LIFETIME = 30;
 const ORIGINAL_FLASH_EFFECT_LIFETIME = 10;
+const SESSION_OVER_FRAME_COUNT = 5;
+const SESSION_OVER_FRAME_MS = 1000 / 30;
+const SESSION_OVER_ANIMATION_DURATION_MS =
+  (SESSION_OVER_FRAME_COUNT - 1) * SESSION_OVER_FRAME_MS;
+const SESSION_OVER_TOP_START_OFFSET = -45;
+const SESSION_OVER_TOP_END_OFFSET = 0;
+const SESSION_OVER_BOTTOM_START_OFFSET = 330;
+const SESSION_OVER_BOTTOM_END_OFFSET = 280;
+const SESSION_OVER_BAND_HEIGHT = 41;
 // Project presentation roles. The original SWF text-field mapping remains unresolved.
 const CANVAS_FONT_FAMILIES = Object.freeze({
   body: `"${ORIGINAL_FONT_FAMILIES.calibri}", "${ORIGINAL_FONT_FAMILIES.calibri14}", system-ui, sans-serif`,
@@ -2064,12 +2073,24 @@ function drawSessionOver(
   context: CanvasRenderingContext2D,
   atlas: VisualAtlas,
   observation: Readonly<GameObservation>,
+  pointer: WorldPoint | undefined,
+  animationProgress: number,
 ): void {
   const camera = observation.camera;
-  const bottomBandY = camera.y + 278;
+  const progress = clamp(animationProgress, 0, 1);
+  const topBandY = interpolate(
+    camera.y + SESSION_OVER_TOP_START_OFFSET,
+    camera.y + SESSION_OVER_TOP_END_OFFSET,
+    progress,
+  );
+  const bottomBandY = interpolate(
+    camera.y + SESSION_OVER_BOTTOM_START_OFFSET,
+    camera.y + SESSION_OVER_BOTTOM_END_OFFSET,
+    progress,
+  );
   context.save();
   context.fillStyle = "#000000";
-  context.fillRect(camera.x, camera.y, camera.width, 43);
+  context.fillRect(camera.x, topBandY, camera.width, SESSION_OVER_BAND_HEIGHT);
   context.fillRect(
     camera.x,
     bottomBandY,
@@ -2078,53 +2099,58 @@ function drawSessionOver(
   );
   context.restore();
 
-  drawUiImage(
-    context,
-    atlas,
-    "session-over-pointer",
-    camera.x + 20,
-    camera.y + 239,
-  );
-  drawOutlinedText(
-    context,
-    "SESSION OVER",
-    camera.x + camera.width / 2,
-    camera.y + 32,
-    {
-      font: `700 28px ${CANVAS_FONT_FAMILIES.displayMedium}`,
-      align: "center",
-      fill: "#080b14",
-      stroke: "#f7f1df",
-      lineWidth: 2,
-    },
-  );
-  drawOutlinedText(
-    context,
-    observation.lifecycle.terminalReason === "combat"
-      ? "You are killed by the Enemy."
-      : "Your lifespan reaches 0%",
-    camera.x + 12,
-    camera.y + 300,
-    {
-      font: `700 16px ${CANVAS_FONT_FAMILIES.displayMedium}`,
-      fill: "#080b14",
-      stroke: "#f7f1df",
-      lineWidth: 2,
-    },
-  );
-  drawOutlinedText(
-    context,
-    "Protip #17 Keep losing? Try again.",
-    camera.x + camera.width - 12,
-    camera.y + 300,
-    {
-      font: `700 11px ${CANVAS_FONT_FAMILIES.compact}`,
-      align: "right",
-      fill: "#f7f1df",
-      stroke: "#080b14",
-      lineWidth: 2,
-    },
-  );
+  if (progress >= 1) {
+    drawOutlinedText(
+      context,
+      "SESSION OVER",
+      camera.x + camera.width / 2,
+      camera.y + 32,
+      {
+        font: `700 28px ${CANVAS_FONT_FAMILIES.displayMedium}`,
+        align: "center",
+        fill: "#080b14",
+        stroke: "#f7f1df",
+        lineWidth: 2,
+      },
+    );
+    drawOutlinedText(
+      context,
+      observation.lifecycle.terminalReason === "combat"
+        ? "You are killed by the Enemy."
+        : "Your lifespan reaches 0%",
+      camera.x + 12,
+      camera.y + 300,
+      {
+        font: `700 16px ${CANVAS_FONT_FAMILIES.displayMedium}`,
+        fill: "#080b14",
+        stroke: "#f7f1df",
+        lineWidth: 2,
+      },
+    );
+    drawOutlinedText(
+      context,
+      "Protip #17 Keep losing? Try again.",
+      camera.x + camera.width - 12,
+      camera.y + 300,
+      {
+        font: `700 11px ${CANVAS_FONT_FAMILIES.compact}`,
+        align: "right",
+        fill: "#f7f1df",
+        stroke: "#080b14",
+        lineWidth: 2,
+      },
+    );
+  }
+
+  if (pointer !== undefined) {
+    drawUiImage(
+      context,
+      atlas,
+      "session-over-pointer",
+      pointer.x - 4,
+      pointer.y - 2,
+    );
+  }
 }
 
 function drawSessionOverBackground(
@@ -2244,6 +2270,9 @@ export class CanvasPresentation implements PresentationPort {
   #staticLayer: HTMLCanvasElement | undefined;
   #staticLayerKey: string | undefined;
   #pointerWorld: WorldPoint | undefined;
+  #sessionOverAnimationStep: number | undefined;
+  #sessionOverAnimationProgress = 1;
+  #sessionOverAnimationFrame: number | undefined;
 
   constructor(canvas: HTMLCanvasElement) {
     this.#canvas = canvas;
@@ -2284,6 +2313,10 @@ export class CanvasPresentation implements PresentationPort {
   setReducedMotion(reducedMotion: boolean): void {
     if (this.#reducedMotion === reducedMotion) return;
     this.#reducedMotion = reducedMotion;
+    if (reducedMotion && this.#sessionOverAnimationFrame !== undefined) {
+      this.#cancelSessionOverAnimation();
+      this.#sessionOverAnimationProgress = 1;
+    }
     this.#canvas.dataset.reducedMotion = String(reducedMotion);
     this.#lastDrawnVisualSignature = undefined;
     this.#draw();
@@ -2522,6 +2555,7 @@ export class CanvasPresentation implements PresentationPort {
     transition: PresentationTransition,
     runningX = this.#animation.runningX(transition.current.distance),
   ): void {
+    this.#updateSessionOverAnimation(transition.previous, transition.current);
     if (
       this.#lastFrameStep !== undefined &&
       transition.current.steps < this.#lastFrameStep
@@ -2569,6 +2603,60 @@ export class CanvasPresentation implements PresentationPort {
     });
 
     this.#lastFrameStep = transition.current.steps;
+  }
+
+  #updateSessionOverAnimation(
+    previous: Readonly<GameObservation>,
+    current: Readonly<GameObservation>,
+  ): void {
+    if (current.lifecycle.phase === "ended") {
+      if (
+        previous.lifecycle.phase !== "ended" &&
+        this.#sessionOverAnimationStep !== current.steps
+      ) {
+        this.#beginSessionOverAnimation(current.steps);
+      }
+      return;
+    }
+
+    if (this.#sessionOverAnimationStep !== undefined) {
+      this.#cancelSessionOverAnimation();
+      this.#sessionOverAnimationStep = undefined;
+      this.#sessionOverAnimationProgress = 1;
+    }
+  }
+
+  #beginSessionOverAnimation(step: number): void {
+    this.#cancelSessionOverAnimation();
+    this.#sessionOverAnimationStep = step;
+    if (this.#reducedMotion) {
+      this.#sessionOverAnimationProgress = 1;
+      return;
+    }
+
+    const startedAt = performance.now();
+    this.#sessionOverAnimationProgress = 0;
+    const animate = (now: number): void => {
+      this.#sessionOverAnimationProgress = clamp(
+        (now - startedAt) / SESSION_OVER_ANIMATION_DURATION_MS,
+        0,
+        1,
+      );
+      this.#draw();
+      if (this.#sessionOverAnimationProgress >= 1) {
+        this.#sessionOverAnimationFrame = undefined;
+        return;
+      }
+      this.#sessionOverAnimationFrame = requestAnimationFrame(animate);
+    };
+    this.#sessionOverAnimationFrame = requestAnimationFrame(animate);
+  }
+
+  #cancelSessionOverAnimation(): void {
+    if (this.#sessionOverAnimationFrame !== undefined) {
+      cancelAnimationFrame(this.#sessionOverAnimationFrame);
+      this.#sessionOverAnimationFrame = undefined;
+    }
   }
 
   #pruneEffects(frame: Readonly<PresentationFrame>): void {
@@ -2637,7 +2725,13 @@ export class CanvasPresentation implements PresentationPort {
     const ended = this.#frame.current.lifecycle.phase === "ended";
     if (ended) {
       drawSessionOverBackground(context, this.#frame, this.#atlas);
-      drawSessionOver(context, this.#atlas, this.#frame.current);
+      drawSessionOver(
+        context,
+        this.#atlas,
+        this.#frame.current,
+        this.#pointerWorld,
+        this.#sessionOverAnimationProgress,
+      );
     } else {
       drawDynamicWorld(
         context,
