@@ -10,7 +10,6 @@ import type {
 } from "../application/contracts.js";
 import {
   describeGameEvent,
-  enemyName,
   itemDescription,
   itemName,
   shopDescription,
@@ -63,7 +62,6 @@ interface WorldPoint {
 
 const GROUND_RATIO = 0.73;
 const HERO_RUNNING_X = 50;
-const GAMEPLAY_HUD_TOP = 8;
 const GAMEPLAY_HUD_BOTTOM = 251;
 const MESSAGE_STRIP_Y = GAMEPLAY_HUD_BOTTOM - 15;
 // Project presentation roles. The original SWF text-field mapping remains unresolved.
@@ -505,22 +503,13 @@ function drawHealthBar(
 ): void {
   const ratio = maximum <= 0 ? 0 : clamp(current / maximum, 0, 1);
   context.save();
-  context.fillStyle = "#080b14";
-  context.fillRect(x - 42, y - 5, 84, 10);
-  context.fillStyle =
-    ratio > 0.5 ? "#82c99b" : ratio > 0.25 ? "#f4d58d" : "#e96d7a";
-  context.fillRect(x - 39, y - 2, 78 * ratio, 4);
-  context.strokeStyle = "#bac6df";
+  context.fillStyle = "#7e0101";
+  context.fillRect(x - 25, y - 3, 50, 6);
+  context.fillStyle = "#ffff00";
+  context.fillRect(x - 25, y - 3, 50 * ratio, 6);
+  context.strokeStyle = "#545401";
   context.lineWidth = 1;
-  context.strokeRect(x - 42, y - 5, 84, 10);
-  context.fillStyle = "#f7f1df";
-  context.font = `600 8px ${CANVAS_FONT_FAMILIES.body}`;
-  context.textAlign = "center";
-  context.fillText(
-    `${formatNumber(current)} / ${formatNumber(maximum)}`,
-    x,
-    y - 9,
-  );
+  context.strokeRect(x - 25.5, y - 3.5, 51, 7);
   context.restore();
 }
 
@@ -629,25 +618,28 @@ function drawClippedLifespanFill(
 ): void {
   const horizontalScale = frameWidth / 309;
   const verticalScale = frameHeight / 14;
-  const fillWidth = 305 * horizontalScale * ratio;
-  const fillHeight = 10 * verticalScale;
-  if (fillWidth <= 0 || fillHeight <= 0) return;
+  const sourceFillWidth = 305;
+  const sourceFillHeight = 10;
+  const fillWidth = sourceFillWidth * horizontalScale * clamp(ratio, 0, 1);
+  const fillHeight = sourceFillHeight * verticalScale;
+  if (fillWidth <= 0) return;
 
   context.save();
   context.beginPath();
-  context.moveTo(frameX + 4 * horizontalScale, frameY + 2 * verticalScale);
-  context.lineTo(frameX + 295 * horizontalScale, frameY + 2 * verticalScale);
-  context.lineTo(frameX + 304 * horizontalScale, frameY + 11 * verticalScale);
-  context.lineTo(frameX + 13 * horizontalScale, frameY + 11 * verticalScale);
-  context.closePath();
+  context.rect(
+    frameX + 2 * horizontalScale,
+    frameY + 2 * verticalScale,
+    fillWidth,
+    fillHeight,
+  );
   context.clip();
   drawUiImage(
     context,
     atlas,
     "lifespan-fill",
-    frameX + 2 * horizontalScale,
-    frameY + 2 * verticalScale,
-    fillWidth,
+    frameX,
+    frameY,
+    sourceFillWidth * horizontalScale,
     fillHeight,
   );
   context.restore();
@@ -682,11 +674,11 @@ function drawLifeBar(
   lifespan: Readonly<GameObservation["lifespan"]>,
 ): void {
   const ratio = clamp((lifespan.whole + lifespan.fraction / 100) / 100, 0, 1);
-  const x = camera.x + 162;
-  const y = camera.y + GAMEPLAY_HUD_TOP;
+  const x = camera.x + 160;
+  const y = camera.y + 10;
   drawClippedLifespanFill(context, atlas, x, y, 309, 14, ratio);
   drawUiImage(context, atlas, "lifespan-frame", x, y, 309, 14);
-  drawOutlinedText(context, "LIFESPAN", camera.x + 237, camera.y + 28, {
+  drawOutlinedText(context, "LIFESPAN", camera.x + 217, camera.y + 32, {
     font: `700 14px ${CANVAS_FONT_FAMILIES.displayMedium}`,
     align: "center",
     lineWidth: 2,
@@ -694,8 +686,8 @@ function drawLifeBar(
   drawOutlinedText(
     context,
     formatLifespan(lifespan),
-    camera.x + 451,
-    camera.y + 31,
+    camera.x + 466,
+    camera.y + 32,
     {
       font: `700 19px ${CANVAS_FONT_FAMILIES.displayMedium}`,
       align: "right",
@@ -1009,11 +1001,11 @@ function drawContextPrompt(
 
   if (current?.kind === "shop") {
     const eligible = observation.actions.canPurchaseCurrentEncounter;
-    if (eligible) {
-      drawActionPointer(context, atlas, observation, x, y);
-    } else {
+    if (!eligible) {
       drawNoAction();
+      return;
     }
+    drawActionPointer(context, atlas, observation, x, y);
     drawOutlinedText(context, shopName(current.shop), x, y - 24, {
       font: `700 9px ${CANVAS_FONT_FAMILIES.serifSmall}`,
       align: "center",
@@ -1057,11 +1049,11 @@ function drawContextPrompt(
     observation.player.inventory.item !== null
   ) {
     const canUseItem = observation.actions.canUseCarriedItem;
-    if (canUseItem) {
-      drawActionPointer(context, atlas, observation, x, y);
-    } else {
+    if (!canUseItem) {
       drawNoAction();
+      return;
     }
+    drawActionPointer(context, atlas, observation, x, y);
     drawOutlinedText(context, "Battle", x, y - 22, {
       font: `700 9px ${CANVAS_FONT_FAMILIES.serifSmall}`,
       align: "center",
@@ -1081,12 +1073,10 @@ function drawContextPrompt(
     );
     drawOutlinedText(
       context,
-      canUseItem
-        ? itemDescription(observation.player.inventory.item).replace(
-            /\. Usable during battle\.$/,
-            "",
-          )
-        : "(Unavailable)",
+      itemDescription(observation.player.inventory.item).replace(
+        /\. Usable during battle\.$/,
+        "",
+      ),
       x,
       y + 19,
       {
@@ -1496,13 +1486,13 @@ function drawEffect(
       drawOriginalHitEffect(context, atlas, point, age);
       drawFloatingText(
         context,
-        formatNumber(effect.event.damage),
+        `${formatNumber(effect.event.damage)}${effect.event.critical ? "!!" : ""}`,
         point,
         age,
         lifetime,
         {
           fill: effect.event.critical ? "#ffe9a6" : "#f7f1df",
-          font: `700 ${effect.event.critical ? 13 : 11}px ${CANVAS_FONT_FAMILIES.displayMedium}`,
+          font: `700 14px ${CANVAS_FONT_FAMILIES.compact}`,
         },
       );
       break;
@@ -2076,7 +2066,7 @@ function drawDynamicWorld(
       context,
       atlas,
       camera.x + animation.runningX(distance),
-      groundY,
+      groundY + (reducedMotion ? 0 : animation.runningY()),
       pose(animation.hero),
     );
   } else {
@@ -2092,7 +2082,7 @@ function drawDynamicWorld(
     drawHealthBar(
       context,
       enemyX,
-      groundY - 106,
+      groundY - 70,
       battle.enemy.currentHp,
       battle.enemy.maximumHp,
     );
@@ -2105,16 +2095,6 @@ function drawDynamicWorld(
     battle === null
   ) {
     drawEnemy(context, atlas, x, groundY, pose(animation.enemy!));
-    context.save();
-    context.fillStyle = "#f7f1df";
-    context.font = `700 9px ${CANVAS_FONT_FAMILIES.bodySmall}`;
-    context.textAlign = "center";
-    context.fillText(
-      `Approaching ${enemyName(current.enemy.id)}`,
-      x,
-      groundY + 28,
-    );
-    context.restore();
   }
 }
 

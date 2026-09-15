@@ -37,7 +37,7 @@ test("loads original runtime assets and produces a readable world screenshot", a
 test("clips the lifespan fill inside its original frame", async ({ page }) => {
   await page.goto("/?manual=1");
 
-  const fillClipCount = await page.evaluate(async (modulePath) => {
+  const fillDetails = await page.evaluate(async (modulePath) => {
     const { CanvasPresentation } = (await import(
       modulePath
     )) as typeof CanvasPresentationModule;
@@ -55,6 +55,8 @@ test("clips the lifespan fill inside its original frame", async ({ page }) => {
 
     let clipCount = 0;
     let clipsBeforeFill = 0;
+    let fillArgs: number[] = [];
+    let frameArgs: number[] = [];
     const clipDescriptor = Object.getOwnPropertyDescriptor(
       CanvasRenderingContext2D.prototype,
       "clip",
@@ -82,6 +84,10 @@ test("clips the lifespan fill inside its original frame", async ({ page }) => {
     ) {
       if (image instanceof HTMLImageElement && image.src.includes("/251.png")) {
         clipsBeforeFill = clipCount;
+        fillArgs = args;
+      }
+      if (image instanceof HTMLImageElement && image.src.includes("/253.png")) {
+        frameArgs = args;
       }
       originalDrawImage.apply(this, [image, ...args] as Parameters<
         typeof originalDrawImage
@@ -99,14 +105,16 @@ test("clips the lifespan fill inside its original frame", async ({ page }) => {
         interpolation: 1,
         events: [],
       });
-      return clipsBeforeFill;
+      return { clipCount, clipsBeforeFill, fillArgs, frameArgs };
     } finally {
       CanvasRenderingContext2D.prototype.clip = originalClip;
       CanvasRenderingContext2D.prototype.drawImage = originalDrawImage;
     }
   }, "/src/browser/canvas-presentation.ts");
 
-  expect(fillClipCount).toBeGreaterThan(2);
+  expect(fillDetails.clipsBeforeFill).toBeGreaterThan(2);
+  expect(fillDetails.fillArgs).toEqual([160, 10, 305, 10]);
+  expect(fillDetails.frameArgs).toEqual([160, 10, 309, 14]);
 });
 
 test("clips the health fill inside its original frame", async ({ page }) => {
@@ -445,6 +453,7 @@ test("leaves shop offers to the cursor prompt without an extra scene marker", as
 
     const productDraws: number[][] = [];
     const markerStyles: string[] = [];
+    const promptTexts: Array<{ text: string; y: number }> = [];
     const drawImageDescriptor = Object.getOwnPropertyDescriptor(
       CanvasRenderingContext2D.prototype,
       "drawImage",
@@ -453,15 +462,22 @@ test("leaves shop offers to the cursor prompt without an extra scene marker", as
       CanvasRenderingContext2D.prototype,
       "stroke",
     );
+    const strokeTextDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "strokeText",
+    );
     if (
       typeof drawImageDescriptor?.value !== "function" ||
-      typeof strokeDescriptor?.value !== "function"
+      typeof strokeDescriptor?.value !== "function" ||
+      typeof strokeTextDescriptor?.value !== "function"
     ) {
       throw new Error("Expected Canvas 2D methods");
     }
     const originalDrawImage =
       drawImageDescriptor.value as CanvasRenderingContext2D["drawImage"];
     const originalStroke = strokeDescriptor.value as () => void;
+    const originalStrokeText =
+      strokeTextDescriptor.value as CanvasRenderingContext2D["strokeText"];
     CanvasRenderingContext2D.prototype.drawImage = function (
       image: CanvasImageSource,
       ...args: number[]
@@ -482,6 +498,14 @@ test("leaves shop offers to the cursor prompt without an extra scene marker", as
         markerStyles.push(this.strokeStyle);
       }
       originalStroke.call(this);
+    };
+    CanvasRenderingContext2D.prototype.strokeText = function (
+      text: string,
+      x: number,
+      y: number,
+    ) {
+      if (x >= 170 && x <= 190 && y > 140) promptTexts.push({ text, y });
+      originalStrokeText.call(this, text, x, y);
     };
     try {
       const current = {
@@ -512,16 +536,171 @@ test("leaves shop offers to the cursor prompt without an extra scene marker", as
         productDraws: productDraws.length,
         sceneMarkerDraws: markerStyles.filter((style) => style === "#ffb4a8")
           .length,
+        promptTexts: promptTexts.map(({ text }) => text),
       };
     } finally {
       CanvasRenderingContext2D.prototype.drawImage = originalDrawImage;
       CanvasRenderingContext2D.prototype.stroke = originalStroke;
+      CanvasRenderingContext2D.prototype.strokeText = originalStrokeText;
     }
   }, "/src/browser/canvas-presentation.ts");
 
   expect(result.productDraws).toBe(0);
   expect(result.sceneMarkerDraws).toBe(0);
   expect(result.cursorMarkerDraws).toBeGreaterThan(0);
+  expect(result.promptTexts).toEqual(["No Action!"]);
+});
+
+test("uses the compact original enemy health bar without a name or HP label", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+
+  const result = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    while (canvas.dataset.assetStatus === "loading")
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const fills: Array<{ style: string; args: number[] }> = [];
+    const strokes: Array<{ style: string; args: number[] }> = [];
+    const text: string[] = [];
+    const fillDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "fillRect",
+    );
+    const strokeRectDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "strokeRect",
+    );
+    const fillTextDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "fillText",
+    );
+    if (
+      typeof fillDescriptor?.value !== "function" ||
+      typeof strokeRectDescriptor?.value !== "function" ||
+      typeof fillTextDescriptor?.value !== "function"
+    ) {
+      throw new Error("Expected Canvas 2D methods");
+    }
+    const originalFill =
+      fillDescriptor.value as CanvasRenderingContext2D["fillRect"];
+    const originalStrokeRect =
+      strokeRectDescriptor.value as CanvasRenderingContext2D["strokeRect"];
+    const originalFillText =
+      fillTextDescriptor.value as CanvasRenderingContext2D["fillText"];
+    CanvasRenderingContext2D.prototype.fillRect = function (
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+    ) {
+      if (width <= 50 && height === 6) {
+        fills.push({
+          style:
+            typeof this.fillStyle === "string" ? this.fillStyle : "non-solid",
+          args: [x, y, width, height],
+        });
+      }
+      originalFill.call(this, x, y, width, height);
+    };
+    CanvasRenderingContext2D.prototype.strokeRect = function (
+      x: number,
+      y: number,
+      width: number,
+      height: number,
+    ) {
+      if (width >= 50 && width <= 52 && height >= 6 && height <= 8) {
+        strokes.push({
+          style:
+            typeof this.strokeStyle === "string"
+              ? this.strokeStyle
+              : "non-solid",
+          args: [x, y, width, height],
+        });
+      }
+      originalStrokeRect.call(this, x, y, width, height);
+    };
+    CanvasRenderingContext2D.prototype.fillText = function (
+      value: string,
+      x: number,
+      y: number,
+    ) {
+      if (value.includes(" / ") || value.startsWith("Approaching")) {
+        text.push(value);
+      }
+      originalFillText.call(this, value, x, y);
+    };
+    try {
+      const current = {
+        ...base,
+        steps: base.steps + 1,
+        activeTicks: base.activeTicks + 1,
+        lifecycle: {
+          ...base.lifecycle,
+          phase: "battling" as const,
+          paused: false,
+          tutorialPage: null,
+        },
+        encounters: {
+          ...base.encounters,
+          current: {
+            kind: "battle" as const,
+            enemy: { id: "golem" as const, maximumHp: 660 },
+            x: 250,
+          },
+        },
+        battle: {
+          enemy: { id: "golem" as const, maximumHp: 660, currentHp: 194 },
+          actors: {
+            hero: { phase: "attack" as const, x: 150 },
+            enemy: { phase: "flinch" as const, x: 250 },
+          },
+        },
+      };
+      presentation.present({
+        previous: base,
+        current,
+        interpolation: 0,
+        events: [],
+      });
+      return { fills, strokes, text };
+    } finally {
+      CanvasRenderingContext2D.prototype.fillRect = originalFill;
+      CanvasRenderingContext2D.prototype.strokeRect = originalStrokeRect;
+      CanvasRenderingContext2D.prototype.fillText = originalFillText;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(result.fills).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        style: "#7e0101",
+        args: expect.arrayContaining([50, 6]),
+      }),
+      expect.objectContaining({ style: "#ffff00" }),
+    ]),
+  );
+  expect(result.strokes).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        style: "#545401",
+        args: expect.arrayContaining([51, 7]),
+      }),
+    ]),
+  );
+  expect(result.text).toEqual([]);
 });
 
 test("uses reference event icons and the staggered compact status icons", async ({

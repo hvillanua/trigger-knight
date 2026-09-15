@@ -151,6 +151,43 @@ describe("original sprite playback", () => {
     present(active);
     expect(animation.hero.frame).toBe(17);
   });
+  it("adds a small source-shaped vertical wander from public active ticks", () => {
+    const engine = createTestGameplayEngine();
+    const base = engine.observe(
+      engine.createRun({
+        ruleset: ORIGINAL_V13_RULESET_ID,
+        seed: "vertical-animation",
+        initialProfile: { schemaVersion: 1, scoreMultiplier: 1 },
+      }),
+    );
+    const active = {
+      ...base,
+      lifecycle: { ...base.lifecycle, paused: false, tutorialPage: null },
+    };
+    const animation = new ActorAnimation();
+    animation.present(active);
+    const offsets = [animation.runningY()];
+    for (let tick = 1; tick <= 180; tick += 1) {
+      animation.present({ ...active, steps: tick, activeTicks: tick });
+      offsets.push(animation.runningY());
+    }
+
+    expect(offsets[0]).toBe(0);
+    expect(Math.max(...offsets)).toBeGreaterThan(0);
+    expect(Math.max(...offsets)).toBeLessThanOrEqual(14);
+    expect(
+      new Set(offsets.map((offset) => offset.toFixed(4))).size,
+    ).toBeGreaterThan(2);
+
+    const frozen = animation.runningY();
+    animation.present({
+      ...active,
+      steps: 181,
+      activeTicks: 180,
+      lifecycle: { ...active.lifecycle, paused: true },
+    });
+    expect(animation.runningY()).toBe(frozen);
+  });
   it("keeps the last battle position when running resumes, then scrolls back with travel", () => {
     const engine = createTestGameplayEngine();
     const base = engine.observe(
