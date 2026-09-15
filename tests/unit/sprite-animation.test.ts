@@ -188,6 +188,68 @@ describe("original sprite playback", () => {
     });
     expect(animation.runningY()).toBe(frozen);
   });
+  it("fades the hero using the original under-25 lifespan sequence", () => {
+    const engine = createTestGameplayEngine();
+    const base = engine.observe(
+      engine.createRun({
+        ruleset: ORIGINAL_V13_RULESET_ID,
+        seed: "lifespan-fade",
+        initialProfile: { schemaVersion: 1, scoreMultiplier: 1 },
+      }),
+    );
+    const active = {
+      ...base,
+      lifecycle: {
+        ...base.lifecycle,
+        paused: false,
+        tutorialPage: null,
+        pregameStepsRemaining: 0,
+        activeGameplay: true,
+      },
+    };
+    const animation = new ActorAnimation();
+
+    animation.present({ ...active, lifespan: { whole: 25, fraction: 0 } });
+    expect(animation.hero.alpha).toBe(1);
+
+    animation.present({
+      ...active,
+      steps: 1,
+      activeTicks: 1,
+      lifespan: { whole: 24, fraction: 74 },
+    });
+    expect(animation.hero.alpha).toBe(0.99);
+
+    animation.present({
+      ...active,
+      steps: 2,
+      activeTicks: 2,
+      lifespan: { whole: 12, fraction: 34 },
+    });
+    expect(animation.hero.alpha).toBe(0.49);
+
+    animation.present({
+      ...active,
+      steps: 3,
+      activeTicks: 3,
+      lifespan: { whole: 0, fraction: 99 },
+    });
+    expect(animation.hero.alpha).toBe(0.04);
+
+    animation.present({
+      ...active,
+      steps: 4,
+      activeTicks: 4,
+      lifespan: { whole: -1, fraction: 99 },
+      lifecycle: {
+        ...active.lifecycle,
+        phase: "ended" as const,
+        terminalReason: "lifespan" as const,
+        activeGameplay: false,
+      },
+    });
+    expect(animation.hero.alpha).toBe(0);
+  });
   it("keeps the last battle position when running resumes, then scrolls back with travel", () => {
     const engine = createTestGameplayEngine();
     const base = engine.observe(

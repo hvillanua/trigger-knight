@@ -14,6 +14,8 @@ const HERO_VERTICAL_CHANGE_RANGE = 30;
 const HERO_VERTICAL_APPROACH_DIVISOR = 20;
 const DEATH_STAGGER_BASE = 10;
 const DEATH_STAGGER_ROLL_BOUND = 7;
+const HERO_LIFESPAN_FADE_THRESHOLD = 25;
+const HERO_LIFESPAN_FADE_RANGE = HERO_LIFESPAN_FADE_THRESHOLD * 100;
 
 // Cosmetic target selection stays deterministic and local to presentation. It
 // uses the public active-tick clock and never consumes gameplay randomness.
@@ -52,6 +54,19 @@ function deathStaggerKnockback(
 function deathStaggerDistance(age: number, knockback: number): number {
   const ticks = Math.min(Math.max(0, Math.floor(age)), knockback);
   return ticks * knockback - (ticks * (ticks - 1)) / 2;
+}
+
+/** Reproduces the original whole-percent alpha calculation below 25%. */
+function heroLifespanAlpha(
+  lifespan: Readonly<GameObservation["lifespan"]>,
+): number {
+  if (lifespan.whole >= HERO_LIFESPAN_FADE_THRESHOLD) return 1;
+
+  const alphaPercent = Math.round(
+    ((lifespan.whole * 100 + lifespan.fraction) / HERO_LIFESPAN_FADE_RANGE) *
+      100,
+  );
+  return Math.max(0, Math.min(1, alphaPercent / 100));
 }
 
 // Pose ranges derived by inspecting the staged PNGs. One frame per active tick
@@ -112,6 +127,7 @@ export class ActorAnimation {
   #activeTicks = 0;
   #heroDeathKnockback = 0;
   #enemyDeathKnockback = 0;
+  #heroLifespanAlpha = 1;
   hero: ActorPose = { id: "hero", phase: "running", frame: 17, alpha: 1 };
   enemy: ActorPose | undefined;
 
@@ -130,6 +146,7 @@ export class ActorAnimation {
       this.#resetHeroVerticalMotion();
       this.#heroDeathKnockback = 0;
       this.#enemyDeathKnockback = 0;
+      this.#heroLifespanAlpha = 1;
     }
     if (!reset && previous.battle !== null && current.battle === null) {
       this.#returnX = previous.battle.actors.hero.x;
@@ -189,6 +206,7 @@ export class ActorAnimation {
         this.#heroPhase(current) === "dead"
           ? deathStaggerKnockback("hero", current.activeTicks)
           : 0;
+      this.#heroLifespanAlpha = 1;
       const enemy = this.#enemyIdentity(current);
       this.#enemyDeathKnockback =
         enemy?.phase === "dead"
@@ -279,11 +297,28 @@ export class ActorAnimation {
 
   #updatePose(current: Readonly<GameObservation>): void {
     const heroPhase = this.#heroPhase(current);
-    this.hero = this.#pose(
+    if (
+      current.lifecycle.phase === "running" &&
+      current.lifecycle.activeGameplay &&
+      heroPhase !== "dead"
+    ) {
+      this.#heroLifespanAlpha = heroLifespanAlpha(current.lifespan);
+    } else if (
+      current.lifecycle.phase === "ended" &&
+      current.lifecycle.terminalReason === "lifespan"
+    ) {
+      this.#heroLifespanAlpha = 0;
+    }
+
+    const hero = this.#pose(
       "hero",
       heroPhase,
       current.activeTicks - this.#heroStart,
     );
+    this.hero = {
+      ...hero,
+      alpha: Math.min(hero.alpha, this.#heroLifespanAlpha),
+    };
     const enemy = this.#enemyIdentity(current);
     this.enemy =
       enemy === undefined
