@@ -1,6 +1,7 @@
 import type {
   GameEvent,
   GameObservation,
+  InventoryItemId,
   ShopId,
 } from "../application/contracts.js";
 import type {
@@ -41,6 +42,12 @@ export interface EffectAnchorInputs {
   readonly encounterX: number;
 }
 
+export interface StatusIconPlacement {
+  readonly imageId: OriginalUiImageId | null;
+  readonly x: number;
+  readonly y: number;
+}
+
 const BACKGROUND_TILE_WIDTH = 960;
 const BACKGROUND_TILE_OVERLAP = 1;
 const ORIGINAL_ACTION_EFFECT_SCALE = 1.5;
@@ -62,6 +69,13 @@ const SHOP_UI_ICONS: Readonly<Record<ShopId, OriginalUiImageId>> =
     pharmacy: "elixir-icon",
     "grims-shop": "divine-edge-icon",
     "voucher-store": "voucher-icon",
+  });
+
+const ITEM_UI_ICONS: Readonly<Record<InventoryItemId, OriginalUiImageId>> =
+  Object.freeze({
+    elixir: "item-stats-icon",
+    "divine-edge": "divine-edge-icon",
+    "gold-voucher": "voucher-icon",
   });
 
 const ACTION_POINTER_FRAME_STEPS = 12;
@@ -318,6 +332,52 @@ export function actionPointerImageId(
   return Math.floor(observation.steps / ACTION_POINTER_FRAME_STEPS) % 2 === 0
     ? "pointer"
     : "pointer-click";
+}
+
+export function tutorialLifespanCrop(
+  camera: Readonly<GameObservation["camera"]>,
+): readonly [x: number, y: number, width: number, height: number] {
+  return [camera.x + 298, camera.y + 191, 150, 80];
+}
+
+/** Maps the compact bottom HUD rows to their public icon positions. */
+export function statusIconPlacements(
+  observation: Readonly<GameObservation>,
+  bottomHudY: number,
+): readonly StatusIconPlacement[] {
+  const item = observation.player.inventory.item;
+  const imageIds: readonly (OriginalUiImageId | null)[] = [
+    "weapon-stats-icon",
+    "armor-stats-icon",
+    item === null ? null : ITEM_UI_ICONS[item],
+  ];
+  return imageIds.map((imageId, index) => ({
+    imageId,
+    x: observation.camera.x + 235 + index * 20,
+    y: bottomHudY + 15 + index * 16,
+  }));
+}
+
+export type ContextPromptMode = "shop" | "item" | "none";
+
+export function contextPromptMode(
+  observation: Readonly<GameObservation>,
+): ContextPromptMode {
+  const current = observation.encounters.current;
+  if (current?.kind === "shop") {
+    return observation.actions.canPurchaseCurrentEncounter ? "shop" : "none";
+  }
+  if (
+    observation.battle !== null &&
+    observation.player.inventory.item !== null
+  ) {
+    return observation.actions.canUseCarriedItem ? "item" : "none";
+  }
+  return "none";
+}
+
+export function sessionOverPointerPosition(point: WorldPoint): WorldPoint {
+  return { x: point.x - 4, y: point.y - 2 };
 }
 
 export type OriginalEventVisual =

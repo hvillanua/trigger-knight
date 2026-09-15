@@ -1,7 +1,6 @@
 import type {
   GameEvent,
   GameObservation,
-  InventoryItemId,
   PresentationFrame,
   PresentationPort,
   PresentationTransition,
@@ -25,6 +24,7 @@ import {
 import {
   actionPointerImageId as drawingActionPointerImageId,
   calculateEffectAnchor,
+  contextPromptMode,
   drawClippedHealthFill as drawClippedHealthFillAsset,
   drawClippedLifespanFill as drawClippedLifespanFillAsset,
   drawHealthBar as drawHealthBarAsset,
@@ -38,6 +38,9 @@ import {
   encounterQueueItems,
   imageReady as drawingImageReady,
   originalEventVisual,
+  sessionOverPointerPosition,
+  statusIconPlacements,
+  tutorialLifespanCrop,
   type WorldPoint,
 } from "./canvas-drawing.js";
 import {
@@ -100,13 +103,6 @@ const CANVAS_FONT_FAMILIES = Object.freeze({
   serif: `"${ORIGINAL_FONT_FAMILIES.calisto5}", "${ORIGINAL_FONT_FAMILIES.calibri}", system-ui, sans-serif`,
   serifSmall: `"${ORIGINAL_FONT_FAMILIES.calisto224}", "${ORIGINAL_FONT_FAMILIES.calibri12}", system-ui, sans-serif`,
 });
-
-const ITEM_UI_ICONS: Readonly<Record<InventoryItemId, OriginalUiImageId>> =
-  Object.freeze({
-    elixir: "item-stats-icon",
-    "divine-edge": "divine-edge-icon",
-    "gold-voucher": "voucher-icon",
-  });
 
 function describeEvent(event: GameEvent): string {
   switch (event.type) {
@@ -671,34 +667,27 @@ function drawBottomHud(
   );
 
   const inventoryItem = observation.player.inventory.item;
-  const equipmentRows: readonly (readonly [
-    OriginalUiImageId | null,
-    string,
-  ])[] = [
-    [
-      "weapon-stats-icon",
-      `${observation.player.weapon.name} [${formatNumber(observation.player.weapon.attack)} ATK]`,
-    ],
-    ["armor-stats-icon", observation.player.armor.name],
-    [
-      inventoryItem === null ? null : ITEM_UI_ICONS[inventoryItem],
-      inventoryItem === null ? "—" : itemName(inventoryItem),
-    ],
+  const equipmentLabels: readonly string[] = [
+    `${observation.player.weapon.name} [${formatNumber(observation.player.weapon.attack)} ATK]`,
+    observation.player.armor.name,
+    inventoryItem === null ? "—" : itemName(inventoryItem),
   ];
-  equipmentRows.forEach(([icon, label], index) => {
-    const rowY = y + 15 + index * 16;
-    if (icon !== null) {
+  const iconPlacements = statusIconPlacements(observation, y);
+  equipmentLabels.forEach((label, index) => {
+    const placement = iconPlacements[index];
+    if (placement === undefined) return;
+    if (placement.imageId !== null) {
       drawUiImage(
         context,
         atlas,
-        icon,
-        camera.x + 235 + index * 20,
-        rowY,
+        placement.imageId,
+        placement.x,
+        placement.y,
         16,
         16,
       );
     }
-    drawOutlinedText(context, label, camera.x + 252 + index * 20, rowY + 12, {
+    drawOutlinedText(context, label, placement.x + 17, placement.y + 12, {
       font: `600 8px ${CANVAS_FONT_FAMILIES.bodySmall}`,
       lineWidth: 2,
     });
@@ -849,6 +838,7 @@ function drawContextPrompt(
   const groundY =
     observation.camera.y + observation.camera.height * GROUND_RATIO;
   const current = observation.encounters.current;
+  const promptMode = contextPromptMode(observation);
   const x = clamp(
     pointer?.x ?? current?.x ?? observation.camera.x + 235,
     observation.camera.x + 36,
@@ -873,12 +863,7 @@ function drawContextPrompt(
     });
   };
 
-  if (current?.kind === "shop") {
-    const eligible = observation.actions.canPurchaseCurrentEncounter;
-    if (!eligible) {
-      drawNoAction();
-      return;
-    }
+  if (promptMode === "shop" && current?.kind === "shop") {
     drawActionPointer(context, atlas, observation, x, y);
     drawOutlinedText(context, shopName(current.shop), x, y - 24, {
       font: `700 9px ${CANVAS_FONT_FAMILIES.serifSmall}`,
@@ -899,15 +884,7 @@ function drawContextPrompt(
     );
     drawOutlinedText(
       context,
-      `${formatNumber(current.cachedPrice)}G${
-        eligible
-          ? ""
-          : current.used
-            ? " (Used)"
-            : observation.player.gold < current.cachedPrice
-              ? " (Insufficient)"
-              : " (Unavailable)"
-      }`,
+      `${formatNumber(current.cachedPrice)}G`,
       x,
       y + 18,
       {
@@ -919,14 +896,10 @@ function drawContextPrompt(
     return;
   }
   if (
+    promptMode === "item" &&
     observation.battle !== null &&
     observation.player.inventory.item !== null
   ) {
-    const canUseItem = observation.actions.canUseCarriedItem;
-    if (!canUseItem) {
-      drawNoAction();
-      return;
-    }
     drawActionPointer(context, atlas, observation, x, y);
     drawOutlinedText(context, "Battle", x, y - 22, {
       font: `700 9px ${CANVAS_FONT_FAMILIES.serifSmall}`,
@@ -1625,9 +1598,18 @@ function drawTutorialSurvivalIllustrations(
   context.stroke();
   context.restore();
 
-  const queueX = panelX + 288;
-  const queueY = panelY + 181;
-  drawUiImage(context, atlas, "tutorial-lifespan-crop", queueX, queueY);
+  const [cropX, cropY, cropWidth, cropHeight] = tutorialLifespanCrop(
+    observation.camera,
+  );
+  drawUiImage(
+    context,
+    atlas,
+    "tutorial-lifespan-crop",
+    cropX,
+    cropY,
+    cropWidth,
+    cropHeight,
+  );
 }
 
 function drawTutorialOverlay(
@@ -1830,12 +1812,13 @@ function drawSessionOver(
   }
 
   if (pointer !== undefined) {
+    const pointerPosition = sessionOverPointerPosition(pointer);
     drawUiImage(
       context,
       atlas,
       "session-over-pointer",
-      pointer.x - 4,
-      pointer.y - 2,
+      pointerPosition.x,
+      pointerPosition.y,
     );
   }
 }

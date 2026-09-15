@@ -537,3 +537,556 @@ test("changes composited scenery when public distance is interpolated", async ({
 
   expect(changedPixels).toBeGreaterThan(100);
 });
+
+test("retains presentation effects through redraw, pause, and batched transitions", async ({
+  page,
+}) => {
+  await openReadyWorld(page);
+
+  const result = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+
+    const createPresentation = async () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 480;
+      canvas.height = 320;
+      document.body.append(canvas);
+      const presentation = new CanvasPresentation(canvas);
+      for (let attempt = 0; attempt < 100; attempt += 1) {
+        if (canvas.dataset.assetStatus === "ready") {
+          return { presentation, canvas };
+        }
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      throw new Error(
+        `Timed out waiting for renderer assets: ${canvas.dataset.assetStatus ?? "missing status"}`,
+      );
+    };
+
+    const purchase = {
+      type: "shop-purchased" as const,
+      shop: "armorsmith" as const,
+      price: 204,
+    };
+    const purchased = {
+      ...base,
+      steps: 10,
+      activeTicks: 10,
+      lifecycle: { ...base.lifecycle, paused: false, tutorialPage: null },
+      player: {
+        ...base.player,
+        gold: 188,
+        armor: { ...base.player.armor, name: "Protector" as const, tier: 1 },
+      },
+      encounters: {
+        ...base.encounters,
+        current: {
+          kind: "shop" as const,
+          shop: "armorsmith" as const,
+          cachedPrice: 204,
+          x: 180,
+          used: true,
+        },
+      },
+    };
+    const next = { ...purchased, steps: 11, activeTicks: 11 };
+    const later = { ...purchased, steps: 12, activeTicks: 12 };
+    const paused = {
+      ...later,
+      steps: 13,
+      lifecycle: { ...later.lifecycle, paused: true },
+    };
+    const resumed = { ...later, steps: 14, activeTicks: 13 };
+    const expired = { ...resumed, steps: 60, activeTicks: 60 };
+
+    const { presentation: messagePresentation, canvas: messageCanvas } =
+      await createPresentation();
+    const fillTexts: string[] = [];
+    const fillTextDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "fillText",
+    );
+    if (typeof fillTextDescriptor?.value !== "function") {
+      throw new Error("Expected the Canvas fillText method");
+    }
+    const originalFillText = fillTextDescriptor.value as (
+      this: CanvasRenderingContext2D,
+      text: string,
+      x: number,
+      y: number,
+      maxWidth?: number,
+    ) => void;
+    CanvasRenderingContext2D.prototype.fillText = function (
+      text,
+      x,
+      y,
+      maxWidth,
+    ) {
+      fillTexts.push(String(text));
+      originalFillText.call(this, text, x, y, maxWidth);
+    };
+    const snapshot = (): string[] => {
+      const values = [...fillTexts];
+      fillTexts.length = 0;
+      return values;
+    };
+    try {
+      messagePresentation.presentTransition({
+        previous: base,
+        current: purchased,
+        events: [purchase],
+      });
+      messagePresentation.present({
+        previous: base,
+        current: purchased,
+        interpolation: 0,
+        events: [purchase],
+      });
+      const first = snapshot();
+      messagePresentation.presentTransition({
+        previous: purchased,
+        current: next,
+        events: [],
+      });
+      messagePresentation.presentTransition({
+        previous: next,
+        current: later,
+        events: [],
+      });
+      messagePresentation.present({
+        previous: next,
+        current: later,
+        interpolation: 0,
+        events: [purchase],
+      });
+      const batched = snapshot();
+      messagePresentation.presentTransition({
+        previous: later,
+        current: paused,
+        events: [],
+      });
+      messagePresentation.present({
+        previous: later,
+        current: paused,
+        interpolation: 0,
+        events: [],
+      });
+      const pausedEffects = messageCanvas.dataset.activeEffects;
+      messagePresentation.presentTransition({
+        previous: paused,
+        current: resumed,
+        events: [],
+      });
+      messagePresentation.present({
+        previous: paused,
+        current: resumed,
+        interpolation: 0,
+        events: [],
+      });
+      const resumedTexts = snapshot();
+      messagePresentation.present({
+        previous: resumed,
+        current: expired,
+        interpolation: 0,
+        events: [],
+      });
+      const expiredTexts = snapshot();
+
+      const { presentation: effectPresentation, canvas: effectCanvas } =
+        await createPresentation();
+      const effectCurrent = {
+        ...base,
+        steps: 5,
+        encounters: {
+          ...base.encounters,
+          current: {
+            kind: "shop" as const,
+            shop: "pharmacy" as const,
+            cachedPrice: 150,
+            x: 180,
+            used: true,
+          },
+        },
+      };
+      const effectEvents = [
+        { type: "step-advanced" as const, step: 5 },
+        { ...purchase },
+      ];
+      effectPresentation.present({
+        previous: base,
+        current: effectCurrent,
+        interpolation: 0,
+        events: effectEvents,
+      });
+      const firstSequence = effectCanvas.dataset.effectSequence;
+      effectPresentation.present({
+        previous: base,
+        current: effectCurrent,
+        interpolation: 0.5,
+        events: effectEvents,
+      });
+      const redrawSequence = effectCanvas.dataset.effectSequence;
+      effectPresentation.present({
+        previous: effectCurrent,
+        current: { ...effectCurrent, steps: 6 },
+        interpolation: 1,
+        events: [
+          { type: "step-advanced" as const, step: 6 },
+          { type: "item-used" as const, item: "elixir" as const },
+        ],
+      });
+      const nextSequence = effectCanvas.dataset.effectSequence;
+
+      const { presentation: retentionPresentation, canvas: retentionCanvas } =
+        await createPresentation();
+      const battle = {
+        ...base,
+        steps: 10,
+        activeTicks: 10,
+        lifecycle: {
+          ...base.lifecycle,
+          paused: false,
+          tutorialPage: null,
+        },
+        battle: {
+          enemy: { id: "goblin" as const, maximumHp: 900, currentHp: 671 },
+          actors: {
+            hero: { phase: "attack" as const, x: 150 },
+            enemy: { phase: "flinch" as const, x: 210 },
+          },
+        },
+      };
+      const hit = {
+        type: "combat-hit" as const,
+        attacker: "hero" as const,
+        target: "enemy" as const,
+        damage: 229,
+        critical: false,
+        remainingHp: 671,
+      };
+      const show = (
+        current: typeof battle,
+        events: readonly (typeof hit)[] = [],
+      ): string => {
+        retentionPresentation.present({
+          previous: battle,
+          current,
+          interpolation: 0,
+          events,
+        });
+        return retentionCanvas.dataset.activeEffects ?? "";
+      };
+      const firstEffects = show(battle, [hit]);
+      const redrawEffects = show(battle);
+      const pausedBattle = {
+        ...battle,
+        steps: 12,
+        lifecycle: { ...battle.lifecycle, paused: true },
+      };
+      const pausedBattleEffects = show(pausedBattle);
+      const resumedBattle = { ...battle, steps: 13, activeTicks: 11 };
+      const resumedBattleEffects = show(resumedBattle);
+      const continuedEffects = show({ ...battle, steps: 14, activeTicks: 14 });
+      const expiredEffects = show({ ...battle, steps: 30, activeTicks: 30 });
+
+      return {
+        first,
+        batched,
+        pausedEffects,
+        resumedTexts,
+        expiredTexts,
+        firstSequence,
+        redrawSequence,
+        nextSequence,
+        firstEffects,
+        redrawEffects,
+        pausedBattleEffects,
+        resumedBattleEffects,
+        continuedEffects,
+        expiredEffects,
+      };
+    } finally {
+      CanvasRenderingContext2D.prototype.fillText = originalFillText;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(result.first).toContain("Upgrade: Clothing > Protector");
+  expect(result.batched).toContain("Upgrade: Clothing > Protector");
+  expect(result.resumedTexts).toContain("Upgrade: Clothing > Protector");
+  expect(result.pausedEffects).toContain("shop-purchased");
+  expect(result.expiredTexts).not.toContain("Upgrade: Clothing > Protector");
+  expect(result.redrawSequence).toBe(result.firstSequence);
+  expect(Number(result.nextSequence)).toBeGreaterThan(
+    Number(result.redrawSequence),
+  );
+  expect(result.firstEffects).toContain("combat-hit");
+  expect(result.redrawEffects).toContain("combat-hit");
+  expect(result.pausedBattleEffects).toContain("combat-hit");
+  expect(result.resumedBattleEffects).toContain("combat-hit");
+  expect(result.continuedEffects).toContain("combat-hit");
+  expect(result.expiredEffects).not.toContain("combat-hit");
+});
+
+test("uses original action feedback without procedural substitutes", async ({
+  page,
+}) => {
+  await openReadyWorld(page);
+
+  const feedback = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    for (let attempt = 0; attempt < 100; attempt += 1) {
+      if (canvas.dataset.assetStatus === "ready") break;
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    if (canvas.dataset.assetStatus !== "ready") {
+      throw new Error(
+        `Timed out waiting for renderer assets: ${canvas.dataset.assetStatus ?? "missing status"}`,
+      );
+    }
+
+    const frames: string[] = [];
+    let arcCount = 0;
+    let goldIconCount = 0;
+    const rewardTexts: string[] = [];
+    const drawImageDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "drawImage",
+    );
+    const arcDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "arc",
+    );
+    const fillTextDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "fillText",
+    );
+    if (
+      typeof drawImageDescriptor?.value !== "function" ||
+      typeof arcDescriptor?.value !== "function" ||
+      typeof fillTextDescriptor?.value !== "function"
+    ) {
+      throw new Error("Expected Canvas 2D methods");
+    }
+    const originalDrawImage =
+      drawImageDescriptor.value as CanvasRenderingContext2D["drawImage"];
+    const originalArc = arcDescriptor.value as CanvasRenderingContext2D["arc"];
+    const originalFillText = fillTextDescriptor.value as (
+      this: CanvasRenderingContext2D,
+      text: string,
+      x: number,
+      y: number,
+      maxWidth?: number,
+    ) => void;
+    CanvasRenderingContext2D.prototype.drawImage = function (
+      image: CanvasImageSource,
+      ...args: number[]
+    ) {
+      if (image instanceof HTMLImageElement) {
+        if (image.src.includes("/DefineSprite_")) {
+          frames.push(image.src.split("/assets/original/effects/")[1] ?? "");
+        }
+        if (image.src.includes("/164.png")) goldIconCount += 1;
+      }
+      originalDrawImage.apply(this, [image, ...args] as Parameters<
+        typeof originalDrawImage
+      >);
+    };
+    CanvasRenderingContext2D.prototype.arc = function (...args) {
+      arcCount += 1;
+      originalArc.apply(this, args);
+    };
+    CanvasRenderingContext2D.prototype.fillText = function (
+      text,
+      x,
+      y,
+      maxWidth,
+    ) {
+      if (String(text) === "+100G") rewardTexts.push(String(text));
+      originalFillText.call(this, text, x, y, maxWidth);
+    };
+
+    try {
+      const purchased = {
+        ...base,
+        steps: 10,
+        activeTicks: 10,
+        lifecycle: { ...base.lifecycle, paused: false, tutorialPage: null },
+        player: {
+          ...base.player,
+          armor: { ...base.player.armor, name: "Protector" as const, tier: 1 },
+        },
+        encounters: {
+          ...base.encounters,
+          current: {
+            kind: "shop" as const,
+            shop: "armorsmith" as const,
+            cachedPrice: 204,
+            x: 180,
+            used: true,
+          },
+        },
+      };
+      presentation.present({
+        previous: base,
+        current: purchased,
+        interpolation: 0,
+        events: [
+          { type: "shop-purchased" as const, shop: "armorsmith", price: 204 },
+        ],
+      });
+      const upgradeFrames = [...frames];
+      const upgradeArcCount = arcCount;
+
+      frames.length = 0;
+      arcCount = 0;
+      const itemUsed = {
+        ...purchased,
+        steps: 11,
+        activeTicks: 11,
+        lifecycle: { ...purchased.lifecycle, phase: "battling" as const },
+        player: {
+          ...purchased.player,
+          inventory: { ...purchased.player.inventory, item: null },
+        },
+        battle: {
+          enemy: { id: "goblin" as const, maximumHp: 900, currentHp: 900 },
+          actors: {
+            hero: { phase: "idle" as const, x: 90 },
+            enemy: { phase: "idle" as const, x: 220 },
+          },
+        },
+        encounters: {
+          ...purchased.encounters,
+          current: {
+            kind: "battle" as const,
+            enemy: { id: "goblin" as const, maximumHp: 900 },
+            x: 220,
+          },
+        },
+      };
+      presentation.present({
+        previous: purchased,
+        current: itemUsed,
+        interpolation: 0,
+        events: [{ type: "item-used" as const, item: "elixir" as const }],
+      });
+      const itemFrames = [...frames];
+      const itemArcCount = arcCount;
+
+      const battle = {
+        ...base,
+        steps: 1,
+        activeTicks: 1,
+        lifecycle: {
+          ...base.lifecycle,
+          phase: "battling" as const,
+          paused: false,
+          tutorialPage: null,
+        },
+        battle: {
+          enemy: { id: "goblin" as const, maximumHp: 900, currentHp: 0 },
+          actors: {
+            hero: { phase: "idle" as const, x: 190 },
+            enemy: { phase: "dead" as const, x: 310 },
+          },
+        },
+        encounters: {
+          ...base.encounters,
+          current: {
+            kind: "battle" as const,
+            enemy: { id: "goblin" as const, maximumHp: 900 },
+            x: 310,
+          },
+        },
+      };
+      const running = {
+        ...base,
+        steps: 2,
+        activeTicks: 2,
+        lifecycle: {
+          ...base.lifecycle,
+          phase: "running" as const,
+          paused: false,
+          tutorialPage: null,
+        },
+        battle: null,
+        encounters: { ...base.encounters, current: null },
+      };
+      presentation.presentTransition({
+        previous: battle,
+        current: running,
+        events: [
+          {
+            type: "battle-reward" as const,
+            enemy: "goblin" as const,
+            gold: 100,
+            score: 100,
+            profileExp: 10,
+            dragonKilled: false,
+          },
+        ],
+      });
+      presentation.present({
+        previous: battle,
+        current: running,
+        interpolation: 1,
+        events: [
+          {
+            type: "battle-reward" as const,
+            enemy: "goblin" as const,
+            gold: 100,
+            score: 100,
+            profileExp: 10,
+            dragonKilled: false,
+          },
+        ],
+      });
+
+      return {
+        upgradeFrames,
+        itemFrames,
+        upgradeArcCount,
+        itemArcCount,
+        rewardTexts,
+        goldIconCount,
+        rewardArcCount: arcCount,
+      };
+    } finally {
+      CanvasRenderingContext2D.prototype.drawImage = originalDrawImage;
+      CanvasRenderingContext2D.prototype.arc = originalArc;
+      CanvasRenderingContext2D.prototype.fillText = originalFillText;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(
+    feedback.upgradeFrames.some((frame) =>
+      frame.startsWith("DefineSprite_153_FXUpgrade/1.png"),
+    ),
+  ).toBe(true);
+  expect(
+    feedback.itemFrames.some((frame) =>
+      frame.startsWith("DefineSprite_151_FXItem/1.png"),
+    ),
+  ).toBe(true);
+  expect(feedback.upgradeArcCount).toBe(0);
+  expect(feedback.itemArcCount).toBe(0);
+  expect(feedback.rewardTexts).toContain("+100G");
+  expect(feedback.rewardArcCount).toBe(0);
+  expect(feedback.goldIconCount).toBe(0);
+});

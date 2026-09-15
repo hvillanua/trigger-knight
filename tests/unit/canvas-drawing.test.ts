@@ -8,16 +8,21 @@ import type {
 import {
   actionPointerImageId,
   calculateEffectAnchor,
+  contextPromptMode,
   drawClippedHealthFill,
   drawClippedLifespanFill,
   drawHealthBar,
   drawOriginalActionEffect,
+  drawOriginalClickEffect,
   drawOriginalFlashEffect,
   drawOriginalHitEffect,
   drawOriginalTimelineFrame,
   drawScenery,
   encounterQueueItems,
   originalEventVisual,
+  sessionOverPointerPosition,
+  statusIconPlacements,
+  tutorialLifespanCrop,
 } from "../../src/browser/canvas-drawing.js";
 
 interface DrawCall {
@@ -334,6 +339,62 @@ describe("Canvas drawing decisions", () => {
     ]);
   });
 
+  it("maps tutorial, status, prompt, and session-over drawing positions", () => {
+    expect(tutorialLifespanCrop(BASE_OBSERVATION.camera)).toEqual([
+      298, 191, 150, 80,
+    ]);
+    expect(statusIconPlacements(BASE_OBSERVATION, 251)).toEqual([
+      { imageId: "weapon-stats-icon", x: 235, y: 266 },
+      { imageId: "armor-stats-icon", x: 255, y: 282 },
+      { imageId: "item-stats-icon", x: 275, y: 298 },
+    ]);
+
+    const ineligibleShop: GameObservation = {
+      ...BASE_OBSERVATION,
+      encounters: {
+        ...BASE_OBSERVATION.encounters,
+        current: {
+          kind: "shop",
+          shop: "pharmacy",
+          cachedPrice: 150,
+          x: 180,
+          used: false,
+        },
+      },
+      actions: {
+        ...BASE_OBSERVATION.actions,
+        canPurchaseCurrentEncounter: false,
+      },
+    };
+    expect(contextPromptMode(ineligibleShop)).toBe("none");
+    expect(
+      contextPromptMode({
+        ...ineligibleShop,
+        actions: {
+          ...ineligibleShop.actions,
+          canPurchaseCurrentEncounter: true,
+        },
+      }),
+    ).toBe("shop");
+    expect(
+      contextPromptMode({
+        ...BASE_OBSERVATION,
+        battle: {
+          enemy: { id: "goblin", maximumHp: 900, currentHp: 900 },
+          actors: {
+            hero: { phase: "idle", x: 70 },
+            enemy: { phase: "idle", x: 220 },
+          },
+        },
+        actions: { ...BASE_OBSERVATION.actions, canUseCarriedItem: true },
+      }),
+    ).toBe("item");
+    expect(sessionOverPointerPosition({ x: 120, y: 70 })).toEqual({
+      x: 116,
+      y: 68,
+    });
+  });
+
   it("selects original feedback assets without procedural substitutes", () => {
     expect(
       [
@@ -417,9 +478,13 @@ describe("Canvas drawing decisions", () => {
     ).toBe(true);
     expect(drawImages(context)[1]?.args.slice(1)).toEqual([88, 68, 24, 24]);
     expect(
+      drawOriginalClickEffect(context, [action], { x: 100, y: 80 }, 0),
+    ).toBe(true);
+    expect(drawImages(context)[2]?.args.slice(1)).toEqual([92, 72, 16, 16]);
+    expect(
       drawOriginalFlashEffect(context, [flash], BASE_OBSERVATION.camera, 0),
     ).toBe(true);
-    expect(drawImages(context)[2]?.args.slice(1)).toEqual([230, 155, 20, 10]);
+    expect(drawImages(context)[3]?.args.slice(1)).toEqual([230, 155, 20, 10]);
 
     const missingContext = createRecordingContext();
     expect(
