@@ -148,11 +148,21 @@ async function advanceUntilResult(
   return summary;
 }
 
-async function readDiagnostics(page: Page): Promise<GameplayTrace> {
+async function readTraceParity(page: Page): Promise<{
+  readonly config: GameplayTrace["config"];
+  readonly traceHash: string;
+  readonly length: number;
+  readonly commands: readonly GameplayTrace["checkpoints"][number]["commands"][];
+}> {
   return page.evaluate(() => {
     const trace = window.triggerKnightDiagnostics?.read();
     if (trace === undefined) throw new Error("Missing browser diagnostics");
-    return trace;
+    return {
+      config: trace.config,
+      traceHash: trace.traceHash,
+      length: trace.checkpoints.length,
+      commands: trace.checkpoints.slice(1).map(({ commands }) => commands),
+    };
   });
 }
 
@@ -372,13 +382,13 @@ test("reduced motion keeps timing and committed results durable", async ({
     await seedDisabledTutorialProfile(normalPage);
     await normalPage.goto("/?manual=1&seed=m4-policy-3");
     const normalSummary = await advanceUntilResult(normalPage, 12_000, true);
-    const normalTrace = await readDiagnostics(normalPage);
+    const normalTrace = await readTraceParity(normalPage);
 
     await reducedPage.emulateMedia({ reducedMotion: "reduce" });
     await seedDisabledTutorialProfile(reducedPage);
     await reducedPage.goto("/?manual=1&seed=m4-policy-3");
     const reducedSummary = await advanceUntilResult(reducedPage, 12_000, true);
-    const reducedTrace = await readDiagnostics(reducedPage);
+    const reducedTrace = await readTraceParity(reducedPage);
 
     for (const summary of [normalSummary, reducedSummary]) {
       expect(
@@ -396,11 +406,13 @@ test("reduced motion keeps timing and committed results durable", async ({
       ruleset: ORIGINAL_V13_RULESET_ID,
       seed: "m4-policy-3",
       initialProfile: disabledTutorialProfile,
+      startImmediately: true,
     });
-    for (const checkpoint of normalTrace.checkpoints.slice(1)) {
-      headless.dispatch(checkpoint.commands);
+    for (const commands of normalTrace.commands) {
+      headless.dispatch(commands);
     }
-    expect(headless.readDiagnostics()).toEqual(normalTrace);
+    expect(headless.readDiagnostics().config).toEqual(normalTrace.config);
+    expect(headless.readDiagnostics().traceHash).toBe(normalTrace.traceHash);
 
     await expect(reducedPage.locator("#run-result")).toHaveAttribute(
       "data-result-state",
