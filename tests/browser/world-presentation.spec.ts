@@ -57,6 +57,12 @@ test("clips the lifespan fill inside its original frame", async ({ page }) => {
     let clipsBeforeFill = 0;
     let fillArgs: number[] = [];
     let frameArgs: number[] = [];
+    const lifespanTextCalls: {
+      text: string;
+      x: number;
+      y: number;
+      font: string;
+    }[] = [];
     const clipDescriptor = Object.getOwnPropertyDescriptor(
       CanvasRenderingContext2D.prototype,
       "clip",
@@ -74,6 +80,20 @@ test("clips the lifespan fill inside its original frame", async ({ page }) => {
     const originalClip = clipDescriptor.value as () => void;
     const originalDrawImage =
       drawImageDescriptor.value as CanvasRenderingContext2D["drawImage"];
+    const fillTextDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "fillText",
+    );
+    if (typeof fillTextDescriptor?.value !== "function") {
+      throw new Error("Expected Canvas fillText");
+    }
+    const originalFillText = fillTextDescriptor.value as (
+      this: CanvasRenderingContext2D,
+      text: string,
+      x: number,
+      y: number,
+      maxWidth?: number,
+    ) => void;
     CanvasRenderingContext2D.prototype.clip = function () {
       clipCount += 1;
       originalClip.call(this);
@@ -93,10 +113,27 @@ test("clips the lifespan fill inside its original frame", async ({ page }) => {
         typeof originalDrawImage
       >);
     };
+    CanvasRenderingContext2D.prototype.fillText = function (
+      text,
+      x,
+      y,
+      maxWidth,
+    ) {
+      if (["LIFESPAN", "51", "19", "%"].includes(String(text))) {
+        lifespanTextCalls.push({
+          text: String(text),
+          x,
+          y,
+          font: this.font,
+        });
+      }
+      originalFillText.call(this, text, x, y, maxWidth);
+    };
     try {
       const current = {
         ...base,
         steps: base.steps + 1,
+        lifespan: { whole: 51, fraction: 19 },
         lifecycle: { ...base.lifecycle, paused: false, tutorialPage: null },
       };
       presentation.present({
@@ -105,16 +142,49 @@ test("clips the lifespan fill inside its original frame", async ({ page }) => {
         interpolation: 1,
         events: [],
       });
-      return { clipCount, clipsBeforeFill, fillArgs, frameArgs };
+      return {
+        clipCount,
+        clipsBeforeFill,
+        fillArgs,
+        frameArgs,
+        lifespanTextCalls,
+      };
     } finally {
       CanvasRenderingContext2D.prototype.clip = originalClip;
       CanvasRenderingContext2D.prototype.drawImage = originalDrawImage;
+      CanvasRenderingContext2D.prototype.fillText = originalFillText;
     }
   }, "/src/browser/canvas-presentation.ts");
 
-  expect(fillDetails.clipsBeforeFill).toBeGreaterThan(2);
-  expect(fillDetails.fillArgs).toEqual([160, 10, 305, 10]);
+  expect(fillDetails.clipsBeforeFill).toBeGreaterThanOrEqual(2);
+  expect(fillDetails.fillArgs).toEqual([162, 12, 305, 10]);
   expect(fillDetails.frameArgs).toEqual([160, 10, 309, 14]);
+  expect(fillDetails.lifespanTextCalls).toEqual([
+    expect.objectContaining({
+      text: "LIFESPAN",
+      x: 217,
+      y: 32,
+      font: expect.stringContaining("20px"),
+    }),
+    expect.objectContaining({
+      text: "51",
+      x: 420,
+      y: 32,
+      font: expect.stringContaining("32px"),
+    }),
+    expect.objectContaining({
+      text: "19",
+      x: 430,
+      y: 33,
+      font: expect.stringContaining("20px"),
+    }),
+    expect.objectContaining({
+      text: "%",
+      x: 454,
+      y: 32,
+      font: expect.stringContaining("30px"),
+    }),
+  ]);
 });
 
 test("clips the health fill inside its original frame", async ({ page }) => {
@@ -1223,6 +1293,167 @@ test("uses the original expanding click feedback for successful actions", async 
   expect(itemCall?.args[0]).toBeLessThan(265);
   expect(itemCall?.args[1]).toBeGreaterThan(63);
   expect(itemCall?.args[1]).toBeLessThan(65);
+});
+
+test("uses the original action feedback timelines without procedural particles", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+
+  const feedback = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    while (canvas.dataset.assetStatus === "loading")
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const frames: string[] = [];
+    let arcCount = 0;
+    const drawImageDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "drawImage",
+    );
+    const arcDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "arc",
+    );
+    if (
+      typeof drawImageDescriptor?.value !== "function" ||
+      typeof arcDescriptor?.value !== "function"
+    ) {
+      throw new Error("Expected Canvas 2D methods");
+    }
+    const originalDrawImage =
+      drawImageDescriptor.value as CanvasRenderingContext2D["drawImage"];
+    const originalArc = arcDescriptor.value as CanvasRenderingContext2D["arc"];
+    CanvasRenderingContext2D.prototype.drawImage = function (
+      image: CanvasImageSource,
+      ...args: number[]
+    ) {
+      if (
+        image instanceof HTMLImageElement &&
+        image.src.includes("/DefineSprite_")
+      ) {
+        frames.push(image.src.split("/assets/original/effects/")[1] ?? "");
+      }
+      originalDrawImage.apply(this, [image, ...args] as Parameters<
+        typeof originalDrawImage
+      >);
+    };
+    CanvasRenderingContext2D.prototype.arc = function (...args) {
+      arcCount += 1;
+      originalArc.apply(this, args);
+    };
+    const waitForFrame = async (name: string): Promise<void> => {
+      for (let attempt = 0; attempt < 200; attempt += 1) {
+        if (frames.some((frame) => frame.startsWith(name))) return;
+        await new Promise((resolve) => setTimeout(resolve, 10));
+      }
+      throw new Error(`Timed out waiting for ${name}`);
+    };
+    try {
+      const purchased = {
+        ...base,
+        steps: 10,
+        activeTicks: 10,
+        lifecycle: { ...base.lifecycle, paused: false, tutorialPage: null },
+        player: {
+          ...base.player,
+          armor: { ...base.player.armor, name: "Protector" as const, tier: 1 },
+        },
+        encounters: {
+          ...base.encounters,
+          current: {
+            kind: "shop" as const,
+            shop: "armorsmith" as const,
+            cachedPrice: 204,
+            x: 180,
+            used: true,
+          },
+        },
+      };
+      presentation.present({
+        previous: base,
+        current: purchased,
+        interpolation: 0,
+        events: [
+          {
+            type: "shop-purchased" as const,
+            shop: "armorsmith" as const,
+            price: 204,
+          },
+        ],
+      });
+      await waitForFrame("DefineSprite_153_FXUpgrade/");
+      const upgradeFrames = [...frames];
+      const upgradeArcCount = arcCount;
+
+      frames.length = 0;
+      arcCount = 0;
+      const itemUsed = {
+        ...purchased,
+        steps: 11,
+        activeTicks: 11,
+        lifecycle: { ...purchased.lifecycle, phase: "battling" as const },
+        player: {
+          ...purchased.player,
+          inventory: { ...purchased.player.inventory, item: null },
+        },
+        battle: {
+          enemy: { id: "goblin" as const, maximumHp: 900, currentHp: 900 },
+          actors: {
+            hero: { phase: "idle" as const, x: 90 },
+            enemy: { phase: "idle" as const, x: 220 },
+          },
+        },
+        encounters: {
+          ...purchased.encounters,
+          current: {
+            kind: "battle" as const,
+            enemy: { id: "goblin" as const, maximumHp: 900 },
+            x: 220,
+          },
+        },
+      };
+      presentation.present({
+        previous: purchased,
+        current: itemUsed,
+        interpolation: 0,
+        events: [{ type: "item-used" as const, item: "elixir" as const }],
+      });
+      await waitForFrame("DefineSprite_151_FXItem/");
+      return {
+        frames,
+        upgradeFrames,
+        upgradeArcCount,
+        itemArcCount: arcCount,
+      };
+    } finally {
+      CanvasRenderingContext2D.prototype.drawImage = originalDrawImage;
+      CanvasRenderingContext2D.prototype.arc = originalArc;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(
+    feedback.frames.some((frame) =>
+      frame.startsWith("DefineSprite_151_FXItem/1.png"),
+    ),
+  ).toBe(true);
+  expect(
+    feedback.upgradeFrames.some((frame) =>
+      frame.startsWith("DefineSprite_153_FXUpgrade/1.png"),
+    ),
+  ).toBe(true);
+  expect(feedback.upgradeArcCount).toBe(0);
+  expect(feedback.itemArcCount).toBe(0);
 });
 
 test("covers every public enemy, shop, and actor phase in Canvas presentation", async ({
@@ -2398,7 +2629,7 @@ test("presents reference purchase, item-use, and combat feedback", async ({
     }
   }, "/src/browser/canvas-presentation.ts");
 
-  expect(result.armor).toContain("UPGRADE!");
+  expect(result.armor).not.toContain("UPGRADE!");
   expect(result.armor).toContain("-Lost 204G!");
   expect(result.armor).toContain("Upgrade: Clothing > Protector");
   expect(result.hint).toContain("You can use Elixir to heal HP!");

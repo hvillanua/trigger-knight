@@ -19,6 +19,7 @@ import {
   createVisualAtlas,
   type VisualAtlas,
   type VisualAtlasStatus,
+  type OriginalActionEffectId,
   type OriginalEffectImageId,
   type OriginalUiImageId,
   type VisualSpriteId,
@@ -68,6 +69,9 @@ const MESSAGE_STRIP_Y = GAMEPLAY_HUD_BOTTOM - 15;
 const BACKGROUND_TILE_WIDTH = 960;
 const BACKGROUND_TILE_OVERLAP = 1;
 const MOUSE_EFFECT_LIFETIME = 60;
+const ORIGINAL_ACTION_EFFECT_SCALE = 1.5;
+const ORIGINAL_ACTION_EFFECT_LIFETIME = 30;
+const ORIGINAL_FLASH_EFFECT_LIFETIME = 10;
 // Project presentation roles. The original SWF text-field mapping remains unresolved.
 const CANVAS_FONT_FAMILIES = Object.freeze({
   body: `"${ORIGINAL_FONT_FAMILIES.calibri}", "${ORIGINAL_FONT_FAMILIES.calibri14}", system-ui, sans-serif`,
@@ -78,15 +82,6 @@ const CANVAS_FONT_FAMILIES = Object.freeze({
   displayMedium: `"${ORIGINAL_FONT_FAMILIES.calibri16}", "${ORIGINAL_FONT_FAMILIES.eurostile}", system-ui, sans-serif`,
   serif: `"${ORIGINAL_FONT_FAMILIES.calisto5}", "${ORIGINAL_FONT_FAMILIES.calibri}", system-ui, sans-serif`,
   serifSmall: `"${ORIGINAL_FONT_FAMILIES.calisto224}", "${ORIGINAL_FONT_FAMILIES.calibri12}", system-ui, sans-serif`,
-});
-
-const SHOP_PRODUCTS: Readonly<Record<ShopId, VisualSpriteId>> = Object.freeze({
-  bladesmith: "weapon",
-  armorsmith: "armor",
-  "soul-shrine": "soul-shrine",
-  pharmacy: "elixir",
-  "grims-shop": "divine-edge",
-  "voucher-store": "gold-voucher",
 });
 
 const SHOP_UI_ICONS: Readonly<Record<ShopId, OriginalUiImageId>> =
@@ -634,11 +629,14 @@ function drawClippedLifespanFill(
 
   context.save();
   context.beginPath();
-  context.moveTo(frameX + 4 * horizontalScale, frameY + 2 * verticalScale);
-  context.lineTo(frameX + 295 * horizontalScale, frameY + 2 * verticalScale);
-  context.lineTo(frameX + 304 * horizontalScale, frameY + 11 * verticalScale);
-  context.lineTo(frameX + 13 * horizontalScale, frameY + 11 * verticalScale);
-  context.closePath();
+  // InterfaceLifespan2 masks the fill with its 305px horizontal rectangle;
+  // the diagonal ends come from the staged fill bitmap itself.
+  context.rect(
+    frameX + 2 * horizontalScale,
+    frameY,
+    sourceFillWidth * horizontalScale,
+    frameHeight,
+  );
   context.clip();
   context.beginPath();
   context.rect(
@@ -652,8 +650,8 @@ function drawClippedLifespanFill(
     context,
     atlas,
     "lifespan-fill",
-    frameX,
-    frameY,
+    frameX + 2 * horizontalScale,
+    frameY + 2 * verticalScale,
     sourceFillWidth * horizontalScale,
     fillHeight,
   );
@@ -693,22 +691,33 @@ function drawLifeBar(
   const y = camera.y + 10;
   drawClippedLifespanFill(context, atlas, x, y, 309, 14, ratio);
   drawUiImage(context, atlas, "lifespan-frame", x, y, 309, 14);
-  drawOutlinedText(context, "LIFESPAN", camera.x + 217, camera.y + 32, {
-    font: `700 14px ${CANVAS_FONT_FAMILIES.displayMedium}`,
+  // These fields mirror InterfaceLifespan2's separate Calibri text fields.
+  drawOutlinedText(context, "LIFESPAN", x + 57, y + 22, {
+    font: `700 20px ${CANVAS_FONT_FAMILIES.body}`,
     align: "center",
     lineWidth: 2,
   });
+  drawOutlinedText(context, String(lifespan.whole), x + 260, y + 22, {
+    font: `700 32px ${CANVAS_FONT_FAMILIES.body}`,
+    align: "right",
+    lineWidth: 3,
+  });
   drawOutlinedText(
     context,
-    formatLifespan(lifespan),
-    camera.x + 466,
-    camera.y + 32,
+    String(lifespan.fraction).padStart(2, "0"),
+    x + 270,
+    y + 23,
     {
-      font: `700 19px ${CANVAS_FONT_FAMILIES.displayMedium}`,
-      align: "right",
-      lineWidth: 3,
+      font: `700 20px ${CANVAS_FONT_FAMILIES.body}`,
+      align: "center",
+      lineWidth: 2,
     },
   );
+  drawOutlinedText(context, "%", x + 294, y + 22, {
+    font: `700 30px ${CANVAS_FONT_FAMILIES.body}`,
+    align: "center",
+    lineWidth: 3,
+  });
 }
 
 function drawEncounterQueue(
@@ -1201,7 +1210,7 @@ function effectAnchor(
       return { x: encounterX, y: groundY - 40 };
     case "shop-purchased":
     case "item-used":
-      return { x: heroX, y: groundY - 6 };
+      return { x: heroX, y: groundY - 30 };
     case "purchase-rejected":
     case "shop-departed":
       return { x: encounterX, y: groundY - 50 };
@@ -1252,9 +1261,9 @@ function effectLifetime(event: GameEvent): number {
     case "encounter-promoted":
       return 14;
     case "shop-purchased":
-      return 45;
+      return ORIGINAL_ACTION_EFFECT_LIFETIME;
     case "item-used":
-      return 24;
+      return ORIGINAL_ACTION_EFFECT_LIFETIME;
     case "battle-reward":
     case "equipment-discovered":
     case "achievement-unlocked":
@@ -1481,6 +1490,70 @@ function drawOriginalClickEffect(
   return true;
 }
 
+function drawOriginalTimelineFrame(
+  context: CanvasRenderingContext2D,
+  frames: readonly (HTMLImageElement | undefined)[],
+  point: WorldPoint,
+  age: number,
+  scale: number,
+): boolean {
+  if (age >= frames.length) return true;
+  const frameIndex = Math.min(frames.length - 1, Math.max(0, Math.floor(age)));
+  const image = frames[frameIndex];
+  if (!imageReady(image)) return false;
+  const width = image.naturalWidth * scale;
+  const height = image.naturalHeight * scale;
+  context.save();
+  try {
+    context.drawImage(
+      image,
+      point.x - width / 2,
+      point.y - height / 2,
+      width,
+      height,
+    );
+  } catch {
+    context.restore();
+    return false;
+  }
+  context.restore();
+  return true;
+}
+
+function drawOriginalActionEffect(
+  context: CanvasRenderingContext2D,
+  atlas: VisualAtlas,
+  effect: OriginalActionEffectId,
+  point: WorldPoint,
+  age: number,
+): boolean {
+  return drawOriginalTimelineFrame(
+    context,
+    atlas.actionEffectFrames[effect],
+    point,
+    age,
+    ORIGINAL_ACTION_EFFECT_SCALE,
+  );
+}
+
+function drawOriginalFlashEffect(
+  context: CanvasRenderingContext2D,
+  atlas: VisualAtlas,
+  camera: Readonly<GameObservation["camera"]>,
+  age: number,
+): boolean {
+  return drawOriginalTimelineFrame(
+    context,
+    atlas.flashEffectFrames,
+    {
+      x: camera.x + camera.width / 2,
+      y: camera.y + camera.height / 2,
+    },
+    age,
+    1,
+  );
+}
+
 function effectSeed(key: string): number {
   let hash = 0;
   for (let index = 0; index < key.length; index += 1) {
@@ -1583,15 +1656,25 @@ function drawEffect(
     case "encounter-promoted":
       break;
     case "shop-purchased": {
+      if (effect.event.shop === "soul-shrine") {
+        if (age < ORIGINAL_FLASH_EFFECT_LIFETIME) {
+          drawOriginalFlashEffect(context, atlas, frame.current.camera, age);
+        }
+        break;
+      }
+      drawOriginalActionEffect(
+        context,
+        atlas,
+        effect.event.shop === "armorsmith" || effect.event.shop === "bladesmith"
+          ? "upgrade"
+          : "buy",
+        point,
+        age,
+      );
       if (
         effect.event.shop === "armorsmith" ||
         effect.event.shop === "bladesmith"
       ) {
-        drawParticles(context, point, "#ffe04f", 24, age, lifetime, effect.key);
-        drawFloatingText(context, "UPGRADE!", point, age, lifetime, {
-          fill: "#ffe04f",
-          font: `700 13px ${CANVAS_FONT_FAMILIES.displayMedium}`,
-        });
         drawFloatingText(
           context,
           `-Lost ${formatNumber(effect.event.price)}G!`,
@@ -1606,20 +1689,7 @@ function drawEffect(
             font: `600 9px ${CANVAS_FONT_FAMILIES.bodySmall}`,
           },
         );
-      } else {
-        drawParticles(context, point, "#ffe9a6", 20, age, lifetime, effect.key);
       }
-      drawAtlasSprite(
-        context,
-        atlas,
-        SHOP_PRODUCTS[effect.event.shop],
-        point.x,
-        point.y + 26,
-        {
-          scale: 0.42,
-          alpha: 1 - clamp(age / lifetime, 0, 1),
-        },
-      );
       break;
     }
     case "battle-reward":
@@ -1641,22 +1711,7 @@ function drawEffect(
       });
       break;
     case "item-used":
-      drawParticles(context, point, "#59d9ff", 24, age, lifetime, effect.key);
-      drawFloatingText(context, "ITEM USED!", point, age, lifetime, {
-        fill: "#59d9ff",
-        font: `700 12px ${CANVAS_FONT_FAMILIES.displayMedium}`,
-      });
-      drawAtlasSprite(
-        context,
-        atlas,
-        effect.event.item,
-        point.x,
-        point.y + 28,
-        {
-          scale: 0.45,
-          alpha: 1 - clamp(age / lifetime, 0, 1),
-        },
-      );
+      drawOriginalActionEffect(context, atlas, "item", point, age);
       break;
     case "purchase-rejected":
     case "item-use-rejected":

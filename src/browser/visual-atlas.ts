@@ -30,6 +30,8 @@ export type OriginalSceneAssetId = "sky" | "ground" | "mountains" | "building";
 export type OriginalEffectImageId =
   "hit-1" | "hit-2" | "hit-3" | "hit-4" | "hit-5" | "hit-6" | "hit-7";
 
+export type OriginalActionEffectId = "buy" | "item" | "upgrade";
+
 export type OriginalUiImageId =
   | "parchment"
   | "bottom-strip"
@@ -185,27 +187,68 @@ const clickEffectFrameUrls = import.meta.glob<string>(
   { eager: true, query: "?url&no-inline", import: "default" },
 );
 
-/** Reviewed frames exported from the original MouseEffect click-feedback timeline. */
-export const ORIGINAL_CLICK_EFFECT_URLS: readonly string[] = Object.freeze(
-  Object.entries(clickEffectFrameUrls)
-    .sort(
-      ([a], [b]) =>
-        Number(a.split("/").at(-1)?.split(".")[0]) -
-        Number(b.split("/").at(-1)?.split(".")[0]),
-    )
-    .map(([, url]) => url),
+const actionEffectFrameUrls: Readonly<
+  Record<OriginalActionEffectId, Record<string, string>>
+> = {
+  buy: import.meta.glob<string>(
+    "../assets/original/effects/DefineSprite_118_FXBuy/*.png",
+    { eager: true, query: "?url&no-inline", import: "default" },
+  ),
+  item: import.meta.glob<string>(
+    "../assets/original/effects/DefineSprite_151_FXItem/*.png",
+    { eager: true, query: "?url&no-inline", import: "default" },
+  ),
+  upgrade: import.meta.glob<string>(
+    "../assets/original/effects/DefineSprite_153_FXUpgrade/*.png",
+    { eager: true, query: "?url&no-inline", import: "default" },
+  ),
+};
+
+const flashEffectFrameUrls = import.meta.glob<string>(
+  "../assets/original/effects/DefineSprite_369_Effect-Flash/*.png",
+  { eager: true, query: "?url&no-inline", import: "default" },
 );
 
-function entityFrames(entity: string): readonly string[] {
+function numberedAssetUrls(
+  entries: Readonly<Record<string, string>>,
+): readonly string[] {
   return Object.freeze(
-    Object.entries(frameUrls)
-      .filter(([path]) => path.includes(`/${entity}/`))
+    Object.entries(entries)
       .sort(
         ([a], [b]) =>
           Number(a.split("/").at(-1)?.split(".")[0]) -
           Number(b.split("/").at(-1)?.split(".")[0]),
       )
       .map(([, url]) => url),
+  );
+}
+
+/** Reviewed frames exported from the original MouseEffect click-feedback timeline. */
+export const ORIGINAL_CLICK_EFFECT_URLS: readonly string[] = Object.freeze(
+  numberedAssetUrls(clickEffectFrameUrls),
+);
+
+/** Reviewed frames exported from the original purchase and item action timelines. */
+export const ORIGINAL_ACTION_EFFECT_URLS: Readonly<
+  Record<OriginalActionEffectId, readonly string[]>
+> = Object.freeze({
+  buy: numberedAssetUrls(actionEffectFrameUrls.buy),
+  item: numberedAssetUrls(actionEffectFrameUrls.item),
+  upgrade: numberedAssetUrls(actionEffectFrameUrls.upgrade),
+});
+
+/** Reviewed frames exported from the original lifespan-restoration flash timeline. */
+export const ORIGINAL_FLASH_EFFECT_URLS: readonly string[] = Object.freeze(
+  numberedAssetUrls(flashEffectFrameUrls),
+);
+
+function entityFrames(entity: string): readonly string[] {
+  return numberedAssetUrls(
+    Object.fromEntries(
+      Object.entries(frameUrls).filter(([path]) =>
+        path.includes(`/${entity}/`),
+      ),
+    ),
   );
 }
 
@@ -236,6 +279,10 @@ export interface VisualAtlas {
     Partial<Record<OriginalEffectImageId, HTMLImageElement>>
   >;
   readonly clickEffectFrames: Readonly<(HTMLImageElement | undefined)[]>;
+  readonly actionEffectFrames: Readonly<
+    Record<OriginalActionEffectId, readonly (HTMLImageElement | undefined)[]>
+  >;
+  readonly flashEffectFrames: Readonly<(HTMLImageElement | undefined)[]>;
   readonly uiImages: Readonly<
     Partial<Record<OriginalUiImageId, HTMLImageElement>>
   >;
@@ -259,6 +306,27 @@ export function createVisualAtlas(
     { length: ORIGINAL_CLICK_EFFECT_URLS.length },
     () => undefined,
   );
+  const actionEffectFrames: Record<
+    OriginalActionEffectId,
+    (HTMLImageElement | undefined)[]
+  > = {
+    buy: Array.from(
+      { length: ORIGINAL_ACTION_EFFECT_URLS.buy.length },
+      () => undefined,
+    ),
+    item: Array.from(
+      { length: ORIGINAL_ACTION_EFFECT_URLS.item.length },
+      () => undefined,
+    ),
+    upgrade: Array.from(
+      { length: ORIGINAL_ACTION_EFFECT_URLS.upgrade.length },
+      () => undefined,
+    ),
+  };
+  const flashEffectFrames: (HTMLImageElement | undefined)[] = Array.from(
+    { length: ORIGINAL_FLASH_EFFECT_URLS.length },
+    () => undefined,
+  );
   const uiImages: Partial<Record<OriginalUiImageId, HTMLImageElement>> = {};
   if (status === "loading") {
     let pending =
@@ -269,9 +337,12 @@ export function createVisualAtlas(
       Object.keys(ORIGINAL_SCENE_ASSET_URLS).length +
       Object.keys(ORIGINAL_EFFECT_IMAGE_URLS).length +
       ORIGINAL_CLICK_EFFECT_URLS.length +
-      Object.keys(ORIGINAL_UI_IMAGE_URLS).length;
+      Object.keys(ORIGINAL_UI_IMAGE_URLS).length +
+      Object.keys(ORIGINAL_ACTION_EFFECT_URLS).length +
+      (ORIGINAL_FLASH_EFFECT_URLS.length > 0 ? 1 : 0);
     let loaded = 0;
     let failed = 0;
+    let coreSettled = false;
     const load = (
       url: string,
       save: (image: HTMLImageElement) => void,
@@ -281,6 +352,7 @@ export function createVisualAtlas(
       const settle = (): void => {
         pending -= 1;
         if (pending !== 0) return;
+        coreSettled = true;
         status =
           loaded === 0 ? "unavailable" : failed > 0 ? "partial" : "ready";
         onStatusChange(status);
@@ -294,6 +366,19 @@ export function createVisualAtlas(
         failed += 1;
         settle();
       };
+      image.src = url;
+    };
+    const loadOptional = (
+      url: string,
+      save: (image: HTMLImageElement) => void,
+    ): void => {
+      const image = new Image();
+      image.decoding = "async";
+      image.onload = () => {
+        save(image);
+        if (coreSettled && status === "ready") onStatusChange(status);
+      };
+      image.onerror = () => undefined;
       image.src = url;
     };
     for (const id of Object.keys(ORIGINAL_ANIMATION_URLS) as ActorSpriteId[]) {
@@ -336,6 +421,33 @@ export function createVisualAtlas(
         uiImages[id] = image;
       });
     }
+    for (const id of Object.keys(
+      ORIGINAL_ACTION_EFFECT_URLS,
+    ) as OriginalActionEffectId[]) {
+      const urls = ORIGINAL_ACTION_EFFECT_URLS[id];
+      const firstUrl = urls[0];
+      if (firstUrl !== undefined) {
+        load(firstUrl, (image) => {
+          actionEffectFrames[id][0] = image;
+        });
+      }
+      urls.slice(1).forEach((url, index) =>
+        loadOptional(url, (image) => {
+          actionEffectFrames[id][index + 1] = image;
+        }),
+      );
+    }
+    const firstFlashUrl = ORIGINAL_FLASH_EFFECT_URLS[0];
+    if (firstFlashUrl !== undefined) {
+      load(firstFlashUrl, (image) => {
+        flashEffectFrames[0] = image;
+      });
+    }
+    ORIGINAL_FLASH_EFFECT_URLS.slice(1).forEach((url, index) =>
+      loadOptional(url, (image) => {
+        flashEffectFrames[index + 1] = image;
+      }),
+    );
   }
   return Object.freeze({
     get status() {
@@ -346,6 +458,8 @@ export function createVisualAtlas(
     sceneImages,
     effectImages,
     clickEffectFrames,
+    actionEffectFrames,
+    flashEffectFrames,
     uiImages,
   });
 }

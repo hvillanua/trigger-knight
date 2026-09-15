@@ -2,8 +2,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
   createVisualAtlas,
+  ORIGINAL_ACTION_EFFECT_URLS,
   ORIGINAL_CLICK_EFFECT_URLS,
   ORIGINAL_EFFECT_IMAGE_URLS,
+  ORIGINAL_FLASH_EFFECT_URLS,
   ORIGINAL_SCENE_ASSET_URLS,
   ORIGINAL_SPRITE_URLS,
   ORIGINAL_ANIMATION_URLS,
@@ -133,6 +135,28 @@ describe("approved visual atlas", () => {
     );
     expect(ORIGINAL_CLICK_EFFECT_URLS.at(-1)).toContain(
       "/DefineSprite_311_MouseEffect/60.png",
+    );
+  });
+
+  it("maps the original action and flash timelines in order", () => {
+    expect(ORIGINAL_ACTION_EFFECT_URLS.buy).toHaveLength(30);
+    expect(ORIGINAL_ACTION_EFFECT_URLS.item).toHaveLength(30);
+    expect(ORIGINAL_ACTION_EFFECT_URLS.upgrade).toHaveLength(30);
+    expect(ORIGINAL_ACTION_EFFECT_URLS.buy[0]).toContain(
+      "/DefineSprite_118_FXBuy/1.png",
+    );
+    expect(ORIGINAL_ACTION_EFFECT_URLS.item.at(-1)).toContain(
+      "/DefineSprite_151_FXItem/30.png",
+    );
+    expect(ORIGINAL_ACTION_EFFECT_URLS.upgrade.at(-1)).toContain(
+      "/DefineSprite_153_FXUpgrade/30.png",
+    );
+    expect(ORIGINAL_FLASH_EFFECT_URLS).toHaveLength(10);
+    expect(ORIGINAL_FLASH_EFFECT_URLS[0]).toContain(
+      "/DefineSprite_369_Effect-Flash/1.png",
+    );
+    expect(ORIGINAL_FLASH_EFFECT_URLS.at(-1)).toContain(
+      "/DefineSprite_369_Effect-Flash/10.png",
     );
   });
 });

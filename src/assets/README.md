@@ -4,9 +4,10 @@ The browser presentation uses the original Trigger Knight visual and font assets
 where available. This directory is the production staging area for reviewed
 asset files from the preserved game artifact and its recorded exports. The
 currently staged original set is under [`original/`](original/): 280 character
-animation frames, 138 raster image exports, 60 MouseEffect click frames, 17 music
-or sound exports, and 8 font exports. The original sound exports remain provenance records and are not
-production inputs. The browser sound adapter uses the independently authored
+animation frames, 138 raster image exports, 60 MouseEffect click frames, 30
+FXBuy frames, 30 FXItem frames, 30 FXUpgrade frames, 10 Effect-Flash frames, 17
+music or sound exports, and 8 font exports. The original sound exports remain
+provenance records and are not production inputs. The browser sound adapter uses the independently authored
 files under [`sound-effects/`](sound-effects/).
 
 The Canvas presentation loads the numbered Hero, Dragon, Goblin, Golem, and Wolf
