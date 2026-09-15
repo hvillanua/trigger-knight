@@ -262,6 +262,70 @@ test("clips the health fill inside its original frame", async ({ page }) => {
   expect(fillClipCount).toBeGreaterThan(4);
 });
 
+test("uses the original gameplay lifespan crop on the survival tutorial", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+
+  const cropCalls = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    while (canvas.dataset.assetStatus === "loading")
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+    const cropCalls: number[][] = [];
+    const drawImageDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "drawImage",
+    );
+    if (typeof drawImageDescriptor?.value !== "function") {
+      throw new Error("Expected the Canvas drawImage method");
+    }
+    const originalDrawImage =
+      drawImageDescriptor.value as CanvasRenderingContext2D["drawImage"];
+    CanvasRenderingContext2D.prototype.drawImage = function (
+      image: CanvasImageSource,
+      ...args: number[]
+    ) {
+      if (image instanceof HTMLImageElement && image.src.includes("/318.jpg"))
+        cropCalls.push(args);
+      originalDrawImage.apply(this, [image, ...args] as Parameters<
+        typeof originalDrawImage
+      >);
+    };
+    try {
+      const current = {
+        ...base,
+        lifecycle: { ...base.lifecycle, tutorialPage: 0 as const },
+      };
+      presentation.present({
+        previous: base,
+        current,
+        interpolation: 0,
+        events: [],
+      });
+      return {
+        cropCalls,
+        expected: [current.camera.x + 298, current.camera.y + 191, 150, 80],
+      };
+    } finally {
+      CanvasRenderingContext2D.prototype.drawImage = originalDrawImage;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(cropCalls.cropCalls).toContainEqual(cropCalls.expected);
+});
+
 test("omits the building when its original image is unavailable", async ({
   page,
 }) => {
@@ -2027,6 +2091,154 @@ test("anchors battle rewards to the hero when combat returns to running", async 
 
   expect(rewardTextXs.length).toBeGreaterThan(0);
   expect(rewardTextXs.every((x) => x === 190)).toBe(true);
+});
+
+test("keeps the reward amount without drawing defeat particles or a gold icon", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+
+  const feedback = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    document.body.append(canvas);
+    const presentation = new CanvasPresentation(canvas);
+    while (canvas.dataset.assetStatus === "loading")
+      await new Promise((resolve) => setTimeout(resolve, 10));
+
+    let arcCount = 0;
+    let goldIconCount = 0;
+    const rewardTexts: string[] = [];
+    const arcDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "arc",
+    );
+    const drawImageDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "drawImage",
+    );
+    const fillTextDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "fillText",
+    );
+    if (
+      typeof arcDescriptor?.value !== "function" ||
+      typeof drawImageDescriptor?.value !== "function" ||
+      typeof fillTextDescriptor?.value !== "function"
+    ) {
+      throw new Error("Expected Canvas drawing methods");
+    }
+    const originalArc = arcDescriptor.value as CanvasRenderingContext2D["arc"];
+    const originalDrawImage =
+      drawImageDescriptor.value as CanvasRenderingContext2D["drawImage"];
+    const originalFillText = fillTextDescriptor.value as (
+      this: CanvasRenderingContext2D,
+      text: string,
+      x: number,
+      y: number,
+      maxWidth?: number,
+    ) => void;
+    CanvasRenderingContext2D.prototype.arc = function (...args) {
+      arcCount += 1;
+      originalArc.apply(this, args);
+    };
+    CanvasRenderingContext2D.prototype.drawImage = function (
+      image: CanvasImageSource,
+      ...args: number[]
+    ) {
+      if (image instanceof HTMLImageElement && image.src.includes("/164.png"))
+        goldIconCount += 1;
+      originalDrawImage.apply(this, [image, ...args] as Parameters<
+        typeof originalDrawImage
+      >);
+    };
+    CanvasRenderingContext2D.prototype.fillText = function (
+      text,
+      x,
+      y,
+      maxWidth,
+    ) {
+      if (String(text) === "+100G") rewardTexts.push(String(text));
+      originalFillText.call(this, text, x, y, maxWidth);
+    };
+    try {
+      const battle = {
+        ...base,
+        steps: 1,
+        activeTicks: 1,
+        lifecycle: {
+          ...base.lifecycle,
+          phase: "battling" as const,
+          paused: false,
+          tutorialPage: null,
+        },
+        battle: {
+          enemy: { id: "goblin" as const, maximumHp: 900, currentHp: 0 },
+          actors: {
+            hero: { phase: "idle" as const, x: 190 },
+            enemy: { phase: "dead" as const, x: 310 },
+          },
+        },
+        encounters: {
+          ...base.encounters,
+          current: {
+            kind: "battle" as const,
+            enemy: { id: "goblin" as const, maximumHp: 900 },
+            x: 310,
+          },
+        },
+      };
+      const running = {
+        ...base,
+        steps: 2,
+        activeTicks: 2,
+        lifecycle: {
+          ...base.lifecycle,
+          phase: "running" as const,
+          paused: false,
+          tutorialPage: null,
+        },
+        battle: null,
+        encounters: { ...base.encounters, current: null },
+      };
+      const reward = {
+        type: "battle-reward" as const,
+        enemy: "goblin" as const,
+        gold: 100,
+        score: 100,
+        profileExp: 10,
+        dragonKilled: false,
+      };
+      presentation.presentTransition({
+        previous: battle,
+        current: running,
+        events: [reward],
+      });
+      presentation.present({
+        previous: battle,
+        current: running,
+        interpolation: 1,
+        events: [reward],
+      });
+      return { arcCount, goldIconCount, rewardTexts };
+    } finally {
+      CanvasRenderingContext2D.prototype.arc = originalArc;
+      CanvasRenderingContext2D.prototype.drawImage = originalDrawImage;
+      CanvasRenderingContext2D.prototype.fillText = originalFillText;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(feedback.rewardTexts).toContain("+100G");
+  expect(feedback.arcCount).toBe(0);
+  expect(feedback.goldIconCount).toBe(0);
 });
 
 test("interpolates original scenery from public distance", async ({ page }) => {

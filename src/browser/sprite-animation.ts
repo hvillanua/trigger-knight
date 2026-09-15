@@ -12,6 +12,8 @@ const HERO_VERTICAL_TARGET_RANGE = 15;
 const HERO_VERTICAL_CHANGE_DELAY = 60;
 const HERO_VERTICAL_CHANGE_RANGE = 30;
 const HERO_VERTICAL_APPROACH_DIVISOR = 20;
+const DEATH_STAGGER_BASE = 10;
+const DEATH_STAGGER_ROLL_BOUND = 7;
 
 // Cosmetic target selection stays deterministic and local to presentation. It
 // uses the public active-tick clock and never consumes gameplay randomness.
@@ -32,6 +34,24 @@ function heroVerticalChangeDelay(index: number): number {
     HERO_VERTICAL_CHANGE_DELAY +
     visualSequenceValue(index + 97, HERO_VERTICAL_CHANGE_RANGE)
   );
+}
+
+function deathStaggerKnockback(
+  id: "hero" | "enemy",
+  activeTicks: number,
+): number {
+  return (
+    DEATH_STAGGER_BASE +
+    visualSequenceValue(
+      activeTicks + (id === "hero" ? 211 : 397),
+      DEATH_STAGGER_ROLL_BOUND,
+    )
+  );
+}
+
+function deathStaggerDistance(age: number, knockback: number): number {
+  const ticks = Math.min(Math.max(0, Math.floor(age)), knockback);
+  return ticks * knockback - (ticks * (ticks - 1)) / 2;
 }
 
 // Pose ranges derived by inspecting the staged PNGs. One frame per active tick
@@ -89,6 +109,9 @@ export class ActorAnimation {
   #heroVerticalTicksUntilChange = 0;
   #heroVerticalTargetIndex = 0;
   #heroVerticalActiveTick = 0;
+  #activeTicks = 0;
+  #heroDeathKnockback = 0;
+  #enemyDeathKnockback = 0;
   hero: ActorPose = { id: "hero", phase: "running", frame: 17, alpha: 1 };
   enemy: ActorPose | undefined;
 
@@ -105,6 +128,8 @@ export class ActorAnimation {
       this.#returnX = 50;
       this.#returnDistance = current.distance;
       this.#resetHeroVerticalMotion();
+      this.#heroDeathKnockback = 0;
+      this.#enemyDeathKnockback = 0;
     }
     if (!reset && previous.battle !== null && current.battle === null) {
       this.#returnX = previous.battle.actors.hero.x;
@@ -115,6 +140,10 @@ export class ActorAnimation {
     const currentHeroPhase = this.#heroPhase(current);
     if (currentHeroPhase !== previousHeroPhase) {
       this.#heroStart = current.activeTicks;
+      this.#heroDeathKnockback =
+        currentHeroPhase === "dead"
+          ? deathStaggerKnockback("hero", current.activeTicks)
+          : 0;
     }
 
     const previousEnemy = this.#enemyIdentity(previous);
@@ -127,6 +156,10 @@ export class ActorAnimation {
         (previous.battle === null && current.battle !== null))
     ) {
       this.#enemyStart = current.activeTicks;
+      this.#enemyDeathKnockback =
+        currentEnemy.phase === "dead"
+          ? deathStaggerKnockback("enemy", current.activeTicks)
+          : 0;
     }
 
     this.#previous = current;
@@ -152,12 +185,33 @@ export class ActorAnimation {
       this.#returnX = 50;
       this.#returnDistance = current.distance;
       this.#resetHeroVerticalMotion();
+      this.#heroDeathKnockback =
+        this.#heroPhase(current) === "dead"
+          ? deathStaggerKnockback("hero", current.activeTicks)
+          : 0;
+      const enemy = this.#enemyIdentity(current);
+      this.#enemyDeathKnockback =
+        enemy?.phase === "dead"
+          ? deathStaggerKnockback("enemy", current.activeTicks)
+          : 0;
       this.#previous = current;
     } else if (current !== previous) {
       this.presentTransition(previous, current);
     }
+    this.#activeTicks = current.activeTicks;
     this.#advanceHeroVerticalMotion(current.activeTicks);
     this.#updatePose(current);
+  }
+
+  /** Returns a signed presentation-only recoil for a public dead phase. */
+  deathStaggerX(id: "hero" | "enemy"): number {
+    const pose = id === "hero" ? this.hero : this.enemy;
+    if (pose === undefined || pose.phase !== "dead") return 0;
+    const start = id === "hero" ? this.#heroStart : this.#enemyStart;
+    const knockback =
+      id === "hero" ? this.#heroDeathKnockback : this.#enemyDeathKnockback;
+    const distance = deathStaggerDistance(this.#activeTicks - start, knockback);
+    return (id === "hero" ? -1 : 1) * distance;
   }
 
   #resetHeroVerticalMotion(): void {

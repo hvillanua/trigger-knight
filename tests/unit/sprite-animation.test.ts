@@ -260,4 +260,40 @@ describe("original sprite playback", () => {
     });
     expect(animation.enemy?.alpha).toBe(0);
   });
+  it("recoils dead actors from their public battle position during the fade", () => {
+    const engine = createTestGameplayEngine();
+    const base = engine.observe(
+      engine.createRun({
+        ruleset: ORIGINAL_V13_RULESET_ID,
+        seed: "death-stagger",
+        initialProfile: { schemaVersion: 1, scoreMultiplier: 1 },
+      }),
+    );
+    const animation = new ActorAnimation();
+    const battle = {
+      enemy: { id: "goblin" as const, maximumHp: 10, currentHp: 0 },
+      actors: {
+        hero: { phase: "idle" as const, x: 190 },
+        enemy: { phase: "dead" as const, x: 250 },
+      },
+    };
+    const dead = {
+      ...base,
+      steps: 1,
+      activeTicks: 1,
+      lifecycle: { ...base.lifecycle, phase: "battling" as const },
+      battle,
+    };
+    animation.present(base);
+    animation.present(dead);
+    expect(animation.deathStaggerX("enemy")).toBe(0);
+    animation.present({ ...dead, steps: 2, activeTicks: 2 });
+    const first = animation.deathStaggerX("enemy");
+    animation.present({ ...dead, steps: 3, activeTicks: 3 });
+    const second = animation.deathStaggerX("enemy");
+
+    expect(first).toBeGreaterThanOrEqual(10);
+    expect(first).toBeLessThanOrEqual(16);
+    expect(second).toBeGreaterThan(first);
+  });
 });

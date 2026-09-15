@@ -38,6 +38,7 @@ export type OriginalUiImageId =
   | "message-strip"
   | "lifespan-fill"
   | "lifespan-frame"
+  | "tutorial-lifespan-crop"
   | "hp-fill"
   | "hp-frame"
   | "portrait"
@@ -119,6 +120,10 @@ export const ORIGINAL_UI_IMAGE_URLS: Readonly<
     .href,
   "lifespan-frame": new URL(
     "../assets/original/images/253.png",
+    import.meta.url,
+  ).href,
+  "tutorial-lifespan-crop": new URL(
+    "../assets/original/images/318.jpg",
     import.meta.url,
   ).href,
   "hp-fill": new URL("../assets/original/images/202.png", import.meta.url).href,

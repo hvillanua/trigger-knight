@@ -169,12 +169,6 @@ function formatNumber(value: number): string {
   return value.toLocaleString("en-US");
 }
 
-function formatLifespan(
-  lifespan: Readonly<{ whole: number; fraction: number }>,
-): string {
-  return `${lifespan.whole}.${String(lifespan.fraction).padStart(2, "0")}%`;
-}
-
 function clamp(value: number, minimum: number, maximum: number): number {
   return Math.min(maximum, Math.max(minimum, value));
 }
@@ -1704,7 +1698,6 @@ function drawEffect(
       break;
     }
     case "battle-reward":
-      drawParticles(context, point, "#ffe9a6", 20, age, lifetime, effect.key);
       drawFloatingText(
         context,
         `+${formatNumber(effect.event.gold)}G`,
@@ -1716,10 +1709,6 @@ function drawEffect(
           font: `700 11px ${CANVAS_FONT_FAMILIES.displayMedium}`,
         },
       );
-      drawAtlasSprite(context, atlas, "gold-voucher", point.x, point.y + 26, {
-        scale: 0.42,
-        alpha: 1 - clamp(age / lifetime, 0, 1),
-      });
       break;
     case "item-used":
       drawOriginalActionEffect(context, atlas, "item", point, age);
@@ -1896,53 +1885,7 @@ function drawTutorialSurvivalIllustrations(
 
   const queueX = panelX + 288;
   const queueY = panelY + 181;
-  context.save();
-  context.fillStyle = "#63cde4";
-  context.fillRect(queueX, queueY, 150, 94);
-  context.strokeStyle = "#080b14";
-  context.lineWidth = 1;
-  context.strokeRect(queueX, queueY, 150, 94);
-  context.restore();
-  const lifespanRatio = clamp(
-    (observation.lifespan.whole + observation.lifespan.fraction / 100) / 100,
-    0,
-    1,
-  );
-  drawClippedLifespanFill(
-    context,
-    atlas,
-    queueX + 2,
-    queueY + 3,
-    146,
-    7,
-    lifespanRatio,
-  );
-  drawUiImage(context, atlas, "lifespan-frame", queueX + 2, queueY + 3, 146, 7);
-  drawOutlinedText(
-    context,
-    formatLifespan(observation.lifespan),
-    queueX + 143,
-    queueY + 22,
-    {
-      font: `700 14px ${CANVAS_FONT_FAMILIES.displayMedium}`,
-      align: "right",
-      lineWidth: 2,
-    },
-  );
-  drawOutlinedText(context, "Next", queueX + 20, queueY + 40, {
-    font: `600 9px ${CANVAS_FONT_FAMILIES.serifSmall}`,
-    align: "center",
-    lineWidth: 2,
-  });
-  observation.encounters.upcoming.slice(0, 3).forEach((entry, index) => {
-    drawEncounterIcon(
-      context,
-      atlas,
-      entry,
-      queueX + 4 + index * 44,
-      queueY + 48,
-    );
-  });
+  drawUiImage(context, atlas, "tutorial-lifespan-crop", queueX, queueY);
 }
 
 function drawTutorialOverlay(
@@ -2225,13 +2168,16 @@ function drawDynamicWorld(
       pose(animation.hero),
     );
   } else {
+    const deathStaggerX = (id: "hero" | "enemy"): number =>
+      reducedMotion ? 0 : animation.deathStaggerX(id);
     const heroX =
-      battleActorX(
+      (battleActorX(
         frame,
         "hero",
         animation.runningX(frame.previous.distance),
-      ) ?? camera.x + HERO_RUNNING_X;
-    const enemyX = battleActorX(frame, "enemy") ?? camera.x + 390;
+      ) ?? camera.x + HERO_RUNNING_X) + deathStaggerX("hero");
+    const enemyX =
+      (battleActorX(frame, "enemy") ?? camera.x + 390) + deathStaggerX("enemy");
     drawHero(context, atlas, heroX, groundY, pose(animation.hero));
     drawEnemy(context, atlas, enemyX, groundY, pose(animation.enemy!));
     drawHealthBar(
