@@ -2,10 +2,7 @@ import type {
   CommittedRunResultView,
   RunTerminalReason,
 } from "../application/contracts.js";
-import {
-  profileExperienceAtProgress,
-  type ProfileExperienceView,
-} from "../domain/profile.js";
+import { profileExperienceAtProgress } from "../domain/profile.js";
 
 /** @playerVisible Public values shown while a completed save is unavailable. */
 export interface PendingCompletedRunView {
@@ -78,7 +75,14 @@ export class CompletedRunPresentation {
   readonly #onRetry: () => void;
   readonly #onNextRun: () => void;
   #scoreFrame: number | undefined;
-  #finalExperience: ProfileExperienceView | undefined;
+  #finalExperience:
+    | Readonly<{
+        readonly level: number;
+        readonly xp: number;
+        readonly threshold: number;
+        readonly scoreMultiplier: number;
+      }>
+    | undefined;
   #reducedMotion = false;
 
   constructor(root: HTMLElement, options: CompletedRunPresentationOptions) {
@@ -318,7 +322,14 @@ export class CompletedRunPresentation {
     this.#skipScoreCount.hidden = true;
   }
 
-  #renderExperience(view: ProfileExperienceView): void {
+  #renderExperience(
+    view: Readonly<{
+      readonly level: number;
+      readonly xp: number;
+      readonly threshold: number;
+      readonly scoreMultiplier: number;
+    }>,
+  ): void {
     const safeThreshold = Math.max(1, view.threshold);
     const safeXp = Math.max(0, view.xp);
     this.#levelLabel.textContent = `Level ${view.level} (x${view.scoreMultiplier} Score)`;
