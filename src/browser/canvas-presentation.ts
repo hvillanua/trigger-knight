@@ -332,12 +332,18 @@ function drawOutlinedText(
   context.restore();
 }
 
+const ACTION_POINTER_FRAME_STEPS = 12;
+
+function actionPointerFrame(observation: Readonly<GameObservation>): 0 | 1 {
+  return Math.floor(observation.steps / ACTION_POINTER_FRAME_STEPS) % 2 === 0
+    ? 0
+    : 1;
+}
+
 function actionPointerImageId(
   observation: Readonly<GameObservation>,
 ): "pointer" | "pointer-click" {
-  return Math.floor(observation.steps / 2) % 2 === 0
-    ? "pointer"
-    : "pointer-click";
+  return actionPointerFrame(observation) === 0 ? "pointer" : "pointer-click";
 }
 
 function drawActionPointer(
@@ -1339,7 +1345,7 @@ function visualFrameSignature(
   const currentKey = JSON.stringify(current);
   return JSON.stringify([
     frame.current.activeTicks,
-    Math.floor(frame.current.steps / 2) % 2,
+    actionPointerFrame(frame.current),
     previousKey,
     currentKey,
     previousKey === currentKey ? null : frame.interpolation,

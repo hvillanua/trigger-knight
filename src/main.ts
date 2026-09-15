@@ -1455,4 +1455,4 @@ const resizeObserver = new ResizeObserver(([entry]) => {
 });
 resizeObserver.observe(canvas);
 
-startRun(currentProfile, { focus: false });
+startRun(currentProfile, { focus: false, startImmediately: true });

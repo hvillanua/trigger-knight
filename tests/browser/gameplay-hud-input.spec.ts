@@ -131,6 +131,47 @@ test("uses the original hand cursor on the title and tutorial screens", async ({
   expect(titleCursors.start).toContain("/12.png");
 });
 
+test("keeps the original hand cursor visible over pause and fullscreen controls", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+
+  const activeCursors = await page.evaluate(() => {
+    const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
+    const fullscreen =
+      document.querySelector<HTMLButtonElement>("#toggle-fullscreen");
+    if (canvas === null || fullscreen === null) {
+      throw new Error("Missing active gameplay controls");
+    }
+    return {
+      canvas: getComputedStyle(canvas).cursor,
+      fullscreen: getComputedStyle(fullscreen).cursor,
+    };
+  });
+  expect(activeCursors.canvas).toBe("none");
+  expect(activeCursors.fullscreen).toContain("/12.png");
+
+  await page.keyboard.press("p");
+  const pausedCursors = await page.evaluate(() => {
+    const stage = document.querySelector<HTMLElement>(".gameplay-stage");
+    const resume = document.querySelector<HTMLButtonElement>("#toggle-pause");
+    const fullscreen =
+      document.querySelector<HTMLButtonElement>("#toggle-fullscreen");
+    if (stage === null || resume === null || fullscreen === null) {
+      throw new Error("Missing paused gameplay controls");
+    }
+    return {
+      stage: getComputedStyle(stage).cursor,
+      resume: getComputedStyle(resume).cursor,
+      fullscreen: getComputedStyle(fullscreen).cursor,
+    };
+  });
+  expect(pausedCursors.stage).toContain("/12.png");
+  expect(pausedCursors.resume).toContain("/12.png");
+  expect(pausedCursors.fullscreen).toContain("/12.png");
+});
+
 test("dismisses the first tutorial dialog from any stage click", async ({
   page,
 }) => {

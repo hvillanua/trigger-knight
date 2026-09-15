@@ -117,6 +117,7 @@ test("matches browser and headless diagnostic traces", async ({ page }) => {
       ruleset: ORIGINAL_V13_RULESET_ID,
       seed: "browser-run",
       initialProfile: createFreshProfile(),
+      startImmediately: true,
     },
     policy,
     maxSteps: 3,

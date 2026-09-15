@@ -48,4 +48,7 @@ test("displays and dismisses the initial public tutorial gate", async ({
 
   await expect(canvas).not.toHaveAttribute("data-tutorial-page");
   await expect(canvas).toHaveAttribute("data-observation-step", "1");
+  await expect(canvas).toHaveAttribute("data-movement-speed", "1");
+  await expect(canvas).toHaveAttribute("data-distance", "1");
+  await expect(canvas).toHaveAttribute("data-score", "10");
 });

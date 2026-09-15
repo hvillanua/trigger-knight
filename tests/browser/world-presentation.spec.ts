@@ -686,7 +686,7 @@ test("animates an available action prompt with the original mouse frames", async
 }) => {
   await page.goto("/?manual=1");
 
-  const pointerIds = await page.evaluate(async (modulePath) => {
+  const pointerFrames = await page.evaluate(async (modulePath) => {
     const { CanvasPresentation } = (await import(
       modulePath
     )) as typeof CanvasPresentationModule;
@@ -703,6 +703,7 @@ test("animates an available action prompt with the original mouse frames", async
       await new Promise((resolve) => setTimeout(resolve, 10));
 
     const ids: string[] = [];
+    const frames: string[][] = [];
     const drawImageDescriptor = Object.getOwnPropertyDescriptor(
       CanvasRenderingContext2D.prototype,
       "drawImage",
@@ -725,41 +726,46 @@ test("animates an available action prompt with the original mouse frames", async
       >);
     };
     try {
-      const current = {
-        ...base,
-        steps: 2,
-        lifecycle: { ...base.lifecycle, paused: false, tutorialPage: null },
-        encounters: {
-          ...base.encounters,
-          current: {
-            kind: "shop" as const,
-            shop: "pharmacy" as const,
-            cachedPrice: 150,
-            x: 180,
-            used: false,
+      let previous = base;
+      for (const steps of [0, 11, 12, 23, 24]) {
+        const current = {
+          ...base,
+          steps,
+          lifecycle: { ...base.lifecycle, paused: false, tutorialPage: null },
+          encounters: {
+            ...base.encounters,
+            current: {
+              kind: "shop" as const,
+              shop: "pharmacy" as const,
+              cachedPrice: 150,
+              x: 180,
+              used: false,
+            },
           },
-        },
-        actions: { ...base.actions, canPurchaseCurrentEncounter: true },
-      };
-      presentation.present({
-        previous: base,
-        current,
-        interpolation: 1,
-        events: [],
-      });
-      presentation.present({
-        previous: current,
-        current: { ...current, steps: 4 },
-        interpolation: 1,
-        events: [],
-      });
-      return ids;
+          actions: { ...base.actions, canPurchaseCurrentEncounter: true },
+        };
+        presentation.present({
+          previous,
+          current,
+          interpolation: 1,
+          events: [],
+        });
+        frames.push([...ids]);
+        previous = current;
+      }
+      return frames;
     } finally {
       CanvasRenderingContext2D.prototype.drawImage = originalDrawImage;
     }
   }, "/src/browser/canvas-presentation.ts");
 
-  expect(pointerIds).toEqual(expect.arrayContaining(["19", "21"]));
+  expect(pointerFrames.map((frame) => frame.at(-1))).toEqual([
+    "19",
+    "19",
+    "21",
+    "21",
+    "19",
+  ]);
 });
 
 test("covers every public enemy, shop, and actor phase in Canvas presentation", async ({

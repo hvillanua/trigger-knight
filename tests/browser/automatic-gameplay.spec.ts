@@ -91,6 +91,7 @@ test("scheduled browser input and interpolated rendering match headless executio
     ruleset: ORIGINAL_V13_RULESET_ID,
     seed: "browser-run",
     initialProfile: createFreshProfile(),
+    startImmediately: true,
   });
   for (let step = 0; step < 90; step += 1)
     headless.dispatch(step === 0 ? [{ type: "dismiss-tutorial" }] : []);
@@ -189,6 +190,7 @@ test("automatic termination commits progression and the next run gets a fresh cl
       window.testFrame(time);
     }
   });
+  await page.locator("#game-canvas").click({ position: { x: 240, y: 160 } });
   await expect(page.locator("#game-status")).toHaveAttribute(
     "data-completion-status",
     "committed",

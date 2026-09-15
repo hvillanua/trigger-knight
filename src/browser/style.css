@@ -750,7 +750,10 @@ body {
 #title-screen,
 #title-screen *,
 .gameplay-stage[data-tutorial-page],
-.gameplay-stage[data-tutorial-page] * {
+.gameplay-stage[data-tutorial-page] *,
+.gameplay-stage[data-paused="true"],
+.gameplay-stage[data-paused="true"] *,
+.gameplay-controls .stage-fullscreen {
   cursor:
     url("../assets/original/images/12.png") 4 2,
     none;
