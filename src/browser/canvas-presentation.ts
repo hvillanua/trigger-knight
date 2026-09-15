@@ -2657,7 +2657,6 @@ export class CanvasPresentation implements PresentationPort {
         this.#animation,
         this.#reducedMotion,
       );
-      drawEffects(context, this.#atlas, this.#frame, visibleEffects);
       drawGameplayHud(
         context,
         this.#frame.current,
