@@ -227,6 +227,15 @@ Playwright is configured to retain a screenshot, error context, and trace for
 each local failure under `test-results/`. The trace includes browser console and
 page-error diagnostics and can be opened with `npx playwright show-trace`.
 
+Screenshots attached by the browser visual-fidelity, world-presentation, and
+session-over tests are human-review artifacts. They are not automated visual
+regression guarantees. The world-presentation suite adds one fixed automated
+visual probe for the initial frame. It uses the manual clock, a fixed 480 by
+320 viewport at DPR 1, loaded original assets and fonts, and reduced motion
+before checking six small canvas regions for the expected scene, hero, HUD, and
+lifespan pixels. This keeps the visual check bounded and does not claim
+pixel-identical Flash output.
+
 `BrowserGameplaySessionOptions.onTransition` receives every step's public
 observation and ordered events once, including steps between displayed frames.
 Use it for event-driven consumers. Repeated `PresentationFrame` renders retain
