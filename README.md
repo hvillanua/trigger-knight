@@ -113,6 +113,12 @@ configuration.
 
 The headless command accepts JSON files or `-` for standard input:
 
+`npm run simulate` first runs the incremental `build:simulation` TypeScript
+build. It writes the NodeNext output to ignored `dist/simulation/`, so the
+command runs the compiled gameplay and simulation modules without starting
+Vite. The checked-in `build/run-simulation.mjs` entry point can also be called
+directly after `npm run build:simulation`.
+
 ```sh
 npm run simulate -- single tests/fixtures/simulation/minimal-request.json
 npm run simulate -- batch tests/fixtures/simulation/manifest.json

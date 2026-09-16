@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:simulation": "tsc --project tsconfig.simulation.json",
     "check:architecture": "depcruise --config dependency-cruiser.config.cjs src && npm run check:public-contracts",
     "check:public-contracts": "node build/check-public-contracts.mjs",
     "format": "prettier --write . --ignore-unknown",
@@ -18,7 +19,7 @@
     "prepare": "npm run setup:hooks",
     "setup:browser": "playwright install chromium",
     "setup:hooks": "node build/install-git-hooks.mjs",
-    "simulate": "node --expose-gc build/run-simulation.mjs",
+    "simulate": "npm run --silent build:simulation && node --expose-gc build/run-simulation.mjs",
     "test": "npm run test:unit && npm run test:browser",
     "test:unit": "vitest run",
     "test:browser": "playwright test",

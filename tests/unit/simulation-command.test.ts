@@ -1,8 +1,9 @@
+import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
 
 import type {
   GameCommand,
@@ -47,6 +48,38 @@ interface SimulationCommandModule {
   ): Promise<string>;
 }
 
+interface SimulationCommandDispatchModule {
+  dispatchSimulationCommand(
+    mode: string,
+    input: unknown,
+    dependencies: unknown,
+  ): Promise<string>;
+  loadSimulationCommandModules(
+    mode: string,
+    loadModule: (modulePath: string) => Promise<unknown>,
+  ): Promise<unknown>;
+}
+
+let commandDispatchModule: SimulationCommandDispatchModule | undefined;
+
+beforeAll(async () => {
+  const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+  const build = spawnSync(npmCommand, ["run", "--silent", "build:simulation"], {
+    cwd: repositoryRoot,
+    encoding: "utf8",
+  });
+  if (build.status !== 0) {
+    throw new Error(
+      `Simulation Node build failed:\n${build.stdout}\n${build.stderr}`,
+    );
+  }
+
+  commandDispatchModule = (await import(
+    pathToFileURL(path.join(repositoryRoot, "build/simulation-command.mjs"))
+      .href
+  )) as SimulationCommandDispatchModule;
+});
+
 function runCommand(...arguments_: string[]) {
   return spawnSync(process.execPath, ["--expose-gc", command, ...arguments_], {
     cwd: repositoryRoot,
@@ -56,7 +89,200 @@ function runCommand(...arguments_: string[]) {
   });
 }
 
+function runCommandWithInput(input: string, ...arguments_: string[]) {
+  return spawnSync(process.execPath, ["--expose-gc", command, ...arguments_], {
+    cwd: repositoryRoot,
+    encoding: "utf8",
+    env: { ...process.env },
+    input,
+    timeout: 30_000,
+  });
+}
+
+function runNpmSimulation(...arguments_: string[]) {
+  const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+  return spawnSync(
+    npmCommand,
+    ["run", "--silent", "simulate", "--", ...arguments_],
+    {
+      cwd: repositoryRoot,
+      encoding: "utf8",
+      env: { ...process.env },
+      timeout: 30_000,
+    },
+  );
+}
+
 describe("simulation command", () => {
+  it("dispatches every command through injected modules", async () => {
+    if (!commandDispatchModule) {
+      throw new Error("Simulation command dispatch was not initialized");
+    }
+
+    const canonical = {
+      stringifyCanonicalJson(value: unknown) {
+        return (value as { route: string }).route;
+      },
+    };
+    const experiment = {
+      normalizeSimulationRequestInput(input: unknown) {
+        return input;
+      },
+      resolveSimulationRequest(input: unknown) {
+        return input;
+      },
+      createSimulationExperiment() {
+        return { run: () => ({ route: "batch" }) };
+      },
+      stringifySimulationBatchExport(value: unknown) {
+        return (value as { route: string }).route;
+      },
+    };
+    const dependencies = {
+      canonical,
+      engine: {},
+      runner: {
+        run: () => ({ route: "single" }),
+      },
+      experiment,
+      comparison: {
+        createSimulationComparison: () => ({
+          run: () => ({ route: "compare" }),
+        }),
+      },
+      replay: {
+        createSimulationReplay: () => ({
+          run: () => ({ route: "replay" }),
+        }),
+      },
+      benchmark: {
+        createSimulationBenchmark: () => ({
+          run: () => ({ route: "benchmark" }),
+        }),
+      },
+      benchmarkEnvironment: {},
+    };
+
+    await expect(
+      commandDispatchModule.dispatchSimulationCommand(
+        "single",
+        {},
+        dependencies,
+      ),
+    ).resolves.toBe("single");
+    await expect(
+      commandDispatchModule.dispatchSimulationCommand(
+        "batch",
+        {},
+        dependencies,
+      ),
+    ).resolves.toBe("batch");
+    await expect(
+      commandDispatchModule.dispatchSimulationCommand(
+        "compare",
+        {},
+        dependencies,
+      ),
+    ).resolves.toBe("compare");
+    await expect(
+      commandDispatchModule.dispatchSimulationCommand(
+        "replay",
+        {},
+        dependencies,
+      ),
+    ).resolves.toBe("replay");
+    await expect(
+      commandDispatchModule.dispatchSimulationCommand(
+        "benchmark",
+        {},
+        dependencies,
+      ),
+    ).resolves.toBe("benchmark");
+  });
+
+  it.each([
+    [
+      "single",
+      [
+        "application/gameplay-engine.js",
+        "domain/rulesets.js",
+        "simulation/canonical-json.js",
+        "simulation/simulation-runner.js",
+        "simulation/simulation-experiment.js",
+      ],
+    ],
+    [
+      "batch",
+      [
+        "application/gameplay-engine.js",
+        "domain/rulesets.js",
+        "simulation/canonical-json.js",
+        "simulation/simulation-runner.js",
+        "simulation/simulation-experiment.js",
+      ],
+    ],
+    [
+      "compare",
+      [
+        "application/gameplay-engine.js",
+        "domain/rulesets.js",
+        "simulation/canonical-json.js",
+        "simulation/simulation-runner.js",
+        "simulation/simulation-comparison.js",
+      ],
+    ],
+    [
+      "replay",
+      [
+        "application/gameplay-engine.js",
+        "domain/rulesets.js",
+        "simulation/canonical-json.js",
+        "simulation/simulation-replay.js",
+      ],
+    ],
+    [
+      "benchmark",
+      [
+        "application/gameplay-engine.js",
+        "domain/rulesets.js",
+        "simulation/canonical-json.js",
+        "simulation/simulation-runner.js",
+        "simulation/simulation-benchmark.js",
+      ],
+    ],
+  ])(
+    "loads only the modules needed by %s",
+    async (mode, expectedModulePaths) => {
+      if (!commandDispatchModule) {
+        throw new Error("Simulation command dispatch was not initialized");
+      }
+
+      const loadedModulePaths: string[] = [];
+      await commandDispatchModule.loadSimulationCommandModules(
+        mode,
+        (modulePath) => {
+          loadedModulePaths.push(modulePath);
+          return Promise.resolve({});
+        },
+      );
+
+      expect([...new Set(loadedModulePaths)].sort()).toEqual(
+        [...expectedModulePaths].sort(),
+      );
+    },
+  );
+
+  it("keeps the npm script wired to the compiled entry point", () => {
+    const result = runNpmSimulation("single", minimalRequest);
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      seed: "cli-minimal",
+      terminalReason: "step-limit",
+    });
+  });
+
   it("executes one retained request through the public simulator contract", () => {
     const result = runCommand("single", minimalRequest);
 
@@ -72,6 +298,30 @@ describe("simulation command", () => {
       terminalReason: "step-limit",
       steps: 3,
     });
+  });
+
+  it("reads a single request from stdin", () => {
+    const result = runCommandWithInput(
+      readFileSync(minimalRequest, "utf8"),
+      "single",
+      "-",
+    );
+
+    expect(result.status).toBe(0);
+    expect(result.stderr).toBe("");
+    expect(JSON.parse(result.stdout)).toMatchObject({
+      seed: "cli-minimal",
+      terminalReason: "step-limit",
+      steps: 3,
+    });
+  });
+
+  it("reports usage for an unsupported command", () => {
+    const result = runCommand();
+
+    expect(result.status).toBe(2);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toContain("Usage: npm run simulate");
   });
 
   it("executes a manifest and emits only a canonical machine-readable export", () => {

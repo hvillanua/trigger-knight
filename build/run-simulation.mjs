@@ -2,13 +2,23 @@ import { readFileSync } from "node:fs";
 import { availableParallelism } from "node:os";
 import path from "node:path";
 import process from "node:process";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { createServer } from "vite";
+import {
+  dispatchSimulationCommand,
+  isSimulationCommand,
+  loadSimulationCommandModules,
+} from "./simulation-command.mjs";
 
 const repositoryRoot = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   "..",
+);
+const compiledSourceRoot = path.join(
+  repositoryRoot,
+  "dist",
+  "simulation",
+  "src",
 );
 
 function usage() {
@@ -32,107 +42,51 @@ function readInput(inputPath) {
   return JSON.parse(raw);
 }
 
+async function loadCompiledModule(modulePath) {
+  return import(pathToFileURL(path.join(compiledSourceRoot, modulePath)).href);
+}
+
 /**
  * Runs the simulation command. Optional registries are used by in-process
  * integration tests to exercise candidate dispatch without adding a
  * production ruleset.
  */
 export async function runSimulationCommand(mode, input, options = {}) {
-  const server = await createServer({
-    appType: "custom",
-    configFile: false,
-    logLevel: "silent",
-    root: repositoryRoot,
-    server: { middlewareMode: true },
+  const modules = await loadSimulationCommandModules(mode, loadCompiledModule);
+  const engine = modules.application.createGameplayEngine(
+    options.ruleSetRegistry ?? modules.rulesets.ruleSetRegistry,
+  );
+  const runner =
+    modules.runner === undefined
+      ? undefined
+      : modules.runner.createSimulationRunner(engine);
+  const benchmarkEnvironment =
+    mode === "benchmark"
+      ? {
+          now: () => performance.now(),
+          readHeapUsedBytes: () => process.memoryUsage().heapUsed,
+          collectGarbage: () => globalThis.gc?.(),
+          host: {
+            nodeVersion: process.version,
+            platform: process.platform,
+            architecture: process.arch,
+            cpuCount: availableParallelism(),
+          },
+        }
+      : undefined;
+
+  return dispatchSimulationCommand(mode, input, {
+    ...modules,
+    engine,
+    runner,
+    policyRegistry: options.policyRegistry,
+    benchmarkEnvironment,
   });
-
-  try {
-    const application = await server.ssrLoadModule(
-      "/src/application/gameplay-engine.ts",
-    );
-    const rulesets = await server.ssrLoadModule("/src/domain/rulesets.ts");
-    const runnerModule = await server.ssrLoadModule(
-      "/src/simulation/simulation-runner.ts",
-    );
-    const experiment = await server.ssrLoadModule(
-      "/src/simulation/simulation-experiment.ts",
-    );
-    const comparison = await server.ssrLoadModule(
-      "/src/simulation/simulation-comparison.ts",
-    );
-    const replay = await server.ssrLoadModule(
-      "/src/simulation/simulation-replay.ts",
-    );
-    const benchmark = await server.ssrLoadModule(
-      "/src/simulation/simulation-benchmark.ts",
-    );
-    const canonical = await server.ssrLoadModule(
-      "/src/simulation/canonical-json.ts",
-    );
-    const engine = application.createGameplayEngine(
-      options.ruleSetRegistry ?? rulesets.ruleSetRegistry,
-    );
-    const runner = runnerModule.createSimulationRunner(engine);
-
-    if (mode === "replay") {
-      return canonical.stringifyCanonicalJson(
-        await replay
-          .createSimulationReplay(engine, options.policyRegistry)
-          .run(input),
-      );
-    }
-
-    if (mode === "single") {
-      const request = experiment.normalizeSimulationRequestInput(input);
-      const resolved = experiment.resolveSimulationRequest(request);
-      return canonical.stringifyCanonicalJson(runner.run(resolved));
-    }
-
-    if (mode === "compare") {
-      return canonical.stringifyCanonicalJson(
-        await comparison
-          .createSimulationComparison(runner, options.policyRegistry)
-          .run(input),
-      );
-    }
-
-    if (mode === "benchmark") {
-      return canonical.stringifyCanonicalJson(
-        await benchmark
-          .createSimulationBenchmark(runner, options.policyRegistry, {
-            now: () => performance.now(),
-            readHeapUsedBytes: () => process.memoryUsage().heapUsed,
-            collectGarbage: () => globalThis.gc?.(),
-            host: {
-              nodeVersion: process.version,
-              platform: process.platform,
-              architecture: process.arch,
-              cpuCount: availableParallelism(),
-            },
-          })
-          .run(input),
-      );
-    }
-
-    const report = await experiment
-      .createSimulationExperiment(runner)
-      .run(input);
-    return experiment.stringifySimulationBatchExport(report);
-  } finally {
-    await server.close();
-  }
 }
 
 async function main() {
   const [mode, inputPath] = process.argv.slice(2);
-  if (
-    (mode !== "single" &&
-      mode !== "batch" &&
-      mode !== "benchmark" &&
-      mode !== "compare" &&
-      mode !== "replay") ||
-    inputPath === undefined
-  ) {
+  if (!isSimulationCommand(mode) || inputPath === undefined) {
     process.stderr.write(`${usage()}\n`);
     process.exitCode = 2;
     return;

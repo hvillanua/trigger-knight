@@ -1,0 +1,26 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": false,
+    "noEmitOnError": true,
+    "outDir": "./dist/simulation",
+    "rootDir": ".",
+    "sourceMap": false,
+    "declaration": false,
+    "incremental": true,
+    "tsBuildInfoFile": "./dist/simulation/tsconfig.tsbuildinfo",
+    "types": ["node"]
+  },
+  "files": [
+    "src/application/gameplay-engine.ts",
+    "src/domain/rulesets.ts",
+    "src/simulation/canonical-json.ts",
+    "src/simulation/simulation-benchmark.ts",
+    "src/simulation/simulation-comparison.ts",
+    "src/simulation/simulation-experiment.ts",
+    "src/simulation/simulation-replay.ts",
+    "src/simulation/simulation-runner.ts"
+  ]
+}
