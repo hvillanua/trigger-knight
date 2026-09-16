@@ -6,37 +6,12 @@ import {
   normalizeCanonicalJson,
   stringifyCanonicalJson,
 } from "../application/canonical-json.js";
-
-type NormalizedRecord = Readonly<Record<string, unknown>>;
-
-function record(value: unknown, label: string): NormalizedRecord {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) {
-    throw new TypeError(`${label} must be a plain record`);
-  }
-
-  return value as NormalizedRecord;
-}
-
-function assertKeys(
-  value: NormalizedRecord,
-  expected: readonly string[],
-  label: string,
-): void {
-  const actual = Object.keys(value).sort();
-  const sortedExpected = [...expected].sort();
-
-  if (
-    actual.length !== sortedExpected.length ||
-    actual.some((key, index) => key !== sortedExpected[index])
-  ) {
-    throw new TypeError(`${label} contains unsupported fields`);
-  }
-}
+import { assertExactKeys, record } from "./simulation-validation.js";
 
 /** Copies and validates one normalized policy descriptor from JSON input. */
 export function normalizePolicyDescriptor(input: unknown): PolicyDescriptor {
   const normalized = record(normalizeCanonicalJson(input), "Policy descriptor");
-  assertKeys(normalized, ["config", "id", "version"], "Policy descriptor");
+  assertExactKeys(normalized, ["config", "id", "version"], "Policy descriptor");
 
   if (typeof normalized.id !== "string" || normalized.id.length === 0) {
     throw new TypeError("Policy descriptor id must be a non-empty string");
