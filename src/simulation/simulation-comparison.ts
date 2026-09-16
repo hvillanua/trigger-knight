@@ -31,31 +31,7 @@ import {
   summarizeSimulationNumbers,
 } from "./simulation-report.js";
 import { simulationPolicyRegistry } from "./policy-registry.js";
-
-type NormalizedRecord = Readonly<Record<string, unknown>>;
-
-function record(value: unknown, label: string): NormalizedRecord {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) {
-    throw new TypeError(`${label} must be a plain record`);
-  }
-
-  return value as NormalizedRecord;
-}
-
-function assertKeys(
-  value: NormalizedRecord,
-  expected: readonly string[],
-  label: string,
-): void {
-  const actual = Object.keys(value).sort();
-  const sortedExpected = [...expected].sort();
-  if (
-    actual.length !== sortedExpected.length ||
-    actual.some((key, index) => key !== sortedExpected[index])
-  ) {
-    throw new TypeError(`${label} contains unsupported fields`);
-  }
-}
+import { assertExactKeys, record } from "./simulation-validation.js";
 
 /** Normalizes and validates the two retained manifests used for comparison. */
 export function normalizeSimulationComparisonInput(
@@ -65,7 +41,7 @@ export function normalizeSimulationComparisonInput(
     normalizeCanonicalJson(input),
     "Simulation comparison",
   );
-  assertKeys(
+  assertExactKeys(
     normalized,
     ["baseline", "candidate", "policyComparison", "schemaVersion"],
     "Simulation comparison",

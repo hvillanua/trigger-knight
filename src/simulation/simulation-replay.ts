@@ -30,38 +30,7 @@ import {
 } from "./simulation-experiment.js";
 import { simulationPolicyRegistry } from "./policy-registry.js";
 import { createSimulationRunner } from "./simulation-runner.js";
-
-type NormalizedRecord = Readonly<Record<string, unknown>>;
-
-function record(value: unknown, label: string): NormalizedRecord {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) {
-    throw new TypeError(`${label} must be a plain record`);
-  }
-
-  return value as NormalizedRecord;
-}
-
-function assertKeys(
-  value: NormalizedRecord,
-  expected: readonly string[],
-  label: string,
-): void {
-  const actual = Object.keys(value).sort();
-  const sortedExpected = [...expected].sort();
-  const missing = sortedExpected.filter((key) => !actual.includes(key));
-  if (missing.length > 0) {
-    throw new TypeError(
-      `${label} is missing required fields: ${missing.join(", ")}`,
-    );
-  }
-
-  if (
-    actual.length !== sortedExpected.length ||
-    actual.some((key, index) => key !== sortedExpected[index])
-  ) {
-    throw new TypeError(`${label} contains unsupported fields`);
-  }
-}
+import { assertKeys, record } from "./simulation-validation.js";
 
 function replayRequestIndex(input: unknown, label: string): number {
   if (typeof input !== "number" || !Number.isSafeInteger(input) || input < 0) {

@@ -1,4 +1,3 @@
-import { normalizeProfile } from "../domain/profile.js";
 import type {
   GameEvent,
   GameplayTrace,
@@ -14,10 +13,13 @@ import { createGameplayExecution } from "../application/gameplay-execution.js";
 import {
   createCanonicalTraceHasher,
   fingerprintCanonicalJson,
-  normalizeCanonicalJson,
 } from "./canonical-json.js";
 import { normalizePolicyDescriptor } from "./policy-descriptor.js";
 import { createRunMetricsAccumulator } from "./simulation-report.js";
+import {
+  normalizeProfileInput,
+  positiveSafeInteger,
+} from "./simulation-validation.js";
 
 // The trace header remains v2 so frozen original-v1.3 trace identities remain
 // valid while the result envelope evolves to carry populated metrics.
@@ -29,18 +31,8 @@ export interface SimulationRunnerOptions {
   readonly onTrace?: (trace: GameplayTrace) => void;
 }
 
-function assertStepLimit(maxSteps: number): void {
-  if (!Number.isSafeInteger(maxSteps) || maxSteps <= 0) {
-    throw new RangeError("maxSteps must be a positive safe integer");
-  }
-}
-
 function snapshotProfile(profile: ProfileInput): ProfileInput {
-  const normalized = normalizeCanonicalJson(profile);
-
-  normalizeProfile(normalized);
-
-  return normalized as unknown as ProfileInput;
+  return normalizeProfileInput(profile);
 }
 
 function runSimulation(
@@ -48,8 +40,7 @@ function runSimulation(
   request: SimulationRequest,
   options: SimulationRunnerOptions,
 ): RunResult {
-  const maxSteps = request.maxSteps;
-  assertStepLimit(maxSteps);
+  const maxSteps = positiveSafeInteger(request.maxSteps, "maxSteps");
 
   const policy = normalizePolicyDescriptor(request.policy.descriptor);
   const initialProfile = snapshotProfile(request.config.initialProfile);

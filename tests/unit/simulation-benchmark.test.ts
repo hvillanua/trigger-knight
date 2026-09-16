@@ -113,6 +113,19 @@ describe("simulation benchmark", () => {
     expect(report.deterministic.comparisons.every(({ stable }) => stable)).toBe(
       true,
     );
+    expect(
+      report.measurements.every(({ strategy }) => strategy === "sequential"),
+    ).toBe(true);
+    expect(
+      report.deterministic.resultCases.every(
+        ({ strategy }) => strategy === "sequential",
+      ),
+    ).toBe(true);
+    expect(
+      report.deterministic.comparisons.every(
+        ({ strategy }) => strategy === "sequential",
+      ),
+    ).toBe(true);
     expect(report.measurements).toHaveLength(4);
     expect(report.targets.met).toBe(true);
     expect(report.host.platform).toBe("test");

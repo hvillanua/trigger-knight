@@ -1,4 +1,3 @@
-import { normalizeProfile } from "../domain/profile.js";
 import type {
   RunConfig,
   SimulationBatchExport,
@@ -24,45 +23,13 @@ import {
 import { simulationPolicyRegistry } from "./policy-registry.js";
 import { normalizePolicyDescriptor } from "./policy-descriptor.js";
 import type { PolicyDescriptor } from "../application/contracts.js";
-import type { ProfileInput } from "../domain/contracts.js";
 import { RUN_METRIC_KEYS } from "./simulation-report.js";
-
-type NormalizedRecord = Readonly<Record<string, unknown>>;
-
-function record(value: unknown, label: string): NormalizedRecord {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) {
-    throw new TypeError(`${label} must be a plain record`);
-  }
-
-  return value as NormalizedRecord;
-}
-
-function assertKeys(
-  value: NormalizedRecord,
-  expected: readonly string[],
-  label: string,
-  optional: readonly string[] = [],
-): void {
-  const actual = Object.keys(value).sort();
-  const sortedExpected = [...expected].sort();
-  const missing = sortedExpected.filter((key) => !actual.includes(key));
-  if (missing.length > 0) {
-    throw new TypeError(
-      `${label} is missing required fields: ${missing.join(", ")}`,
-    );
-  }
-
-  const allowed = new Set([...expected, ...optional]);
-  if (actual.some((key) => !allowed.has(key))) {
-    throw new TypeError(`${label} contains unsupported fields`);
-  }
-}
-
-function normalizeProfileInput(input: unknown): ProfileInput {
-  const normalized = normalizeCanonicalJson(input);
-  normalizeProfile(normalized);
-  return normalized as unknown as ProfileInput;
-}
+import {
+  assertKeys,
+  normalizeProfileInput,
+  positiveSafeInteger,
+  record,
+} from "./simulation-validation.js";
 
 function normalizeRunConfigInput(input: unknown): RunConfig {
   const normalized = record(normalizeCanonicalJson(input), "Simulation config");
@@ -102,11 +69,7 @@ function normalizeRunConfigInput(input: unknown): RunConfig {
 }
 
 function normalizeStepLimit(input: unknown): number {
-  if (typeof input !== "number" || !Number.isSafeInteger(input) || input <= 0) {
-    throw new RangeError("maxSteps must be a positive safe integer");
-  }
-
-  return input;
+  return positiveSafeInteger(input, "maxSteps");
 }
 
 function compareFingerprints(left: string, right: string): number {
