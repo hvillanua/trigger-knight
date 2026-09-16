@@ -39,6 +39,59 @@ test("loads original runtime assets and produces a readable world screenshot", a
   expect(screenshot.byteLength).toBeGreaterThan(1_000);
 });
 
+test("uses one offscreen canvas for the static scenery cache", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+
+  const cachedCanvasDraws = await page.evaluate(async (modulePath) => {
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof CanvasPresentationModule;
+    const base =
+      window.triggerKnightDiagnostics?.read().checkpoints[0]?.observation;
+    if (base === undefined) throw new Error("Expected the initial observation");
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 480;
+    canvas.height = 320;
+    document.body.append(canvas);
+    const drawImageDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "drawImage",
+    );
+    if (typeof drawImageDescriptor?.value !== "function") {
+      throw new Error("Expected Canvas drawImage");
+    }
+    const originalDrawImage =
+      drawImageDescriptor.value as CanvasRenderingContext2D["drawImage"];
+    let cachedCanvasDraws = 0;
+    CanvasRenderingContext2D.prototype.drawImage = function (
+      image: CanvasImageSource,
+      ...args: number[]
+    ) {
+      if (image instanceof HTMLCanvasElement) cachedCanvasDraws += 1;
+      originalDrawImage.apply(this, [image, ...args] as Parameters<
+        typeof originalDrawImage
+      >);
+    };
+    try {
+      const presentation = new CanvasPresentation(canvas);
+      presentation.present({
+        previous: base,
+        current: base,
+        interpolation: 1,
+        events: [],
+      });
+      return cachedCanvasDraws;
+    } finally {
+      CanvasRenderingContext2D.prototype.drawImage = originalDrawImage;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(cachedCanvasDraws).toBe(1);
+});
+
 test("clips the lifespan fill inside its original frame", async ({ page }) => {
   await openReadyWorld(page);
 

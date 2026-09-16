@@ -6,21 +6,27 @@ import type {
   PresentationTransition,
   TutorialPage,
 } from "../application/contracts.js";
+import { itemDescription, itemName, shopDescription, shopName } from "./hud.js";
 import {
-  describeGameEvent,
-  itemDescription,
-  itemName,
-  shopDescription,
-  shopName,
-} from "./hud.js";
-import {
-  createVisualAtlas,
   type VisualAtlas,
-  type VisualAtlasStatus,
   type OriginalActionEffectId,
   type OriginalUiImageId,
   type VisualSpriteId,
 } from "./visual-atlas.js";
+import {
+  CanvasDiagnostics,
+  visualFrameSignature,
+} from "./canvas-diagnostics.js";
+import {
+  CanvasEffectTracker,
+  clickEffectAge,
+  effectAge,
+  effectLifetime,
+  NO_VISUAL_EFFECTS,
+  sameEventList,
+  type EffectRecord,
+} from "./canvas-effects.js";
+import { createCanvasResources } from "./canvas-resources.js";
 import {
   actionPointerImageId as drawingActionPointerImageId,
   calculateEffectAnchor,
@@ -49,7 +55,7 @@ import {
   mapClientPointToWorld,
   type CssDimensions,
 } from "./foundation.js";
-import { loadOriginalFonts, ORIGINAL_FONT_FAMILIES } from "./font-assets.js";
+import { ORIGINAL_FONT_FAMILIES } from "./font-assets.js";
 
 import {
   ActorAnimation,
@@ -65,23 +71,10 @@ interface SpriteOptions {
   readonly frame?: number;
 }
 
-interface EffectRecord {
-  readonly event: GameEvent;
-  readonly key: string;
-  readonly startActiveTicks: number;
-  readonly anchor: WorldPoint;
-  readonly clickAnchor: WorldPoint | undefined;
-  readonly message: string | undefined;
-}
-
-const NO_VISUAL_EFFECTS: readonly EffectRecord[] = Object.freeze([]);
-
 const GROUND_RATIO = 0.73;
 const HERO_RUNNING_X = 50;
 const GAMEPLAY_HUD_BOTTOM = 251;
 const MESSAGE_STRIP_Y = GAMEPLAY_HUD_BOTTOM - 15;
-const MOUSE_EFFECT_LIFETIME = 60;
-const ORIGINAL_ACTION_EFFECT_LIFETIME = 30;
 const ORIGINAL_FLASH_EFFECT_LIFETIME = 10;
 const SESSION_OVER_FRAME_COUNT = 5;
 const SESSION_OVER_FRAME_MS = 1000 / 30;
@@ -103,51 +96,6 @@ const CANVAS_FONT_FAMILIES = Object.freeze({
   serif: `"${ORIGINAL_FONT_FAMILIES.calisto5}", "${ORIGINAL_FONT_FAMILIES.calibri}", system-ui, sans-serif`,
   serifSmall: `"${ORIGINAL_FONT_FAMILIES.calisto224}", "${ORIGINAL_FONT_FAMILIES.calibri12}", system-ui, sans-serif`,
 });
-
-function describeEvent(event: GameEvent): string {
-  switch (event.type) {
-    case "achievement-unlocked":
-      return `${event.type}:${event.achievement}`;
-    case "combat-phase-changed":
-      return `${event.type}:${event.actor}:${event.phase}`;
-    case "combat-hit":
-      return `${event.type}:${event.attacker}:${event.damage}`;
-    case "combat-lethal-hit":
-      return `${event.type}:${event.target}`;
-    case "battle-reward":
-      return `${event.type}:${event.enemy}:${event.gold}`;
-    case "battle-started":
-      return event.type;
-    case "encounter-promoted":
-      return `${event.type}:${event.encounter.kind}`;
-    case "equipment-discovered":
-      return `${event.type}:${event.equipment}:${event.tier}`;
-    case "lifespan-death":
-      return event.type;
-    case "pause-toggled":
-      return `${event.type}:${String(event.paused)}`;
-    case "purchase-rejected":
-      return `${event.type}:${event.reason}`;
-    case "item-used":
-      return `${event.type}:${event.item}`;
-    case "item-use-rejected":
-      return `${event.type}:${event.reason}`;
-    case "step-advanced":
-      return `${event.type}:${event.step}`;
-    case "shop-departed":
-      return `${event.type}:${event.shop}`;
-    case "shop-purchased":
-      return `${event.type}:${event.shop}:${event.price}`;
-    case "tutorial-dismissed":
-      return `${event.type}:${event.page}`;
-    case "run-ended":
-      return `${event.type}:${event.reason}`;
-  }
-}
-
-function formatProjectionValue(value: number): string {
-  return String(Math.round(value * 1_000_000) / 1_000_000);
-}
 
 function formatNumber(value: number): string {
   return value.toLocaleString("en-US");
@@ -299,10 +247,6 @@ function drawOutlinedText(
   context.strokeText(text, x, y);
   context.fillText(text, x, y);
   context.restore();
-}
-
-function actionPointerFrame(observation: Readonly<GameObservation>): 0 | 1 {
-  return drawingActionPointerImageId(observation) === "pointer" ? 0 : 1;
 }
 
 function actionPointerImageId(
@@ -813,22 +757,6 @@ function eventContextMessage(
   return null;
 }
 
-function latestRetainedEffect(
-  effects: readonly EffectRecord[],
-  frame: Readonly<PresentationFrame>,
-): Readonly<EffectRecord> | undefined {
-  for (let index = effects.length - 1; index >= 0; index -= 1) {
-    const effect = effects[index];
-    if (
-      effect?.message !== undefined &&
-      effectAge(frame, effect) <= effectLifetime(effect.event)
-    ) {
-      return effect;
-    }
-  }
-  return undefined;
-}
-
 function drawContextPrompt(
   context: CanvasRenderingContext2D,
   atlas: VisualAtlas,
@@ -1019,168 +947,6 @@ function effectAnchor(
     enemyX,
     encounterX,
   });
-}
-
-const VISUAL_EFFECT_EVENT_TYPES: ReadonlySet<GameEvent["type"]> = new Set([
-  "achievement-unlocked",
-  "battle-reward",
-  "combat-hit",
-  "combat-lethal-hit",
-  "equipment-discovered",
-  "item-use-rejected",
-  "item-used",
-  "lifespan-death",
-  "purchase-rejected",
-  "run-ended",
-  "shop-departed",
-  "shop-purchased",
-]);
-
-function isVisualEffectEvent(event: GameEvent): boolean {
-  return VISUAL_EFFECT_EVENT_TYPES.has(event.type);
-}
-
-/** Visual lifetimes are presentation choices measured in public active ticks. */
-function effectLifetime(event: GameEvent): number {
-  switch (event.type) {
-    case "combat-hit":
-      return 8;
-    case "combat-lethal-hit":
-      return 8;
-    case "combat-phase-changed":
-      return 1;
-    case "battle-started":
-    case "encounter-promoted":
-      return 14;
-    case "shop-purchased":
-      return ORIGINAL_ACTION_EFFECT_LIFETIME;
-    case "item-used":
-      return ORIGINAL_ACTION_EFFECT_LIFETIME;
-    case "battle-reward":
-    case "equipment-discovered":
-    case "achievement-unlocked":
-      return 20;
-    case "purchase-rejected":
-    case "item-use-rejected":
-      return 10;
-    case "shop-departed":
-      return 12;
-    case "lifespan-death":
-    case "run-ended":
-      return 20;
-    case "pause-toggled":
-    case "tutorial-dismissed":
-      return 12;
-    case "step-advanced":
-      return 0;
-  }
-}
-
-function effectRetentionLifetime(effect: Readonly<EffectRecord>): number {
-  return Math.max(
-    effectLifetime(effect.event),
-    effect.clickAnchor === undefined ? 0 : MOUSE_EFFECT_LIFETIME,
-  );
-}
-
-function effectAge(
-  frame: Readonly<PresentationFrame>,
-  effect: Readonly<EffectRecord>,
-): number {
-  const activeTickAge = Math.max(
-    0,
-    frame.current.activeTicks - effect.startActiveTicks,
-  );
-  return (
-    activeTickAge + (frame.current.lifecycle.paused ? 0 : frame.interpolation)
-  );
-}
-
-function clickEffectAge(
-  frame: Readonly<PresentationFrame>,
-  effect: Readonly<EffectRecord>,
-): number {
-  const age = effectAge(frame, effect);
-  if (frame.current.activeTicks !== effect.startActiveTicks) return age;
-  return Math.max(
-    0,
-    age - (frame.current.lifecycle.paused ? 0 : frame.interpolation),
-  );
-}
-
-function sameEventList(
-  previous: readonly GameEvent[],
-  current: readonly GameEvent[],
-): boolean {
-  if (previous.length !== current.length) return false;
-  return current.every((event, index) => previous[index] === event);
-}
-
-function visualObservationSignature(
-  observation: Readonly<GameObservation>,
-): readonly unknown[] {
-  const battle = observation.battle;
-  const encounter = observation.encounters.current;
-  return [
-    observation.camera.x,
-    observation.camera.y,
-    observation.camera.width,
-    observation.camera.height,
-    observation.distance,
-    observation.day,
-    observation.lifecycle.phase,
-    observation.lifecycle.paused,
-    observation.lifecycle.tutorialPage,
-    observation.lifespan.whole,
-    observation.lifespan.fraction,
-    observation.player.hp.current,
-    observation.player.hp.maximum,
-    observation.player.gold,
-    observation.player.weapon.name,
-    observation.player.weapon.tier,
-    observation.player.armor.name,
-    observation.player.armor.tier,
-    observation.player.inventory.item,
-    observation.score,
-    observation.actions.canPurchaseCurrentEncounter,
-    observation.actions.canUseCarriedItem,
-    battle === null
-      ? null
-      : [
-          battle.enemy.id,
-          battle.enemy.currentHp,
-          battle.enemy.maximumHp,
-          battle.actors.hero.phase,
-          battle.actors.hero.x,
-          battle.actors.enemy.phase,
-          battle.actors.enemy.x,
-        ],
-    encounter === null
-      ? null
-      : encounter.kind === "shop"
-        ? ["shop", encounter.shop, encounter.x, encounter.used]
-        : ["battle", encounter.enemy.id, encounter.x],
-  ];
-}
-
-function visualFrameSignature(
-  frame: Readonly<PresentationFrame>,
-  effects: readonly EffectRecord[],
-  atlasStatus: VisualAtlasStatus,
-): string {
-  const previous = visualObservationSignature(frame.previous);
-  const current = visualObservationSignature(frame.current);
-  const previousKey = JSON.stringify(previous);
-  const currentKey = JSON.stringify(current);
-  return JSON.stringify([
-    frame.current.activeTicks,
-    actionPointerFrame(frame.current),
-    previousKey,
-    currentKey,
-    previousKey === currentKey ? null : frame.interpolation,
-    effects.map(({ key }) => key),
-    atlasStatus,
-  ]);
 }
 
 function drawBurst(
@@ -1899,17 +1665,11 @@ export class CanvasPresentation implements PresentationPort {
   #frame: PresentationFrame | undefined;
   #reducedMotion = false;
   #atlas: VisualAtlas;
-  #activeEffects: readonly EffectRecord[] = Object.freeze([]);
-  #effectHistory = new Map<string, EffectRecord>();
-  #seenEffectKeys = new Set<string>();
-  #registeredEffectEvents = new Set<GameEvent>();
-  #effectSequence = 0;
-  #lastFrameStep: number | undefined;
+  readonly #diagnostics: CanvasDiagnostics;
+  readonly #effects = new CanvasEffectTracker();
   #lastDrawnVisualSignature: string | undefined;
   #backgroundLayer: HTMLCanvasElement | undefined;
   #backgroundLayerKey: string | undefined;
-  #staticLayer: HTMLCanvasElement | undefined;
-  #staticLayerKey: string | undefined;
   #pointerWorld: WorldPoint | undefined;
   #sessionOverAnimationStep: number | undefined;
   #sessionOverAnimationProgress = 1;
@@ -1917,20 +1677,18 @@ export class CanvasPresentation implements PresentationPort {
 
   constructor(canvas: HTMLCanvasElement) {
     this.#canvas = canvas;
-    this.#canvas.dataset.renderer = "canvas-2d";
-    this.#canvas.dataset.visualVersion = "original-assets-v1";
-    this.#canvas.dataset.assetSource = "original-runtime-assets";
-    this.#canvas.dataset.fontStatus = "loading";
-    this.#atlas = createVisualAtlas((status) => {
-      this.#canvas.dataset.assetStatus = status;
-      this.#canvas.dataset.spriteMode =
-        status === "ready" ? "atlas" : "missing";
+    this.#diagnostics = new CanvasDiagnostics(canvas);
+    const resources = createCanvasResources((change) => {
+      if (change.type === "assets") {
+        this.#diagnostics.setAssetStatus(change.status);
+      } else {
+        this.#diagnostics.setFontStatus(change.status);
+      }
+      this.#lastDrawnVisualSignature = undefined;
       this.#draw();
     });
-    this.#canvas.dataset.assetStatus = this.#atlas.status;
-    this.#canvas.dataset.spriteMode =
-      this.#atlas.status === "ready" ? "atlas" : "missing";
-    this.#canvas.dataset.reducedMotion = "false";
+    this.#atlas = resources.atlas;
+    this.#diagnostics.initialize(resources.atlas.status, resources.fontStatus);
     this.#canvas.addEventListener("pointermove", (event) => {
       const frame = this.#frame;
       if (frame === undefined) return;
@@ -1940,12 +1698,6 @@ export class CanvasPresentation implements PresentationPort {
     });
     this.#canvas.addEventListener("pointerleave", () => {
       this.#pointerWorld = undefined;
-      this.#draw();
-    });
-    void loadOriginalFonts().then((loaded) => {
-      this.#staticLayerKey = undefined;
-      this.#lastDrawnVisualSignature = undefined;
-      this.#canvas.dataset.fontStatus = loaded ? "ready" : "fallback";
       this.#draw();
     });
   }
@@ -1958,7 +1710,7 @@ export class CanvasPresentation implements PresentationPort {
       this.#cancelSessionOverAnimation();
       this.#sessionOverAnimationProgress = 1;
     }
-    this.#canvas.dataset.reducedMotion = String(reducedMotion);
+    this.#diagnostics.setReducedMotion(reducedMotion);
     this.#lastDrawnVisualSignature = undefined;
     this.#draw();
   }
@@ -2001,91 +1753,25 @@ export class CanvasPresentation implements PresentationPort {
         ),
       ),
     );
-    this.#pruneEffects(normalizedFrame);
+    this.#effects.prune(normalizedFrame);
     const visibleEffects = this.#reducedMotion
       ? NO_VISUAL_EFFECTS
-      : this.#activeEffects;
-    const visualSignature = visualFrameSignature(
+      : this.#effects.activeEffects;
+    this.#diagnostics.updateFrame(
       normalizedFrame,
-      visibleEffects,
+      visibleEffects.map(({ event }) => event.type),
+      this.#effects.sequence,
       this.#atlas.status,
     );
-    this.#canvas.dataset.assetStatus = this.#atlas.status;
-    this.#canvas.dataset.spriteMode =
-      this.#atlas.status === "ready" ? "atlas" : "missing";
-    this.#canvas.dataset.observationStep = String(frame.current.steps);
-    this.#canvas.dataset.events = frame.events.map(describeEvent).join(",");
-    this.#canvas.dataset.eventAnnouncement = frame.events
-      .map(describeGameEvent)
-      .filter(Boolean)
-      .join(" ");
-    this.#canvas.dataset.visualScene = frame.current.battle
-      ? "battle"
-      : frame.current.lifecycle.phase === "ended"
-        ? "ended"
-        : frame.current.encounters.current?.kind === "battle"
-          ? "approaching-battle"
-          : "running";
-    this.#canvas.dataset.movementSpeed = String(frame.current.movementSpeed);
-    this.#canvas.dataset.distance = String(frame.current.distance);
-    this.#canvas.dataset.day = String(frame.current.day);
-    this.#canvas.dataset.score = String(frame.current.score);
-    this.#canvas.dataset.phase = frame.current.lifecycle.phase;
-    this.#canvas.dataset.purchaseEligible = String(
-      frame.current.actions.canPurchaseCurrentEncounter,
-    );
-    this.#canvas.dataset.itemEligible = String(
-      frame.current.actions.canUseCarriedItem,
-    );
-    this.#canvas.dataset.activeEffects = visibleEffects
-      .map(({ event }) => event.type)
-      .join(",");
-    this.#canvas.dataset.effectSequence = String(this.#effectSequence);
-    const current = frame.current.encounters.current;
-    this.#canvas.dataset.renderedSprites = [
-      "hero",
-      frame.current.player.weapon.tier > 0 ? "weapon" : "",
-      frame.current.player.armor.tier > 0 ? "armor" : "",
-      frame.current.player.inventory.item ?? "",
-      frame.current.battle?.enemy.id ??
-        (current?.kind === "battle" ? current.enemy.id : ""),
-      current?.kind === "shop" ? current.shop : "",
-    ]
-      .filter(Boolean)
-      .join(",");
-
-    if (current?.kind === "shop") {
-      this.#canvas.dataset.currentShop = current.shop;
-      this.#canvas.dataset.currentEncounterX = String(current.x);
-    } else {
-      delete this.#canvas.dataset.currentShop;
-      delete this.#canvas.dataset.currentEncounterX;
-    }
-    if (current?.kind === "battle" && frame.current.battle === null) {
-      this.#canvas.dataset.approachingEnemy = current.enemy.id;
-    } else {
-      delete this.#canvas.dataset.approachingEnemy;
-    }
-    const tutorialPage = frame.current.lifecycle.tutorialPage;
-    if (tutorialPage === null) {
-      delete this.#canvas.dataset.tutorialPage;
-    } else {
-      this.#canvas.dataset.tutorialPage = String(tutorialPage);
-    }
-    const battle = frame.current.battle;
-    if (battle === null) {
-      delete this.#canvas.dataset.battleEnemy;
-      delete this.#canvas.dataset.battleEnemyHp;
-      delete this.#canvas.dataset.battleHeroPhase;
-      delete this.#canvas.dataset.battleEnemyPhase;
-    } else {
-      this.#canvas.dataset.battleEnemy = battle.enemy.id;
-      this.#canvas.dataset.battleEnemyHp = `${battle.enemy.currentHp}/${battle.enemy.maximumHp}`;
-      this.#canvas.dataset.battleHeroPhase = battle.actors.hero.phase;
-      this.#canvas.dataset.battleEnemyPhase = battle.actors.enemy.phase;
-    }
-    if (redrawRequired && visualSignature !== this.#lastDrawnVisualSignature) {
-      this.#draw();
+    if (redrawRequired) {
+      const visualSignature = visualFrameSignature(
+        normalizedFrame,
+        visibleEffects.map(({ key }) => key),
+        this.#atlas.status,
+      );
+      if (visualSignature !== this.#lastDrawnVisualSignature) {
+        this.#draw(visualSignature);
+      }
     }
   }
 
@@ -2097,47 +1783,6 @@ export class CanvasPresentation implements PresentationPort {
     this.#canvas.width = backingStore.width;
     this.#canvas.height = backingStore.height;
     this.#draw();
-  }
-
-  #ensureStaticLayer(
-    frame: Readonly<PresentationFrame>,
-    projection: ReturnType<typeof calculateWorldProjection>,
-  ): HTMLCanvasElement {
-    const camera = frame.current.camera;
-    const key = JSON.stringify([
-      this.#canvas.width,
-      this.#canvas.height,
-      camera.x,
-      camera.y,
-      camera.width,
-      camera.height,
-      frame.current.day,
-      this.#atlas.status,
-    ]);
-    if (this.#staticLayer !== undefined && this.#staticLayerKey === key) {
-      return this.#staticLayer;
-    }
-
-    const layer = this.#staticLayer ?? document.createElement("canvas");
-    if (
-      layer.width !== this.#canvas.width ||
-      layer.height !== this.#canvas.height
-    ) {
-      layer.width = this.#canvas.width;
-      layer.height = this.#canvas.height;
-    }
-    const context = layer.getContext("2d");
-    if (context === null) {
-      throw new Error("Canvas 2D is unavailable for the static layer");
-    }
-
-    context.setTransform(1, 0, 0, 1, 0, 0);
-    context.clearRect(0, 0, layer.width, layer.height);
-    context.drawImage(this.#ensureBackgroundLayer(frame, projection), 0, 0);
-
-    this.#staticLayer = layer;
-    this.#staticLayerKey = key;
-    return layer;
   }
 
   #ensureBackgroundLayer(
@@ -2152,7 +1797,6 @@ export class CanvasPresentation implements PresentationPort {
       camera.y,
       camera.width,
       camera.height,
-      frame.current.day,
       this.#atlas.status,
     ]);
     if (
@@ -2198,57 +1842,31 @@ export class CanvasPresentation implements PresentationPort {
   }
 
   #registerTransition(
-    transition: PresentationTransition,
+    transition: Pick<PresentationFrame, "previous" | "current" | "events">,
     runningX = this.#animation.runningX(transition.current.distance),
   ): void {
     this.#updateSessionOverAnimation(transition.previous, transition.current);
-    if (
-      this.#lastFrameStep !== undefined &&
-      transition.current.steps < this.#lastFrameStep
-    ) {
-      this.#effectHistory.clear();
-      this.#seenEffectKeys.clear();
-      this.#registeredEffectEvents.clear();
-      this.#effectSequence = 0;
-    }
-
     const frame = Object.freeze({
       previous: transition.previous,
       current: transition.current,
       interpolation: 1,
       events: transition.events,
     });
-    transition.events.forEach((event, index) => {
-      if (!isVisualEffectEvent(event)) return;
-      if (this.#registeredEffectEvents.has(event)) return;
-      this.#registeredEffectEvents.add(event);
-      const key = `${transition.current.steps}:${index}:${describeEvent(event)}`;
-      if (!this.#seenEffectKeys.has(key)) {
-        this.#seenEffectKeys.add(key);
-        this.#effectSequence += 1;
-        this.#effectHistory.set(
-          key,
-          Object.freeze({
-            event,
-            key,
-            startActiveTicks: transition.current.activeTicks,
-            anchor: effectAnchor(frame, event, runningX),
-            clickAnchor:
-              event.type === "shop-purchased" || event.type === "item-used"
-                ? (this.#pointerWorld ?? effectAnchor(frame, event, runningX))
-                : undefined,
-            message:
-              eventContextMessage(
-                event,
-                transition.current,
-                transition.previous,
-              ) ?? undefined,
-          }),
-        );
-      }
-    });
-
-    this.#lastFrameStep = transition.current.steps;
+    this.#effects.register(frame, (event, key) =>
+      Object.freeze({
+        event,
+        key,
+        startActiveTicks: transition.current.activeTicks,
+        anchor: effectAnchor(frame, event, runningX),
+        clickAnchor:
+          event.type === "shop-purchased" || event.type === "item-used"
+            ? (this.#pointerWorld ?? effectAnchor(frame, event, runningX))
+            : undefined,
+        message:
+          eventContextMessage(event, transition.current, transition.previous) ??
+          undefined,
+      }),
+    );
   }
 
   #updateSessionOverAnimation(
@@ -2305,19 +1923,7 @@ export class CanvasPresentation implements PresentationPort {
     }
   }
 
-  #pruneEffects(frame: Readonly<PresentationFrame>): void {
-    const active: EffectRecord[] = [];
-    for (const [key, effect] of this.#effectHistory) {
-      if (effectAge(frame, effect) <= effectRetentionLifetime(effect)) {
-        active.push(effect);
-      } else {
-        this.#effectHistory.delete(key);
-      }
-    }
-    this.#activeEffects = Object.freeze(active);
-  }
-
-  #draw(): void {
+  #draw(expectedVisualSignature?: string): void {
     const context = this.#canvas.getContext("2d");
     if (context === null) {
       throw new Error("Canvas 2D is unavailable");
@@ -2337,26 +1943,17 @@ export class CanvasPresentation implements PresentationPort {
       height: this.#canvas.height,
     });
     const { viewport } = projection;
-    this.#canvas.dataset.worldCamera = [
-      camera.x,
-      camera.y,
-      camera.width,
-      camera.height,
-    ]
-      .map(formatProjectionValue)
-      .join(",");
-    this.#canvas.dataset.projectionViewport = [
-      viewport.x,
-      viewport.y,
-      viewport.width,
-      viewport.height,
-    ]
-      .map(formatProjectionValue)
-      .join(",");
-    this.#canvas.dataset.interpolation = String(this.#frame.interpolation);
+    this.#diagnostics.updateProjection(
+      camera,
+      viewport,
+      this.#frame.interpolation,
+    );
 
-    const staticLayer = this.#ensureStaticLayer(this.#frame, projection);
-    context.drawImage(staticLayer, 0, 0);
+    const backgroundLayer = this.#ensureBackgroundLayer(
+      this.#frame,
+      projection,
+    );
+    context.drawImage(backgroundLayer, 0, 0);
 
     context.save();
     context.beginPath();
@@ -2367,7 +1964,7 @@ export class CanvasPresentation implements PresentationPort {
     context.translate(-camera.x, -camera.y);
     const visibleEffects = this.#reducedMotion
       ? NO_VISUAL_EFFECTS
-      : this.#activeEffects;
+      : this.#effects.activeEffects;
     const ended = this.#frame.current.lifecycle.phase === "ended";
     if (ended) {
       drawDynamicWorld(
@@ -2384,7 +1981,7 @@ export class CanvasPresentation implements PresentationPort {
         this.#atlas,
         this.#frame.events,
         undefined,
-        latestRetainedEffect(this.#activeEffects, this.#frame),
+        this.#effects.latestMessage(this.#frame),
         false,
       );
       drawSessionOver(
@@ -2419,22 +2016,24 @@ export class CanvasPresentation implements PresentationPort {
           this.#atlas,
           this.#frame.events,
           this.#pointerWorld,
-          latestRetainedEffect(this.#activeEffects, this.#frame),
+          this.#effects.latestMessage(this.#frame),
         );
       }
     }
     context.restore();
-    this.#lastDrawnVisualSignature = visualFrameSignature(
-      this.#frame,
-      visibleEffects,
-      this.#atlas.status,
-    );
+    this.#lastDrawnVisualSignature =
+      expectedVisualSignature ??
+      visualFrameSignature(
+        this.#frame,
+        visibleEffects.map(({ key }) => key),
+        this.#atlas.status,
+      );
 
     const interpolatedDistance = interpolate(
       this.#frame.previous.distance,
       this.#frame.current.distance,
       this.#frame.interpolation,
     );
-    this.#canvas.dataset.interpolatedDistance = String(interpolatedDistance);
+    this.#diagnostics.setInterpolatedDistance(interpolatedDistance);
   }
 }
