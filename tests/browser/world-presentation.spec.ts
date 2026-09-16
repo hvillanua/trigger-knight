@@ -1,5 +1,8 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Browser, type Page } from "@playwright/test";
 import type * as CanvasPresentationModule from "../../src/browser/canvas-presentation.js";
+
+const VISUAL_VIEWPORT = Object.freeze({ width: 480, height: 320 });
+const VISUAL_DEVICE_SCALE_FACTOR = 1;
 
 async function openReadyWorld(page: Page) {
   await page.goto("/?manual=1");
@@ -17,26 +20,212 @@ async function openReadyWorld(page: Page) {
   return canvas;
 }
 
-test("loads original runtime assets and produces a readable world screenshot", async ({
-  page,
-}, testInfo) => {
-  const canvas = await openReadyWorld(page);
-  await expect(canvas).toHaveAttribute("data-sprite-mode", "atlas");
+async function openStableWorld(browser: Browser) {
+  const context = await browser.newContext({
+    viewport: VISUAL_VIEWPORT,
+    deviceScaleFactor: VISUAL_DEVICE_SCALE_FACTOR,
+  });
+  const page = await context.newPage();
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/?manual=1&seed=issue-144-visual");
+
+  const canvas = page.getByRole("img", { name: "Trigger Knight game view" });
+  await expect(canvas).toHaveAttribute(
+    "data-asset-source",
+    "original-runtime-assets",
+  );
+  await expect(canvas).toHaveAttribute("data-asset-status", "ready");
+  await expect(canvas).toHaveAttribute("data-font-status", "ready");
+  await page.evaluate(() => document.fonts.ready);
+  await expect(canvas).toHaveAttribute("data-reduced-motion", "true");
   await expect(canvas).toHaveAttribute("data-world-camera", "0,0,480,320");
 
-  const sprites = (await canvas.getAttribute("data-rendered-sprites"))?.split(
-    ",",
-  );
-  expect(sprites).toEqual(
-    expect.arrayContaining(["hero", "weapon", "armor", "elixir"]),
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+  await expect(canvas).not.toHaveAttribute("data-tutorial-page");
+  await expect(canvas).toHaveAttribute("data-observation-step", "1");
+  await expect(canvas).toHaveAttribute("data-interpolation", "1");
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        window.requestAnimationFrame(() => resolve()),
+      ),
   );
 
-  const screenshot = await canvas.screenshot();
-  await testInfo.attach("running-world.png", {
-    body: screenshot,
-    contentType: "image/png",
-  });
-  expect(screenshot.byteLength).toBeGreaterThan(1_000);
+  return { context, page, canvas };
+}
+
+test("checks the controlled world frame and attaches human-review evidence", async ({
+  browser,
+}, testInfo) => {
+  test.setTimeout(30_000);
+  const { context, page, canvas } = await openStableWorld(browser);
+  try {
+    await expect(canvas).toHaveAttribute("data-sprite-mode", "atlas");
+    const sprites = (await canvas.getAttribute("data-rendered-sprites"))?.split(
+      ",",
+    );
+    expect(sprites).toEqual(
+      expect.arrayContaining(["hero", "weapon", "armor", "elixir"]),
+    );
+
+    const screenshot = await canvas.screenshot();
+    await testInfo.attach("running-world-human-review.png", {
+      body: screenshot,
+      contentType: "image/png",
+    });
+
+    // PNG byte length says nothing about what the renderer drew. These probes
+    // cover the staged scene, actor, HUD, and lifespan assets instead.
+    const evidence = await page.evaluate(() => {
+      const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
+      if (canvas === null) throw new Error("Missing game canvas");
+      const context = canvas.getContext("2d");
+      if (context === null) throw new Error("Expected a Canvas 2D context");
+
+      const image = context.getImageData(0, 0, canvas.width, canvas.height);
+      const pixels = image.data;
+      const worldToPixel = (
+        value: number,
+        worldSize: number,
+        pixelSize: number,
+      ): number =>
+        Math.max(
+          0,
+          Math.min(pixelSize - 1, Math.floor((value / worldSize) * pixelSize)),
+        );
+      const region = (
+        x: number,
+        y: number,
+        width: number,
+        height: number,
+        matches: (
+          red: number,
+          green: number,
+          blue: number,
+          alpha: number,
+        ) => boolean,
+      ) => {
+        const startX = worldToPixel(x, 480, image.width);
+        const startY = worldToPixel(y, 320, image.height);
+        const endX = Math.max(
+          startX + 1,
+          Math.min(image.width, Math.ceil(((x + width) / 480) * image.width)),
+        );
+        const endY = Math.max(
+          startY + 1,
+          Math.min(
+            image.height,
+            Math.ceil(((y + height) / 320) * image.height),
+          ),
+        );
+        const colors = new Set<string>();
+        let matchingPixels = 0;
+        for (let pixelY = startY; pixelY < endY; pixelY += 1) {
+          for (let pixelX = startX; pixelX < endX; pixelX += 1) {
+            const index = (pixelY * image.width + pixelX) * 4;
+            const red = pixels[index] ?? 0;
+            const green = pixels[index + 1] ?? 0;
+            const blue = pixels[index + 2] ?? 0;
+            const alpha = pixels[index + 3] ?? 0;
+            colors.add(`${red},${green},${blue},${alpha}`);
+            if (matches(red, green, blue, alpha)) matchingPixels += 1;
+          }
+        }
+        return { distinctColors: colors.size, matchingPixels };
+      };
+
+      return {
+        width: canvas.width,
+        height: canvas.height,
+        devicePixelRatio: window.devicePixelRatio,
+        regions: {
+          sky: region(
+            0,
+            0,
+            480,
+            80,
+            (red, green, blue, alpha) =>
+              alpha === 255 &&
+              red >= 80 &&
+              red <= 190 &&
+              green >= 160 &&
+              blue >= 170,
+          ),
+          mountains: region(
+            0,
+            95,
+            480,
+            70,
+            (red, green, blue, alpha) =>
+              alpha === 255 && red < 130 && green > red + 20 && blue > red + 20,
+          ),
+          ground: region(
+            0,
+            180,
+            480,
+            60,
+            (red, green, blue, alpha) =>
+              alpha === 255 &&
+              green > red * 1.25 &&
+              green > blue * 1.1 &&
+              green > 60,
+          ),
+          hero: region(
+            24,
+            150,
+            68,
+            78,
+            (red, green, blue, alpha) =>
+              alpha === 255 &&
+              red >= 20 &&
+              red <= 80 &&
+              green >= 5 &&
+              green <= 50 &&
+              blue <= 35 &&
+              red > green + 8,
+          ),
+          hud: region(
+            0,
+            251,
+            480,
+            69,
+            (red, green, blue, alpha) =>
+              alpha === 255 && red < 25 && green < 35 && blue < 45,
+          ),
+          lifespan: region(
+            155,
+            7,
+            301,
+            20,
+            (red, green, blue, alpha) =>
+              alpha === 255 &&
+              red >= 180 &&
+              green >= 120 &&
+              blue <= 120 &&
+              red > green * 1.1,
+          ),
+        },
+      };
+    });
+
+    expect(evidence.width).toBeGreaterThan(1);
+    expect(evidence.height).toBeGreaterThan(1);
+    expect(evidence.devicePixelRatio).toBe(VISUAL_DEVICE_SCALE_FACTOR);
+    for (const [name, visual] of Object.entries(evidence.regions)) {
+      expect(
+        visual.distinctColors,
+        `${name} should contain rendered detail`,
+      ).toBeGreaterThan(100);
+    }
+    expect(evidence.regions.sky.matchingPixels).toBeGreaterThan(1_000);
+    expect(evidence.regions.mountains.matchingPixels).toBeGreaterThan(1_000);
+    expect(evidence.regions.ground.matchingPixels).toBeGreaterThan(1_000);
+    expect(evidence.regions.hero.matchingPixels).toBeGreaterThan(50);
+    expect(evidence.regions.hud.matchingPixels).toBeGreaterThan(1_000);
+    expect(evidence.regions.lifespan.matchingPixels).toBeGreaterThan(500);
+  } finally {
+    await context.close();
+  }
 });
 
 test("uses one offscreen canvas for the static scenery cache", async ({
