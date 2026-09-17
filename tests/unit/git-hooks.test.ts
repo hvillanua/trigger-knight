@@ -15,9 +15,10 @@ describe("local validation hooks", () => {
   it("runs the complete validation gate only before pushes", () => {
     const hooksDirectory = path.join(repositoryRoot, ".githooks");
 
-    expect(
-      readFileSync(path.join(hooksDirectory, "pre-push"), "utf8"),
-    ).toContain("node build/run-push-validation.mjs");
+    const hook = readFileSync(path.join(hooksDirectory, "pre-push"), "utf8");
+    expect(hook).toContain("node build/run-push-validation.mjs");
+    expect(hook).toContain("--no-renames");
+    expect(hook).toContain("code-affecting-unknown-range");
     expect(existsSync(path.join(hooksDirectory, "pre-commit"))).toBe(false);
   });
 
@@ -26,6 +27,9 @@ describe("local validation hooks", () => {
       shouldSkipCodeValidation(["README.md", "docs/test-performance.md"]),
     ).toBe(true);
     expect(shouldSkipCodeValidation(["README.md", "src/main.ts"])).toBe(false);
+    expect(shouldSkipCodeValidation(["src/main.ts", "docs/example.md"])).toBe(
+      false,
+    );
     expect(shouldSkipCodeValidation([])).toBe(false);
   });
 

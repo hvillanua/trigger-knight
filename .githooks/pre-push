@@ -20,8 +20,13 @@ while read -r local_ref local_sha remote_ref remote_sha; do
       changed_files="code-affecting-new-branch"
       ;;
     *)
-      changed_files="$changed_files
-$(git diff --name-only "$remote_sha...$local_sha")"
+      if diff_files=$(git diff --name-only --no-renames "$remote_sha" "$local_sha"); then
+        changed_files="$changed_files
+$diff_files"
+      else
+        # An unavailable or unrelated remote object must not skip validation.
+        changed_files="code-affecting-unknown-range"
+      fi
       ;;
   esac
 done
