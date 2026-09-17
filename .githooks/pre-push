@@ -1,3 +1,29 @@
 #!/bin/sh
 
-npm run validate
+set -eu
+
+changed_files=""
+while read -r local_ref local_sha remote_ref remote_sha; do
+  if [ -z "${local_ref:-}" ]; then
+    continue
+  fi
+
+  case "$local_sha" in
+    0000000000000000000000000000000000000000)
+      continue
+      ;;
+  esac
+
+  case "$remote_sha" in
+    0000000000000000000000000000000000000000)
+      # A new branch has no reliable remote range. Run the complete gate.
+      changed_files="code-affecting-new-branch"
+      ;;
+    *)
+      changed_files="$changed_files
+$(git diff --name-only "$remote_sha...$local_sha")"
+      ;;
+  esac
+done
+
+printf '%s\n' "$changed_files" | node build/run-push-validation.mjs
