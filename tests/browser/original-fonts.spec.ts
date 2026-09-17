@@ -8,7 +8,7 @@ import type * as CanvasPresentationModule from "../../src/browser/canvas-present
 test("loads and uses the staged original fonts in browser presentation", async ({
   page,
 }) => {
-  await page.goto("/?manual=1");
+  await page.goto("/?manual=1&diagnostics=1");
   await expect(
     page.getByRole("img", { name: "Trigger Knight game view" }),
   ).toHaveAttribute("data-font-status", "ready");

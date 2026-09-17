@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test("shows readable public HUD values and keeps queued battles generic", async ({
   page,
 }) => {
-  await page.goto("/?manual=1");
+  await page.goto("/?manual=1&diagnostics=1");
 
   await expect(page.locator("#hud-hero-hp")).toHaveText("1,908/1,908");
   await expect(page.locator("#hud-lifespan")).toHaveText("99.99%");
@@ -25,7 +25,7 @@ test("shows readable public HUD values and keeps queued battles generic", async 
 test("routes keyboard bindings once and ignores held-key repeats", async ({
   page,
 }) => {
-  await page.goto("/?manual=1");
+  await page.goto("/?manual=1&diagnostics=1");
 
   await page.keyboard.down("Enter");
   await page.keyboard.down("Enter");

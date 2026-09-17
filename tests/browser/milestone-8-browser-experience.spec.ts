@@ -180,6 +180,9 @@ test("exposes fullscreen controls and the reduced-motion presentation state", as
     "data-reduced-motion",
     "true",
   );
+  await expect(
+    page.evaluate(() => window.triggerKnightDiagnostics),
+  ).resolves.toBeUndefined();
 });
 
 test("handles fullscreen entry, exit, resize, and denied or unsupported hosts", async ({
@@ -380,13 +383,13 @@ test("reduced motion keeps timing and committed results durable", async ({
   const reducedPage = await reducedContext.newPage();
   try {
     await seedDisabledTutorialProfile(normalPage);
-    await normalPage.goto("/?manual=1&seed=m4-policy-3");
+    await normalPage.goto("/?manual=1&seed=m4-policy-3&diagnostics=1");
     const normalSummary = await advanceUntilResult(normalPage, 12_000, true);
     const normalTrace = await readTraceParity(normalPage);
 
     await reducedPage.emulateMedia({ reducedMotion: "reduce" });
     await seedDisabledTutorialProfile(reducedPage);
-    await reducedPage.goto("/?manual=1&seed=m4-policy-3");
+    await reducedPage.goto("/?manual=1&seed=m4-policy-3&diagnostics=1");
     const reducedSummary = await advanceUntilResult(reducedPage, 12_000, true);
     const reducedTrace = await readTraceParity(reducedPage);
 
@@ -399,7 +402,31 @@ test("reduced motion keeps timing and committed results durable", async ({
         terminalReason: "lifespan",
       });
       expect(summary.purchaseCount).toBeGreaterThan(0);
+      expect(summary.eventTypes).toContain("shop-purchased");
+      expect(summary.eventTypes).toContain("battle-started");
+      expect(summary.eventTypes).toContain("run-ended");
     }
+    await expect(normalPage.locator("#run-result")).toHaveAttribute(
+      "data-result-state",
+      "committed",
+    );
+    await expect(normalPage.locator("#result-terminal-reason")).toHaveText(
+      "Lifespan depleted",
+    );
+    await expect(normalPage.locator(".result-score-actions")).toBeVisible();
+    await expect(
+      normalPage.getByRole("button", { name: "Skip score count" }),
+    ).toBeHidden();
+    await normalPage
+      .getByRole("button", { name: "Main menu", exact: true })
+      .click();
+    await expect(normalPage.locator("#title-screen")).toBeVisible();
+    await normalPage.getByRole("button", { name: "Start run" }).click();
+    await expect(normalPage.locator("#gameplay-screen")).toBeVisible();
+    await expect(normalPage.getByTestId("game-status")).toHaveText("Step 0");
+    await expect(normalPage.locator("#tutorial-panel")).toBeVisible();
+    await normalPage.getByRole("button", { name: "Dismiss tutorial" }).click();
+    await expect(normalPage.locator("#tutorial-panel")).toBeHidden();
     expect(reducedTrace).toEqual(normalTrace);
 
     const headless = createGameplayExecution(
@@ -442,7 +469,7 @@ test("reduced motion keeps timing and committed results durable", async ({
       if (value === null) throw new Error("Expected a committed profile");
       return value;
     }, PROFILE_STORAGE_KEY);
-    await reducedPage.goto("/?manual=1&seed=m4-policy-3");
+    await reducedPage.goto("/?manual=1&seed=m4-policy-3&diagnostics=1");
     expect(
       await reducedPage.evaluate(
         (key) => localStorage.getItem(key),
@@ -501,13 +528,12 @@ test("dismisses the original session-over screen with keyboard activation", asyn
   );
 });
 
-test("completes both gameplay death paths and starts another real browser run", async ({
+test("completes the combat death path and starts another real browser run", async ({
   browser,
 }) => {
   test.setTimeout(120_000);
   for (const scenario of [
     { seed: "m4-policy-2211", reason: "combat", maxSteps: 20_000 },
-    { seed: "m4-policy-3", reason: "lifespan", maxSteps: 12_000 },
   ] as const) {
     const context = await browser.newContext({
       viewport: { width: 640, height: 360 },
@@ -516,7 +542,7 @@ test("completes both gameplay death paths and starts another real browser run", 
     const page = await context.newPage();
     try {
       await seedDisabledTutorialProfile(page);
-      await page.goto(`/?manual=1&seed=${scenario.seed}`);
+      await page.goto(`/?manual=1&seed=${scenario.seed}&diagnostics=1`);
       const summary = await advanceUntilResult(page, scenario.maxSteps, true);
       expect(summary.seed).toBe(scenario.seed);
       expect(summary.terminalReason, JSON.stringify(summary)).toBe(

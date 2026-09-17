@@ -244,9 +244,12 @@ the latest transition's events; they are not new event notifications. The existi
 starts a fresh sequence. Automatic hosts disable dispatch-time rendering and
 call `render` at display cadence.
 
-In the development browser, call `window.triggerKnightDiagnostics.read()` in
-the console. This hook is absent from production builds. Browser sessions also
-provide `readDiagnostics()`. `compareGameplayTraces` reports the first differing
+For a development browser session that needs the complete gameplay trace, add
+`diagnostics=1`, for example `/?manual=1&diagnostics=1`, then call
+`window.triggerKnightDiagnostics.read()` in the console. Ordinary development
+sessions do not retain historical checkpoints. This hook is absent from
+production builds. Browser sessions also provide `readDiagnostics()` when
+diagnostics were requested. `compareGameplayTraces` reports the first differing
 execution field.
 
 ### Replay retained simulations

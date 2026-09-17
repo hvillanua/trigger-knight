@@ -5,7 +5,7 @@ const VISUAL_VIEWPORT = Object.freeze({ width: 480, height: 320 });
 const VISUAL_DEVICE_SCALE_FACTOR = 1;
 
 async function openReadyWorld(page: Page) {
-  await page.goto("/?manual=1");
+  await page.goto("/?manual=1&diagnostics=1");
   const canvas = page.getByRole("img", { name: "Trigger Knight game view" });
   await expect(canvas).toHaveAttribute(
     "data-asset-source",
@@ -231,7 +231,7 @@ test("checks the controlled world frame and attaches human-review evidence", asy
 test("uses one offscreen canvas for the static scenery cache", async ({
   page,
 }) => {
-  await page.goto("/?manual=1");
+  await page.goto("/?manual=1&diagnostics=1");
 
   const cachedCanvasDraws = await page.evaluate(async (modulePath) => {
     const { CanvasPresentation } = (await import(
@@ -527,7 +527,7 @@ test("omits a missing original building without drawing a fallback", async ({
   await page.route("**/assets/original/images/366.png", (route) =>
     route.abort(),
   );
-  await page.goto("/?manual=1");
+  await page.goto("/?manual=1&diagnostics=1");
 
   const fallbackCalls = await page.evaluate(async (modulePath) => {
     const { CanvasPresentation } = (await import(
@@ -1339,7 +1339,7 @@ test("omits a missing hit frame without substituting a burst", async ({
   await page.route("**/assets/original/images/119.png", (route) =>
     route.abort(),
   );
-  await page.goto("/?manual=1");
+  await page.goto("/?manual=1&diagnostics=1");
 
   const result = await page.evaluate(async (modulePath) => {
     const { CanvasPresentation } = (await import(
