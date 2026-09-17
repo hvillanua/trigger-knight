@@ -665,6 +665,10 @@ const settingsController = createSettingsController(
   currentSettings.bindings,
 );
 
+const diagnosticsRequested =
+  import.meta.env.DEV &&
+  new URLSearchParams(window.location.search).get("diagnostics") === "1";
+
 const activeRunController = createBrowserActiveRunController({
   gameplayEngine,
   presentation,
@@ -672,7 +676,7 @@ const activeRunController = createBrowserActiveRunController({
   sound: soundEffects,
   ruleset: ORIGINAL_V13_RULESET_ID,
   manualClock,
-  retainDiagnostics: import.meta.env.DEV,
+  retainDiagnostics: diagnosticsRequested,
   devSeedOverride,
   isGameplayScreen: () => screenNavigation?.current() === "gameplay",
   readSettings: () => currentSettings,
@@ -727,7 +731,7 @@ function syncReducedMotion(): void {
 syncReducedMotion();
 reducedMotionQuery?.addEventListener("change", syncReducedMotion);
 
-if (import.meta.env.DEV) {
+if (diagnosticsRequested) {
   window.triggerKnightDiagnostics = Object.freeze({
     read: () => {
       if (activeRunController === undefined) {
@@ -736,6 +740,9 @@ if (import.meta.env.DEV) {
       return activeRunController.readDiagnostics();
     },
   });
+}
+
+if (import.meta.env.DEV) {
   window.triggerKnightSoundDiagnostics = Object.freeze({
     read: () => soundEffects.readDiagnostics(),
   });

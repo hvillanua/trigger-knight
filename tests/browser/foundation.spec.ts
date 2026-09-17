@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test("loads the browser and Canvas foundation", async ({ page }) => {
-  await page.goto("/?manual=1");
+  await page.goto("/?manual=1&diagnostics=1");
 
   await expect(
     page.getByRole("heading", { name: "Trigger Knight" }),
@@ -28,7 +28,7 @@ test("loads the browser and Canvas foundation", async ({ page }) => {
 test("projects the complete 480x320 world camera into wide and tall output", async ({
   page,
 }) => {
-  await page.goto("/?manual=1");
+  await page.goto("/?manual=1&diagnostics=1");
 
   const canvas = page.getByRole("img", { name: "Trigger Knight game view" });
   await canvas.evaluate((element) => {
@@ -82,7 +82,7 @@ test("projects the complete 480x320 world camera into wide and tall output", asy
 test("interpolates public observations without mutating gameplay", async ({
   page,
 }) => {
-  await page.goto("/?manual=1");
+  await page.goto("/?manual=1&diagnostics=1");
 
   const result = await page
     .getByRole("img", { name: "Trigger Knight game view" })
@@ -191,7 +191,7 @@ test("sizes the Canvas backing store from its content box after a DPR change", a
   context,
   page,
 }) => {
-  await page.goto("/?manual=1");
+  await page.goto("/?manual=1&diagnostics=1");
 
   const canvas = page.getByRole("img", { name: "Trigger Knight game view" });
   await expect(canvas).toHaveAttribute("data-renderer", "canvas-2d");

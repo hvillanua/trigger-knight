@@ -27,7 +27,8 @@ async function installFrames(page: Page, url = "/"): Promise<void> {
       pending.forEach((callback) => callback(time));
     };
   });
-  await page.goto(url);
+  const separator = url.includes("?") ? "&" : "?";
+  await page.goto(`${url}${separator}diagnostics=1`);
   await expect(page.locator("#game-canvas")).toHaveAttribute(
     "data-renderer",
     "canvas-2d",
@@ -38,7 +39,7 @@ async function installFrames(page: Page, url = "/"): Promise<void> {
 test("normal play advances automatically with no manual control", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/?diagnostics=1");
   await expect(page.getByRole("button", { name: "Advance run" })).toHaveCount(
     0,
   );

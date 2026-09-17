@@ -13,7 +13,7 @@
     "tsBuildInfoFile": "./dist/simulation/tsconfig.tsbuildinfo",
     "types": ["node"]
   },
-  "files": [
+  "include": [
     "src/application/gameplay-engine.ts",
     "src/domain/rulesets.ts",
     "src/simulation/canonical-json.ts",
@@ -22,5 +22,6 @@
     "src/simulation/simulation-experiment.ts",
     "src/simulation/simulation-replay.ts",
     "src/simulation/simulation-runner.ts"
-  ]
+  ],
+  "exclude": ["tests/architecture/fixtures"]
 }

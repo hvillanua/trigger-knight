@@ -4,7 +4,7 @@ import type * as CanvasModule from "../../src/browser/canvas-presentation.js";
 test("draws original animation poses and preserves positions through battle transitions", async ({
   page,
 }, testInfo) => {
-  await page.goto("/?manual=1");
+  await page.goto("/?manual=1&diagnostics=1");
   const result = await page.evaluate(async (modulePath) => {
     const { CanvasPresentation } = (await import(
       modulePath

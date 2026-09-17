@@ -35,12 +35,13 @@ Run commands from the repository root:
 | Build production output        | `npm run build`              |
 
 Pass a test path after `--` to run focused tests. `npm ci` activates one
-repository-owned Git hook: `.githooks/pre-push`, which runs `npm run validate`
-before pushing. There is no repository-owned commit hook or other validation
-hook. Re-run `npm run setup:hooks` if local Git configuration is replaced after
-installation. The repository-owned pre-push hook is the complete validation gate
-for code-affecting changes. GitHub Actions is intentionally disabled and is not a
-merge gate.
+repository-owned Git hook: `.githooks/pre-push`, which runs the complete
+validation gate before pushing code-affecting changes. Documentation-only pushes
+skip code validation, and new branches use the complete gate because their
+remote comparison is not yet known. There is no repository-owned commit hook or
+other validation hook. Re-run `npm run setup:hooks` if local Git configuration
+is replaced after installation. GitHub Actions is intentionally disabled and is
+not a merge gate.
 
 For the architecture and validation-runner tooling tests, use this focused
 command:
@@ -244,9 +245,12 @@ the latest transition's events; they are not new event notifications. The existi
 starts a fresh sequence. Automatic hosts disable dispatch-time rendering and
 call `render` at display cadence.
 
-In the development browser, call `window.triggerKnightDiagnostics.read()` in
-the console. This hook is absent from production builds. Browser sessions also
-provide `readDiagnostics()`. `compareGameplayTraces` reports the first differing
+For a development browser session that needs the complete gameplay trace, add
+`diagnostics=1`, for example `/?manual=1&diagnostics=1`, then call
+`window.triggerKnightDiagnostics.read()` in the console. Ordinary development
+sessions do not retain historical checkpoints. This hook is absent from
+production builds. Browser sessions also provide `readDiagnostics()` when
+diagnostics were requested. `compareGameplayTraces` reports the first differing
 execution field.
 
 ### Replay retained simulations

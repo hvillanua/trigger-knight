@@ -88,7 +88,7 @@ test("browser and headless progression agree despite storage and presentation ca
     parityConfig.initialProfile,
     headless.settlement,
   );
-  await page.goto("/?manual=1");
+  await page.goto("/?manual=1&diagnostics=1");
 
   const variants = await page.evaluate(
     async ({ config, schedule }) => {
@@ -231,7 +231,7 @@ test("a migrated profile is committed before result presentation and survives na
     },
     { key: "trigger-knight.profile", value: migratedEnvelope },
   );
-  await page.goto("/?manual=1");
+  await page.goto("/?manual=1&diagnostics=1");
   await page.clock.install();
   await page.clock.pauseAt(new Date(Date.now() + 1_000));
   await expect(page.getByTestId("profile-summary")).toContainText(
@@ -304,7 +304,7 @@ test("a migrated profile is committed before result presentation and survives na
 
   // Navigate while the optional score count is still running. The next page
   // starts from the committed profile rather than the result animation.
-  await page.goto("/?manual=1");
+  await page.goto("/?manual=1&diagnostics=1");
   expect(
     await page.evaluate(
       (key) => localStorage.getItem(key),
