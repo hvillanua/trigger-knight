@@ -313,6 +313,29 @@ describe("browser sound effects", () => {
     expect(sound.readDiagnostics().deliveredCues).toEqual(["item-use"]);
   });
 
+  it("preserves music while the result screen starts the next session", async () => {
+    const { context, sound } = setup();
+    await sound.initialize();
+    sound.setSession("run-1");
+    sound.startGameplayMusic();
+    sound.presentTransition("run-1", 1, [event("battle-started")]);
+
+    const musicSource = context.sources.find((source) => source.loop);
+    const effectSource = context.sources.find((source) => !source.loop);
+    expect(musicSource).toBeDefined();
+    expect(effectSource).toBeDefined();
+
+    sound.setSession("run-2");
+
+    expect(musicSource?.stopped).toBe(false);
+    expect(effectSource?.stopped).toBe(true);
+    expect(sound.readDiagnostics().musicPlaying).toBe(true);
+
+    sound.setSession(null);
+    expect(musicSource?.stopped).toBe(true);
+    expect(sound.readDiagnostics().musicPlaying).toBe(false);
+  });
+
   it("suspends and resumes visibly without replaying hidden cues", async () => {
     const { context, sound } = setup();
     await sound.initialize();
@@ -389,7 +412,7 @@ describe("browser sound effects", () => {
       "notice",
       "applause",
     ]);
-    expect(context.sources.filter((source) => source.loop)).toHaveLength(2);
+    expect(context.sources.filter((source) => source.loop)).toHaveLength(1);
 
     sound.setScoreCounting(false);
     sound.startGameplayMusic();
@@ -399,5 +422,25 @@ describe("browser sound effects", () => {
 
     expect(sound.readDiagnostics().musicPlaying).toBe(false);
     expect(sound.readDiagnostics().scoreLoopPlaying).toBe(false);
+  });
+
+  it("repeats the score cue at the original presentation cadence", async () => {
+    vi.useFakeTimers();
+    try {
+      const { context, sound } = setup();
+      await sound.initialize();
+      sound.setSession("run-1");
+      sound.setScoreCounting(true);
+
+      expect(context.sources.filter((source) => !source.loop)).toHaveLength(1);
+      vi.advanceTimersByTime(70);
+      expect(context.sources.filter((source) => !source.loop)).toHaveLength(3);
+
+      sound.setScoreCounting(false);
+      vi.advanceTimersByTime(1000);
+      expect(context.sources.filter((source) => !source.loop)).toHaveLength(3);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

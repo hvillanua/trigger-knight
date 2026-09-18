@@ -13,6 +13,7 @@ const MAX_RETAINED_CUES = 256;
 const MUSIC_TARGET_GAIN = 0.9;
 const MUSIC_FADE_STEPS = 90;
 const MUSIC_FADE_INTERVAL_MS = 1000 / 30;
+const SCORE_CUE_INTERVAL_MS = 1000 / 30;
 
 export const ORIGINAL_SOUND_ASSET_FILE_NAMES = Object.freeze({
   applause: "513_SFXApplause.mp3",
@@ -351,7 +352,7 @@ export function createBrowserSoundEffects(
   let musicBuffer: SoundBuffer | undefined;
   let musicFailed = false;
   let musicSource: SoundAudioSource | undefined;
-  let scoreLoopSource: SoundAudioSource | undefined;
+  let scoreCueTimer: ReturnType<typeof setInterval> | undefined;
   let musicRequested = false;
   let scoreCounting = false;
   let musicGainLevel = 0;
@@ -398,21 +399,22 @@ export function createBrowserSoundEffects(
     }
   };
 
-  const stopScoreLoopSource = (): void => {
-    const source = scoreLoopSource;
-    scoreLoopSource = undefined;
-    if (source === undefined) return;
-    try {
-      source.stop();
-    } catch {
-      // Audio teardown remains best effort.
-    }
+  const stopScoreCueTimer = (): void => {
+    if (scoreCueTimer === undefined) return;
+    clearInterval(scoreCueTimer);
+    scoreCueTimer = undefined;
+  };
+
+  const stopEffects = (): void => {
+    pendingCues = [];
+    scoreCounting = false;
+    stopOneShotSources();
+    stopScoreCueTimer();
   };
 
   const stopAllSources = (): void => {
-    stopOneShotSources();
+    stopEffects();
     stopMusicSource();
-    stopScoreLoopSource();
   };
 
   const drain = (): void => {
@@ -515,10 +517,9 @@ export function createBrowserSoundEffects(
     }
   };
 
-  const startScoreLoopSource = (): void => {
+  const playScoreCue = (): void => {
     if (
       !scoreCounting ||
-      scoreLoopSource !== undefined ||
       context === undefined ||
       context.state !== "running" ||
       !visible ||
@@ -530,20 +531,33 @@ export function createBrowserSoundEffects(
     try {
       const source = context.createBufferSource();
       source.buffer = buffers.get("experience-loop") ?? null;
-      source.loop = true;
+      source.loop = false;
       source.connect(sfxGain);
-      source.onEnded = () => {
-        if (scoreLoopSource === source) scoreLoopSource = undefined;
-      };
-      scoreLoopSource = source;
+      source.onEnded = () => activeSources.delete(source);
+      activeSources.add(source);
       source.start();
       retain(playedCues, "experience-loop");
     } catch {
-      scoreLoopSource = undefined;
       if (status !== "unavailable" && status !== "failed") {
         notifyStatus("degraded");
       }
     }
+  };
+
+  const startScoreCueTimer = (): void => {
+    if (scoreCueTimer !== undefined) return;
+    if (
+      !scoreCounting ||
+      context === undefined ||
+      context.state !== "running" ||
+      !visible ||
+      buffers.get("experience-loop") === undefined ||
+      sfxGain === undefined
+    ) {
+      return;
+    }
+    playScoreCue();
+    scoreCueTimer = setInterval(playScoreCue, SCORE_CUE_INTERVAL_MS);
   };
 
   const resume = async (): Promise<void> => {
@@ -563,7 +577,7 @@ export function createBrowserSoundEffects(
     if (baseStatus === "ready" || baseStatus === "degraded") {
       notifyStatus(baseStatus);
       startMusicSource();
-      startScoreLoopSource();
+      startScoreCueTimer();
       drain();
     }
   };
@@ -693,10 +707,12 @@ export function createBrowserSoundEffects(
     },
     setSession(nextSessionId: string | null): void {
       if (sessionId === nextSessionId) return;
-      stopAllSources();
-      musicRequested = false;
-      scoreCounting = false;
-      pendingCues = [];
+      const preserveMusic = sessionId !== null && nextSessionId !== null;
+      stopEffects();
+      if (!preserveMusic) {
+        musicRequested = false;
+        stopMusicSource();
+      }
       deliveredCues = [];
       playedCues = [];
       lastTransitionStep = -1;
@@ -763,11 +779,11 @@ export function createBrowserSoundEffects(
     setScoreCounting(counting: boolean): void {
       scoreCounting = counting;
       if (!counting) {
-        stopScoreLoopSource();
+        stopScoreCueTimer();
         return;
       }
       void initialize();
-      startScoreLoopSource();
+      startScoreCueTimer();
     },
     setVisible(nextVisible: boolean): void {
       if (visible === nextVisible) return;
@@ -775,7 +791,7 @@ export function createBrowserSoundEffects(
       if (!visible) {
         pendingCues = [];
         stopOneShotSources();
-        stopScoreLoopSource();
+        stopScoreCueTimer();
         if (context?.state === "running") {
           try {
             void context.suspend().catch(() => {});
@@ -790,10 +806,7 @@ export function createBrowserSoundEffects(
       void resume();
     },
     stopEffects(): void {
-      pendingCues = [];
-      scoreCounting = false;
-      stopOneShotSources();
-      stopScoreLoopSource();
+      stopEffects();
     },
     stop(): void {
       musicRequested = false;
@@ -809,11 +822,9 @@ export function createBrowserSoundEffects(
         playedCues: Object.freeze([...playedCues]),
         failedCues: Object.freeze([...failedCues]),
         activeSourceCount:
-          activeSources.size +
-          (musicSource === undefined ? 0 : 1) +
-          (scoreLoopSource === undefined ? 0 : 1),
+          activeSources.size + (musicSource === undefined ? 0 : 1),
         musicPlaying: musicSource !== undefined,
-        scoreLoopPlaying: scoreLoopSource !== undefined,
+        scoreLoopPlaying: scoreCueTimer !== undefined,
       });
     },
   });
