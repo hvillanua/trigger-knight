@@ -114,7 +114,7 @@ body {
   margin-top: 1.5rem;
 }
 
-.gameplay-screen:fullscreen {
+.foundation:fullscreen {
   width: 100vw;
   height: 100vh;
   min-height: 0;
@@ -126,18 +126,18 @@ body {
   background: #05070d;
 }
 
-.gameplay-screen:fullscreen .gameplay-stage {
+.foundation:fullscreen > .screen {
   width: min(100%, 150vh);
   max-width: 100%;
   max-height: 100%;
 }
 
 @supports (height: 100dvh) {
-  .gameplay-screen:fullscreen {
+  .foundation:fullscreen {
     height: 100dvh;
   }
 
-  .gameplay-screen:fullscreen .gameplay-stage {
+  .foundation:fullscreen > .screen {
     width: min(100%, 150dvh);
   }
 }
@@ -753,7 +753,8 @@ body {
 .gameplay-stage[data-tutorial-page] *,
 .gameplay-stage[data-paused="true"],
 .gameplay-stage[data-paused="true"] *,
-.gameplay-controls .stage-fullscreen {
+.gameplay-controls .stage-fullscreen,
+.fullscreen-exit-control {
   cursor:
     url("../assets/original/images/12.png") 4 2,
     none;
@@ -890,6 +891,33 @@ body {
   line-height: 1;
 }
 
+.fullscreen-exit-control {
+  position: fixed;
+  top: 0.15rem;
+  right: 0.15rem;
+  z-index: 20;
+  min-width: 8.5rem;
+  min-height: 2.75rem;
+  padding: 0.2rem 0.35rem;
+  border: 0;
+  color: #f7f1df;
+  background: transparent;
+  font-family: "Trigger Knight Calibri 16", sans-serif;
+  font-size: clamp(0.85rem, 3vw, 1.1rem);
+  font-weight: 650;
+  text-shadow:
+    -1px -1px 0 #080b14,
+    1px -1px 0 #080b14,
+    -1px 1px 0 #080b14,
+    1px 1px 0 #080b14;
+}
+
+.fullscreen-exit-control:hover,
+.fullscreen-exit-control:focus-visible {
+  color: #57c8ee;
+  background: rgb(8 11 20 / 16%);
+}
+
 .stage-action {
   position: absolute;
   top: 0.15rem;
@@ -906,6 +934,18 @@ body {
   aspect-ratio: 3 / 2;
   min-height: 20rem;
   overflow-y: auto;
+}
+
+.foundation:fullscreen > #run-result.run-result {
+  width: min(100%, 150vh);
+  max-width: 100%;
+  max-height: 100%;
+}
+
+@supports (height: 100dvh) {
+  .foundation:fullscreen > #run-result.run-result {
+    width: min(100%, 150dvh);
+  }
 }
 
 .run-result h2,

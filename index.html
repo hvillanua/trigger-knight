@@ -10,7 +10,26 @@
     <title>Trigger Knight</title>
   </head>
   <body>
-    <main class="foundation">
+    <main id="app-shell" class="foundation">
+      <button
+        id="exit-fullscreen"
+        class="fullscreen-exit-control"
+        type="button"
+        aria-label="Exit fullscreen"
+        aria-describedby="fullscreen-status"
+        hidden
+      >
+        EXIT FULLSCREEN
+      </button>
+      <p
+        id="fullscreen-status"
+        class="help-text accessible-stage-status"
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+      >
+        Fullscreen is available.
+      </p>
       <header class="site-header">
         <h1>Trigger Knight</h1>
         <p>Run, fight, and keep your discoveries.</p>
@@ -254,15 +273,6 @@
               Main menu
             </button>
           </div>
-          <p
-            id="fullscreen-status"
-            class="help-text accessible-stage-status"
-            role="status"
-            aria-live="polite"
-            aria-atomic="true"
-          >
-            Fullscreen is available.
-          </p>
         </div>
         <p
           class="status accessible-hud"
