@@ -189,7 +189,9 @@ export function createScreenNavigation(
   };
 
   const show = (screen: ScreenId, focus = true): void => {
-    if (screen !== "gameplay") options.onLeaveGameplay();
+    if (currentScreen === "gameplay" && screen !== "gameplay") {
+      options.onLeaveGameplay();
+    }
     for (const [id, element] of Object.entries(elements.screens) as [
       ScreenId,
       HTMLElement,
