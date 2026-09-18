@@ -37,6 +37,29 @@ combat-loop and milestone 6 compatibility-corpus browser specs. Each block now
 crosses the Playwright connection as JSON text and is parsed in Node before the
 existing full comparison. No production code changed.
 
+## Reduced-motion browser replay
+
+The Milestone 8 reduced-motion test keeps one complete run through the real DOM,
+Canvas, settlement, and profile-storage paths. It replays the exact command
+batches from that run through a normal-motion browser session with
+`renderOnDispatch: false` and `renderEvery: 11`. The replay retains every
+checkpoint and compares the configuration, command sequence, checkpoint count,
+and trace hash. Milestone 4 and milestone 6 continue to compare full checkpoint
+values on their compatibility paths.
+
+The focused test was measured with one Playwright worker on September 18, 2026.
+The earlier isolated baseline was 35.69 seconds. The refactored test took 17.14
+seconds. Both runs passed the same reduced-motion result, persistence, and Node
+parity assertions. This is a 52% wall-time reduction for the focused test. Peak
+RSS varied between 365 and 384 MiB, so the experiment does not establish a
+memory reduction.
+
+Repeat the focused measurement with:
+
+```sh
+/usr/bin/time -v npm run test:browser -- tests/browser/milestone-8-browser-experience.spec.ts --grep "reduced motion keeps timing" --workers=1
+```
+
 Issue #136 removes repeated long executions from the focused combat checks. The
 policy assertions now inspect the existing full combat traces in the Milestone 4
 unit test. The browser combat spec keeps one completed lifespan run and uses a

@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 test("loads the browser and Canvas foundation", async ({ page }) => {
-  await page.goto("/?manual=1&diagnostics=1");
+  await page.goto("/?manual=1");
 
   await expect(
     page.getByRole("heading", { name: "Trigger Knight" }),
@@ -28,7 +28,7 @@ test("loads the browser and Canvas foundation", async ({ page }) => {
 test("projects the complete 480x320 world camera into wide and tall output", async ({
   page,
 }) => {
-  await page.goto("/?manual=1&diagnostics=1");
+  await page.goto("/?manual=1");
 
   const canvas = page.getByRole("img", { name: "Trigger Knight game view" });
   await canvas.evaluate((element) => {

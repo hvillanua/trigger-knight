@@ -307,7 +307,7 @@ test("keeps a failed completed-run save visible until retry succeeds", async ({
       },
     });
   }, PROFILE_STORAGE_KEY);
-  await page.goto("/?manual=1&diagnostics=1");
+  await page.goto("/?manual=1");
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
   await page.evaluate(() => {
     const advance = document.querySelector<HTMLButtonElement>("#advance-run");

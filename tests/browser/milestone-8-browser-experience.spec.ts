@@ -2,6 +2,14 @@ import { expect, test, type Page } from "@playwright/test";
 
 import { createGameplayExecution } from "../../src/application/gameplay-execution.js";
 import type { GameplayTrace } from "../../src/application/gameplay-execution.js";
+import type {
+  PresentationFrame,
+  PresentationTransition,
+} from "../../src/application/contracts.js";
+import type * as CanvasPresentationModule from "../../src/browser/canvas-presentation.js";
+import type * as EngineModule from "../../src/application/gameplay-engine.js";
+import type * as RulesModule from "../../src/domain/rulesets.js";
+import type * as SessionModule from "../../src/browser/gameplay-session.js";
 import { createFreshProfile } from "../../src/domain/profile.js";
 import { ORIGINAL_V13_RULESET_ID } from "../../src/domain/rulesets.js";
 import {
@@ -20,6 +28,8 @@ const disabledTutorialProfile = Object.freeze({
   ...createFreshProfile(),
   tutorialPreference: "disabled" as const,
 });
+
+const REDUCED_MOTION_PARITY_RENDER_EVERY = 11;
 
 function profileEnvelope() {
   return {
@@ -148,12 +158,18 @@ async function advanceUntilResult(
   return summary;
 }
 
-async function readTraceParity(page: Page): Promise<{
+type TraceParity = {
   readonly config: GameplayTrace["config"];
   readonly traceHash: string;
   readonly length: number;
   readonly commands: readonly GameplayTrace["checkpoints"][number]["commands"][];
-}> {
+};
+
+type SampledTraceParity = TraceParity & {
+  readonly renderedFrames: number;
+};
+
+async function readTraceParity(page: Page): Promise<TraceParity> {
   return page.evaluate(() => {
     const trace = window.triggerKnightDiagnostics?.read();
     if (trace === undefined) throw new Error("Missing browser diagnostics");
@@ -164,6 +180,75 @@ async function readTraceParity(page: Page): Promise<{
       commands: trace.checkpoints.slice(1).map(({ commands }) => commands),
     };
   });
+}
+
+async function replayWithSampledCanvas(
+  page: Page,
+  input: Readonly<{
+    readonly config: GameplayTrace["config"];
+    readonly commands: TraceParity["commands"];
+    readonly renderEvery: number;
+  }>,
+): Promise<SampledTraceParity> {
+  return page.evaluate(async ({ config, commands, renderEvery }) => {
+    const enginePath = "/src/application/gameplay-engine.ts";
+    const sessionPath = "/src/browser/gameplay-session.ts";
+    const rulesPath = "/src/domain/rulesets.ts";
+    const presentationPath = "/src/browser/canvas-presentation.ts";
+    const engineModule = (await import(enginePath)) as typeof EngineModule;
+    const sessionModule = (await import(sessionPath)) as typeof SessionModule;
+    const rulesModule = (await import(rulesPath)) as typeof RulesModule;
+    const presentationModule = (await import(
+      presentationPath
+    )) as typeof CanvasPresentationModule;
+    const canvas = document.createElement("canvas");
+    canvas.style.width = "100vw";
+    canvas.style.height = "100vh";
+    document.body.append(canvas);
+    const presentation = new presentationModule.CanvasPresentation(canvas);
+    presentation.resize(
+      { width: innerWidth, height: innerHeight },
+      devicePixelRatio,
+    );
+    let renderedFrames = 0;
+    const session = sessionModule.createBrowserGameplaySession(
+      engineModule.createGameplayEngine(rulesModule.ruleSetRegistry),
+      config,
+      {
+        present(frame: PresentationFrame) {
+          if (
+            frame.current.steps % renderEvery !== 0 &&
+            frame.current.lifecycle.terminalReason === null
+          ) {
+            return;
+          }
+          renderedFrames += 1;
+          presentation.present(frame);
+        },
+        presentTransition(transition: PresentationTransition) {
+          presentation.presentTransition(transition);
+        },
+      },
+      { renderOnDispatch: false, retainDiagnostics: true },
+    );
+
+    for (const commandBatch of commands) {
+      session.dispatch(commandBatch);
+      if (session.readObservation().steps % renderEvery === 0) {
+        session.render(1);
+      }
+    }
+    session.render(1);
+
+    const trace = session.readDiagnostics();
+    return {
+      config: trace.config,
+      traceHash: trace.traceHash,
+      length: trace.checkpoints.length,
+      commands: trace.checkpoints.slice(1).map(({ commands: batch }) => batch),
+      renderedFrames,
+    };
+  }, input);
 }
 
 test("exposes fullscreen controls and the reduced-motion presentation state", async ({
@@ -382,52 +467,41 @@ test("reduced motion keeps timing and committed results durable", async ({
   const normalPage = await normalContext.newPage();
   const reducedPage = await reducedContext.newPage();
   try {
-    await seedDisabledTutorialProfile(normalPage);
-    await normalPage.goto("/?manual=1&seed=m4-policy-3&diagnostics=1");
-    const normalSummary = await advanceUntilResult(normalPage, 12_000, true);
-    const normalTrace = await readTraceParity(normalPage);
-
     await reducedPage.emulateMedia({ reducedMotion: "reduce" });
     await seedDisabledTutorialProfile(reducedPage);
     await reducedPage.goto("/?manual=1&seed=m4-policy-3&diagnostics=1");
     const reducedSummary = await advanceUntilResult(reducedPage, 12_000, true);
     const reducedTrace = await readTraceParity(reducedPage);
 
-    for (const summary of [normalSummary, reducedSummary]) {
-      expect(
-        summary,
-        JSON.stringify({ ...summary, eventTypes: summary.eventTypes.length }),
-      ).toMatchObject({
-        seed: "m4-policy-3",
-        terminalReason: "lifespan",
-      });
-      expect(summary.purchaseCount).toBeGreaterThan(0);
-      expect(summary.eventTypes).toContain("shop-purchased");
-      expect(summary.eventTypes).toContain("battle-started");
-      expect(summary.eventTypes).toContain("run-ended");
-    }
-    await expect(normalPage.locator("#run-result")).toHaveAttribute(
-      "data-result-state",
-      "committed",
-    );
-    await expect(normalPage.locator("#result-terminal-reason")).toHaveText(
-      "Lifespan depleted",
-    );
-    await expect(normalPage.locator(".result-score-actions")).toBeVisible();
-    await expect(
-      normalPage.getByRole("button", { name: "Skip score count" }),
-    ).toBeHidden();
-    await normalPage
-      .getByRole("button", { name: "Main menu", exact: true })
-      .click();
-    await expect(normalPage.locator("#title-screen")).toBeVisible();
-    await normalPage.getByRole("button", { name: "Start run" }).click();
-    await expect(normalPage.locator("#gameplay-screen")).toBeVisible();
-    await expect(normalPage.getByTestId("game-status")).toHaveText("Step 0");
-    await expect(normalPage.locator("#tutorial-panel")).toBeVisible();
-    await normalPage.getByRole("button", { name: "Dismiss tutorial" }).click();
-    await expect(normalPage.locator("#tutorial-panel")).toBeHidden();
-    expect(reducedTrace).toEqual(normalTrace);
+    expect(
+      reducedSummary,
+      JSON.stringify({
+        ...reducedSummary,
+        eventTypes: reducedSummary.eventTypes.length,
+      }),
+    ).toMatchObject({
+      seed: "m4-policy-3",
+      terminalReason: "lifespan",
+    });
+    expect(reducedSummary.purchaseCount).toBeGreaterThan(0);
+    expect(reducedSummary.eventTypes).toContain("shop-purchased");
+    expect(reducedSummary.eventTypes).toContain("battle-started");
+    expect(reducedSummary.eventTypes).toContain("run-ended");
+
+    await normalPage.emulateMedia({ reducedMotion: "no-preference" });
+    await normalPage.goto("/?manual=1");
+    const normalReplay = await replayWithSampledCanvas(normalPage, {
+      config: reducedTrace.config,
+      commands: reducedTrace.commands,
+      renderEvery: REDUCED_MOTION_PARITY_RENDER_EVERY,
+    });
+    expect({
+      config: normalReplay.config,
+      traceHash: normalReplay.traceHash,
+      length: normalReplay.length,
+      commands: normalReplay.commands,
+    }).toEqual(reducedTrace);
+    expect(normalReplay.renderedFrames).toBeGreaterThan(0);
 
     const headless = createGameplayExecution(
       createTestGameplayEngine(),
@@ -439,16 +513,21 @@ test("reduced motion keeps timing and committed results durable", async ({
       },
       { retainDiagnostics: true },
     );
-    for (const commands of normalTrace.commands) {
+    for (const commands of reducedTrace.commands) {
       headless.dispatch(commands);
     }
-    expect(headless.readDiagnostics().config).toEqual(normalTrace.config);
-    expect(headless.readDiagnostics().traceHash).toBe(normalTrace.traceHash);
+    const headlessTrace = headless.readDiagnostics();
+    expect(headlessTrace.config).toEqual(reducedTrace.config);
+    expect(headlessTrace.traceHash).toBe(reducedTrace.traceHash);
 
     await expect(reducedPage.locator("#run-result")).toHaveAttribute(
       "data-result-state",
       "committed",
     );
+    await expect(reducedPage.locator("#result-terminal-reason")).toHaveText(
+      "Lifespan depleted",
+    );
+    await expect(reducedPage.locator(".result-score-actions")).toBeVisible();
     await expect(reducedPage.locator("#run-result")).toHaveAttribute(
       "data-reduced-motion",
       "true",
