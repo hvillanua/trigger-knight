@@ -91,6 +91,7 @@ interface ActiveRunRecord {
   readonly initialProfile: Readonly<ProfileState>;
   session: BrowserGameplaySession | undefined;
   clock: BrowserGameplayClock | undefined;
+  lastObservation: Readonly<GameObservation> | undefined;
   settlement: Readonly<CompletedRunSettlementInput> | undefined;
   commit: CompletedRunResult | undefined;
   sessionOverDismissed: boolean;
@@ -172,6 +173,7 @@ export function createBrowserActiveRunController(
         initialProfile: profile,
         session: undefined,
         clock: undefined,
+        lastObservation: undefined,
         settlement: undefined,
         commit: undefined,
         sessionOverDismissed: false,
@@ -179,6 +181,8 @@ export function createBrowserActiveRunController(
       activeRun = record;
       options.sound.setSession(record.completionId);
       options.sound.setPreferences(options.readSettings().sound);
+      options.sound.presentUiAction("activate");
+      options.sound.startGameplayMusic();
       options.onRunStarted(profile, startOptions.focus ?? true);
 
       const seed =
@@ -204,11 +208,19 @@ export function createBrowserActiveRunController(
           renderOnDispatch: options.manualClock,
           onTransition: (result) => {
             if (activeRun !== record) return;
+            const previousObservation = record.lastObservation;
+            record.lastObservation = result.observation;
+            const tutorialOpened =
+              previousObservation?.lifecycle.tutorialPage === null &&
+              result.observation.lifecycle.tutorialPage !== null;
             options.onTransition(result);
             options.sound.presentTransition(
               record.completionId,
               result.observation.steps,
               result.events,
+              tutorialOpened
+                ? (result.observation.lifecycle.tutorialPage ?? undefined)
+                : undefined,
             );
           },
           onCompletedRun: (run) => {
@@ -218,7 +230,11 @@ export function createBrowserActiveRunController(
           },
         },
       );
-      options.onInitialObservation(record.session.readObservation());
+      record.lastObservation = record.session.readObservation();
+      options.onInitialObservation(record.lastObservation);
+      if (record.lastObservation.lifecycle.tutorialPage !== null) {
+        options.sound.presentTutorial();
+      }
       if (!options.manualClock) {
         record.clock = createClock(record.session);
         record.clock.setVisible(document.visibilityState === "visible");

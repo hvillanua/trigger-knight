@@ -18,14 +18,13 @@ The behavioral specification in `research/` is the source of truth for original-
 The browser presentation uses original visual and font assets where available.
 Missing or failed visual assets are omitted, with no replacement artwork or
 procedural asset fallback. Text and controls remain usable without artwork. The
-original sound exports remain source and provenance records; this clean-room
-implementation uses independently authored sound effects under
-`src/assets/sound-effects/`. The preserved SWF in `original/` and its recorded
-exports in `exports/` are source and provenance records; reviewed original
-production copies belong under `src/assets/original/`, while authored sound files
-carry their own generator, hash, rights, and review metadata. Font redistribution
-rights are currently unverified, and the browser's font-role mapping is an
-explicit presentation choice rather than confirmed original text-field behavior.
+reviewed original sound exports under `src/assets/original/sounds/` are approved
+browser presentation inputs. The preserved SWF in `original/` and its recorded
+exports in `exports/` remain source and provenance records; production copies
+stay under `src/assets/original/` and retain the source artifact hash, extraction
+details, rights notice, and review date. Font redistribution rights are
+currently unverified, and the browser's font-role mapping is an explicit
+presentation choice rather than confirmed original text-field behavior.
 This policy does not permit copying decompiled ActionScript or generated
 behavioral research into the implementation, and it does not transfer copyright
 or grant a public license for the original assets.
@@ -60,7 +59,7 @@ The browser version must provide the main game screens, HUD information, interac
 
 The original coordinate scale is retained as abstract world units for the `original-v1.3` ruleset: one original stage coordinate unit equals one world unit, and the initial camera shows a 480x320-world-unit viewport. This preserves researched positions, distances, speeds, and thresholds without treating them as physical pixels. The renderer must project that camera into responsive, high-density, and fullscreen output while preserving the intended composition and mapping input back to world coordinates.
 
-The original 30 fps timing remains a 30 Hz gameplay simulation requirement because mechanics are frame-based. Rendering may run at the display refresh rate and interpolate between logical ticks; changing render cadence must not change gameplay outcomes. The presentation should use the original game visual and font assets where available and the approved independently authored sound effects; asset loading and playback must remain outside authoritative gameplay state.
+The original 30 fps timing remains a 30 Hz gameplay simulation requirement because mechanics are frame-based. Rendering may run at the display refresh rate and interpolate between logical ticks; changing render cadence must not change gameplay outcomes. The presentation should use the original game visual, font, music, and sound assets where available; asset loading and playback must remain outside authoritative gameplay state.
 
 When reviewed references provide evidence, the initial title screen, player-status screen, gameplay HUD, tutorial and pause overlays, prompts, and run-result screen should keep the original 480x320 composition, art placement, bands, icons, and layer order as their presentation baseline. Responsive projection and parallel accessible text may scale or letterbox that composition, but they must continue to describe only public gameplay state. Visual details and animation timing without evidence remain documented implementation decisions rather than claims about original behavior.
 

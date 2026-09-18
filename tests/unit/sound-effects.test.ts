@@ -13,6 +13,7 @@ import {
 class FakeSource implements SoundAudioSource {
   buffer: SoundBuffer | null = null;
   onEnded: (() => void) | undefined;
+  loop = false;
   started = false;
   stopped = false;
 
@@ -137,21 +138,49 @@ function setup() {
 }
 
 describe("sound cue mapping", () => {
-  it("covers public gameplay outcomes and leaves logical steps silent", () => {
+  it("maps public gameplay outcomes to the original sound symbols", () => {
     expect(soundCuesForEvent(event("battle-started"))).toEqual([
       "battle-start",
     ]);
-    expect(soundCuesForEvent(event("combat-phase-changed"))).toEqual([
-      "combat-attack",
-    ]);
-    expect(soundCuesForEvent(event("combat-hit"))).toEqual(["combat-hit"]);
+    expect(soundCuesForEvent(event("combat-phase-changed"))).toEqual([]);
+    expect(soundCuesForEvent(event("combat-hit"))).toEqual(["hit-01"]);
     expect(soundCuesForEvent(event("shop-purchased"))).toEqual([
-      "shop-purchase",
+      "event-triggered",
     ]);
     expect(soundCuesForEvent(event("item-used"))).toEqual(["item-use"]);
-    expect(soundCuesForEvent(event("battle-reward"))).toEqual(["reward"]);
-    expect(soundCuesForEvent(event("lifespan-death"))).toEqual(["death"]);
+    expect(soundCuesForEvent(event("battle-reward"))).toEqual([
+      "event-triggered",
+    ]);
+    expect(soundCuesForEvent(event("lifespan-death"))).toEqual([
+      "character-death",
+    ]);
+    expect(soundCuesForEvent(event("run-ended"))).toEqual([]);
+    expect(soundCuesForEvent({ type: "run-ended", reason: "combat" })).toEqual([
+      "character-death",
+    ]);
+    expect(soundCuesForEvent(event("achievement-unlocked"))).toEqual([]);
+    expect(soundCuesForEvent(event("encounter-promoted"))).toEqual(["event"]);
     expect(soundCuesForEvent(event("step-advanced"))).toEqual([]);
+  });
+
+  it("uses the staged original sound exports for every cue", async () => {
+    const { SOUND_CUE_ASSET_URLS, GAME_MUSIC_ASSET_URL } =
+      await import("../../src/sound/sound-effects.js");
+
+    expect(GAME_MUSIC_ASSET_URL).toContain(
+      "/assets/original/sounds/512_BGMGame.mp3",
+    );
+    expect(Object.values(SOUND_CUE_ASSET_URLS)).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining("513_SFXApplause.mp3"),
+        expect.stringContaining("515_SFXButtonPress.mp3"),
+        expect.stringContaining("516_SFXButtonSelect.mp3"),
+        expect.stringContaining("523_SFXHit01.mp3"),
+        expect.stringContaining("524_SFXHit02.mp3"),
+        expect.stringContaining("525_SFXHit03.mp3"),
+        expect.stringContaining("527_SFXNotice.mp3"),
+      ]),
+    );
   });
 });
 
@@ -169,16 +198,42 @@ describe("browser sound effects", () => {
     ]);
 
     expect(sound.readDiagnostics().deliveredCues).toEqual([
-      "shop-purchase",
+      "event-triggered",
       "item-use",
-      "reward",
+      "event-triggered",
     ]);
     expect(sound.readDiagnostics().playedCues).toEqual([
-      "shop-purchase",
+      "event-triggered",
       "item-use",
-      "reward",
+      "event-triggered",
     ]);
     expect(context.sources.filter((source) => source.started)).toHaveLength(3);
+  });
+
+  it("inserts tutorial notice at the original event boundary", async () => {
+    const { sound } = setup();
+    await sound.initialize();
+    sound.setSession("run-1");
+
+    sound.presentTransition(
+      "run-1",
+      1,
+      [event("combat-hit"), event("combat-lethal-hit")],
+      5,
+    );
+
+    expect(sound.readDiagnostics().deliveredCues).toEqual([
+      "hit-01",
+      "notice",
+      "enemy-death",
+    ]);
+
+    sound.setSession("run-2");
+    sound.presentTransition("run-2", 1, [event("battle-started")], 3);
+    expect(sound.readDiagnostics().deliveredCues).toEqual([
+      "notice",
+      "battle-start",
+    ]);
   });
 
   it("retains a first-interaction cue while assets are decoding", async () => {
@@ -195,11 +250,11 @@ describe("browser sound effects", () => {
     const initialization = sound.initialize();
 
     sound.presentUiAction("activate");
-    expect(sound.readDiagnostics().pendingCues).toEqual(["ui-activate"]);
+    expect(sound.readDiagnostics().pendingCues).toEqual(["button-press"]);
     for (const release of releases) release();
     await initialization;
 
-    expect(sound.readDiagnostics().playedCues).toEqual(["ui-activate"]);
+    expect(sound.readDiagnostics().playedCues).toEqual(["button-press"]);
   });
 
   it("preserves cue order when later assets decode first", async () => {
@@ -209,12 +264,12 @@ describe("browser sound effects", () => {
     const runtime: SoundAudioRuntime = {
       createContext: () => context,
       load: (url) => {
-        if (url.endsWith("battle-start.wav")) {
+        if (url.endsWith("514_SFXBattleStart.mp3")) {
           return new Promise<ArrayBuffer>((resolve) => {
             releaseBattle = () => resolve(new ArrayBuffer(8));
           });
         }
-        if (url.endsWith("item.wav")) {
+        if (url.endsWith("526_SFXItemUse.mp3")) {
           return new Promise<ArrayBuffer>((resolve) => {
             releaseItem = () => resolve(new ArrayBuffer(8));
           });
@@ -272,7 +327,7 @@ describe("browser sound effects", () => {
     expect(context.resume).toHaveBeenCalledTimes(1);
     expect(sound.readDiagnostics().deliveredCues).toEqual([
       "battle-start",
-      "shop-purchase",
+      "event-triggered",
     ]);
     expect(sound.readDiagnostics().playedCues).toEqual(["battle-start"]);
   });
@@ -289,7 +344,7 @@ describe("browser sound effects", () => {
     await expect(sound.initialize()).resolves.toMatchObject({
       status: "unavailable",
     });
-    expect(sound.readDiagnostics().deliveredCues).toEqual(["ui-activate"]);
+    expect(sound.readDiagnostics().deliveredCues).toEqual(["button-press"]);
     expect(status).toHaveBeenCalledWith("unavailable");
   });
 
@@ -316,5 +371,33 @@ describe("browser sound effects", () => {
 
     expect(sound.readDiagnostics().status).toBe("degraded");
     expect(sound.readDiagnostics().failedCues.length).toBeGreaterThan(0);
+  });
+
+  it("plays persistent original music and result sounds on their lifecycle hooks", async () => {
+    const { context, sound } = setup();
+    await sound.initialize();
+    sound.setSession("run-1");
+
+    sound.startGameplayMusic();
+    sound.presentTutorial();
+    sound.presentResult();
+    sound.setScoreCounting(true);
+
+    expect(sound.readDiagnostics().musicPlaying).toBe(true);
+    expect(sound.readDiagnostics().scoreLoopPlaying).toBe(true);
+    expect(sound.readDiagnostics().deliveredCues).toEqual([
+      "notice",
+      "applause",
+    ]);
+    expect(context.sources.filter((source) => source.loop)).toHaveLength(2);
+
+    sound.setScoreCounting(false);
+    sound.startGameplayMusic();
+    sound.stopEffects();
+    expect(sound.readDiagnostics().musicPlaying).toBe(true);
+    sound.stop();
+
+    expect(sound.readDiagnostics().musicPlaying).toBe(false);
+    expect(sound.readDiagnostics().scoreLoopPlaying).toBe(false);
   });
 });

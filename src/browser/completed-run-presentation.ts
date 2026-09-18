@@ -18,6 +18,7 @@ export type CompletionPresentationStatus =
 export interface CompletedRunPresentationOptions {
   readonly onRetry: () => void;
   readonly onNextRun: () => void;
+  readonly onScoreCountingChanged?: (counting: boolean) => void;
 }
 
 function requiredElement<T extends HTMLElement>(
@@ -74,6 +75,7 @@ export class CompletedRunPresentation {
   readonly #nextRun: HTMLButtonElement;
   readonly #onRetry: () => void;
   readonly #onNextRun: () => void;
+  readonly #onScoreCountingChanged: (counting: boolean) => void;
   #scoreFrame: number | undefined;
   #finalExperience:
     | Readonly<{
@@ -84,6 +86,7 @@ export class CompletedRunPresentation {
       }>
     | undefined;
   #reducedMotion = false;
+  #scoreCountingSoundActive = false;
 
   constructor(root: HTMLElement, options: CompletedRunPresentationOptions) {
     this.#root = root;
@@ -124,6 +127,7 @@ export class CompletedRunPresentation {
     this.#nextRun = requiredElement(root, "#next-run");
     this.#onRetry = options.onRetry;
     this.#onNextRun = options.onNextRun;
+    this.#onScoreCountingChanged = options.onScoreCountingChanged ?? (() => {});
     this.#details.inert = true;
 
     this.#skipScoreCount.addEventListener("click", () => {
@@ -289,6 +293,7 @@ export class CompletedRunPresentation {
     this.#scoreCount.textContent = "0";
     this.#scoreCount.dataset.state = "counting";
     this.#skipScoreCount.hidden = false;
+    this.#setScoreCountingSound(true);
     const startedAt = performance.now();
     const animate = (now: number): void => {
       const progress = Math.min(1, (now - startedAt) / SCORE_COUNT_DURATION_MS);
@@ -342,5 +347,12 @@ export class CompletedRunPresentation {
       cancelAnimationFrame(this.#scoreFrame);
       this.#scoreFrame = undefined;
     }
+    this.#setScoreCountingSound(false);
+  }
+
+  #setScoreCountingSound(counting: boolean): void {
+    if (this.#scoreCountingSoundActive === counting) return;
+    this.#scoreCountingSoundActive = counting;
+    this.#onScoreCountingChanged(counting);
   }
 }

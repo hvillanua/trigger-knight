@@ -5,97 +5,126 @@ import type {
   SoundPort,
   SoundStatus,
   SoundUiAction,
+  TutorialPage,
 } from "../application/contracts.js";
 import type { SoundPreferences } from "../application/settings.js";
 
 const MAX_RETAINED_CUES = 256;
+const MUSIC_TARGET_GAIN = 0.9;
+const MUSIC_FADE_STEPS = 90;
+const MUSIC_FADE_INTERVAL_MS = 1000 / 30;
 
-export const SOUND_CUES: readonly SoundCue[] = Object.freeze([
-  "ui-activate",
-  "ui-confirm",
-  "ui-cancel",
-  "encounter",
-  "shop-purchase",
-  "purchase-rejected",
-  "item-use",
-  "item-use-rejected",
-  "battle-start",
-  "combat-attack",
-  "combat-hit",
-  "combat-lethal",
-  "reward",
-  "discovery",
-  "achievement",
-  "death",
-  "run-ended",
-  "pause",
-]);
+export const ORIGINAL_SOUND_ASSET_FILE_NAMES = Object.freeze({
+  applause: "513_SFXApplause.mp3",
+  battleStart: "514_SFXBattleStart.mp3",
+  buttonPress: "515_SFXButtonPress.mp3",
+  buttonSelect: "516_SFXButtonSelect.mp3",
+  characterDeath: "517_SFXCharaDie.mp3",
+  enemyDeath: "518_SFXEnemyDie.mp3",
+  error: "519_SFXError.mp3",
+  event: "520_SFXEvent.mp3",
+  eventTriggered: "521_SFXEventTriggered.mp3",
+  experienceLoop: "522_SFXEXPLoop.mp3",
+  hit01: "523_SFXHit01.mp3",
+  hit02: "524_SFXHit02.mp3",
+  hit03: "525_SFXHit03.mp3",
+  itemUse: "526_SFXItemUse.mp3",
+  notice: "527_SFXNotice.mp3",
+  gameMusic: "512_BGMGame.mp3",
+} as const);
 
 const assetUrl = (fileName: string): string =>
-  new URL(`../assets/sound-effects/${fileName}`, import.meta.url).href;
+  new URL(`../assets/original/sounds/${fileName}`, import.meta.url).href;
 
-/** Independently authored runtime assets. Original SWF audio is never imported. */
+export const GAME_MUSIC_ASSET_URL = assetUrl(
+  ORIGINAL_SOUND_ASSET_FILE_NAMES.gameMusic,
+);
+
+export const SOUND_CUES: readonly SoundCue[] = Object.freeze([
+  "applause",
+  "battle-start",
+  "button-press",
+  "button-select",
+  "character-death",
+  "enemy-death",
+  "error",
+  "event",
+  "event-triggered",
+  "experience-loop",
+  "hit-01",
+  "hit-02",
+  "hit-03",
+  "item-use",
+  "notice",
+]);
+
 export const SOUND_CUE_ASSET_URLS: Readonly<Record<SoundCue, string>> =
   Object.freeze({
-    "ui-activate": assetUrl("ui-activate.wav"),
-    "ui-confirm": assetUrl("ui-confirm.wav"),
-    "ui-cancel": assetUrl("ui-cancel.wav"),
-    encounter: assetUrl("encounter.wav"),
-    "shop-purchase": assetUrl("purchase.wav"),
-    "purchase-rejected": assetUrl("reject.wav"),
-    "item-use": assetUrl("item.wav"),
-    "item-use-rejected": assetUrl("reject.wav"),
-    "battle-start": assetUrl("battle-start.wav"),
-    "combat-attack": assetUrl("attack.wav"),
-    "combat-hit": assetUrl("hit.wav"),
-    "combat-lethal": assetUrl("lethal.wav"),
-    reward: assetUrl("reward.wav"),
-    discovery: assetUrl("reward.wav"),
-    achievement: assetUrl("achievement.wav"),
-    death: assetUrl("death.wav"),
-    "run-ended": assetUrl("death.wav"),
-    pause: assetUrl("ui-confirm.wav"),
+    applause: assetUrl(ORIGINAL_SOUND_ASSET_FILE_NAMES.applause),
+    "battle-start": assetUrl(ORIGINAL_SOUND_ASSET_FILE_NAMES.battleStart),
+    "button-press": assetUrl(ORIGINAL_SOUND_ASSET_FILE_NAMES.buttonPress),
+    "button-select": assetUrl(ORIGINAL_SOUND_ASSET_FILE_NAMES.buttonSelect),
+    "character-death": assetUrl(ORIGINAL_SOUND_ASSET_FILE_NAMES.characterDeath),
+    "enemy-death": assetUrl(ORIGINAL_SOUND_ASSET_FILE_NAMES.enemyDeath),
+    error: assetUrl(ORIGINAL_SOUND_ASSET_FILE_NAMES.error),
+    event: assetUrl(ORIGINAL_SOUND_ASSET_FILE_NAMES.event),
+    "event-triggered": assetUrl(ORIGINAL_SOUND_ASSET_FILE_NAMES.eventTriggered),
+    "experience-loop": assetUrl(ORIGINAL_SOUND_ASSET_FILE_NAMES.experienceLoop),
+    "hit-01": assetUrl(ORIGINAL_SOUND_ASSET_FILE_NAMES.hit01),
+    "hit-02": assetUrl(ORIGINAL_SOUND_ASSET_FILE_NAMES.hit02),
+    "hit-03": assetUrl(ORIGINAL_SOUND_ASSET_FILE_NAMES.hit03),
+    "item-use": assetUrl(ORIGINAL_SOUND_ASSET_FILE_NAMES.itemUse),
+    notice: assetUrl(ORIGINAL_SOUND_ASSET_FILE_NAMES.notice),
   });
 
 const cueList = (...cues: SoundCue[]): readonly SoundCue[] =>
   Object.freeze(cues);
 
-/** Static event mappings remain inspectable without coupling the domain to audio. */
 export const SOUND_EVENT_CUES: Readonly<
   Record<GameEvent["type"], readonly SoundCue[]>
 > = Object.freeze({
-  "achievement-unlocked": cueList("achievement"),
+  "achievement-unlocked": cueList(),
+  "battle-reward": cueList("event-triggered"),
   "battle-started": cueList("battle-start"),
-  "battle-reward": cueList("reward"),
   "combat-phase-changed": cueList(),
-  "combat-hit": cueList("combat-hit"),
-  "combat-lethal-hit": cueList("combat-lethal"),
-  "equipment-discovered": cueList("discovery"),
-  "encounter-promoted": cueList("encounter"),
-  "item-use-rejected": cueList("item-use-rejected"),
+  "combat-hit": cueList("hit-01"),
+  "combat-lethal-hit": cueList("enemy-death"),
+  "equipment-discovered": cueList(),
+  "encounter-promoted": cueList(),
+  "item-use-rejected": cueList("error"),
   "item-used": cueList("item-use"),
-  "lifespan-death": cueList("death"),
-  "pause-toggled": cueList("pause"),
-  "purchase-rejected": cueList("purchase-rejected"),
-  "run-ended": cueList("run-ended"),
-  "shop-purchased": cueList("shop-purchase"),
-  "shop-departed": cueList("encounter"),
+  "lifespan-death": cueList("character-death"),
+  "pause-toggled": cueList(),
+  "purchase-rejected": cueList("error"),
+  "run-ended": cueList(),
+  "shop-purchased": cueList("event-triggered"),
+  "shop-departed": cueList(),
   "step-advanced": cueList(),
-  "tutorial-dismissed": cueList("ui-confirm"),
+  "tutorial-dismissed": cueList("button-press"),
 });
 
 export const SOUND_UI_ACTION_CUES: Readonly<
   Record<SoundUiAction, readonly SoundCue[]>
 > = Object.freeze({
-  activate: cueList("ui-activate"),
-  confirm: cueList("ui-confirm"),
-  cancel: cueList("ui-cancel"),
+  activate: cueList("button-press"),
+  confirm: cueList("button-press"),
+  cancel: cueList("button-press"),
+  select: cueList("button-select"),
 });
 
-/** Resolves the one combat phase that has a distinct audible attack cue. */
+const HIT_CUES = Object.freeze(["hit-01", "hit-02", "hit-03"] as const);
+
+function cueForHitVariant(hitVariant: number): SoundCue {
+  const normalized = Math.abs(Math.trunc(hitVariant)) % HIT_CUES.length;
+  return HIT_CUES[normalized] ?? "hit-01";
+}
+
 export function soundCuesForEvent(event: GameEvent): readonly SoundCue[] {
-  if (event.type === "combat-phase-changed") {
-    return event.phase === "attack" ? cueList("combat-attack") : cueList();
+  if (event.type === "encounter-promoted") {
+    return event.encounter.kind === "shop" ? cueList("event") : cueList();
+  }
+  if (event.type === "run-ended") {
+    return event.reason === "combat" ? cueList("character-death") : cueList();
   }
   return SOUND_EVENT_CUES[event.type];
 }
@@ -112,11 +141,12 @@ export interface SoundAudioDestination {
 export interface SoundAudioGain {
   readonly native?: unknown;
   setGain(value: number): void;
-  connect(destination: SoundAudioDestination): void;
+  connect(destination: SoundAudioDestination | SoundAudioGain): void;
 }
 
 export interface SoundAudioSource {
   buffer: SoundBuffer | null;
+  loop: boolean;
   onEnded: (() => void) | undefined;
   connect(destination: SoundAudioGain): void;
   start(): void;
@@ -147,11 +177,14 @@ export interface SoundEffectsDiagnostics {
   readonly playedCues: readonly SoundCue[];
   readonly failedCues: readonly SoundCue[];
   readonly activeSourceCount: number;
+  readonly musicPlaying: boolean;
+  readonly scoreLoopPlaying: boolean;
 }
 
 export interface SoundEffectsOptions {
   readonly runtime?: SoundAudioRuntime;
   readonly assetUrls?: Readonly<Record<SoundCue, string>>;
+  readonly musicAssetUrl?: string;
   readonly onStatusChange?: (status: SoundStatus) => void;
 }
 
@@ -189,7 +222,9 @@ function createBrowserAudioRuntime(): SoundAudioRuntime {
               setGain(value: number): void {
                 nativeGain.gain.value = value;
               },
-              connect(nextDestination: SoundAudioDestination): void {
+              connect(
+                nextDestination: SoundAudioDestination | SoundAudioGain,
+              ): void {
                 nativeGain.connect(nextDestination.native as AudioNode);
               },
             });
@@ -208,6 +243,12 @@ function createBrowserAudioRuntime(): SoundAudioRuntime {
                   nextBuffer === null
                     ? null
                     : (nextBuffer.native as AudioBuffer);
+              },
+              get loop(): boolean {
+                return nativeSource.loop;
+              },
+              set loop(nextLoop: boolean) {
+                nativeSource.loop = nextLoop;
               },
               get onEnded(): (() => void) | undefined {
                 return ended;
@@ -278,15 +319,17 @@ function resultFor(
   });
 }
 
-/** Web Audio adapter with lazy, failure-tolerant decoding and session isolation. */
 export function createBrowserSoundEffects(
   options: SoundEffectsOptions = {},
 ): SoundEffects {
   const runtime = options.runtime ?? createBrowserAudioRuntime();
   const assetUrls = options.assetUrls ?? SOUND_CUE_ASSET_URLS;
+  const musicAssetUrl = options.musicAssetUrl ?? GAME_MUSIC_ASSET_URL;
   let status: SoundStatus = "uninitialized";
   let context: SoundAudioContext | undefined;
   let masterGain: SoundAudioGain | undefined;
+  let sfxGain: SoundAudioGain | undefined;
+  let musicGain: SoundAudioGain | undefined;
   let baseStatus: Exclude<
     SoundStatus,
     "uninitialized" | "loading" | "suspended"
@@ -305,6 +348,15 @@ export function createBrowserSoundEffects(
   const failedCues = new Set<SoundCue>();
   const buffers = new Map<SoundCue, SoundBuffer>();
   const activeSources = new Set<SoundAudioSource>();
+  let musicBuffer: SoundBuffer | undefined;
+  let musicFailed = false;
+  let musicSource: SoundAudioSource | undefined;
+  let scoreLoopSource: SoundAudioSource | undefined;
+  let musicRequested = false;
+  let scoreCounting = false;
+  let musicGainLevel = 0;
+  let musicFadeTimer: ReturnType<typeof setInterval> | undefined;
+  let nextHitVariant = 0;
 
   const notifyStatus = (nextStatus: SoundStatus): void => {
     status = nextStatus;
@@ -316,7 +368,7 @@ export function createBrowserSoundEffects(
   const audible = (): boolean =>
     visible && !preferences.muted && preferences.volume > 0;
 
-  const stopSources = (): void => {
+  const stopOneShotSources = (): void => {
     for (const source of activeSources) {
       try {
         source.stop();
@@ -327,12 +379,48 @@ export function createBrowserSoundEffects(
     activeSources.clear();
   };
 
+  const clearMusicFade = (): void => {
+    if (musicFadeTimer !== undefined) {
+      clearInterval(musicFadeTimer);
+      musicFadeTimer = undefined;
+    }
+  };
+
+  const stopMusicSource = (): void => {
+    clearMusicFade();
+    const source = musicSource;
+    musicSource = undefined;
+    if (source === undefined) return;
+    try {
+      source.stop();
+    } catch {
+      // Audio teardown remains best effort.
+    }
+  };
+
+  const stopScoreLoopSource = (): void => {
+    const source = scoreLoopSource;
+    scoreLoopSource = undefined;
+    if (source === undefined) return;
+    try {
+      source.stop();
+    } catch {
+      // Audio teardown remains best effort.
+    }
+  };
+
+  const stopAllSources = (): void => {
+    stopOneShotSources();
+    stopMusicSource();
+    stopScoreLoopSource();
+  };
+
   const drain = (): void => {
     if (
       context === undefined ||
       context.state !== "running" ||
       !audible() ||
-      masterGain === undefined
+      sfxGain === undefined
     ) {
       return;
     }
@@ -357,7 +445,8 @@ export function createBrowserSoundEffects(
         const currentSource = context.createBufferSource();
         source = currentSource;
         currentSource.buffer = buffer;
-        currentSource.connect(masterGain);
+        currentSource.loop = false;
+        currentSource.connect(sfxGain);
         currentSource.onEnded = () => activeSources.delete(currentSource);
         activeSources.add(currentSource);
         currentSource.start();
@@ -367,6 +456,92 @@ export function createBrowserSoundEffects(
         if (status !== "unavailable" && status !== "failed") {
           notifyStatus("degraded");
         }
+      }
+    }
+  };
+
+  const startMusicFade = (): void => {
+    clearMusicFade();
+    musicGainLevel = 0;
+    musicGain?.setGain(musicGainLevel);
+    let step = 0;
+    musicFadeTimer = setInterval(() => {
+      if (!musicRequested || musicSource === undefined) {
+        clearMusicFade();
+        return;
+      }
+      step += 1;
+      musicGainLevel = Math.min(
+        MUSIC_TARGET_GAIN,
+        (MUSIC_TARGET_GAIN * step) / MUSIC_FADE_STEPS,
+      );
+      try {
+        musicGain?.setGain(musicGainLevel);
+      } catch {
+        clearMusicFade();
+      }
+      if (step >= MUSIC_FADE_STEPS) clearMusicFade();
+    }, MUSIC_FADE_INTERVAL_MS);
+  };
+
+  const startMusicSource = (): void => {
+    if (
+      !musicRequested ||
+      musicSource !== undefined ||
+      context === undefined ||
+      context.state !== "running" ||
+      !visible ||
+      musicBuffer === undefined ||
+      musicGain === undefined
+    ) {
+      return;
+    }
+    try {
+      const source = context.createBufferSource();
+      source.buffer = musicBuffer;
+      source.loop = true;
+      source.connect(musicGain);
+      source.onEnded = () => {
+        if (musicSource === source) musicSource = undefined;
+      };
+      musicSource = source;
+      source.start();
+      startMusicFade();
+    } catch {
+      musicSource = undefined;
+      if (status !== "unavailable" && status !== "failed") {
+        notifyStatus("degraded");
+      }
+    }
+  };
+
+  const startScoreLoopSource = (): void => {
+    if (
+      !scoreCounting ||
+      scoreLoopSource !== undefined ||
+      context === undefined ||
+      context.state !== "running" ||
+      !visible ||
+      buffers.get("experience-loop") === undefined ||
+      sfxGain === undefined
+    ) {
+      return;
+    }
+    try {
+      const source = context.createBufferSource();
+      source.buffer = buffers.get("experience-loop") ?? null;
+      source.loop = true;
+      source.connect(sfxGain);
+      source.onEnded = () => {
+        if (scoreLoopSource === source) scoreLoopSource = undefined;
+      };
+      scoreLoopSource = source;
+      source.start();
+      retain(playedCues, "experience-loop");
+    } catch {
+      scoreLoopSource = undefined;
+      if (status !== "unavailable" && status !== "failed") {
+        notifyStatus("degraded");
       }
     }
   };
@@ -387,6 +562,8 @@ export function createBrowserSoundEffects(
     }
     if (baseStatus === "ready" || baseStatus === "degraded") {
       notifyStatus(baseStatus);
+      startMusicSource();
+      startScoreLoopSource();
       drain();
     }
   };
@@ -408,14 +585,23 @@ export function createBrowserSoundEffects(
       notifyStatus("unavailable");
       return resultFor(status, failedCues);
     }
+    const audioContext = context;
 
     try {
       masterGain = context.createGain();
+      sfxGain = context.createGain();
+      musicGain = context.createGain();
       masterGain.setGain(preferences.muted ? 0 : preferences.volume);
+      sfxGain.setGain(1);
+      musicGain.setGain(musicGainLevel);
+      sfxGain.connect(masterGain);
+      musicGain.connect(masterGain);
       masterGain.connect(context.destination);
     } catch {
       context = undefined;
       masterGain = undefined;
+      sfxGain = undefined;
+      musicGain = undefined;
       baseStatus = "failed";
       notifyStatus("failed");
       return resultFor(status, failedCues);
@@ -429,10 +615,10 @@ export function createBrowserSoundEffects(
       urlsToCues.set(url, cues);
     }
 
-    await Promise.all(
-      [...urlsToCues.entries()].map(async ([url, cues]) => {
+    await Promise.all([
+      ...[...urlsToCues.entries()].map(async ([url, cues]) => {
         try {
-          const buffer = await context!.decodeAudioData(
+          const buffer = await audioContext.decodeAudioData(
             await runtime.load(url),
           );
           for (const cue of cues) buffers.set(cue, buffer);
@@ -440,14 +626,23 @@ export function createBrowserSoundEffects(
           for (const cue of cues) failedCues.add(cue);
         }
       }),
-    );
+      (async () => {
+        try {
+          musicBuffer = await audioContext.decodeAudioData(
+            await runtime.load(musicAssetUrl),
+          );
+        } catch {
+          musicFailed = true;
+        }
+      })(),
+    ]);
 
-    baseStatus =
-      buffers.size === 0
-        ? "failed"
-        : failedCues.size > 0
-          ? "degraded"
-          : "ready";
+    const hasAnyAudio = buffers.size > 0 || musicBuffer !== undefined;
+    baseStatus = !hasAnyAudio
+      ? "failed"
+      : failedCues.size > 0 || musicFailed
+        ? "degraded"
+        : "ready";
     pendingCues = pendingCues.filter((cue) => !failedCues.has(cue));
     notifyStatus(visible ? baseStatus : "suspended");
     await resume();
@@ -493,22 +688,35 @@ export function createBrowserSoundEffects(
       }
       if (!audible()) {
         pendingCues = [];
-        stopSources();
+        stopOneShotSources();
       }
     },
     setSession(nextSessionId: string | null): void {
       if (sessionId === nextSessionId) return;
-      stopSources();
+      stopAllSources();
+      musicRequested = false;
+      scoreCounting = false;
       pendingCues = [];
       deliveredCues = [];
       playedCues = [];
       lastTransitionStep = -1;
+      nextHitVariant = 0;
       sessionId = nextSessionId;
+    },
+    startGameplayMusic(): void {
+      if (sessionId === null) return;
+      musicRequested = true;
+      void initialize();
+      startMusicSource();
+    },
+    presentTutorial(): void {
+      enqueue("notice");
     },
     presentTransition(
       nextSessionId: string,
       step: number,
       events: readonly GameEvent[],
+      tutorialPage?: TutorialPage,
     ): void {
       if (
         sessionId !== nextSessionId ||
@@ -518,19 +726,56 @@ export function createBrowserSoundEffects(
         return;
       }
       lastTransitionStep = step;
+      let tutorialPresented = false;
+      const presentTutorialBeforeEvent = (): void => {
+        if (tutorialPage === 3 && !tutorialPresented) {
+          tutorialPresented = true;
+          enqueue("notice");
+        }
+      };
       for (const event of events) {
-        for (const cue of soundCuesForEvent(event)) enqueue(cue);
+        presentTutorialBeforeEvent();
+        const cues =
+          event.type === "combat-hit"
+            ? cueList(cueForHitVariant(nextHitVariant))
+            : soundCuesForEvent(event);
+        for (const cue of cues) {
+          enqueue(cue);
+        }
+        if (event.type === "combat-hit") {
+          nextHitVariant = (nextHitVariant + 1) % HIT_CUES.length;
+          if (tutorialPage === 5 && !tutorialPresented) {
+            tutorialPresented = true;
+            enqueue("notice");
+          }
+        }
+      }
+      if (tutorialPage !== undefined && !tutorialPresented) {
+        enqueue("notice");
       }
     },
     presentUiAction(action: SoundUiAction): void {
       for (const cue of SOUND_UI_ACTION_CUES[action]) enqueue(cue);
+    },
+    presentResult(): void {
+      enqueue("applause");
+    },
+    setScoreCounting(counting: boolean): void {
+      scoreCounting = counting;
+      if (!counting) {
+        stopScoreLoopSource();
+        return;
+      }
+      void initialize();
+      startScoreLoopSource();
     },
     setVisible(nextVisible: boolean): void {
       if (visible === nextVisible) return;
       visible = nextVisible;
       if (!visible) {
         pendingCues = [];
-        stopSources();
+        stopOneShotSources();
+        stopScoreLoopSource();
         if (context?.state === "running") {
           try {
             void context.suspend().catch(() => {});
@@ -544,9 +789,15 @@ export function createBrowserSoundEffects(
       }
       void resume();
     },
-    stop(): void {
+    stopEffects(): void {
       pendingCues = [];
-      stopSources();
+      scoreCounting = false;
+      stopOneShotSources();
+      stopScoreLoopSource();
+    },
+    stop(): void {
+      musicRequested = false;
+      stopAllSources();
     },
     readDiagnostics(): SoundEffectsDiagnostics {
       return Object.freeze({
@@ -557,7 +808,12 @@ export function createBrowserSoundEffects(
         deliveredCues: Object.freeze([...deliveredCues]),
         playedCues: Object.freeze([...playedCues]),
         failedCues: Object.freeze([...failedCues]),
-        activeSourceCount: activeSources.size,
+        activeSourceCount:
+          activeSources.size +
+          (musicSource === undefined ? 0 : 1) +
+          (scoreLoopSource === undefined ? 0 : 1),
+        musicPlaying: musicSource !== undefined,
+        scoreLoopPlaying: scoreLoopSource !== undefined,
       });
     },
   });

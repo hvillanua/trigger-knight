@@ -6,13 +6,13 @@ planning, product scope, architecture, and the implementation boundary.
 Gameplay and domain code are reconstructed clean-room from the behavioral
 specification in `research/`, not by copying decompiled ActionScript. The
 browser presentation uses original game visual and font assets where available.
-The sound adapter uses separately authored cues because the extracted original
-sound bytes remain provenance records rather than production inputs.
+The sound adapter uses the reviewed original sound exports staged under
+`src/assets/original/sounds/`; playback wiring remains presentation-only.
 The preserved SWF and its extracted exports remain outside this directory as
 source records. Reviewed production copies are staged under
 `src/assets/original/` with provenance and rights metadata, and the Canvas
 presentation loads the staged character, scene, and font exports. Separately
-authored sound effects live under `src/assets/sound-effects/`. The exact
+original sound mappings live in `src/sound/sound-effects.ts`. The exact
 original font-to-text-field mapping remains unresolved. Decompiled code and
 unreviewed research output remain outside production.
 

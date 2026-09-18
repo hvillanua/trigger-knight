@@ -179,9 +179,10 @@ sprites remain available in `swf.xml` and raw exports.
 512 is started with 9,999 loops and faded toward volume 90. SFX symbols 513-527
 cover UI/combat events and respect the saved sound toggle.
 
-**UNKNOWN** Exact perceived audio timing and codec/player differences were not
-validated in a live Flash runtime. Exported sound bytes are preserved under
-`exports/assets/raw/sounds/` for later inspection.
+**UNKNOWN** Exact perceived audio latency, mixing, and codec/player differences
+were not validated in a live Flash runtime. Byte-for-byte reviewed copies are
+staged under `src/assets/original/sounds/`; the archival exports remain under
+`exports/assets/raw/sounds/`.
 
 ## Reference exports
 

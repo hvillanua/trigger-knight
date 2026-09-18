@@ -272,19 +272,19 @@ let currentSettings: BrowserSettings =
 function soundStatusText(status: SoundStatus): string {
   switch (status) {
     case "uninitialized":
-      return "Sound effects start after the first player interaction.";
+      return "Original music and sound start after the first player interaction.";
     case "loading":
-      return "Loading sound effects.";
+      return "Loading original music and sound.";
     case "ready":
-      return "Sound effects ready.";
+      return "Original music and sound ready.";
     case "degraded":
-      return "Some sound effects are unavailable. Gameplay continues.";
+      return "Some original music or sound is unavailable. Gameplay continues.";
     case "suspended":
       return "Sound is paused while the page is hidden or playback is waiting for browser permission.";
     case "unavailable":
       return "Audio is unavailable. Gameplay continues without sound.";
     case "failed":
-      return "Sound effects could not be decoded. Gameplay continues without sound.";
+      return "Original music and sound could not be decoded. Gameplay continues without audio.";
   }
 }
 
@@ -531,15 +531,16 @@ function renderCompletion(completion: ActiveRunCompletion): void {
   gameStatus.dataset.completionStatus = commit.status;
   if (commit.status === "failed" || commit.status === "uncertain") {
     gameStatus.dataset.completionError = commit.error.code;
+    resultCollections.disabled = true;
+    resultAchievements.disabled = true;
+    resultMainMenu.disabled = true;
+    screenNavigation?.show("result");
     resultPresentation.showPending(
       pendingView(settlement),
       commit.status,
       commit.error.code,
     );
-    resultCollections.disabled = true;
-    resultAchievements.disabled = true;
-    resultMainMenu.disabled = true;
-    screenNavigation?.show("result");
+    soundEffects.presentResult();
     return;
   }
 
@@ -548,11 +549,12 @@ function renderCompletion(completion: ActiveRunCompletion): void {
   screenNavigation?.renderProfileScreens(currentProfile);
   settingsController?.render(currentSettings);
   delete gameStatus.dataset.completionError;
-  resultPresentation.showCommitted(commit.result, commit.status);
   resultCollections.disabled = false;
   resultAchievements.disabled = false;
   resultMainMenu.disabled = false;
   screenNavigation?.show("result");
+  resultPresentation.showCommitted(commit.result, commit.status);
+  soundEffects.presentResult();
 }
 
 const resultPresentation = new CompletedRunPresentation(resultRoot, {
@@ -569,9 +571,9 @@ const resultPresentation = new CompletedRunPresentation(resultRoot, {
       (commit.status === "committed" || commit.status === "already-committed")
     ) {
       activeRunController?.start(commit.profile, { startImmediately: true });
-      presentUiAction("activate");
     }
   },
+  onScoreCountingChanged: (counting) => soundEffects.setScoreCounting(counting),
 });
 
 const screenNavigation = createScreenNavigation(
@@ -594,7 +596,7 @@ const screenNavigation = createScreenNavigation(
     readProfile: () => currentProfile,
     onLeaveGameplay: () => {
       void fullscreenController.exit();
-      soundEffects.stop();
+      soundEffects.stopEffects();
     },
     beforeShowTitle: () => {
       activeRunController?.stop();
@@ -902,7 +904,7 @@ useItemButton.addEventListener("click", () => {
 });
 
 pauseButton.addEventListener("click", () => {
-  dispatch(commandsForTogglePauseActivation());
+  runUiAction("activate", () => dispatch(commandsForTogglePauseActivation()));
 });
 
 fullscreenButton.addEventListener("click", () => {
@@ -911,13 +913,8 @@ fullscreenButton.addEventListener("click", () => {
   });
 });
 
-requiredElement<HTMLButtonElement>("#start-run").addEventListener(
-  "click",
-  () => {
-    runUiAction("activate", () =>
-      activeRunController?.start(currentProfile, { startImmediately: true }),
-    );
-  },
+requiredElement<HTMLButtonElement>("#start-run").addEventListener("click", () =>
+  activeRunController?.start(currentProfile, { startImmediately: true }),
 );
 requiredElement<HTMLButtonElement>("#title-collections").addEventListener(
   "click",
@@ -973,6 +970,28 @@ requiredElement<HTMLButtonElement>("#settings-back").addEventListener(
   "click",
   () => runUiAction("cancel", () => screenNavigation?.returnFromSettings()),
 );
+
+function presentButtonSelect(target: EventTarget | null): void {
+  if (!(target instanceof Element)) return;
+  const button = target.closest<HTMLButtonElement>("button");
+  if (button === null || button.disabled) return;
+  presentUiAction("select");
+}
+
+document.addEventListener("pointerover", (event) => {
+  const target = event.target;
+  if (
+    event.relatedTarget instanceof Node &&
+    target instanceof Element &&
+    target.closest("button")?.contains(event.relatedTarget)
+  ) {
+    return;
+  }
+  presentButtonSelect(target);
+});
+document.addEventListener("focusin", (event) => {
+  presentButtonSelect(event.target);
+});
 
 document.addEventListener("visibilitychange", () => {
   const visible = document.visibilityState === "visible";
