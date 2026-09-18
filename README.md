@@ -319,9 +319,9 @@ provenance. The runtime asset policy is:
 
 - Use original visual and font assets from the preserved SWF or its recorded
   exports where approved.
-- Use separately authored sound effects from `src/assets/sound-effects/`; the
-  original extracted sound bytes remain provenance records and are not
-  production inputs for this adapter.
+- Use the reviewed original music and sound exports from
+  `src/assets/original/sounds/`; the browser adapter maps their recorded
+  symbols to the original gameplay and screen call sites.
 - The current reviewed production copies live under `src/assets/original/`; do
   not import directly from the archival `original/` or `exports/` directories.
 - Add neighboring provenance metadata recording the source path, artifact hash

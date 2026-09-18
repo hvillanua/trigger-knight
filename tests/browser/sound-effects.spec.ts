@@ -19,7 +19,7 @@ test("initializes sound from interaction and reports cue delivery", async ({
       page.evaluate(() => {
         const diagnostics = window.triggerKnightSoundDiagnostics?.read();
         return (
-          diagnostics?.playedCues.includes("ui-cancel") === true ||
+          diagnostics?.playedCues.includes("button-press") === true ||
           diagnostics?.status === "suspended" ||
           diagnostics?.status === "unavailable" ||
           diagnostics?.status === "failed"
@@ -35,9 +35,9 @@ test("initializes sound from interaction and reports cue delivery", async ({
     }
     return value;
   });
-  expect(diagnostics.deliveredCues).toContain("ui-cancel");
+  expect(diagnostics.deliveredCues).toContain("button-press");
   if (diagnostics.status === "ready" || diagnostics.status === "degraded") {
-    expect(diagnostics.playedCues).toContain("ui-cancel");
+    expect(diagnostics.playedCues).toContain("button-press");
   }
 
   await page.getByRole("button", { name: "Settings", exact: true }).click();

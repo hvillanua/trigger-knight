@@ -1,29 +1,26 @@
-import type { GameEvent } from "../domain/contracts.js";
+import type { GameEvent, TutorialPage } from "../domain/contracts.js";
 import type { SoundPreferences } from "./settings.js";
 
-/** @playerVisible Semantic presentation cue with no asset or playback details. */
+/** @playerVisible Original-audio presentation cue with no playback details. */
 export type SoundCue =
-  | "ui-activate"
-  | "ui-confirm"
-  | "ui-cancel"
-  | "encounter"
-  | "shop-purchase"
-  | "purchase-rejected"
-  | "item-use"
-  | "item-use-rejected"
+  | "applause"
   | "battle-start"
-  | "combat-attack"
-  | "combat-hit"
-  | "combat-lethal"
-  | "reward"
-  | "discovery"
-  | "achievement"
-  | "death"
-  | "run-ended"
-  | "pause";
+  | "button-press"
+  | "button-select"
+  | "character-death"
+  | "enemy-death"
+  | "error"
+  | "event"
+  | "event-triggered"
+  | "experience-loop"
+  | "hit-01"
+  | "hit-02"
+  | "hit-03"
+  | "item-use"
+  | "notice";
 
 /** @playerVisible Browser actions that need feedback without changing gameplay state. */
-export type SoundUiAction = "activate" | "confirm" | "cancel";
+export type SoundUiAction = "activate" | "confirm" | "cancel" | "select";
 
 /** @playerVisible Sound availability state surfaced by the browser UI. */
 export type SoundStatus =
@@ -46,12 +43,18 @@ export interface SoundPort {
   initialize(): Promise<SoundInitializationResult>;
   setPreferences(preferences: Readonly<SoundPreferences>): void;
   setSession(sessionId: string | null): void;
+  startGameplayMusic(): void;
+  presentTutorial(): void;
   presentTransition(
     sessionId: string,
     step: number,
     events: readonly GameEvent[],
+    tutorialPage?: TutorialPage,
   ): void;
   presentUiAction(action: SoundUiAction): void;
+  presentResult(): void;
+  setScoreCounting(counting: boolean): void;
   setVisible(visible: boolean): void;
+  stopEffects(): void;
   stop(): void;
 }

@@ -2,8 +2,8 @@
 
 These files are reviewed copies of visual, audio, and font exports from the preserved
 Trigger Knight v1.3 SWF, staged for provenance and approved presentation use. The
-original sound exports remain archival compatibility records and are not production
-sound inputs. The gameplay and domain code remains a clean-room implementation.
+staged sound exports are approved browser presentation inputs. The gameplay
+and domain code remains a clean-room implementation.
 
 - `key-sprites/` contains every exported frame for Hero, Dragon, Goblin, Golem,
   and Wolf.
