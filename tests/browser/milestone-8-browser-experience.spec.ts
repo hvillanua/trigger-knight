@@ -67,22 +67,25 @@ async function installFullscreenStub(
   mode: "working" | "denied" | "unsupported",
 ): Promise<void> {
   await page.addInitScript((stubMode) => {
-    let fullscreenElement: Element | null = null;
+    let fullscreenElementId: string | null = null;
     Object.defineProperty(document, "fullscreenEnabled", {
       configurable: true,
       get: () => stubMode !== "unsupported",
     });
     Object.defineProperty(document, "fullscreenElement", {
       configurable: true,
-      get: () => fullscreenElement,
+      get: () =>
+        fullscreenElementId === null
+          ? null
+          : document.getElementById(fullscreenElementId),
     });
     Object.defineProperty(Element.prototype, "requestFullscreen", {
       configurable: true,
-      value: function requestFullscreen() {
+      value: function requestFullscreen(this: Element) {
         if (stubMode === "denied") {
           return Promise.reject(new DOMException("Denied", "NotAllowedError"));
         }
-        fullscreenElement = document.querySelector("#gameplay-screen");
+        fullscreenElementId = this.id;
         document.dispatchEvent(new Event("fullscreenchange"));
         return Promise.resolve();
       },
@@ -90,13 +93,72 @@ async function installFullscreenStub(
     Object.defineProperty(document, "exitFullscreen", {
       configurable: true,
       value: function exitFullscreen() {
-        fullscreenElement = null;
+        fullscreenElementId = null;
         document.dispatchEvent(new Event("fullscreenchange"));
         return Promise.resolve();
       },
     });
   }, mode);
 }
+
+test("keeps fullscreen active while moving from a finished run to player status", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  await installFullscreenStub(page, "working");
+  await seedDisabledTutorialProfile(page);
+  await page.goto("/?manual=1&seed=milestone-2-lifecycle-2&diagnostics=1");
+
+  await page.getByRole("button", { name: "Enter fullscreen" }).click();
+  await expect
+    .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
+    .toBe("app-shell");
+
+  const summary = await advanceUntilResult(page, 2_600, false);
+  expect(summary.terminalReason, JSON.stringify(summary)).toBe("lifespan");
+  await expect(page.locator("#run-result")).toHaveAttribute(
+    "data-result-state",
+    "committed",
+  );
+  await expect
+    .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
+    .toBe("app-shell");
+
+  await expect(
+    page.getByRole("button", { name: "View achievements" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "View achievements" }).click();
+  await expect(
+    page.getByRole("heading", { name: "PLAYER STATUS" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Exit fullscreen" }),
+  ).toBeVisible();
+  await expect
+    .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
+    .toBe("app-shell");
+
+  await page.getByRole("button", { name: "Back" }).click();
+  await page.getByRole("button", { name: "Main menu", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "View collections" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "View collections" }).click();
+  await expect(
+    page.getByRole("heading", { name: "PLAYER STATUS" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Exit fullscreen" }),
+  ).toBeVisible();
+  await expect
+    .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
+    .toBe("app-shell");
+
+  await page.getByRole("button", { name: "Exit fullscreen" }).click();
+  await expect
+    .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
+    .toBeNull();
+});
 
 async function advanceUntilResult(
   page: Page,
@@ -438,8 +500,8 @@ test("keeps assembled screens readable and operable at representative sizes", as
       await expect(page.locator("#collections-screen")).toBeVisible();
       await page.locator("#collections-back").click();
       await page.getByRole("button", { name: "View achievements" }).click();
-      await expect(page.locator("#achievements-screen")).toBeVisible();
-      await page.locator("#achievements-back").click();
+      await expect(page.locator("#collections-screen")).toBeVisible();
+      await page.locator("#collections-back").click();
       await page.getByRole("button", { name: "Settings" }).click();
       await expect(page.locator("#settings-screen")).toBeVisible();
       await page.locator("#settings-back").click();

@@ -15,3 +15,22 @@ FFDec release source: <https://github.com/jindrapetrik/jpexs-decompiler/releases
 The ignored `ffdec-runtime/` directory contains FFDec-generated cache/log data
 and is not part of the original artifact. Local extracted copies are under
 `ffdec-26.2.1/` and `temurin-jre21/`.
+
+## Menu parity capture
+
+With the development server running on `http://127.0.0.1:5173`, capture the
+current title and player-status screens beside frames from a reference video:
+
+```sh
+node tooling/capture-menu-parity.mjs /path/to/reference.mp4 /tmp/menu-parity
+```
+
+Compare the captures after both sets of images exist:
+
+```sh
+node tooling/compare-menu-parity.mjs /tmp/menu-parity
+```
+
+The comparison prints the mean absolute RGB difference after normalizing each
+image to the game's 480 by 320 stage. Use the images for visual review because
+the number alone cannot distinguish intended animation or profile-data changes.

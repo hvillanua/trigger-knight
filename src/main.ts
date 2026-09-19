@@ -69,10 +69,10 @@ function requiredElement<T extends HTMLElement>(selector: string): T {
   return element;
 }
 
+const appShell = requiredElement<HTMLElement>("#app-shell");
 const titleScreen = requiredElement<HTMLElement>("#title-screen");
 const gameplayScreen = requiredElement<HTMLElement>("#gameplay-screen");
 const collectionsScreen = requiredElement<HTMLElement>("#collections-screen");
-const achievementsScreen = requiredElement<HTMLElement>("#achievements-screen");
 const settingsScreen = requiredElement<HTMLElement>("#settings-screen");
 const canvas = requiredElement<HTMLCanvasElement>("#game-canvas");
 const dismissTutorialButton =
@@ -98,6 +98,8 @@ if (advanceButton !== undefined) {
 const pauseButton = requiredElement<HTMLButtonElement>("#toggle-pause");
 const fullscreenButton =
   requiredElement<HTMLButtonElement>("#toggle-fullscreen");
+const fullscreenExitButton =
+  requiredElement<HTMLButtonElement>("#exit-fullscreen");
 const fullscreenLabel = requiredElement<HTMLElement>("#fullscreen-label");
 const fullscreenStatus = requiredElement<HTMLElement>("#fullscreen-status");
 const purchaseButton = requiredElement<HTMLButtonElement>(
@@ -159,16 +161,15 @@ const collectionProgress = requiredElement<HTMLElement>(
 );
 const playerStatusLevel = requiredElement<HTMLElement>("#player-status-level");
 const playerStatusXp = requiredElement<HTMLElement>("#player-status-xp");
+const playerStatusXpFill = requiredElement<HTMLElement>(
+  "#player-status-xp-fill",
+);
 const equipmentPreview = requiredElement<HTMLElement>("#equipment-preview");
 const playerStatusChallenges = requiredElement<HTMLUListElement>(
   "#player-status-challenges",
 );
 const playerStatusProgress = requiredElement<HTMLElement>(
   "#player-status-progress",
-);
-const achievementList = requiredElement<HTMLUListElement>("#achievement-list");
-const achievementProgress = requiredElement<HTMLElement>(
-  "#achievements-progress",
 );
 const settingsStatus = requiredElement<HTMLElement>("#settings-status");
 const soundStatus = requiredElement<HTMLElement>("#sound-status");
@@ -310,7 +311,6 @@ const screens: Readonly<Record<ScreenId, HTMLElement>> = Object.freeze({
   gameplay: gameplayScreen,
   result: resultRoot,
   collections: collectionsScreen,
-  achievements: achievementsScreen,
   settings: settingsScreen,
 });
 
@@ -330,6 +330,9 @@ function fullscreenStatusText(state: FullscreenState): string {
 function renderFullscreen(change: FullscreenStateChange): void {
   const label = change.active ? "Exit fullscreen" : "Enter fullscreen";
   fullscreenButton.disabled = !change.supported;
+  fullscreenButton.hidden = change.active;
+  fullscreenExitButton.hidden = !change.active;
+  fullscreenExitButton.disabled = !change.active;
   fullscreenLabel.textContent = label;
   fullscreenButton.setAttribute("aria-label", label);
   fullscreenButton.title = label;
@@ -338,7 +341,7 @@ function renderFullscreen(change: FullscreenStateChange): void {
   fullscreenStatus.dataset.state = change.state;
 }
 
-const fullscreenController = createFullscreenController(gameplayScreen, {
+const fullscreenController = createFullscreenController(appShell, {
   onStateChange: renderFullscreen,
 });
 
@@ -586,16 +589,14 @@ const screenNavigation = createScreenNavigation(
     collectionProgress,
     playerStatusLevel,
     playerStatusXp,
+    playerStatusXpFill,
     equipmentPreview,
     playerStatusChallenges,
     playerStatusProgress,
-    achievementList,
-    achievementProgress,
   },
   {
     readProfile: () => currentProfile,
     onLeaveGameplay: () => {
-      void fullscreenController.exit();
       soundEffects.stopEffects();
     },
     beforeShowTitle: () => {
@@ -913,22 +914,22 @@ fullscreenButton.addEventListener("click", () => {
   });
 });
 
+fullscreenExitButton.addEventListener("click", () => {
+  runUiAction("cancel", () => {
+    void fullscreenController.exit();
+  });
+});
+
 requiredElement<HTMLButtonElement>("#start-run").addEventListener("click", () =>
   activeRunController?.start(currentProfile, { startImmediately: true }),
 );
 requiredElement<HTMLButtonElement>("#title-collections").addEventListener(
   "click",
-  () =>
-    runUiAction("activate", () =>
-      screenNavigation?.showProfileScreen("collections"),
-    ),
+  () => runUiAction("activate", () => screenNavigation?.showProfileScreen()),
 );
 requiredElement<HTMLButtonElement>("#title-achievements").addEventListener(
   "click",
-  () =>
-    runUiAction("activate", () =>
-      screenNavigation?.showProfileScreen("achievements"),
-    ),
+  () => runUiAction("activate", () => screenNavigation?.showProfileScreen()),
 );
 requiredElement<HTMLButtonElement>("#title-settings").addEventListener(
   "click",
@@ -944,24 +945,14 @@ requiredElement<HTMLButtonElement>("#result-main-menu").addEventListener(
 );
 requiredElement<HTMLButtonElement>("#result-view-collections").addEventListener(
   "click",
-  () =>
-    runUiAction("activate", () =>
-      screenNavigation?.showProfileScreen("collections"),
-    ),
+  () => runUiAction("activate", () => screenNavigation?.showProfileScreen()),
 );
 requiredElement<HTMLButtonElement>(
   "#result-view-achievements",
 ).addEventListener("click", () =>
-  runUiAction("activate", () =>
-    screenNavigation?.showProfileScreen("achievements"),
-  ),
+  runUiAction("activate", () => screenNavigation?.showProfileScreen()),
 );
 requiredElement<HTMLButtonElement>("#collections-back").addEventListener(
-  "click",
-  () =>
-    runUiAction("cancel", () => screenNavigation?.returnFromProfileScreen()),
-);
-requiredElement<HTMLButtonElement>("#achievements-back").addEventListener(
   "click",
   () =>
     runUiAction("cancel", () => screenNavigation?.returnFromProfileScreen()),

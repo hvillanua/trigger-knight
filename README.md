@@ -215,9 +215,12 @@ server. This enables the Advance run control and immediate single-step command
 dispatch. Production builds always use automatic scheduling.
 
 The gameplay screen provides an Enter fullscreen control when the host supports
-the Fullscreen API. Entry, exit, denied requests, and unsupported hosts are
-reported beside the control; changing the presentation size does not change the
-480 by 320 world camera. The browser honors `prefers-reduced-motion` by removing
+the Fullscreen API. Fullscreen remains active while the player moves through
+the result and menu screens. The shell-level Exit fullscreen control and the
+browser's Escape key leave fullscreen. Entry, exit, denied requests, and
+unsupported hosts are reported beside the control. Changing the presentation
+size does not change the 480 by 320 world camera. The browser honors
+`prefers-reduced-motion` by removing
 optional world effects, interpolation, and result counting animation while
 leaving logical timing, action eligibility, and committed results unchanged.
 For deterministic development replays, `/?manual=1&seed=<seed>` selects the

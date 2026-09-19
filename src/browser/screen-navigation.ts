@@ -3,9 +3,10 @@ import type {
   ProfileOverviewView,
   ProfileState,
 } from "../application/contracts.js";
+import { profileExperienceThreshold } from "../domain/profile.js";
 
 export type ScreenId =
-  "title" | "gameplay" | "result" | "collections" | "achievements" | "settings";
+  "title" | "gameplay" | "result" | "collections" | "settings";
 
 export interface ScreenNavigationElements {
   readonly screens: Readonly<Record<ScreenId, HTMLElement>>;
@@ -16,11 +17,10 @@ export interface ScreenNavigationElements {
   readonly collectionProgress: HTMLElement;
   readonly playerStatusLevel: HTMLElement;
   readonly playerStatusXp: HTMLElement;
+  readonly playerStatusXpFill: HTMLElement;
   readonly equipmentPreview: HTMLElement;
   readonly playerStatusChallenges: HTMLUListElement;
   readonly playerStatusProgress: HTMLElement;
-  readonly achievementList: HTMLUListElement;
-  readonly achievementProgress: HTMLElement;
 }
 
 export interface ScreenNavigationOptions {
@@ -35,7 +35,7 @@ export interface ScreenNavigation {
   current(): ScreenId;
   show(screen: ScreenId, focus?: boolean): void;
   showTitle(): void;
-  showProfileScreen(screen: "collections" | "achievements"): void;
+  showProfileScreen(): void;
   showSettings(): void;
   returnFromProfileScreen(): void;
   returnFromSettings(): void;
@@ -57,15 +57,15 @@ function achievementLabel(
 ): string {
   switch (id) {
     case "slay-a-dragon":
-      return "Slay a dragon";
+      return "Slay a Dragon";
     case "stashed-3000-gold":
-      return "Stash 3,000 gold";
+      return "Stashed 3000 Gold";
     case "reach-day-10":
-      return "Reach day 10";
+      return "Reach Day #10";
     case "get-all-collection":
-      return "Complete the collection";
+      return "Get all Collection";
     case "perform-70000-damage":
-      return "Deal 70,000 damage";
+      return "Perform 70000+ Damage";
   }
 }
 
@@ -106,13 +106,19 @@ function renderPlayerStatus(
 ): void {
   elements.equipmentPreview.dataset.state = "empty";
   elements.playerStatusLevel.textContent = `Level ${view.level} (x${view.scoreMultiplier} Score)`;
-  elements.playerStatusXp.textContent = `${view.xp} XP`;
-  elements.playerStatusProgress.textContent = `Game Progress - ${Math.round((view.collections.totalDiscovered / view.collections.total) * 100)}%`;
+  const xpThreshold = profileExperienceThreshold(view.level);
+  elements.playerStatusXp.textContent = `${view.xp}/${xpThreshold} EXP`;
+  elements.playerStatusXpFill.style.width = `${Math.min(100, (view.xp / xpThreshold) * 100)}%`;
+  elements.playerStatusProgress.textContent = `Game Progress - ${Math.round(view.progress.totalPoints)}%`;
   elements.playerStatusChallenges.replaceChildren(
     ...view.achievements.map((achievement) => {
       const item = document.createElement("li");
       item.dataset.unlocked = String(achievement.unlocked);
-      item.textContent = `${achievementLabel(achievement.id)} ${achievement.unlocked ? "■" : "□"}`;
+      item.setAttribute(
+        "aria-label",
+        `${achievementLabel(achievement.id)}, ${achievement.unlocked ? "Unlocked" : "Locked"}`,
+      );
+      item.textContent = achievementLabel(achievement.id);
       return item;
     }),
   );
@@ -168,24 +174,6 @@ export function createScreenNavigation(
     elements.collectionProgress.textContent =
       `${view.collections.totalDiscovered}/${view.collections.total} equipment discoveries · ` +
       `${view.progress.collectionPoints} collection points`;
-    elements.achievementList.replaceChildren(
-      ...view.achievements.map((achievement) => {
-        const item = document.createElement("li");
-        const state = achievement.unlocked ? "Unlocked" : "Locked";
-        item.dataset.achievementId = achievement.id;
-        item.dataset.unlocked = String(achievement.unlocked);
-        item.setAttribute(
-          "aria-label",
-          `${achievementLabel(achievement.id)}, ${state}`,
-        );
-        item.textContent = `${achievementLabel(achievement.id)} · ${state}`;
-        return item;
-      }),
-    );
-    elements.achievementProgress.textContent =
-      `${view.achievements.filter(({ unlocked }) => unlocked).length}/5 achievements unlocked · ` +
-      `${view.progress.achievementPoints} achievement points · ` +
-      `${view.progress.totalPoints} total points`;
   };
 
   const show = (screen: ScreenId, focus = true): void => {
@@ -213,10 +201,10 @@ export function createScreenNavigation(
       options.renderSettings();
       show("title");
     },
-    showProfileScreen(screen: "collections" | "achievements"): void {
+    showProfileScreen(): void {
       profileReturnScreen = currentScreen === "result" ? "result" : "title";
       renderProfileScreens(options.readProfile());
-      show(screen);
+      show("collections");
     },
     showSettings(): void {
       settingsReturnScreen = currentScreen === "result" ? "result" : "title";
