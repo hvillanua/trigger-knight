@@ -75,15 +75,15 @@ test("browses collections and defined achievements from the main menu", async ({
   await page.getByRole("button", { name: "Back", exact: true }).click();
 
   await page.getByRole("button", { name: "View achievements" }).click();
-  await expect(page.locator("#achievements-screen")).toBeVisible();
-  await expect(page.locator("#achievement-list li")).toHaveCount(5);
+  await expect(page.locator("#collections-screen")).toBeVisible();
+  await expect(page.locator("#player-status-challenges li")).toHaveCount(5);
   await expect(
-    page.locator('#achievement-list li[data-unlocked="true"]'),
+    page.locator('#player-status-challenges li[data-unlocked="true"]'),
   ).toHaveCount(1);
-  await expect(page.locator("#achievement-list")).toContainText(
-    "Slay a dragon",
+  await expect(page.locator("#player-status-challenges")).toContainText(
+    "Slay a Dragon",
   );
-  await expect(page.locator("#achievement-list")).not.toContainText(
+  await expect(page.locator("#player-status-challenges")).not.toContainText(
     "undefined",
   );
 });

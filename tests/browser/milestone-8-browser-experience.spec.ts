@@ -67,22 +67,25 @@ async function installFullscreenStub(
   mode: "working" | "denied" | "unsupported",
 ): Promise<void> {
   await page.addInitScript((stubMode) => {
-    let fullscreenElement: Element | null = null;
+    let fullscreenElementId: string | null = null;
     Object.defineProperty(document, "fullscreenEnabled", {
       configurable: true,
       get: () => stubMode !== "unsupported",
     });
     Object.defineProperty(document, "fullscreenElement", {
       configurable: true,
-      get: () => fullscreenElement,
+      get: () =>
+        fullscreenElementId === null
+          ? null
+          : document.getElementById(fullscreenElementId),
     });
     Object.defineProperty(Element.prototype, "requestFullscreen", {
       configurable: true,
-      value: function requestFullscreen() {
+      value: function requestFullscreen(this: Element) {
         if (stubMode === "denied") {
           return Promise.reject(new DOMException("Denied", "NotAllowedError"));
         }
-        fullscreenElement = document.querySelector("#app-shell");
+        fullscreenElementId = this.id;
         document.dispatchEvent(new Event("fullscreenchange"));
         return Promise.resolve();
       },
@@ -90,7 +93,7 @@ async function installFullscreenStub(
     Object.defineProperty(document, "exitFullscreen", {
       configurable: true,
       value: function exitFullscreen() {
-        fullscreenElement = null;
+        fullscreenElementId = null;
         document.dispatchEvent(new Event("fullscreenchange"));
         return Promise.resolve();
       },
@@ -126,7 +129,7 @@ test("keeps fullscreen active while moving from a finished run to player status"
   ).toBeVisible();
   await page.getByRole("button", { name: "View achievements" }).click();
   await expect(
-    page.getByRole("heading", { name: "Achievements" }),
+    page.getByRole("heading", { name: "PLAYER STATUS" }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Exit fullscreen" }),
@@ -497,8 +500,8 @@ test("keeps assembled screens readable and operable at representative sizes", as
       await expect(page.locator("#collections-screen")).toBeVisible();
       await page.locator("#collections-back").click();
       await page.getByRole("button", { name: "View achievements" }).click();
-      await expect(page.locator("#achievements-screen")).toBeVisible();
-      await page.locator("#achievements-back").click();
+      await expect(page.locator("#collections-screen")).toBeVisible();
+      await page.locator("#collections-back").click();
       await page.getByRole("button", { name: "Settings" }).click();
       await expect(page.locator("#settings-screen")).toBeVisible();
       await page.locator("#settings-back").click();

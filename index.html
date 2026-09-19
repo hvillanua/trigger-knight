@@ -44,6 +44,7 @@
         hidden
       >
         <h2 id="title-screen-heading" class="visually-hidden">Main menu</h2>
+        <div class="title-sky" aria-hidden="true"></div>
         <div class="title-hero-art" aria-hidden="true"></div>
         <div class="title-logo" aria-hidden="true"></div>
         <div class="title-actions controls" aria-label="Main menu actions">
@@ -435,66 +436,62 @@
 
       <section
         id="collections-screen"
-        class="screen profile-screen"
+        class="screen profile-screen player-status-screen"
         aria-labelledby="collections-heading"
         tabindex="-1"
         hidden
       >
+        <div class="player-status-sky" aria-hidden="true"></div>
+        <div class="player-status-hero" aria-hidden="true"></div>
+        <div class="player-status-xp-block">
+          <p id="player-status-level" class="player-status-level"></p>
+          <div class="player-status-xp-bracket" aria-hidden="true">
+            <span class="player-status-xp-track">
+              <span id="player-status-xp-fill"></span>
+            </span>
+          </div>
+          <p id="player-status-xp" class="player-status-xp"></p>
+        </div>
+        <div class="player-status-content">
+          <div class="player-status-rule" aria-hidden="true"></div>
+          <h3 id="collections-list-heading">Collections</h3>
+          <div class="collection-columns">
+            <section aria-labelledby="weapons-heading">
+              <h4 id="weapons-heading">Weapons</h4>
+              <ul id="weapon-collection" class="discovery-list"></ul>
+            </section>
+            <section aria-labelledby="armor-heading">
+              <h4 id="armor-heading">Armors</h4>
+              <ul id="armor-collection" class="discovery-list"></ul>
+            </section>
+          </div>
+          <p class="player-status-hint">Hover to see Equip</p>
+          <div
+            id="equipment-preview"
+            class="equipment-preview"
+            role="status"
+            aria-live="polite"
+          >
+            Select an equipment slot to see its details.
+          </div>
+          <div
+            class="player-status-rule challenges-rule"
+            aria-hidden="true"
+          ></div>
+          <section
+            class="player-status-challenges"
+            aria-labelledby="player-status-challenges-heading"
+          >
+            <h3 id="player-status-challenges-heading">Challenges</h3>
+            <ul id="player-status-challenges" class="challenge-list"></ul>
+          </section>
+          <p id="player-status-progress"></p>
+        </div>
+        <p id="collections-progress" class="visually-hidden"></p>
         <div class="screen-heading-row">
           <h2 id="collections-heading">PLAYER STATUS</h2>
           <button id="collections-back" type="button">Back</button>
         </div>
-        <div class="player-status-layout">
-          <div class="player-status-hero" aria-hidden="true"></div>
-          <div class="player-status-content">
-            <p id="player-status-level" class="player-status-level"></p>
-            <p id="player-status-xp" class="player-status-xp"></p>
-            <div class="player-status-rule" aria-hidden="true"></div>
-            <p id="collections-progress" class="player-status-progress"></p>
-            <p class="player-status-hint">Hover to see Equip</p>
-            <div
-              id="equipment-preview"
-              class="equipment-preview"
-              role="status"
-              aria-live="polite"
-            >
-              Select an equipment slot to see its details.
-            </div>
-          </div>
-        </div>
-        <div class="collection-columns">
-          <section aria-labelledby="weapons-heading">
-            <h3 id="weapons-heading">Weapons</h3>
-            <ul id="weapon-collection" class="discovery-list"></ul>
-          </section>
-          <section aria-labelledby="armor-heading">
-            <h3 id="armor-heading">Armor</h3>
-            <ul id="armor-collection" class="discovery-list"></ul>
-          </section>
-        </div>
-        <section
-          class="player-status-challenges"
-          aria-labelledby="player-status-challenges-heading"
-        >
-          <h3 id="player-status-challenges-heading">Challenges</h3>
-          <ul id="player-status-challenges" class="challenge-list"></ul>
-          <p id="player-status-progress"></p>
-        </section>
-      </section>
-
-      <section
-        id="achievements-screen"
-        class="screen profile-screen"
-        aria-labelledby="achievements-heading"
-        tabindex="-1"
-        hidden
-      >
-        <div class="screen-heading-row">
-          <h2 id="achievements-heading">Achievements</h2>
-          <button id="achievements-back" type="button">Back</button>
-        </div>
-        <p id="achievements-progress"></p>
-        <ul id="achievement-list" class="achievement-list"></ul>
       </section>
 
       <section

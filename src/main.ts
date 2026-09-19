@@ -73,7 +73,6 @@ const appShell = requiredElement<HTMLElement>("#app-shell");
 const titleScreen = requiredElement<HTMLElement>("#title-screen");
 const gameplayScreen = requiredElement<HTMLElement>("#gameplay-screen");
 const collectionsScreen = requiredElement<HTMLElement>("#collections-screen");
-const achievementsScreen = requiredElement<HTMLElement>("#achievements-screen");
 const settingsScreen = requiredElement<HTMLElement>("#settings-screen");
 const canvas = requiredElement<HTMLCanvasElement>("#game-canvas");
 const dismissTutorialButton =
@@ -162,16 +161,15 @@ const collectionProgress = requiredElement<HTMLElement>(
 );
 const playerStatusLevel = requiredElement<HTMLElement>("#player-status-level");
 const playerStatusXp = requiredElement<HTMLElement>("#player-status-xp");
+const playerStatusXpFill = requiredElement<HTMLElement>(
+  "#player-status-xp-fill",
+);
 const equipmentPreview = requiredElement<HTMLElement>("#equipment-preview");
 const playerStatusChallenges = requiredElement<HTMLUListElement>(
   "#player-status-challenges",
 );
 const playerStatusProgress = requiredElement<HTMLElement>(
   "#player-status-progress",
-);
-const achievementList = requiredElement<HTMLUListElement>("#achievement-list");
-const achievementProgress = requiredElement<HTMLElement>(
-  "#achievements-progress",
 );
 const settingsStatus = requiredElement<HTMLElement>("#settings-status");
 const soundStatus = requiredElement<HTMLElement>("#sound-status");
@@ -313,7 +311,6 @@ const screens: Readonly<Record<ScreenId, HTMLElement>> = Object.freeze({
   gameplay: gameplayScreen,
   result: resultRoot,
   collections: collectionsScreen,
-  achievements: achievementsScreen,
   settings: settingsScreen,
 });
 
@@ -592,11 +589,10 @@ const screenNavigation = createScreenNavigation(
     collectionProgress,
     playerStatusLevel,
     playerStatusXp,
+    playerStatusXpFill,
     equipmentPreview,
     playerStatusChallenges,
     playerStatusProgress,
-    achievementList,
-    achievementProgress,
   },
   {
     readProfile: () => currentProfile,
@@ -929,17 +925,11 @@ requiredElement<HTMLButtonElement>("#start-run").addEventListener("click", () =>
 );
 requiredElement<HTMLButtonElement>("#title-collections").addEventListener(
   "click",
-  () =>
-    runUiAction("activate", () =>
-      screenNavigation?.showProfileScreen("collections"),
-    ),
+  () => runUiAction("activate", () => screenNavigation?.showProfileScreen()),
 );
 requiredElement<HTMLButtonElement>("#title-achievements").addEventListener(
   "click",
-  () =>
-    runUiAction("activate", () =>
-      screenNavigation?.showProfileScreen("achievements"),
-    ),
+  () => runUiAction("activate", () => screenNavigation?.showProfileScreen()),
 );
 requiredElement<HTMLButtonElement>("#title-settings").addEventListener(
   "click",
@@ -955,24 +945,14 @@ requiredElement<HTMLButtonElement>("#result-main-menu").addEventListener(
 );
 requiredElement<HTMLButtonElement>("#result-view-collections").addEventListener(
   "click",
-  () =>
-    runUiAction("activate", () =>
-      screenNavigation?.showProfileScreen("collections"),
-    ),
+  () => runUiAction("activate", () => screenNavigation?.showProfileScreen()),
 );
 requiredElement<HTMLButtonElement>(
   "#result-view-achievements",
 ).addEventListener("click", () =>
-  runUiAction("activate", () =>
-    screenNavigation?.showProfileScreen("achievements"),
-  ),
+  runUiAction("activate", () => screenNavigation?.showProfileScreen()),
 );
 requiredElement<HTMLButtonElement>("#collections-back").addEventListener(
-  "click",
-  () =>
-    runUiAction("cancel", () => screenNavigation?.returnFromProfileScreen()),
-);
-requiredElement<HTMLButtonElement>("#achievements-back").addEventListener(
   "click",
   () =>
     runUiAction("cancel", () => screenNavigation?.returnFromProfileScreen()),

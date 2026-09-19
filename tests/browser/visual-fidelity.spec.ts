@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test";
 test("keeps the reference-backed screens composed and interactive", async ({
   page,
 }, testInfo) => {
+  await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/?manual=1");
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
   await page.keyboard.press("p");
@@ -16,13 +17,25 @@ test("keeps the reference-backed screens composed and interactive", async ({
     };
     return {
       parchment: readBackground("#title-screen"),
+      sky: readBackground(".title-sky"),
       hero: readBackground(".title-hero-art"),
       logo: readBackground(".title-logo"),
     };
   });
   expect(titleAssets.parchment).toContain("529.jpg");
+  expect(titleAssets.sky).toContain("357.jpg");
   expect(titleAssets.hero).toContain("533.png");
   expect(titleAssets.logo).toContain("268.png");
+  const initialSkyPosition = await page
+    .locator(".title-sky")
+    .evaluate((element) => getComputedStyle(element).backgroundPositionX);
+  await expect
+    .poll(() =>
+      page
+        .locator(".title-sky")
+        .evaluate((element) => getComputedStyle(element).backgroundPositionX),
+    )
+    .not.toBe(initialSkyPosition);
   const titleTutorialToggle = page.locator("#title-tutorial-toggle");
   await expect(titleTutorialToggle).toBeChecked();
   await titleTutorialToggle.uncheck();
@@ -59,6 +72,10 @@ test("keeps the reference-backed screens composed and interactive", async ({
   await expect(page.locator("#equipment-preview")).toContainText("tier");
   await equipmentSlots.first().click();
   await expect(page.locator("#equipment-preview")).toContainText("tier");
+  await expect(page.locator("#player-status-xp")).toHaveText("0/130 EXP");
+  await expect(page.locator("#player-status-progress")).toHaveText(
+    "Game Progress - 7%",
+  );
   await testInfo.attach("reference-player-status.png", {
     body: await page.screenshot(),
     contentType: "image/png",
