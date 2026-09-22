@@ -85,7 +85,7 @@ test("keeps the reference-backed screens composed and interactive", async ({
     contentType: "image/png",
   });
 
-  await page.getByRole("button", { name: "View collections" }).click();
+  await page.getByRole("button", { name: "View achievements" }).click();
   const profileAssets = await page
     .locator("#collections-screen")
     .evaluate(() => {
@@ -100,6 +100,150 @@ test("keeps the reference-backed screens composed and interactive", async ({
     });
   expect(profileAssets.parchment).toContain("529.jpg");
   expect(profileAssets.hero).toContain("533.png");
+  await expect(page.locator("#collections-heading")).toHaveText("ACHIEVEMENTS");
+  const achievementsLabel = await page
+    .locator("#collections-heading")
+    .evaluate((element) => {
+      const style = getComputedStyle(element);
+      const strip = getComputedStyle(element, "::before");
+      const textRange = document.createRange();
+      textRange.selectNodeContents(element);
+      return {
+        fontFamily: style.fontFamily,
+        fontSize: style.fontSize,
+        fontWeight: style.fontWeight,
+        color: style.color,
+        textStroke: style.getPropertyValue("-webkit-text-stroke"),
+        textWidth: textRange.getBoundingClientRect().width,
+        strip: {
+          backgroundImage: strip.backgroundImage,
+          top: strip.top,
+          width: strip.width,
+          height: strip.height,
+          zIndex: strip.zIndex,
+        },
+      };
+    });
+  expect(achievementsLabel.fontFamily).toContain("Trigger Knight Calibri");
+  expect(achievementsLabel.fontFamily).not.toContain("Calibri 16");
+  expect(achievementsLabel.fontSize).toBe("30px");
+  expect(achievementsLabel.fontWeight).toBe("400");
+  expect(achievementsLabel.color).toBe("rgb(0, 0, 0)");
+  expect(achievementsLabel.textStroke).toContain("1px");
+  expect(achievementsLabel.textWidth).toBeCloseTo(197, 0);
+  expect(achievementsLabel.strip.backgroundImage).toContain("linear-gradient");
+  expect(Number.parseFloat(achievementsLabel.strip.top)).toBeCloseTo(21, 0);
+  expect(Number.parseFloat(achievementsLabel.strip.width)).toBeCloseTo(232, 0);
+  expect(Number.parseFloat(achievementsLabel.strip.height)).toBeCloseTo(13, 0);
+  expect(achievementsLabel.strip.zIndex).toBe("-1");
+  const screen = page.locator("#collections-screen");
+  const textScreenshot = await screen.screenshot();
+  const heading = page.locator("#collections-heading");
+  const originalInlineStyles = await heading.evaluate((element) => ({
+    color: element.style.color,
+    textShadow: element.style.textShadow,
+    textStroke: element.style.getPropertyValue("-webkit-text-stroke"),
+  }));
+  await heading.evaluate((element) => {
+    element.style.color = "transparent";
+    element.style.textShadow = "none";
+    element.style.setProperty("-webkit-text-stroke", "0 transparent");
+  });
+  const backgroundOnlyScreenshot = await screen.screenshot();
+  await heading.evaluate((element, styles) => {
+    element.style.color = styles.color;
+    element.style.textShadow = styles.textShadow;
+    element.style.setProperty("-webkit-text-stroke", styles.textStroke);
+  }, originalInlineStyles);
+  const visibleTextBounds = await page.evaluate(
+    async ({ text, background }) => {
+      const readImage = async (base64: string): Promise<ImageData> => {
+        const image = new Image();
+        image.src = `data:image/png;base64,${base64}`;
+        await image.decode();
+        const canvas = document.createElement("canvas");
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        const context = canvas.getContext("2d");
+        if (context === null) throw new Error("Missing screenshot canvas");
+        context.drawImage(image, 0, 0);
+        return context.getImageData(0, 0, canvas.width, canvas.height);
+      };
+      const withText = await readImage(text);
+      const withoutText = await readImage(background);
+      const headingElement = document.querySelector<HTMLElement>(
+        "#collections-heading",
+      );
+      const screenElement = document.querySelector<HTMLElement>(
+        "#collections-screen",
+      );
+      if (headingElement === null || screenElement === null) {
+        throw new Error("Missing heading screenshot bounds");
+      }
+      const headingRect = headingElement.getBoundingClientRect();
+      const screenRect = screenElement.getBoundingClientRect();
+      const left = Math.max(0, Math.floor(headingRect.left - screenRect.left));
+      const right = Math.min(
+        withText.width,
+        Math.ceil(headingRect.right - screenRect.left),
+      );
+      const top = Math.max(0, Math.floor(headingRect.top - screenRect.top));
+      const bottom = Math.min(
+        withText.height,
+        Math.ceil(headingRect.bottom - screenRect.top),
+      );
+      let minY = bottom;
+      let maxY = top;
+      for (let y = top; y < bottom; y += 1) {
+        for (let x = left; x < right; x += 1) {
+          const index = (y * withText.width + x) * 4;
+          const withTextLuminance =
+            (withText.data[index] ?? 0) +
+            (withText.data[index + 1] ?? 0) +
+            (withText.data[index + 2] ?? 0);
+          const withoutTextLuminance =
+            (withoutText.data[index] ?? 0) +
+            (withoutText.data[index + 1] ?? 0) +
+            (withoutText.data[index + 2] ?? 0);
+          if (withoutTextLuminance - withTextLuminance > 24) {
+            minY = Math.min(minY, y);
+            maxY = Math.max(maxY, y);
+          }
+        }
+      }
+      return { minY, maxY };
+    },
+    {
+      text: textScreenshot.toString("base64"),
+      background: backgroundOnlyScreenshot.toString("base64"),
+    },
+  );
+  const labelGeometry = await heading.evaluate((element) => {
+    const screen = document.querySelector<HTMLElement>("#collections-screen");
+    if (screen === null) throw new Error("Missing achievements screen");
+    const headingRect = element.getBoundingClientRect();
+    const screenRect = screen.getBoundingClientRect();
+    const strip = getComputedStyle(element, "::before");
+    return {
+      stripMidpoint:
+        headingRect.top -
+        screenRect.top +
+        Number.parseFloat(strip.top) +
+        Number.parseFloat(strip.height) / 2,
+    };
+  });
+  expect(visibleTextBounds.maxY).toBeGreaterThan(visibleTextBounds.minY);
+  expect(
+    Math.abs(visibleTextBounds.maxY + 1 - labelGeometry.stripMidpoint),
+  ).toBeLessThan(1.5);
+  await expect(page.locator("#player-status-challenges-heading")).toBeVisible();
+  await expect(page.locator("#player-status-challenges-heading")).toHaveText(
+    "Challenges",
+  );
+  await expect(page.locator("#player-status-challenges-heading")).toHaveCSS(
+    "color",
+    "rgb(8, 11, 20)",
+  );
   const equipmentSlots = page.locator(".equipment-slot");
   await expect(equipmentSlots).toHaveCount(20);
   await expect(page.locator("#weapons-heading")).toHaveText("Wpns");
@@ -189,7 +333,6 @@ test("keeps the title actions inside the stage at narrow widths", async ({
   if (stageBox === null) throw new Error("Missing title stage bounds");
   for (const selector of [
     "#start-run",
-    "#title-collections",
     "#title-achievements",
     "#title-settings",
   ]) {

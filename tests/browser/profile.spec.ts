@@ -158,6 +158,7 @@ test("shows a committed result and starts the next run from its profile", async 
   await expect(
     page.getByRole("button", { name: "Skip score count" }),
   ).toBeVisible();
+  await expect(page.locator("#result-view-collections")).toHaveCount(0);
   await expect
     .poll(() =>
       page
@@ -165,8 +166,6 @@ test("shows a committed result and starts the next run from its profile", async 
         .evaluate((element) => (element as HTMLElement).inert),
     )
     .toBe(true);
-  await page.locator("#result-view-collections").focus();
-  await expect(page.locator("#result-view-collections")).not.toBeFocused();
   const scoreCardGeometry = await page.evaluate(() => {
     const card = document.querySelector<HTMLElement>(".result-score-card");
     const track = document.querySelector<HTMLElement>(".result-xp-track");
@@ -175,8 +174,8 @@ test("shows a committed result and starts the next run from its profile", async 
     const silhouette = document.querySelector<HTMLElement>(
       ".result-score-silhouette",
     );
-    const twitter = document.querySelector<HTMLElement>(
-      ".result-score-twitter",
+    const calculation = document.querySelector<HTMLElement>(
+      "#result-calculation",
     );
     if (
       card === null ||
@@ -184,7 +183,7 @@ test("shows a committed result and starts the next run from its profile", async 
       fill === null ||
       result === null ||
       silhouette === null ||
-      twitter === null
+      calculation === null
     ) {
       throw new Error("Missing score card geometry");
     }
@@ -198,7 +197,30 @@ test("shows a committed result and starts the next run from its profile", async 
       fill: rect(fill),
       parchment: getComputedStyle(result).backgroundImage,
       silhouette: getComputedStyle(silhouette).webkitMaskImage,
-      twitter: getComputedStyle(twitter).backgroundImage,
+      calculation: (() => {
+        const style = getComputedStyle(calculation);
+        const strip = getComputedStyle(calculation, "::before");
+        const textRange = document.createRange();
+        textRange.selectNodeContents(calculation);
+        const calculationRect = calculation.getBoundingClientRect();
+        const textRect = textRange.getBoundingClientRect();
+        return {
+          fontFamily: style.fontFamily,
+          fontSize: style.fontSize,
+          fontWeight: style.fontWeight,
+          color: style.color,
+          textStroke: style.getPropertyValue("-webkit-text-stroke"),
+          textWidth: textRange.getBoundingClientRect().width,
+          textBottomOffset: textRect.bottom - calculationRect.top,
+          strip: {
+            backgroundImage: strip.backgroundImage,
+            top: strip.top,
+            width: strip.width,
+            height: strip.height,
+            zIndex: strip.zIndex,
+          },
+        };
+      })(),
     };
   });
   expect(scoreCardGeometry.card.width).toBeCloseTo(480);
@@ -208,7 +230,34 @@ test("shows a committed result and starts the next run from its profile", async 
   );
   expect(scoreCardGeometry.parchment).toContain("529.jpg");
   expect(scoreCardGeometry.silhouette).toContain("533.png");
-  expect(scoreCardGeometry.twitter).toContain("596.png");
+  expect(scoreCardGeometry.calculation.fontFamily).toContain(
+    "Trigger Knight Calibri",
+  );
+  expect(scoreCardGeometry.calculation.fontSize).toBe("30px");
+  expect(scoreCardGeometry.calculation.fontWeight).toBe("400");
+  expect(scoreCardGeometry.calculation.color).toBe("rgb(0, 0, 0)");
+  expect(scoreCardGeometry.calculation.textStroke).toContain("1px");
+  expect(scoreCardGeometry.calculation.textWidth).toBeCloseTo(173, 0);
+  expect(
+    Math.abs(
+      scoreCardGeometry.calculation.textBottomOffset -
+        (Number.parseFloat(scoreCardGeometry.calculation.strip.top) +
+          Number.parseFloat(scoreCardGeometry.calculation.strip.height) / 2),
+    ),
+  ).toBeLessThan(1);
+  expect(scoreCardGeometry.calculation.strip.backgroundImage).toContain(
+    "linear-gradient",
+  );
+  expect(
+    Number.parseFloat(scoreCardGeometry.calculation.strip.top),
+  ).toBeCloseTo(21, 0);
+  expect(
+    Number.parseFloat(scoreCardGeometry.calculation.strip.width),
+  ).toBeCloseTo(232, 0);
+  expect(
+    Number.parseFloat(scoreCardGeometry.calculation.strip.height),
+  ).toBeCloseTo(13, 0);
+  expect(scoreCardGeometry.calculation.strip.zIndex).toBe("-1");
   const savedRecord = await page.evaluate((key) => {
     const raw = localStorage.getItem(key);
     if (raw === null) {

@@ -1420,6 +1420,7 @@ body {
 
 #collections-screen.player-status-screen .player-status-challenges h3 {
   margin: 0 0 0.8cqw;
+  color: #080b14;
   font-family: "Trigger Knight Hooge", sans-serif;
   font-size: 2.3cqw;
   font-weight: 400;
@@ -1471,18 +1472,35 @@ body {
 
 #collections-screen.player-status-screen .screen-heading-row h2 {
   position: absolute;
-  bottom: 3cqw;
-  left: 1.5cqw;
+  bottom: 6.25cqw;
+  left: 1.4583cqw;
+  z-index: 0;
   margin: 0;
-  color: #f7f1df;
-  font-family: "Trigger Knight Calibri 16", sans-serif;
-  font-size: 5.9cqw;
-  font-weight: 700;
-  text-shadow:
-    -2px -2px 0 #080b14,
-    2px -2px 0 #080b14,
-    -2px 2px 0 #080b14,
-    2px 2px 0 #080b14;
+  color: #000;
+  font-family: "Trigger Knight Calibri", sans-serif;
+  font-size: 6.25cqw;
+  font-weight: 400;
+  letter-spacing: -0.035cqw;
+  line-height: 1;
+  -webkit-text-stroke: 1px #fff;
+  text-shadow: 0 0 3px #fff;
+}
+
+#collections-screen.player-status-screen .screen-heading-row h2 > span {
+  position: relative;
+  top: 1.0417cqw;
+  z-index: 1;
+}
+
+#collections-screen.player-status-screen .screen-heading-row h2::before {
+  position: absolute;
+  top: 70%;
+  left: -1.4583cqw;
+  z-index: -1;
+  width: 48.3333cqw;
+  height: 2.7083cqw;
+  content: "";
+  background: linear-gradient(to right, #fff 0%, rgb(255 255 255 / 0%) 100%);
 }
 
 #collections-screen.player-status-screen .screen-heading-row button {
@@ -1547,18 +1565,6 @@ body {
   mask-size: 100% 100%;
   -webkit-mask-mode: alpha;
   mask-mode: alpha;
-}
-
-.result-score-twitter {
-  position: absolute;
-  top: 4.1667cqw;
-  left: 4.1667cqw;
-  z-index: 3;
-  width: 6.25cqw;
-  height: 6.25cqw;
-  background: url("../assets/original/images/596.png") center / 100% 100%
-    no-repeat;
-  pointer-events: none;
 }
 
 .result-score-progression {
@@ -1707,33 +1713,31 @@ body {
 
 #result-calculation {
   position: absolute;
-  bottom: 10.625%;
+  bottom: 9.375%;
   left: 1.4583cqw;
   z-index: 4;
   width: 48.5417%;
   margin: 0;
-  color: #080b14;
+  color: #000;
   font-family: "Trigger Knight Calibri", sans-serif;
   font-size: 6.25cqw;
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1;
+  letter-spacing: -0.075cqw;
   text-align: left;
-  text-shadow:
-    -1px -1px 0 #f7f1df,
-    1px -1px 0 #f7f1df,
-    -1px 1px 0 #f7f1df,
-    1px 1px 0 #f7f1df;
+  -webkit-text-stroke: 1px #fff;
+  text-shadow: 0 0 3px #fff;
 }
 
 #result-calculation::before {
   position: absolute;
-  top: 52%;
-  right: 1.4583cqw;
+  top: 70%;
   left: -1.4583cqw;
   z-index: -1;
-  height: 4.0625cqw;
+  width: 48.3333cqw;
+  height: 2.7083cqw;
   content: "";
-  background: #f7f1df;
+  background: linear-gradient(to right, #fff 0%, rgb(255 255 255 / 0%) 100%);
 }
 
 .run-result .result-score-actions {
