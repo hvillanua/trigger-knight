@@ -319,6 +319,50 @@ test("keeps the reference-backed screens composed and interactive", async ({
   });
 });
 
+test("keeps the original knight-shaped sky extension on the profile screen", async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+  await page.keyboard.press("p");
+  await page.getByRole("button", { name: "Main menu", exact: true }).click();
+  await page.getByRole("button", { name: "View achievements" }).click();
+
+  const screenshot = await page.locator("#collections-screen").screenshot();
+  const contourPixels = await page.evaluate(async (base64) => {
+    const image = new Image();
+    image.src = `data:image/png;base64,${base64}`;
+    await image.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const context = canvas.getContext("2d");
+    if (context === null) throw new Error("Missing screenshot canvas");
+    context.drawImage(image, 0, 0);
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    const points = [
+      { x: 73, y: 37 },
+      { x: 274, y: 75 },
+      { x: 112, y: 90 },
+    ];
+    return points.map(({ x, y }) => {
+      const index = (y * imageData.width + x) * 4;
+      return [
+        imageData.data[index] ?? 0,
+        imageData.data[index + 1] ?? 0,
+        imageData.data[index + 2] ?? 0,
+      ];
+    });
+  }, screenshot.toString("base64"));
+
+  expect(contourPixels).toEqual([
+    [227, 255, 255],
+    [228, 247, 253],
+    [234, 247, 255],
+  ]);
+});
+
 test("keeps the title actions inside the stage at narrow widths", async ({
   page,
 }) => {

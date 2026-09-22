@@ -1,0 +1,14 @@
+{
+  "path": "src/assets/original/shapes/350.svg",
+  "sourceArtifact": "original/kongregate/MonotouchKong13APPSTORE.swf",
+  "sourceArtifactSha256": "0f0630b981172fd2183b3a2ff890d98a178c11bc8e0aa3b5ed1be05c4ddb2c20",
+  "sourceExportIdentifier": "DefineShape4Tag shapeId 350, used by the original silmask and silmask2 clips",
+  "sourceExportSha256": "93660b8ff6d35abee1e24bf4ed017200dacdc9932455ac805514792e2d49d6d2",
+  "extraction": {
+    "tool": "FFDec 26.2.1",
+    "method": "shape:svg export with -selectid 350"
+  },
+  "rightsOrLicense": "Original Trigger Knight visual asset. Copyright remains with applicable rights holders; this repository does not grant a separate public license.",
+  "reviewDate": "2026-09-22",
+  "transformations": "None. The SVG retains the reviewed FFDec export bytes."
+}
