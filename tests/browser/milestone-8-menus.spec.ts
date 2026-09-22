@@ -61,8 +61,12 @@ test("browses collections and defined achievements from the main menu", async ({
   await expect(page.locator("#title-profile-summary")).toContainText(
     "Collections 3/20",
   );
+  await expect(page.locator("#title-collections")).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: "View collections" }),
+  ).toHaveCount(0);
 
-  await page.getByRole("button", { name: "View collections" }).click();
+  await page.getByRole("button", { name: "View achievements" }).click();
   await expect(page.locator("#collections-screen")).toBeVisible();
   await expect(page.locator("#weapon-collection li")).toHaveCount(10);
   await expect(page.locator("#armor-collection li")).toHaveCount(10);
@@ -72,10 +76,6 @@ test("browses collections and defined achievements from the main menu", async ({
   await expect(page.locator("#weapon-collection")).toContainText(
     "Tier 2: Sword",
   );
-  await page.getByRole("button", { name: "Back", exact: true }).click();
-
-  await page.getByRole("button", { name: "View achievements" }).click();
-  await expect(page.locator("#collections-screen")).toBeVisible();
   await expect(page.locator("#player-status-challenges li")).toHaveCount(5);
   await expect(
     page.locator('#player-status-challenges li[data-unlocked="true"]'),

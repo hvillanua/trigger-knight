@@ -202,9 +202,6 @@ const bindingInputs = Object.freeze({
   purchaseCurrentEncounter: bindingPurchase,
   useCarriedItem: bindingUseItem,
 });
-const resultCollections = requiredElement<HTMLButtonElement>(
-  "#result-view-collections",
-);
 const resultAchievements = requiredElement<HTMLButtonElement>(
   "#result-view-achievements",
 );
@@ -534,7 +531,6 @@ function renderCompletion(completion: ActiveRunCompletion): void {
   gameStatus.dataset.completionStatus = commit.status;
   if (commit.status === "failed" || commit.status === "uncertain") {
     gameStatus.dataset.completionError = commit.error.code;
-    resultCollections.disabled = true;
     resultAchievements.disabled = true;
     resultMainMenu.disabled = true;
     screenNavigation?.show("result");
@@ -552,7 +548,6 @@ function renderCompletion(completion: ActiveRunCompletion): void {
   screenNavigation?.renderProfileScreens(currentProfile);
   settingsController?.render(currentSettings);
   delete gameStatus.dataset.completionError;
-  resultCollections.disabled = false;
   resultAchievements.disabled = false;
   resultMainMenu.disabled = false;
   screenNavigation?.show("result");
@@ -923,10 +918,6 @@ fullscreenExitButton.addEventListener("click", () => {
 requiredElement<HTMLButtonElement>("#start-run").addEventListener("click", () =>
   activeRunController?.start(currentProfile, { startImmediately: true }),
 );
-requiredElement<HTMLButtonElement>("#title-collections").addEventListener(
-  "click",
-  () => runUiAction("activate", () => screenNavigation?.showProfileScreen()),
-);
 requiredElement<HTMLButtonElement>("#title-achievements").addEventListener(
   "click",
   () => runUiAction("activate", () => screenNavigation?.showProfileScreen()),
@@ -942,10 +933,6 @@ requiredElement<HTMLButtonElement>("#gameplay-main-menu").addEventListener(
 requiredElement<HTMLButtonElement>("#result-main-menu").addEventListener(
   "click",
   () => runUiAction("cancel", () => screenNavigation?.showTitle()),
-);
-requiredElement<HTMLButtonElement>("#result-view-collections").addEventListener(
-  "click",
-  () => runUiAction("activate", () => screenNavigation?.showProfileScreen()),
 );
 requiredElement<HTMLButtonElement>(
   "#result-view-achievements",

@@ -101,7 +101,7 @@ async function installFullscreenStub(
   }, mode);
 }
 
-test("keeps fullscreen active while moving from a finished run to player status", async ({
+test("keeps fullscreen active while moving from a finished run to achievements", async ({
   page,
 }) => {
   test.setTimeout(90_000);
@@ -129,7 +129,7 @@ test("keeps fullscreen active while moving from a finished run to player status"
   ).toBeVisible();
   await page.getByRole("button", { name: "View achievements" }).click();
   await expect(
-    page.getByRole("heading", { name: "PLAYER STATUS" }),
+    page.getByRole("heading", { name: "ACHIEVEMENTS" }),
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Exit fullscreen" }),
@@ -140,13 +140,7 @@ test("keeps fullscreen active while moving from a finished run to player status"
 
   await page.getByRole("button", { name: "Back" }).click();
   await page.getByRole("button", { name: "Main menu", exact: true }).click();
-  await expect(
-    page.getByRole("button", { name: "View collections" }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "View collections" }).click();
-  await expect(
-    page.getByRole("heading", { name: "PLAYER STATUS" }),
-  ).toBeVisible();
+  await expect(page.locator("#title-collections")).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Exit fullscreen" }),
   ).toBeVisible();
@@ -160,7 +154,7 @@ test("keeps fullscreen active while moving from a finished run to player status"
     .toBeNull();
 });
 
-test("re-enters fullscreen from menu, player status, and settings screens", async ({
+test("re-enters fullscreen from menu, achievements, and settings screens", async ({
   page,
 }) => {
   test.setTimeout(90_000);
@@ -177,7 +171,7 @@ test("re-enters fullscreen from menu, player status, and settings screens", asyn
   expect(summary.terminalReason, JSON.stringify(summary)).toBe("lifespan");
   await page.getByRole("button", { name: "View achievements" }).click();
   await expect(
-    page.getByRole("heading", { name: "PLAYER STATUS" }),
+    page.getByRole("heading", { name: "ACHIEVEMENTS" }),
   ).toBeVisible();
 
   await page.getByRole("button", { name: "Exit fullscreen" }).click();
@@ -195,9 +189,7 @@ test("re-enters fullscreen from menu, player status, and settings screens", asyn
   await page.getByRole("button", { name: "Exit fullscreen" }).click();
   await page.getByRole("button", { name: "Back" }).click();
   await page.getByRole("button", { name: "Main menu", exact: true }).click();
-  await expect(
-    page.getByRole("button", { name: "View collections" }),
-  ).toBeVisible();
+  await expect(page.locator("#title-collections")).toHaveCount(0);
   await expect(
     page.getByRole("button", { name: "Enter fullscreen" }),
   ).toBeVisible();
@@ -435,7 +427,7 @@ test("keeps fullscreen control anchored to every active screen", async ({
   await expect(page.locator("#title-screen")).toBeVisible();
   await expectFullscreenControl();
 
-  await page.getByRole("button", { name: "View collections" }).click();
+  await page.getByRole("button", { name: "View achievements" }).click();
   await expect(page.locator("#collections-screen")).toBeVisible();
   await expectFullscreenControl();
 
@@ -663,9 +655,6 @@ test("keeps assembled screens readable and operable at representative sizes", as
         .click();
       await expect(page.locator("#title-screen")).toBeVisible();
       await expect(page.locator("#title-screen")).toBeFocused();
-      await page.getByRole("button", { name: "View collections" }).click();
-      await expect(page.locator("#collections-screen")).toBeVisible();
-      await page.locator("#collections-back").click();
       await page.getByRole("button", { name: "View achievements" }).click();
       await expect(page.locator("#collections-screen")).toBeVisible();
       await page.locator("#collections-back").click();
