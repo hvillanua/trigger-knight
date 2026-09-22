@@ -1729,6 +1729,12 @@ body {
   text-shadow: 0 0 3px #fff;
 }
 
+#result-calculation > span {
+  position: relative;
+  top: 1.0417cqw;
+  z-index: 1;
+}
+
 #result-calculation::before {
   position: absolute;
   top: 70%;

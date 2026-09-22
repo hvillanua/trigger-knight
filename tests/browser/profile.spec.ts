@@ -202,8 +202,6 @@ test("shows a committed result and starts the next run from its profile", async 
         const strip = getComputedStyle(calculation, "::before");
         const textRange = document.createRange();
         textRange.selectNodeContents(calculation);
-        const calculationRect = calculation.getBoundingClientRect();
-        const textRect = textRange.getBoundingClientRect();
         return {
           fontFamily: style.fontFamily,
           fontSize: style.fontSize,
@@ -211,7 +209,6 @@ test("shows a committed result and starts the next run from its profile", async 
           color: style.color,
           textStroke: style.getPropertyValue("-webkit-text-stroke"),
           textWidth: textRange.getBoundingClientRect().width,
-          textBottomOffset: textRect.bottom - calculationRect.top,
           strip: {
             backgroundImage: strip.backgroundImage,
             top: strip.top,
@@ -238,13 +235,6 @@ test("shows a committed result and starts the next run from its profile", async 
   expect(scoreCardGeometry.calculation.color).toBe("rgb(0, 0, 0)");
   expect(scoreCardGeometry.calculation.textStroke).toContain("1px");
   expect(scoreCardGeometry.calculation.textWidth).toBeCloseTo(173, 0);
-  expect(
-    Math.abs(
-      scoreCardGeometry.calculation.textBottomOffset -
-        (Number.parseFloat(scoreCardGeometry.calculation.strip.top) +
-          Number.parseFloat(scoreCardGeometry.calculation.strip.height) / 2),
-    ),
-  ).toBeLessThan(1);
   expect(scoreCardGeometry.calculation.strip.backgroundImage).toContain(
     "linear-gradient",
   );
@@ -258,6 +248,108 @@ test("shows a committed result and starts the next run from its profile", async 
     Number.parseFloat(scoreCardGeometry.calculation.strip.height),
   ).toBeCloseTo(13, 0);
   expect(scoreCardGeometry.calculation.strip.zIndex).toBe("-1");
+  const scoreCard = page.locator(".result-score-card");
+  const calculation = page.locator("#result-calculation");
+  const textScreenshot = await scoreCard.screenshot();
+  const originalInlineStyles = await calculation.evaluate((element) => ({
+    color: element.style.color,
+    textShadow: element.style.textShadow,
+    textStroke: element.style.getPropertyValue("-webkit-text-stroke"),
+  }));
+  await calculation.evaluate((element) => {
+    element.style.color = "transparent";
+    element.style.textShadow = "none";
+    element.style.setProperty("-webkit-text-stroke", "0 transparent");
+  });
+  const backgroundOnlyScreenshot = await scoreCard.screenshot();
+  await calculation.evaluate((element, styles) => {
+    element.style.color = styles.color;
+    element.style.textShadow = styles.textShadow;
+    element.style.setProperty("-webkit-text-stroke", styles.textStroke);
+  }, originalInlineStyles);
+  const visibleTextBounds = await page.evaluate(
+    async ({ text, background }) => {
+      const readImage = async (base64: string): Promise<ImageData> => {
+        const image = new Image();
+        image.src = `data:image/png;base64,${base64}`;
+        await image.decode();
+        const canvas = document.createElement("canvas");
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
+        const context = canvas.getContext("2d");
+        if (context === null) throw new Error("Missing screenshot canvas");
+        context.drawImage(image, 0, 0);
+        return context.getImageData(0, 0, canvas.width, canvas.height);
+      };
+      const withText = await readImage(text);
+      const withoutText = await readImage(background);
+      const calculationElement = document.querySelector<HTMLElement>(
+        "#result-calculation",
+      );
+      const cardElement =
+        document.querySelector<HTMLElement>(".result-score-card");
+      if (calculationElement === null || cardElement === null) {
+        throw new Error("Missing calculation screenshot bounds");
+      }
+      const calculationRect = calculationElement.getBoundingClientRect();
+      const cardRect = cardElement.getBoundingClientRect();
+      const left = Math.max(
+        0,
+        Math.floor(calculationRect.left - cardRect.left),
+      );
+      const right = Math.min(
+        withText.width,
+        Math.ceil(calculationRect.right - cardRect.left),
+      );
+      const top = Math.max(0, Math.floor(calculationRect.top - cardRect.top));
+      const bottom = Math.min(
+        withText.height,
+        Math.ceil(calculationRect.bottom - cardRect.top),
+      );
+      let minY = bottom;
+      let maxY = top;
+      for (let y = top; y < bottom; y += 1) {
+        for (let x = left; x < right; x += 1) {
+          const index = (y * withText.width + x) * 4;
+          const withTextLuminance =
+            (withText.data[index] ?? 0) +
+            (withText.data[index + 1] ?? 0) +
+            (withText.data[index + 2] ?? 0);
+          const withoutTextLuminance =
+            (withoutText.data[index] ?? 0) +
+            (withoutText.data[index + 1] ?? 0) +
+            (withoutText.data[index + 2] ?? 0);
+          if (withoutTextLuminance - withTextLuminance > 24) {
+            minY = Math.min(minY, y);
+            maxY = Math.max(maxY, y);
+          }
+        }
+      }
+      return { minY, maxY };
+    },
+    {
+      text: textScreenshot.toString("base64"),
+      background: backgroundOnlyScreenshot.toString("base64"),
+    },
+  );
+  const calculationGeometry = await calculation.evaluate((element) => {
+    const card = document.querySelector<HTMLElement>(".result-score-card");
+    if (card === null) throw new Error("Missing score card");
+    const calculationRect = element.getBoundingClientRect();
+    const cardRect = card.getBoundingClientRect();
+    const strip = getComputedStyle(element, "::before");
+    return {
+      stripMidpoint:
+        calculationRect.top -
+        cardRect.top +
+        Number.parseFloat(strip.top) +
+        Number.parseFloat(strip.height) / 2,
+    };
+  });
+  expect(visibleTextBounds.maxY).toBeGreaterThan(visibleTextBounds.minY);
+  expect(
+    Math.abs(visibleTextBounds.maxY + 1 - calculationGeometry.stripMidpoint),
+  ).toBeLessThan(1.5);
   const savedRecord = await page.evaluate((key) => {
     const raw = localStorage.getItem(key);
     if (raw === null) {
