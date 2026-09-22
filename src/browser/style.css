@@ -700,17 +700,29 @@ body {
   border: 0;
 }
 
-.title-footer {
+.title-footer-row {
   position: absolute;
   right: 0.6rem;
-  bottom: 0.35rem;
-  left: 5.6rem;
+  bottom: 0.25rem;
+  left: 0.6rem;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.title-footer {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.3rem;
   margin: 0;
   color: #f7f1df;
   font-family: "Trigger Knight Calisto 5", serif;
   font-size: clamp(0.48rem, 1.8vw, 0.7rem);
-  text-align: left;
+  white-space: nowrap;
   text-shadow:
     -1px -1px 0 #080b14,
     1px -1px 0 #080b14,
@@ -719,13 +731,11 @@ body {
 }
 
 .title-tutorial-toggle {
-  position: absolute;
-  bottom: 0.25rem;
-  left: 0.6rem;
-  z-index: 1;
+  flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
+  margin: 0;
   color: #f7f1df;
   font-family: "Trigger Knight Calisto 5", serif;
   font-size: clamp(0.48rem, 1.8vw, 0.7rem);
@@ -762,16 +772,19 @@ body {
     font-size: 3.6667cqw;
   }
 
-  .foundation:fullscreen > #title-screen .title-footer {
+  .foundation:fullscreen > #title-screen .title-footer-row {
     right: 2cqw;
-    bottom: 1.1667cqw;
-    left: 18.6667cqw;
+    bottom: 0.8333cqw;
+    left: 2cqw;
+    gap: 2cqw;
+  }
+
+  .foundation:fullscreen > #title-screen .title-footer {
+    gap: 0.75cqw;
     font-size: 2.3333cqw;
   }
 
   .foundation:fullscreen > #title-screen .title-tutorial-toggle {
-    bottom: 0.8333cqw;
-    left: 2cqw;
     gap: 0.6667cqw;
     font-size: 2.3333cqw;
   }
@@ -943,7 +956,7 @@ body {
   border: 0;
   color: #f7f1df;
   background: transparent;
-  font-family: "Trigger Knight Calibri 16", sans-serif;
+  font-family: "Trigger Knight Hooge", sans-serif;
   font-size: 1.35rem;
   font-weight: 650;
   line-height: 1;
@@ -1301,7 +1314,7 @@ body {
   position: absolute;
   top: 23.8cqw;
   right: 3.5cqw;
-  left: 59.3cqw;
+  left: 62.7cqw;
   z-index: 2;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -1373,18 +1386,6 @@ body {
   background: #080b14;
 }
 
-#collections-screen.player-status-screen .player-status-hint {
-  position: absolute;
-  top: 30.7cqw;
-  right: 3.5cqw;
-  width: auto;
-  margin: 0;
-  color: #666;
-  font-family: "Trigger Knight Hooge", sans-serif;
-  font-size: 2.1cqw;
-  font-weight: 400;
-}
-
 #collections-screen.player-status-screen .equipment-preview {
   position: absolute;
   top: 33.2cqw;
@@ -1395,6 +1396,7 @@ body {
   padding: 0;
   font-family: "Trigger Knight Calibri 14", sans-serif;
   font-size: 1.8cqw;
+  text-align: right;
 }
 
 #collections-screen.player-status-screen

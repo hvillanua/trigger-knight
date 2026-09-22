@@ -83,11 +83,25 @@
         <p id="title-profile-summary" class="title-profile-summary">
           Loading profile…
         </p>
-        <label class="title-tutorial-toggle">
-          <input id="title-tutorial-toggle" type="checkbox" />
-          Tutorial
-        </label>
-        <p class="title-footer">M/S to mute Music/SFX, P to Pause</p>
+        <div class="title-footer-row">
+          <label class="title-tutorial-toggle">
+            <input id="title-tutorial-toggle" type="checkbox" />
+            Tutorial
+          </label>
+          <p
+            class="title-footer"
+            aria-label="| M/S to mute Music/SFX, P to Pause"
+          >
+            <span aria-hidden="true">|</span>
+            <span aria-hidden="true">M/S</span>
+            <span aria-hidden="true">to</span>
+            <span aria-hidden="true">mute</span>
+            <span aria-hidden="true">Music/SFX,</span>
+            <span aria-hidden="true">P</span>
+            <span aria-hidden="true">to</span>
+            <span aria-hidden="true">Pause</span>
+          </p>
+        </div>
       </section>
 
       <section
@@ -457,15 +471,14 @@
           <h3 id="collections-list-heading">Collections</h3>
           <div class="collection-columns">
             <section aria-labelledby="weapons-heading">
-              <h4 id="weapons-heading">Weapons</h4>
+              <h4 id="weapons-heading">Wpns</h4>
               <ul id="weapon-collection" class="discovery-list"></ul>
             </section>
             <section aria-labelledby="armor-heading">
-              <h4 id="armor-heading">Armors</h4>
+              <h4 id="armor-heading">Armrs</h4>
               <ul id="armor-collection" class="discovery-list"></ul>
             </section>
           </div>
-          <p class="player-status-hint">Hover to see Equip</p>
           <div
             id="equipment-preview"
             class="equipment-preview"
