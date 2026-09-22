@@ -151,6 +151,7 @@ test("keeps the original hand cursor visible over pause and fullscreen controls"
   });
   expect(activeCursors.canvas).toBe("none");
   expect(activeCursors.fullscreen).toContain("/12.png");
+  expect(activeCursors.fullscreen).toMatch(/,\s*pointer$/);
 
   await page.keyboard.press("p");
   const pausedCursors = await page.evaluate(() => {
@@ -170,6 +171,7 @@ test("keeps the original hand cursor visible over pause and fullscreen controls"
   expect(pausedCursors.stage).toContain("/12.png");
   expect(pausedCursors.resume).toContain("/12.png");
   expect(pausedCursors.fullscreen).toContain("/12.png");
+  expect(pausedCursors.fullscreen).toMatch(/,\s*pointer$/);
 });
 
 test("dismisses the first tutorial dialog from any stage click", async ({

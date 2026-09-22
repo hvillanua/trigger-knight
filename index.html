@@ -12,6 +12,17 @@
   <body>
     <main id="app-shell" class="foundation">
       <button
+        id="toggle-fullscreen"
+        class="stage-control stage-fullscreen"
+        type="button"
+        aria-pressed="false"
+        aria-describedby="fullscreen-status"
+      >
+        <span id="fullscreen-label" class="visually-hidden">
+          Enter fullscreen
+        </span>
+      </button>
+      <button
         id="exit-fullscreen"
         class="fullscreen-exit-control"
         type="button"
@@ -236,17 +247,6 @@
               aria-pressed="false"
             >
               Pause
-            </button>
-            <button
-              id="toggle-fullscreen"
-              class="stage-control stage-fullscreen"
-              type="button"
-              aria-pressed="false"
-              aria-describedby="fullscreen-status"
-            >
-              <span id="fullscreen-label" class="visually-hidden">
-                Enter fullscreen
-              </span>
             </button>
             <button
               id="purchase-current-encounter"

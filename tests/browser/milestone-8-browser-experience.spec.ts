@@ -160,6 +160,64 @@ test("keeps fullscreen active while moving from a finished run to player status"
     .toBeNull();
 });
 
+test("re-enters fullscreen from menu, player status, and settings screens", async ({
+  page,
+}) => {
+  test.setTimeout(90_000);
+  await installFullscreenStub(page, "working");
+  await seedDisabledTutorialProfile(page);
+  await page.goto("/?manual=1&seed=milestone-2-lifecycle-2&diagnostics=1");
+
+  await page.getByRole("button", { name: "Enter fullscreen" }).click();
+  await expect
+    .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
+    .toBe("app-shell");
+
+  const summary = await advanceUntilResult(page, 2_600, false);
+  expect(summary.terminalReason, JSON.stringify(summary)).toBe("lifespan");
+  await page.getByRole("button", { name: "View achievements" }).click();
+  await expect(
+    page.getByRole("heading", { name: "PLAYER STATUS" }),
+  ).toBeVisible();
+
+  await page.getByRole("button", { name: "Exit fullscreen" }).click();
+  await expect
+    .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
+    .toBeNull();
+  await expect(
+    page.getByRole("button", { name: "Enter fullscreen" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Enter fullscreen" }).click();
+  await expect
+    .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
+    .toBe("app-shell");
+
+  await page.getByRole("button", { name: "Exit fullscreen" }).click();
+  await page.getByRole("button", { name: "Back" }).click();
+  await page.getByRole("button", { name: "Main menu", exact: true }).click();
+  await expect(
+    page.getByRole("button", { name: "View collections" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Enter fullscreen" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Enter fullscreen" }).click();
+  await expect
+    .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
+    .toBe("app-shell");
+
+  await page.getByRole("button", { name: "Settings" }).click();
+  await expect(page.locator("#settings-screen")).toBeVisible();
+  await page.getByRole("button", { name: "Exit fullscreen" }).click();
+  await expect(
+    page.getByRole("button", { name: "Enter fullscreen" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Enter fullscreen" }).click();
+  await expect
+    .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
+    .toBe("app-shell");
+});
+
 async function advanceUntilResult(
   page: Page,
   maxSteps: number,
@@ -330,6 +388,115 @@ test("exposes fullscreen controls and the reduced-motion presentation state", as
   await expect(
     page.evaluate(() => window.triggerKnightDiagnostics),
   ).resolves.toBeUndefined();
+});
+
+test("keeps fullscreen control anchored to every active screen", async ({
+  page,
+}) => {
+  await seedDisabledTutorialProfile(page);
+  await page.goto("/?manual=1");
+
+  const expectFullscreenControl = async (): Promise<void> => {
+    const layout = await page.evaluate(() => {
+      const screen = [
+        ...document.querySelectorAll<HTMLElement>(".screen"),
+      ].find((candidate) => !candidate.hidden);
+      const button =
+        document.querySelector<HTMLButtonElement>("#toggle-fullscreen");
+      if (screen === undefined || button === null) {
+        throw new Error("Missing active screen or fullscreen control");
+      }
+      const screenRect = screen.getBoundingClientRect();
+      const buttonRect = button.getBoundingClientRect();
+      return {
+        rightGap: screenRect.right - buttonRect.right,
+        topGap: buttonRect.top - screenRect.top,
+        hitTarget:
+          document.elementFromPoint(
+            buttonRect.left + buttonRect.width / 2,
+            buttonRect.top + buttonRect.height / 2,
+          ) === button,
+        cursor: getComputedStyle(button).cursor,
+      };
+    });
+
+    expect(layout.rightGap).toBeGreaterThanOrEqual(0);
+    expect(layout.rightGap).toBeLessThanOrEqual(8);
+    expect(layout.topGap).toBeGreaterThanOrEqual(0);
+    expect(layout.topGap).toBeLessThanOrEqual(8);
+    expect(layout.hitTarget).toBe(true);
+    expect(layout.cursor).toMatch(/,\s*pointer$/);
+  };
+
+  await expectFullscreenControl();
+
+  await page.keyboard.press("p");
+  await page.getByRole("button", { name: "Main menu", exact: true }).click();
+  await expect(page.locator("#title-screen")).toBeVisible();
+  await expectFullscreenControl();
+
+  await page.getByRole("button", { name: "View collections" }).click();
+  await expect(page.locator("#collections-screen")).toBeVisible();
+  await expectFullscreenControl();
+
+  await page.getByRole("button", { name: "Back" }).click();
+  await page.getByRole("button", { name: "Settings" }).click();
+  await expect(page.locator("#settings-screen")).toBeVisible();
+  await expectFullscreenControl();
+});
+
+test("scales the main menu presentation in fullscreen", async ({ page }) => {
+  await seedDisabledTutorialProfile(page);
+  await page.goto("/?manual=1");
+  await page.keyboard.press("p");
+  await page.getByRole("button", { name: "Main menu", exact: true }).click();
+  await expect(page.locator("#title-screen")).toBeVisible();
+
+  const readMenuLayout = async () =>
+    page.evaluate(() => {
+      const screen = document.querySelector<HTMLElement>("#title-screen");
+      const logo = document.querySelector<HTMLElement>(".title-logo");
+      const actions = document.querySelector<HTMLElement>(".title-actions");
+      const action = document.querySelector<HTMLElement>(
+        ".title-actions button",
+      );
+      if (
+        screen === null ||
+        logo === null ||
+        actions === null ||
+        action === null
+      ) {
+        throw new Error("Missing main menu layout elements");
+      }
+      const screenRect = screen.getBoundingClientRect();
+      const logoRect = logo.getBoundingClientRect();
+      const actionsRect = actions.getBoundingClientRect();
+      return {
+        screenWidth: screenRect.width,
+        screenHeight: screenRect.height,
+        logoHeight: logoRect.height,
+        actionsTop: actionsRect.top - screenRect.top,
+        actionFontSize: Number.parseFloat(getComputedStyle(action).fontSize),
+      };
+    });
+
+  const normal = await readMenuLayout();
+  await page.locator("#toggle-fullscreen").click();
+  await expect
+    .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
+    .toBe("app-shell");
+  const fullscreen = await readMenuLayout();
+  const scale = fullscreen.screenWidth / normal.screenWidth;
+
+  expect(fullscreen.logoHeight / normal.logoHeight).toBeCloseTo(scale, 1);
+  expect(fullscreen.actionFontSize / normal.actionFontSize).toBeCloseTo(
+    scale,
+    1,
+  );
+  expect(fullscreen.actionsTop / fullscreen.screenHeight).toBeCloseTo(
+    normal.actionsTop / normal.screenHeight,
+    2,
+  );
 });
 
 test("handles fullscreen entry, exit, resize, and denied or unsupported hosts", async ({
@@ -653,7 +820,9 @@ test("dismisses the original session-over screen with keyboard activation", asyn
   expect(ended).toBe(true);
   const canvas = page.locator("#game-canvas");
   await expect(canvas).toHaveAttribute("data-visual-scene", "ended");
-  await expect(page.locator("#toggle-fullscreen")).toBeHidden();
+  await expect(
+    page.getByRole("button", { name: "Enter fullscreen" }),
+  ).toBeVisible();
   await expect(page.locator("#run-result")).toBeHidden();
   const screenshot = await canvas.screenshot();
   await testInfo.attach("session-over-human-review.png", {

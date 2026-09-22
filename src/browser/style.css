@@ -115,6 +115,7 @@ body {
 }
 
 .foundation:fullscreen {
+  --foundation-padding: 0px;
   width: 100vw;
   height: 100vh;
   min-height: 0;
@@ -562,8 +563,10 @@ body {
 }
 
 .foundation {
+  --foundation-padding: clamp(0.5rem, 2vw, 1rem);
+  position: relative;
   width: min(32rem, 100%);
-  padding: clamp(0.5rem, 2vw, 1rem);
+  padding: var(--foundation-padding);
 }
 
 .site-header {
@@ -600,6 +603,7 @@ body {
 }
 
 .menu-screen {
+  container-type: inline-size;
   aspect-ratio: 3 / 2;
   min-height: 0;
   padding: 0;
@@ -739,6 +743,45 @@ body {
   accent-color: #57c8ee;
 }
 
+@supports (width: 1cqw) {
+  .foundation:fullscreen > #title-screen .title-logo {
+    top: 0.6667cqw;
+    right: 0.6667cqw;
+    height: 35cqw;
+  }
+
+  .foundation:fullscreen > #title-screen .title-actions {
+    top: 43%;
+    right: 2.3333cqw;
+    gap: 0.6667cqw;
+  }
+
+  .foundation:fullscreen > #title-screen .title-actions button {
+    min-height: 6cqw;
+    padding: 0.1667cqw 0.8333cqw;
+    font-size: 3.6667cqw;
+  }
+
+  .foundation:fullscreen > #title-screen .title-footer {
+    right: 2cqw;
+    bottom: 1.1667cqw;
+    left: 18.6667cqw;
+    font-size: 2.3333cqw;
+  }
+
+  .foundation:fullscreen > #title-screen .title-tutorial-toggle {
+    bottom: 0.8333cqw;
+    left: 2cqw;
+    gap: 0.6667cqw;
+    font-size: 2.3333cqw;
+  }
+
+  .foundation:fullscreen > #title-screen .title-tutorial-toggle input {
+    width: 2.5cqw;
+    height: 2.5cqw;
+  }
+}
+
 .gameplay-screen {
   position: relative;
   width: 100%;
@@ -775,11 +818,11 @@ body {
 .gameplay-stage[data-tutorial-page] *,
 .gameplay-stage[data-paused="true"],
 .gameplay-stage[data-paused="true"] *,
-.gameplay-controls .stage-fullscreen,
+.stage-fullscreen,
 .fullscreen-exit-control {
   cursor:
     url("../assets/original/images/12.png") 4 2,
-    none;
+    pointer;
 }
 
 .accessible-hud,
@@ -870,8 +913,7 @@ body {
   display: none;
 }
 
-.gameplay-stage[data-phase="ended"] .gameplay-controls #advance-run,
-.gameplay-stage[data-phase="ended"] .gameplay-controls .stage-fullscreen {
+.gameplay-stage[data-phase="ended"] .gameplay-controls #advance-run {
   display: none;
 }
 
@@ -890,14 +932,20 @@ body {
 }
 
 .stage-fullscreen {
-  top: 0.15rem;
-  right: 0.15rem !important;
-  min-width: 2.75rem !important;
+  position: absolute;
+  top: calc(var(--foundation-padding) + 0.15rem);
+  right: calc(var(--foundation-padding) + 0.15rem);
+  z-index: 20;
+  min-width: 2.75rem;
   width: 2.75rem;
-  min-height: 2.75rem !important;
+  min-height: 2.75rem;
   padding: 0;
+  border: 0;
   color: #f7f1df;
+  background: transparent;
+  font-family: "Trigger Knight Calibri 16", sans-serif;
   font-size: 1.35rem;
+  font-weight: 650;
   line-height: 1;
   text-shadow:
     -1px -1px 0 #080b14,
@@ -914,9 +962,9 @@ body {
 }
 
 .fullscreen-exit-control {
-  position: fixed;
-  top: 0.15rem;
-  right: 0.15rem;
+  position: absolute;
+  top: calc(var(--foundation-padding) + 0.15rem);
+  right: calc(var(--foundation-padding) + 0.15rem);
   z-index: 20;
   min-width: 8.5rem;
   min-height: 2.75rem;
@@ -934,6 +982,8 @@ body {
     1px 1px 0 #080b14;
 }
 
+.stage-fullscreen:hover,
+.stage-fullscreen:focus-visible,
 .fullscreen-exit-control:hover,
 .fullscreen-exit-control:focus-visible {
   color: #57c8ee;
@@ -1097,7 +1147,8 @@ body {
 
 @media (max-width: 34rem) {
   .foundation {
-    padding: 0.35rem;
+    --foundation-padding: 0.35rem;
+    padding: var(--foundation-padding);
   }
 
   .title-actions {
