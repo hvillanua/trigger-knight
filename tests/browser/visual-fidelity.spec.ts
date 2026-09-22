@@ -26,6 +26,42 @@ test("keeps the reference-backed screens composed and interactive", async ({
   expect(titleAssets.sky).toContain("357.jpg");
   expect(titleAssets.hero).toContain("533.png");
   expect(titleAssets.logo).toContain("268.png");
+  const titleFooterAlignment = await page
+    .locator(".title-footer-row")
+    .evaluate((row) => {
+      const tutorial = row.querySelector<HTMLElement>(".title-tutorial-toggle");
+      const footer = row.querySelector<HTMLElement>(".title-footer");
+      if (tutorial === null || footer === null) {
+        throw new Error("Missing title footer controls");
+      }
+      const tutorialRect = tutorial.getBoundingClientRect();
+      const footerRect = footer.getBoundingClientRect();
+      return {
+        display: getComputedStyle(row).display,
+        centerDelta: Math.abs(
+          tutorialRect.top +
+            tutorialRect.height / 2 -
+            (footerRect.top + footerRect.height / 2),
+        ),
+      };
+    });
+  expect(titleFooterAlignment.display).toBe("flex");
+  expect(titleFooterAlignment.centerDelta).toBeLessThan(1);
+  await expect(page.locator(".title-footer")).toHaveText(
+    "| M/S to mute Music/SFX, P to Pause",
+  );
+  await expect(page.locator(".title-footer > span")).toHaveCount(8);
+  const footerGaps = await page.locator(".title-footer").evaluate((footer) => {
+    const spans = [...footer.children].map((child) =>
+      child.getBoundingClientRect(),
+    );
+    return spans.slice(1).map((span, index) => {
+      const previous = spans[index];
+      if (previous === undefined) throw new Error("Missing footer span");
+      return span.left - previous.right;
+    });
+  });
+  expect(footerGaps.every((gap) => gap >= 1)).toBe(true);
   const initialSkyPosition = await page
     .locator(".title-sky")
     .evaluate((element) => getComputedStyle(element).backgroundPositionX);
@@ -66,12 +102,38 @@ test("keeps the reference-backed screens composed and interactive", async ({
   expect(profileAssets.hero).toContain("533.png");
   const equipmentSlots = page.locator(".equipment-slot");
   await expect(equipmentSlots).toHaveCount(20);
+  await expect(page.locator("#weapons-heading")).toHaveText("Wpns");
+  await expect(page.locator("#armor-heading")).toHaveText("Armrs");
+  const collectionGeometry = await page
+    .locator("#collections-screen")
+    .evaluate((screen) => {
+      const screenRect = screen.getBoundingClientRect();
+      const columns = screen.querySelector<HTMLElement>(".collection-columns");
+      if (columns === null) throw new Error("Missing collection columns");
+      return (
+        (columns.getBoundingClientRect().left - screenRect.left) /
+        screenRect.width
+      );
+    });
+  expect(collectionGeometry).toBeGreaterThanOrEqual(0.62);
+  await expect(page.locator(".player-status-hint")).toHaveCount(0);
   await equipmentSlots.first().focus();
-  await expect(page.locator("#equipment-preview")).toContainText("tier");
+  await expect(page.locator("#equipment-preview")).toHaveText("Lv1 - Dagger");
+  await expect(page.locator("#equipment-preview")).toHaveCSS(
+    "text-align",
+    "right",
+  );
+  await expect(equipmentSlots.first()).toHaveAttribute("title", "Lv1 - Dagger");
   await equipmentSlots.nth(1).hover();
-  await expect(page.locator("#equipment-preview")).toContainText("tier");
+  await expect(page.locator("#equipment-preview")).toHaveText("Lv2 - Sword");
   await equipmentSlots.first().click();
-  await expect(page.locator("#equipment-preview")).toContainText("tier");
+  await expect(page.locator("#equipment-preview")).toHaveText("Lv1 - Dagger");
+  const armorSlot = page.locator("#armor-collection .equipment-slot").last();
+  await armorSlot.hover();
+  await expect(page.locator("#equipment-preview")).toHaveText(
+    "Lv10 - Astral Armor",
+  );
+  await expect(armorSlot).toHaveAttribute("title", "Lv10 - Astral Armor");
   await expect(page.locator("#player-status-xp")).toHaveText("0/130 EXP");
   await expect(page.locator("#player-status-progress")).toHaveText(
     "Game Progress - 7%",

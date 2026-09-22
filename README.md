@@ -214,12 +214,13 @@ For deterministic manual browser tests, open `/?manual=1` on the development
 server. This enables the Advance run control and immediate single-step command
 dispatch. Production builds always use automatic scheduling.
 
-The gameplay screen provides an Enter fullscreen control when the host supports
-the Fullscreen API. Fullscreen remains active while the player moves through
-the result and menu screens. The shell-level Exit fullscreen control and the
-browser's Escape key leave fullscreen. Entry, exit, denied requests, and
-unsupported hosts are reported beside the control. Changing the presentation
-size does not change the 480 by 320 world camera. The browser honors
+The application shell provides an Enter fullscreen control when the host
+supports the Fullscreen API. You can enter fullscreen from the gameplay,
+result, menu, player-status, and settings screens. Fullscreen remains active
+while the player moves between those screens. The shell-level Exit fullscreen
+control and the browser's Escape key leave fullscreen. Entry, exit, denied
+requests, and unsupported hosts are reported beside the control. Changing the
+presentation size does not change the 480 by 320 world camera. The browser honors
 `prefers-reduced-motion` by removing
 optional world effects, interpolation, and result counting animation while
 leaving logical timing, action eligibility, and committed results unchanged.

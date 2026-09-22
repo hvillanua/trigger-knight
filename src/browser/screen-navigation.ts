@@ -89,7 +89,7 @@ function renderEquipmentList(
         "aria-label",
         `Tier ${entry.tier}, ${entry.name}, ${state}`,
       );
-      button.title = `${entry.name} · ${state}`;
+      button.title = `Lv${entry.tier} - ${entry.name}`;
       button.textContent = entry.discovered ? "■" : "□";
       item.append(
         button,
@@ -131,12 +131,9 @@ function showEquipmentPreview(
   if (!(target instanceof HTMLButtonElement)) return;
   const name = target.dataset.equipmentName;
   const tier = target.dataset.equipmentTier;
-  const discovered = target.dataset.discovered === "true";
   if (name === undefined || tier === undefined) return;
   equipmentPreview.dataset.state = "selected";
-  equipmentPreview.textContent = discovered
-    ? `${name}, tier ${tier}. This equipment is available in future runs.`
-    : `${name}, tier ${tier}. This equipment has not been discovered yet.`;
+  equipmentPreview.textContent = `Lv${tier} - ${name}`;
 }
 
 /** Owns browser screen visibility, menu return paths, and profile views. */
