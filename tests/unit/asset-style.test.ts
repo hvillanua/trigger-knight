@@ -25,8 +25,9 @@ describe("CSS-owned visual treatment", () => {
     expect(properties.get("--trigger-knight-sky-image")).toContain(
       "/assets/generated/realesrgan-4x/",
     );
-    expect(properties.get("--trigger-knight-cursor-image")).toContain(
+    expect(properties.get("--trigger-knight-hand-cursor")).toContain(
       "/assets/original/images/12.png",
     );
+    expect(properties.get("--trigger-knight-result-cursor")).toMatch(/, none$/);
   });
 });

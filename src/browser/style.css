@@ -5,7 +5,10 @@
   --trigger-knight-sky-image: url("../assets/original/images/357.jpg");
   --trigger-knight-sky-mask-image: url("../assets/original/shapes/350.svg");
   --trigger-knight-logo-image: url("../assets/original/images/268.png");
-  --trigger-knight-cursor-image: url("../assets/original/images/12.png");
+  --trigger-knight-hand-cursor:
+    url("../assets/original/images/12.png") 4 2, pointer;
+  --trigger-knight-result-cursor:
+    url("../assets/original/images/12.png") 4 2, none;
 }
 
 @font-face {
@@ -844,9 +847,7 @@ body {
 .gameplay-stage[data-paused="true"] *,
 .stage-fullscreen,
 .fullscreen-exit-control {
-  cursor:
-    var(--trigger-knight-cursor-image) 4 2,
-    pointer;
+  cursor: var(--trigger-knight-hand-cursor);
 }
 
 .accessible-hud,
@@ -1532,9 +1533,7 @@ body {
  * units keep its artwork and typography aligned when the stage scales down. */
 #run-result,
 #run-result * {
-  cursor:
-    var(--trigger-knight-cursor-image) 4 2,
-    none;
+  cursor: var(--trigger-knight-result-cursor);
 }
 
 #run-result.run-result {
