@@ -2,7 +2,9 @@ import type { GameCommand } from "../application/contracts.js";
 import type { ActionEligibility } from "../application/contracts.js";
 import {
   isSupportedKeyboardCode,
+  type KeyboardCode,
   type InputBindings,
+  type RawInputBindings,
 } from "../application/settings.js";
 import {
   PURCHASE_CURRENT_ENCOUNTER_COMMANDS,
@@ -127,14 +129,14 @@ export type BindingCaptureResult =
   | Readonly<{
       status: "captured";
       action: InputAction;
-      code: string;
+      code: KeyboardCode;
       bindings: InputBindings;
     }>
   | Readonly<{ status: "cancelled"; action: InputAction }>
   | Readonly<{
       status: "conflict";
       action: InputAction;
-      code: string;
+      code: KeyboardCode;
       conflictingAction: InputAction;
     }>
   | Readonly<{ status: "unsupported"; action: InputAction; code: string }>
@@ -199,9 +201,9 @@ export function createBindingCaptureController(
   });
 }
 
-/** Finds the first duplicate saved binding, if one exists. */
+/** Finds the first duplicate saved or draft binding, if one exists. */
 export function findBindingConflict(
-  bindings: Readonly<InputBindings>,
+  bindings: Readonly<RawInputBindings>,
 ): Readonly<{ code: string; actions: readonly InputAction[] }> | null {
   for (const action of INPUT_ACTIONS) {
     const actions = INPUT_ACTIONS.filter(

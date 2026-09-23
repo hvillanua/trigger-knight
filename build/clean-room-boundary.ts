@@ -21,6 +21,15 @@ function isInside(candidate: string, directory: string): boolean {
   );
 }
 
+function resolveExistingPath(candidate: string): string {
+  try {
+    return realpathSync(candidate);
+  } catch {
+    // Vite also asks plugins about virtual and not-yet-created module IDs.
+    return candidate;
+  }
+}
+
 export function assertProductionModuleAllowed(
   moduleId: string,
   projectRoot: string,
@@ -31,16 +40,11 @@ export function assertProductionModuleAllowed(
     return;
   }
 
-  let resolvedFileName = fileName;
-
-  try {
-    resolvedFileName = realpathSync(fileName);
-  } catch {
-    // Vite also asks plugins about virtual and not-yet-created module IDs.
-  }
+  const resolvedFileName = resolveExistingPath(fileName);
+  const resolvedProjectRoot = resolveExistingPath(projectRoot);
 
   for (const root of PROHIBITED_PRODUCTION_ROOTS) {
-    if (isInside(resolvedFileName, path.join(projectRoot, root))) {
+    if (isInside(resolvedFileName, path.join(resolvedProjectRoot, root))) {
       throw new Error(
         `Refusing prohibited production input from ${root}: ${resolvedFileName}`,
       );

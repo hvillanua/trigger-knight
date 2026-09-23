@@ -1,7 +1,3 @@
-import { normalizeProfile } from "../domain/profile.js";
-import type { ProfileInput } from "../domain/contracts.js";
-import { normalizeCanonicalJson } from "../application/canonical-json.js";
-
 export type NormalizedRecord = Readonly<Record<string, unknown>>;
 
 /** Checks the small record shape shared by serializable simulation inputs. */
@@ -49,13 +45,6 @@ export function assertKeys(
   if (actual.some((key) => !allowed.has(key))) {
     throw new TypeError(`${label} contains unsupported fields`);
   }
-}
-
-/** Copies and validates one profile input for a headless simulation boundary. */
-export function normalizeProfileInput(input: unknown): ProfileInput {
-  const normalized = normalizeCanonicalJson(input);
-  normalizeProfile(normalized);
-  return normalized as unknown as ProfileInput;
 }
 
 /** Validates a positive safe integer shared by finite simulation boundaries. */

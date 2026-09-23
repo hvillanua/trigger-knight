@@ -224,4 +224,24 @@ describe("completed-run profile settlement", () => {
       ),
     ).toThrow("completed run");
   });
+
+  it("rejects settlement records whose unlocks come from a prototype", () => {
+    const inheritedUnlocks = Object.create({
+      weaponDiscoveries: Array<boolean>(10).fill(false),
+      armorDiscoveries: Array<boolean>(10).fill(false),
+      achievementSlots: Array<boolean>(6).fill(false),
+    }) as Record<string, unknown>;
+    Object.assign(inheritedUnlocks, {
+      lifecycle: { phase: "ended", terminalReason: "combat" },
+      score: 0,
+      profileExpEarned: 0,
+    });
+
+    expect(() =>
+      settleCompletedRun(
+        createFreshProfile(),
+        inheritedUnlocks as unknown as CompletedRunSettlementInput,
+      ),
+    ).toThrow("plain record");
+  });
 });

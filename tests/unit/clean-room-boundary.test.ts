@@ -1,3 +1,11 @@
+import {
+  mkdirSync,
+  mkdtempSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
+import os from "node:os";
 import path from "node:path";
 
 import { describe, expect, it } from "vitest";
@@ -27,5 +35,25 @@ describe("production implementation boundary", () => {
     expect(() =>
       assertProductionModuleAllowed(file, projectRoot),
     ).not.toThrow();
+  });
+
+  it("still protects prohibited roots in a symlinked checkout", () => {
+    const target = mkdtempSync(path.join(os.tmpdir(), "trigger-knight-"));
+    const projectRoot = path.join(target, "checkout");
+    const prohibited = path.join(target, "original");
+    mkdirSync(prohibited);
+    writeFileSync(path.join(prohibited, "copied-artifact.js"), "");
+    symlinkSync(target, projectRoot, "dir");
+
+    try {
+      expect(() =>
+        assertProductionModuleAllowed(
+          path.join(projectRoot, "original", "copied-artifact.js"),
+          projectRoot,
+        ),
+      ).toThrow("prohibited production input");
+    } finally {
+      rmSync(target, { recursive: true, force: true });
+    }
   });
 });

@@ -14,6 +14,7 @@ import {
   simulationRequestFingerprint,
   stringifySimulationBatchExport,
 } from "./simulation-experiment.js";
+import { positiveSafeInteger } from "./simulation-validation.js";
 import type {
   SimulationBenchmarkExecution,
   SimulationBenchmarkHeapTracker,
@@ -149,14 +150,22 @@ export function createBatchSizedRunner(
   batchSize: number,
   afterBatch?: () => void,
 ): SimulationRunner {
+  const normalizedBatchSize = positiveSafeInteger(
+    batchSize,
+    "Benchmark batch size",
+  );
   return Object.freeze({
     run: (request: SimulationRequest) => runner.run(request),
     async runBatch(
       requests: readonly SimulationRequest[],
     ): Promise<readonly RunResult[]> {
       const results: RunResult[] = [];
-      for (let start = 0; start < requests.length; start += batchSize) {
-        const end = Math.min(start + batchSize, requests.length);
+      for (
+        let start = 0;
+        start < requests.length;
+        start += normalizedBatchSize
+      ) {
+        const end = Math.min(start + normalizedBatchSize, requests.length);
         const batchResults = await runner.runBatch(requests.slice(start, end));
         if (batchResults.length !== end - start) {
           throw new Error(
@@ -175,13 +184,17 @@ export function createBatchSizedRunner(
 export async function measureSimulationBenchmarkExecution(
   input: SimulationBenchmarkMeasurementInput,
 ): Promise<SimulationBenchmarkMeasuredExecution> {
+  const normalizedBatchSize = positiveSafeInteger(
+    input.batchSize,
+    "Benchmark batch size",
+  );
   const heapUsedBeforeBytes = input.heapTracker.sample();
   const start = checkClockValue(input.environment.now(), "Benchmark clock");
   const result = await runSequential(
     input.runner,
     input.policies,
     input.manifest,
-    input.batchSize,
+    normalizedBatchSize,
     () => input.heapTracker.sample(),
   );
   const end = checkClockValue(input.environment.now(), "Benchmark clock");

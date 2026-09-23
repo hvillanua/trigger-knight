@@ -106,22 +106,18 @@ describe("versioned browser settings storage", () => {
     expect(storage.getItem(SETTINGS_STORAGE_KEY)).toBe(raw);
   });
 
-  it("rejects unsupported bindings when saving", () => {
-    const storage = new MemoryStorage();
-    const store = createBrowserSettingsStore(storage);
-    const existing = createDefaultSettings();
-    store.save(existing);
+  it("rejects unsupported bindings during normalization", () => {
+    const defaults = createDefaultSettings();
 
-    const result = store.save({
-      ...existing,
-      bindings: { ...existing.bindings, togglePause: "NotARealKey" },
-    });
-
-    expect(result).toMatchObject({
-      status: "failed",
-      error: { code: "invalid-record" },
-    });
-    expect(store.load()).toEqual({ status: "loaded", settings: existing });
+    expect(() =>
+      normalizeSettings({
+        ...defaults,
+        bindings: {
+          ...defaults.bindings,
+          togglePause: "NotARealKey",
+        },
+      }),
+    ).toThrow("Settings togglePause must be a supported keyboard code");
   });
 
   it("rejects conflicting bindings before they can be saved", () => {

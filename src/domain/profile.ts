@@ -175,24 +175,31 @@ function flags(
   return Object.freeze(copied);
 }
 
+function isPlainRecord(value: unknown): value is Record<string, unknown> {
+  if (value === null || typeof value !== "object" || Array.isArray(value)) {
+    return false;
+  }
+  const prototype = Object.getPrototypeOf(value) as unknown;
+  return prototype === Object.prototype || prototype === null;
+}
+
 function normalizeUnlockState(input: unknown): ProfileUnlockState {
-  if (input === null || typeof input !== "object") {
+  if (!isPlainRecord(input)) {
     throw new TypeError("Completed-run unlock state must be a plain record");
   }
-  const unlocks = input as Record<string, unknown>;
   return Object.freeze({
     weaponDiscoveries: flags(
-      unlocks.weaponDiscoveries,
+      input.weaponDiscoveries,
       "weaponDiscoveries",
       PROFILE_EQUIPMENT_TIER_COUNT,
     ),
     armorDiscoveries: flags(
-      unlocks.armorDiscoveries,
+      input.armorDiscoveries,
       "armorDiscoveries",
       PROFILE_EQUIPMENT_TIER_COUNT,
     ),
     achievementSlots: flags(
-      unlocks.achievementSlots,
+      input.achievementSlots,
       "achievementSlots",
       PROFILE_ACHIEVEMENT_SLOT_COUNT,
     ),
@@ -210,14 +217,10 @@ function mergeFlags(
 
 /** Validates explicit configuration inputs, not a browser storage envelope. */
 export function normalizeProfile(input: unknown): ProfileState {
-  if (input === null || typeof input !== "object" || Array.isArray(input)) {
+  if (!isPlainRecord(input)) {
     throw new TypeError("Profile must be a plain record");
   }
-  const prototype = Object.getPrototypeOf(input) as unknown;
-  if (prototype !== Object.prototype && prototype !== null) {
-    throw new TypeError("Profile must be a plain record");
-  }
-  const profile = input as Record<string, unknown>;
+  const profile = input;
   if (
     profile.schemaVersion !== 1 &&
     profile.schemaVersion !== PROFILE_SCHEMA_VERSION

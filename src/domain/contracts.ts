@@ -12,7 +12,7 @@ export type TutorialPage = 0 | 1 | 2 | 3 | 4 | 5;
 
 /** Explicit run input, including the earlier minimal configuration shape. */
 export interface MinimalProfileInput {
-  readonly schemaVersion: number;
+  readonly schemaVersion: 1;
   readonly scoreMultiplier: number;
   readonly tutorialPreference?: TutorialPreference;
 }
@@ -29,8 +29,9 @@ export interface ProfileUnlockState {
 export type ProfileInput = MinimalProfileInput | ProfileState;
 
 /** Complete between-run progression snapshot. */
-export interface ProfileState extends MinimalProfileInput, ProfileUnlockState {
+export interface ProfileState extends ProfileUnlockState {
   readonly schemaVersion: 2;
+  readonly scoreMultiplier: number;
   readonly level: number;
   readonly xp: number;
   readonly highScore: number;

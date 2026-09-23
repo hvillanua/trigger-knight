@@ -11,6 +11,7 @@ import {
   normalizeSimulationBenchmark,
   type SimulationBenchmarkEnvironment,
 } from "../../src/simulation/simulation-benchmark.js";
+import { createSimulationBenchmarkCases } from "../../src/simulation/simulation-benchmark-input.js";
 import { simulationPolicyRegistry } from "../../src/simulation/policy-registry.js";
 import { createSimulationRunner } from "../../src/simulation/simulation-runner.js";
 import { createTestGameplayEngine } from "../helpers/gameplay-engine.js";
@@ -294,6 +295,40 @@ describe("simulation benchmark", () => {
         targets: { ...baseConfig.targets, minimumRunsPerSecond: 0 },
       }),
     ).toThrowError(/minimumRunsPerSecond/);
+  });
+
+  it("keeps case identities distinct when user labels contain separators", () => {
+    const config = normalizeSimulationBenchmark({
+      ...baseConfig,
+      scenarios: [
+        {
+          ...baseConfig.scenarios[0],
+          id: "a/b",
+          profiles: [
+            {
+              id: "c",
+              initialProfile: { schemaVersion: 1, scoreMultiplier: 1 },
+            },
+          ],
+          policies: [{ id: "d", version: "1", config: {} }],
+        },
+        {
+          ...baseConfig.scenarios[0],
+          id: "a",
+          profiles: [
+            {
+              id: "b/c",
+              initialProfile: { schemaVersion: 1, scoreMultiplier: 1 },
+            },
+          ],
+          policies: [{ id: "d", version: "1", config: {} }],
+        },
+      ],
+    });
+
+    const cases = createSimulationBenchmarkCases(config);
+
+    expect(new Set(cases.map(({ caseId }) => caseId)).size).toBe(cases.length);
   });
 
   it("reports a target miss without changing the deterministic result", async () => {

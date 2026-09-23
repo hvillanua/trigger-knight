@@ -7,9 +7,9 @@ import type {
 import {
   copyAndFreezeJson,
   fingerprintCanonicalJson,
-  normalizeCanonicalJson,
 } from "./canonical-json.js";
-import type { GameplayEngine, RunConfig } from "./gameplay-engine.js";
+import type { GameplayEngine } from "./gameplay-engine.js";
+import { normalizeRunConfig, type RunConfig } from "./run-config.js";
 
 const GAMEPLAY_TRACE_SCHEMA_VERSION = 2 as const;
 const MISSING_TRACE_VALUE = Object.freeze({ kind: "missing" as const });
@@ -125,9 +125,7 @@ export function createGameplayExecution(
   config: RunConfig,
   options: GameplayExecutionOptions = {},
 ): GameplayExecution {
-  const normalizedConfig = normalizeCanonicalJson(
-    config,
-  ) as unknown as RunConfig;
+  const normalizedConfig = normalizeRunConfig(config);
   const retainDiagnostics = options.retainDiagnostics ?? false;
   let state = snapshotAs(engine.createRun(normalizedConfig));
   let observation = snapshotAs(engine.observe(state));

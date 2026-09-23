@@ -90,11 +90,13 @@ export type {
   ProfileEquipmentView,
   ProfileOverviewView,
 } from "./profile.js";
+export type { GameplayEngine, StepResult } from "./gameplay-engine.js";
+export type { RunConfig } from "./run-config.js";
 export type {
-  GameplayEngine,
-  RunConfig,
-  StepResult,
-} from "./gameplay-engine.js";
+  InputBindings,
+  KeyboardCode,
+  RawInputBindings,
+} from "./settings.js";
 export type {
   GameplayCheckpoint,
   GameplayDivergenceKind,
@@ -180,7 +182,6 @@ export {
 } from "./settings.js";
 export type {
   BrowserSettings,
-  InputBindings,
   SettingsLoadResult,
   SettingsSaveResult,
   SettingsStore,

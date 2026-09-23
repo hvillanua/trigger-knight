@@ -1,5 +1,4 @@
 import type {
-  RunConfig,
   SimulationBatchExport,
   SimulationExperiment,
   SimulationManifest,
@@ -10,6 +9,7 @@ import type {
   RunMetrics,
   RunResult,
 } from "../application/contracts.js";
+import { normalizeRunConfig } from "../application/run-config.js";
 import {
   SIMULATION_BATCH_EXPORT_SCHEMA_VERSION,
   SIMULATION_MANIFEST_SCHEMA_VERSION,
@@ -26,47 +26,9 @@ import type { PolicyDescriptor } from "../application/contracts.js";
 import { RUN_METRIC_KEYS } from "./simulation-report.js";
 import {
   assertKeys,
-  normalizeProfileInput,
   positiveSafeInteger,
   record,
 } from "./simulation-validation.js";
-
-function normalizeRunConfigInput(input: unknown): RunConfig {
-  const normalized = record(normalizeCanonicalJson(input), "Simulation config");
-  assertKeys(
-    normalized,
-    ["initialProfile", "ruleset", "seed"],
-    "Simulation config",
-    ["startImmediately"],
-  );
-
-  if (
-    typeof normalized.ruleset !== "string" ||
-    normalized.ruleset.length === 0
-  ) {
-    throw new TypeError("Simulation config ruleset must be a non-empty string");
-  }
-
-  if (typeof normalized.seed !== "string") {
-    throw new TypeError("Simulation config seed must be a string");
-  }
-
-  if (
-    normalized.startImmediately !== undefined &&
-    typeof normalized.startImmediately !== "boolean"
-  ) {
-    throw new TypeError("Simulation config startImmediately must be a boolean");
-  }
-
-  return Object.freeze({
-    ruleset: normalized.ruleset,
-    seed: normalized.seed,
-    initialProfile: normalizeProfileInput(normalized.initialProfile),
-    ...(normalized.startImmediately === undefined
-      ? {}
-      : { startImmediately: normalized.startImmediately }),
-  });
-}
 
 function normalizeStepLimit(input: unknown): number {
   return positiveSafeInteger(input, "maxSteps");
@@ -91,7 +53,7 @@ export function normalizeSimulationRequestInput(
   );
 
   return Object.freeze({
-    config: normalizeRunConfigInput(normalized.config),
+    config: normalizeRunConfig(normalized.config),
     policy: normalizePolicyDescriptor(normalized.policy),
     maxSteps: normalizeStepLimit(normalized.maxSteps),
   });

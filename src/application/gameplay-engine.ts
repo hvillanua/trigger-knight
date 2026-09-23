@@ -1,21 +1,14 @@
-import { normalizeProfile } from "../domain/profile.js";
 import type {
   GameCommand,
   GameEvent,
   GameObservation,
-  ProfileInput,
-  RuleSetId,
   RunState,
 } from "../domain/contracts.js";
 import type { RuleSetRegistry } from "../domain/rulesets.js";
+import { normalizeProfile } from "../domain/profile.js";
+import { normalizeRunConfig, type RunConfig } from "./run-config.js";
 
-export interface RunConfig {
-  readonly ruleset: RuleSetId;
-  readonly seed: string;
-  readonly initialProfile: ProfileInput;
-  /** Optional startup behavior for a newly created run. */
-  readonly startImmediately?: boolean;
-}
+export type { RunConfig } from "./run-config.js";
 
 export interface StepResult {
   readonly state: RunState;
@@ -35,15 +28,16 @@ export function createGameplayEngine(
 ): GameplayEngine {
   return Object.freeze({
     createRun(config: RunConfig): RunState {
+      const normalizedConfig = normalizeRunConfig(config);
       const options =
-        config.startImmediately === undefined
+        normalizedConfig.startImmediately === undefined
           ? undefined
-          : { startImmediately: config.startImmediately };
+          : { startImmediately: normalizedConfig.startImmediately };
       return registry
-        .resolve(config.ruleset)
+        .resolve(normalizedConfig.ruleset)
         .createRun(
-          config.seed,
-          normalizeProfile(config.initialProfile),
+          normalizedConfig.seed,
+          normalizeProfile(normalizedConfig.initialProfile),
           options,
         );
     },

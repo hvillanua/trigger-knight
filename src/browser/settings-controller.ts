@@ -9,8 +9,10 @@ import type {
 } from "../application/contracts.js";
 import {
   createDefaultSettings,
+  normalizeInputBindings,
   normalizeSettings,
   SETTINGS_SCHEMA_VERSION,
+  type RawInputBindings,
 } from "../application/settings.js";
 import {
   bindingLabel,
@@ -182,7 +184,7 @@ export function createSettingsController(
   };
 
   const readSettingsForm = (): BrowserSettings => {
-    const bindings = {
+    const bindings: RawInputBindings = {
       togglePause: elements.bindingInputs.togglePause.value,
       dismissTutorial: elements.bindingInputs.dismissTutorial.value,
       purchaseCurrentEncounter:
@@ -331,14 +333,19 @@ export function createSettingsController(
 
   for (const input of Object.values(elements.bindingInputs)) {
     input.addEventListener("input", () => {
-      bindingCapture.replaceBindings({
+      const rawBindings: RawInputBindings = {
         togglePause: elements.bindingInputs.togglePause.value,
         dismissTutorial: elements.bindingInputs.dismissTutorial.value,
         purchaseCurrentEncounter:
           elements.bindingInputs.purchaseCurrentEncounter.value,
         useCarriedItem: elements.bindingInputs.useCarriedItem.value,
-      });
-      renderKeyboardHints();
+      };
+      try {
+        bindingCapture.replaceBindings(normalizeInputBindings(rawBindings));
+        renderKeyboardHints();
+      } catch {
+        return;
+      }
     });
   }
 

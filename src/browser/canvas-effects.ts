@@ -115,7 +115,7 @@ export class CanvasEffectTracker {
   #activeEffects: readonly EffectRecord[] = NO_VISUAL_EFFECTS;
   #effectHistory = new Map<string, EffectRecord>();
   #seenEffectKeys = new Set<string>();
-  #registeredEffectEvents = new Set<GameEvent>();
+  #registeredEffectEvents = new WeakSet<GameEvent>();
   #effectSequence = 0;
   #lastFrameStep: number | undefined;
 
@@ -137,7 +137,7 @@ export class CanvasEffectTracker {
     ) {
       this.#effectHistory.clear();
       this.#seenEffectKeys.clear();
-      this.#registeredEffectEvents.clear();
+      this.#registeredEffectEvents = new WeakSet<GameEvent>();
       this.#effectSequence = 0;
     }
 
@@ -162,6 +162,7 @@ export class CanvasEffectTracker {
         active.push(effect);
       } else {
         this.#effectHistory.delete(key);
+        this.#seenEffectKeys.delete(key);
       }
     }
     this.#activeEffects = Object.freeze(active);

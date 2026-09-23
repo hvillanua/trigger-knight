@@ -2,24 +2,20 @@ import type {
   GameEvent,
   GameplayTrace,
   GameplayEngine,
-  ProfileInput,
-  RunConfig,
   RunResult,
   SimulationRequest,
   SimulationRunner,
 } from "../application/contracts.js";
 import { SIMULATION_RUN_RESULT_SCHEMA_VERSION } from "../application/contracts.js";
 import { createGameplayExecution } from "../application/gameplay-execution.js";
+import { normalizeRunConfig } from "../application/run-config.js";
 import {
   createCanonicalTraceHasher,
   fingerprintCanonicalJson,
 } from "./canonical-json.js";
 import { normalizePolicyDescriptor } from "./policy-descriptor.js";
 import { createRunMetricsAccumulator } from "./simulation-report.js";
-import {
-  normalizeProfileInput,
-  positiveSafeInteger,
-} from "./simulation-validation.js";
+import { positiveSafeInteger } from "./simulation-validation.js";
 
 // The trace header remains v2 so frozen original-v1.3 trace identities remain
 // valid while the result envelope evolves to carry populated metrics.
@@ -31,10 +27,6 @@ export interface SimulationRunnerOptions {
   readonly onTrace?: (trace: GameplayTrace) => void;
 }
 
-function snapshotProfile(profile: ProfileInput): ProfileInput {
-  return normalizeProfileInput(profile);
-}
-
 function runSimulation(
   engine: GameplayEngine,
   request: SimulationRequest,
@@ -43,15 +35,8 @@ function runSimulation(
   const maxSteps = positiveSafeInteger(request.maxSteps, "maxSteps");
 
   const policy = normalizePolicyDescriptor(request.policy.descriptor);
-  const initialProfile = snapshotProfile(request.config.initialProfile);
-  const config: RunConfig = Object.freeze({
-    ruleset: request.config.ruleset,
-    seed: request.config.seed,
-    initialProfile,
-    ...(request.config.startImmediately === undefined
-      ? {}
-      : { startImmediately: request.config.startImmediately }),
-  });
+  const config = normalizeRunConfig(request.config);
+  const initialProfile = config.initialProfile;
   const initialProfileFingerprint = fingerprintCanonicalJson(initialProfile);
   const trace = createCanonicalTraceHasher();
   const agent = request.policy.createAgent();
@@ -129,7 +114,7 @@ export function createSimulationRunner(
     runBatch(
       requests: readonly SimulationRequest[],
     ): Promise<readonly RunResult[]> {
-      return Promise.resolve(Object.freeze(requests.map(run)));
+      return Promise.resolve().then(() => Object.freeze(requests.map(run)));
     },
   });
 }
