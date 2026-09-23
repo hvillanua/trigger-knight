@@ -1,4 +1,13 @@
 /* Browser presentation styles. */
+:root {
+  --trigger-knight-parchment-image: url("../assets/original/images/529.jpg");
+  --trigger-knight-title-hero-image: url("../assets/original/images/533.png");
+  --trigger-knight-sky-image: url("../assets/original/images/357.jpg");
+  --trigger-knight-sky-mask-image: url("../assets/original/shapes/350.svg");
+  --trigger-knight-logo-image: url("../assets/original/images/268.png");
+  --trigger-knight-cursor-image: url("../assets/original/images/12.png");
+}
+
 @font-face {
   font-family: "Trigger Knight Calibri";
   src: url("../assets/original/fonts/2_Calibri.ttf") format("truetype");
@@ -596,7 +605,7 @@ body {
   border-radius: 0;
   color: #080b14;
   background-color: #e5c98f;
-  background-image: url("../assets/original/images/529.jpg");
+  background-image: var(--trigger-knight-parchment-image);
   background-size: 100% 100%;
   text-align: left;
   box-shadow: 0 1rem 3rem rgb(0 0 0 / 45%);
@@ -613,7 +622,7 @@ body {
   position: absolute;
   inset: 0 auto 0 0;
   width: 68%;
-  background: url("../assets/original/images/533.png") left bottom / auto 100%
+  background: var(--trigger-knight-title-hero-image) left bottom / auto 100%
     no-repeat;
 }
 
@@ -621,10 +630,9 @@ body {
 .player-status-sky {
   position: absolute;
   inset: 0;
-  background: url("../assets/original/images/357.jpg") 0 0 / auto 100% repeat-x;
+  background: var(--trigger-knight-sky-image) 0 0 / auto 100% repeat-x;
   mask-image:
-    url("../assets/original/shapes/350.svg"),
-    url("../assets/original/shapes/350.svg");
+    var(--trigger-knight-sky-mask-image), var(--trigger-knight-sky-mask-image);
   mask-position:
     0 0,
     calc(100cqw * 9.5 / 480) calc(100cqw * 17.5 / 480);
@@ -652,8 +660,7 @@ body {
   right: 0.2rem;
   width: 58%;
   height: 10.5rem;
-  background: url("../assets/original/images/268.png") center / contain
-    no-repeat;
+  background: var(--trigger-knight-logo-image) center / contain no-repeat;
 }
 
 .title-actions {
@@ -838,7 +845,7 @@ body {
 .stage-fullscreen,
 .fullscreen-exit-control {
   cursor:
-    url("../assets/original/images/12.png") 4 2,
+    var(--trigger-knight-cursor-image) 4 2,
     pointer;
 }
 
@@ -1198,7 +1205,7 @@ body {
   inset: 0;
   z-index: 1;
   width: 100%;
-  background: url("../assets/original/images/533.png") 0 0 / 100% 100% no-repeat;
+  background: var(--trigger-knight-title-hero-image) 0 0 / 100% 100% no-repeat;
   pointer-events: none;
 }
 
@@ -1526,7 +1533,7 @@ body {
 #run-result,
 #run-result * {
   cursor:
-    url("../assets/original/images/12.png") 4 2,
+    var(--trigger-knight-cursor-image) 4 2,
     none;
 }
 
@@ -1539,7 +1546,7 @@ body {
   overflow: hidden;
   color: #080b14;
   background-color: #e5c98f;
-  background-image: url("../assets/original/images/529.jpg");
+  background-image: var(--trigger-knight-parchment-image);
   background-size: 100% 100%;
 }
 
@@ -1559,8 +1566,8 @@ body {
   height: 100%;
   background: #333;
   pointer-events: none;
-  -webkit-mask-image: url("../assets/original/images/533.png");
-  mask-image: url("../assets/original/images/533.png");
+  -webkit-mask-image: var(--trigger-knight-title-hero-image);
+  mask-image: var(--trigger-knight-title-hero-image);
   -webkit-mask-position: 0 0;
   mask-position: 0 0;
   -webkit-mask-repeat: no-repeat;

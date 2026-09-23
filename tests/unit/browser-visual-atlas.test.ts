@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+import { parseAssetTreatment } from "../../src/browser/asset-treatment.js";
 import {
   createVisualAtlas,
   ORIGINAL_ACTION_EFFECT_URLS,
@@ -80,6 +81,64 @@ describe("approved visual atlas", () => {
     expect(atlas.originalFrames.hero?.[16]).toBeDefined();
     expect(atlas.originalFrames.hero?.[17]).toBeUndefined();
     expect(atlas.originalFrames.hero?.[18]).toBeDefined();
+  });
+
+  it("selects generated artwork and keeps per-file density metadata", async () => {
+    const requests: string[] = [];
+    vi.stubGlobal(
+      "Image",
+      class {
+        onload?: () => void;
+        onerror?: () => void;
+        set src(url: string) {
+          requests.push(url);
+          queueMicrotask(() => this.onload?.());
+        }
+      },
+    );
+
+    const atlas = createVisualAtlas(
+      () => undefined,
+      parseAssetTreatment("ffdec-2x"),
+    );
+    await Promise.resolve();
+
+    expect(atlas.treatment.id).toBe("ffdec-2x");
+    expect(
+      requests.some((url) =>
+        url.includes(
+          "/assets/generated/ffdec-2x/key-sprites/DefineSprite_497_Hero/1.png",
+        ),
+      ),
+    ).toBe(true);
+    expect(atlas.originalFrames.hero?.[0]?.pixelDensity).toBe(2);
+    expect(atlas.sceneImages.sky?.pixelDensity).toBe(1);
+  });
+
+  it("falls back to originals when a generated treatment has no raster output", async () => {
+    const requests: string[] = [];
+    vi.stubGlobal(
+      "Image",
+      class {
+        onload?: () => void;
+        onerror?: () => void;
+        set src(url: string) {
+          requests.push(url);
+          queueMicrotask(() => this.onload?.());
+        }
+      },
+    );
+
+    const atlas = createVisualAtlas(
+      () => undefined,
+      parseAssetTreatment("ai-4x"),
+    );
+    await Promise.resolve();
+
+    expect(
+      requests.every((url) => !url.includes("/assets/generated/ai-4x/")),
+    ).toBe(true);
+    expect(atlas.originalFrames.hero?.[0]?.pixelDensity).toBe(1);
   });
 
   it("maps the original character and scene exports into runtime assets", () => {
