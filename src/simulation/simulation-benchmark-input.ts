@@ -4,6 +4,7 @@ import type {
   SimulationRequestInput,
 } from "../application/contracts.js";
 import { SIMULATION_MANIFEST_SCHEMA_VERSION } from "../application/contracts.js";
+import { normalizeProfileInput } from "../application/run-config.js";
 import {
   fingerprintCanonicalJson,
   normalizeCanonicalJson,
@@ -13,7 +14,6 @@ import { normalizeSimulationManifest } from "./simulation-experiment.js";
 import { normalizePolicyDescriptor } from "./policy-descriptor.js";
 import {
   assertExactKeys,
-  normalizeProfileInput,
   positiveSafeInteger,
   record,
 } from "./simulation-validation.js";
@@ -262,7 +262,10 @@ function createCaseId(
   policy: PolicyDescriptor,
   maxSteps: number,
 ): string {
-  return `${scenarioId}/${profileId}/${policy.id}@${policy.version}/${maxSteps}/${fingerprintCanonicalJson(policy.config)}`;
+  const encodePart = (value: string): string => encodeURIComponent(value);
+  return `${[scenarioId, profileId, policy.id, policy.version]
+    .map(encodePart)
+    .join("/")}/${maxSteps}/${fingerprintCanonicalJson(policy.config)}`;
 }
 
 function createManifest(

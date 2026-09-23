@@ -6,7 +6,7 @@ import type {
   RunTerminalReason,
 } from "../domain/contracts.js";
 import type { GameplayTraceDivergenceComparison } from "./gameplay-execution.js";
-import type { RunConfig } from "./gameplay-engine.js";
+import type { RunConfig } from "./run-config.js";
 
 type PolicyConfigValue =
   | boolean

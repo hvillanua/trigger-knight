@@ -3,7 +3,15 @@ import { defineConfig, devices } from "@playwright/test";
 
 function configuredWorkers(): number | string | undefined {
   const value = process.env.PLAYWRIGHT_WORKERS;
-  if (value === undefined || /^\d+%$/.test(value)) return value;
+  if (value === undefined) return undefined;
+  if (/^\d+%$/.test(value)) {
+    const percentage = Number(value.slice(0, -1));
+    if (percentage >= 1 && percentage <= 100) return value;
+
+    throw new Error(
+      "PLAYWRIGHT_WORKERS must be a positive integer or a percentage from 1% to 100%",
+    );
+  }
 
   const workers = Number(value);
   if (Number.isSafeInteger(workers) && workers > 0) return workers;

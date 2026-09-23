@@ -2,65 +2,6 @@ import type { ProfileStorageError } from "./persistence.js";
 
 export const SETTINGS_SCHEMA_VERSION = 1 as const;
 
-/** Device-independent browser bindings persisted outside gameplay state. */
-export interface InputBindings {
-  readonly togglePause: string;
-  readonly dismissTutorial: string;
-  readonly purchaseCurrentEncounter: string;
-  readonly useCarriedItem: string;
-}
-
-/** @playerVisible Sound presentation preferences persisted outside gameplay state. */
-export interface SoundPreferences {
-  readonly muted: boolean;
-  /** Master volume, normalized to the inclusive range 0–1. */
-  readonly volume: number;
-}
-
-/** Versioned settings record shared by browser input and sound adapters. */
-export interface BrowserSettings {
-  readonly schemaVersion: typeof SETTINGS_SCHEMA_VERSION;
-  readonly bindings: InputBindings;
-  readonly sound: SoundPreferences;
-}
-
-export type SettingsLoadResult =
-  | Readonly<{
-      status: "empty";
-      settings: BrowserSettings;
-    }>
-  | Readonly<{
-      status: "loaded";
-      settings: BrowserSettings;
-    }>
-  | Readonly<{
-      status: "failed";
-      error: ProfileStorageError;
-    }>;
-
-export type SettingsSaveResult =
-  | Readonly<{
-      status: "saved";
-      settings: BrowserSettings;
-    }>
-  | Readonly<{
-      status: "failed";
-      error: ProfileStorageError;
-    }>;
-
-/** Application boundary for browser-only settings. */
-export interface SettingsStore {
-  load(): SettingsLoadResult;
-  save(settings: BrowserSettings): SettingsSaveResult;
-}
-
-export const DEFAULT_INPUT_BINDINGS: InputBindings = Object.freeze({
-  togglePause: "KeyP",
-  dismissTutorial: "Enter",
-  purchaseCurrentEncounter: "KeyB",
-  useCarriedItem: "KeyI",
-});
-
 /** Portable KeyboardEvent.code values accepted by the settings UI. */
 const SUPPORTED_KEYBOARD_CODES = Object.freeze([
   "Backquote",
@@ -166,13 +107,80 @@ const SUPPORTED_KEYBOARD_CODES = Object.freeze([
   "KeyZ",
 ] as const);
 
+export type KeyboardCode = (typeof SUPPORTED_KEYBOARD_CODES)[number];
+
+/** Device-independent browser bindings persisted outside gameplay state. */
+export interface InputBindings {
+  readonly togglePause: KeyboardCode;
+  readonly dismissTutorial: KeyboardCode;
+  readonly purchaseCurrentEncounter: KeyboardCode;
+  readonly useCarriedItem: KeyboardCode;
+}
+
+/** Raw binding values retained while a settings form is being edited. */
+export interface RawInputBindings {
+  readonly togglePause: string;
+  readonly dismissTutorial: string;
+  readonly purchaseCurrentEncounter: string;
+  readonly useCarriedItem: string;
+}
+
+/** @playerVisible Sound presentation preferences persisted outside gameplay state. */
+export interface SoundPreferences {
+  readonly muted: boolean;
+  /** Master volume, normalized to the inclusive range 0–1. */
+  readonly volume: number;
+}
+
+/** Versioned settings record shared by browser input and sound adapters. */
+export interface BrowserSettings {
+  readonly schemaVersion: typeof SETTINGS_SCHEMA_VERSION;
+  readonly bindings: InputBindings;
+  readonly sound: SoundPreferences;
+}
+
+export type SettingsLoadResult =
+  | Readonly<{
+      status: "empty";
+      settings: BrowserSettings;
+    }>
+  | Readonly<{
+      status: "loaded";
+      settings: BrowserSettings;
+    }>
+  | Readonly<{
+      status: "failed";
+      error: ProfileStorageError;
+    }>;
+
+export type SettingsSaveResult =
+  | Readonly<{
+      status: "saved";
+      settings: BrowserSettings;
+    }>
+  | Readonly<{
+      status: "failed";
+      error: ProfileStorageError;
+    }>;
+
+/** Application boundary for browser-only settings. */
+export interface SettingsStore {
+  load(): SettingsLoadResult;
+  save(settings: BrowserSettings): SettingsSaveResult;
+}
+
+export const DEFAULT_INPUT_BINDINGS: InputBindings = Object.freeze({
+  togglePause: "KeyP",
+  dismissTutorial: "Enter",
+  purchaseCurrentEncounter: "KeyB",
+  useCarriedItem: "KeyI",
+});
+
 /** Returns whether a value is a portable KeyboardEvent.code. */
-export function isSupportedKeyboardCode(value: unknown): value is string {
+export function isSupportedKeyboardCode(value: unknown): value is KeyboardCode {
   return (
     typeof value === "string" &&
-    SUPPORTED_KEYBOARD_CODES.includes(
-      value as (typeof SUPPORTED_KEYBOARD_CODES)[number],
-    )
+    SUPPORTED_KEYBOARD_CODES.some((code) => code === value)
   );
 }
 
@@ -204,11 +212,36 @@ function hasExactKeys(
   );
 }
 
-function binding(value: unknown, field: string): string {
+function binding(value: unknown, field: string): KeyboardCode {
   if (!isSupportedKeyboardCode(value)) {
     throw new TypeError(`Settings ${field} must be a supported keyboard code`);
   }
   return value;
+}
+
+/** Validates binding values without applying the saved-settings conflict rule. */
+export function normalizeInputBindings(input: unknown): InputBindings {
+  if (!isPlainRecord(input)) {
+    throw new TypeError("Settings bindings must be a plain record");
+  }
+  const expected = [
+    "togglePause",
+    "dismissTutorial",
+    "purchaseCurrentEncounter",
+    "useCarriedItem",
+  ];
+  if (!hasExactKeys(input, expected)) {
+    throw new TypeError("Settings bindings contain unsupported fields");
+  }
+  return Object.freeze({
+    togglePause: binding(input.togglePause, "togglePause"),
+    dismissTutorial: binding(input.dismissTutorial, "dismissTutorial"),
+    purchaseCurrentEncounter: binding(
+      input.purchaseCurrentEncounter,
+      "purchaseCurrentEncounter",
+    ),
+    useCarriedItem: binding(input.useCarriedItem, "useCarriedItem"),
+  });
 }
 
 function volume(value: unknown): number {
@@ -244,30 +277,14 @@ export function normalizeSettings(input: unknown): BrowserSettings {
 
   const bindings = input.bindings;
   const sound = input.sound;
-  if (
-    !hasExactKeys(bindings, [
-      "togglePause",
-      "dismissTutorial",
-      "purchaseCurrentEncounter",
-      "useCarriedItem",
-    ]) ||
-    !hasExactKeys(sound, ["muted", "volume"])
-  ) {
+  if (!hasExactKeys(sound, ["muted", "volume"])) {
     throw new TypeError("Settings contains unsupported fields");
   }
   if (typeof sound.muted !== "boolean") {
     throw new TypeError("Settings sound muted must be boolean");
   }
 
-  const normalizedBindings = Object.freeze({
-    togglePause: binding(bindings.togglePause, "togglePause"),
-    dismissTutorial: binding(bindings.dismissTutorial, "dismissTutorial"),
-    purchaseCurrentEncounter: binding(
-      bindings.purchaseCurrentEncounter,
-      "purchaseCurrentEncounter",
-    ),
-    useCarriedItem: binding(bindings.useCarriedItem, "useCarriedItem"),
-  });
+  const normalizedBindings = normalizeInputBindings(bindings);
   if (new Set(Object.values(normalizedBindings)).size !== 4) {
     throw new TypeError("Settings bindings must not conflict");
   }

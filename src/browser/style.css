@@ -623,9 +623,13 @@ body {
   inset: 0;
   background: url("../assets/original/images/357.jpg") 0 0 / auto 100% repeat-x;
   mask-image:
-    radial-gradient(ellipse 8% 18% at 10% 17%, #000 65%, transparent 75%),
-    radial-gradient(ellipse 13% 18% at 28% 39%, #000 65%, transparent 75%),
-    radial-gradient(ellipse 13% 28% at 57% 61%, #000 65%, transparent 75%);
+    url("../assets/original/shapes/350.svg"),
+    url("../assets/original/shapes/350.svg");
+  mask-position:
+    0 0,
+    calc(100cqw * 9.5 / 480) calc(100cqw * 17.5 / 480);
+  mask-size: calc(100cqw * 292.6 / 480) calc(100cqw * 320.9 / 480);
+  mask-repeat: no-repeat;
   animation: menu-sky-drift 18s linear infinite;
 }
 

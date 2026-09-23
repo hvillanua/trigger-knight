@@ -6,6 +6,7 @@ import type {
   GameEvent,
   GameObservation,
   GameplayEngine,
+  ProfileState,
   PlayerPolicy,
   RunConfig,
   SimulationRequest,
@@ -330,13 +331,17 @@ describe("headless simulation runner", () => {
       ...createFreshProfile(),
       level: 2,
     };
-    const profileWithSecondOrder = {
+    const fresh = createFreshProfile();
+    const profileWithSecondOrder: ProfileState = {
       level: 2,
-      ...Object.fromEntries(
-        Object.entries(createFreshProfile()).filter(([key]) => key !== "level"),
-      ),
       schemaVersion: 2,
       scoreMultiplier: 1,
+      xp: fresh.xp,
+      highScore: fresh.highScore,
+      tutorialPreference: fresh.tutorialPreference,
+      weaponDiscoveries: fresh.weaponDiscoveries,
+      armorDiscoveries: fresh.armorDiscoveries,
+      achievementSlots: fresh.achievementSlots,
     };
 
     const first = runner.run(
@@ -393,5 +398,17 @@ describe("headless simulation runner", () => {
       "batch-second",
     ]);
     expect(Object.isFrozen(results)).toBe(true);
+  });
+
+  it("rejects a batch promise when one request is invalid", async () => {
+    const runner = createSimulationRunner(gameplayEngine);
+    const invalid = {
+      ...request(),
+      config: { ...config, seed: 7 },
+    } as unknown as SimulationRequest;
+
+    await expect(runner.runBatch([invalid])).rejects.toThrow(
+      "Run config seed must be a string",
+    );
   });
 });

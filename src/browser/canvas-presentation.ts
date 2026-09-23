@@ -273,6 +273,19 @@ function drawActionPointer(
   );
 }
 
+function isActorSpriteId(spriteId: VisualSpriteId): spriteId is ActorSpriteId {
+  switch (spriteId) {
+    case "hero":
+    case "dragon":
+    case "goblin":
+    case "golem":
+    case "wolf":
+      return true;
+    default:
+      return false;
+  }
+}
+
 function drawAtlasSprite(
   context: CanvasRenderingContext2D,
   atlas: VisualAtlas,
@@ -291,8 +304,8 @@ function drawAtlasSprite(
   };
   const icon = iconIds[spriteId];
   const originalImage =
-    options.frame !== undefined
-      ? atlas.originalFrames[spriteId as ActorSpriteId]?.[options.frame - 1]
+    options.frame !== undefined && isActorSpriteId(spriteId)
+      ? atlas.originalFrames[spriteId]?.[options.frame - 1]
       : icon !== undefined
         ? atlas.uiImages[icon]
         : atlas.originalImages[spriteId];
@@ -307,7 +320,9 @@ function drawAtlasSprite(
     golem: [86.5, 103],
     wolf: [64.5, 65],
   };
-  const anchor = anchors[spriteId as ActorSpriteId] ?? [
+  const anchor = (isActorSpriteId(spriteId)
+    ? anchors[spriteId]
+    : undefined) ?? [
     originalImage.naturalWidth / 2,
     originalImage.naturalHeight,
   ];
@@ -1638,7 +1653,9 @@ function drawDynamicWorld(
     const enemyX =
       (battleActorX(frame, "enemy") ?? camera.x + 390) + deathStaggerX("enemy");
     drawHero(context, atlas, heroX, groundY, pose(animation.hero));
-    drawEnemy(context, atlas, enemyX, groundY, pose(animation.enemy!));
+    if (animation.enemy !== undefined) {
+      drawEnemy(context, atlas, enemyX, groundY, pose(animation.enemy));
+    }
     drawHealthBar(
       context,
       enemyX,
@@ -1654,7 +1671,9 @@ function drawDynamicWorld(
     current.kind === "battle" &&
     battle === null
   ) {
-    drawEnemy(context, atlas, x, groundY, pose(animation.enemy!));
+    if (animation.enemy !== undefined) {
+      drawEnemy(context, atlas, x, groundY, pose(animation.enemy));
+    }
   }
 }
 

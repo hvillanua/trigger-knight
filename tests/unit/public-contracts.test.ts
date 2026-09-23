@@ -15,6 +15,8 @@ import type {
   GameplayTraceComparison,
   GameplayTraceDivergence,
   GameplayTraceDivergenceComparison,
+  InputBindings,
+  KeyboardCode,
   ObservedBattleEnemy,
   ObservedPositionedBattleEncounter,
   PlayerAgent,
@@ -31,6 +33,7 @@ import type {
   RunResult,
   RunMetrics,
   RunState,
+  RawInputBindings,
   QueuedBattleEncounter,
   ShopEncounter,
   ShopId,
@@ -55,6 +58,12 @@ import type {
 } from "../../src/application/contracts.js";
 
 describe("public application contracts", () => {
+  it("keeps normalized keyboard bindings closed while drafts stay raw", () => {
+    expectTypeOf<KeyboardCode>().toMatchTypeOf<string>();
+    expectTypeOf<InputBindings["togglePause"]>().toEqualTypeOf<KeyboardCode>();
+    expectTypeOf<RawInputBindings["togglePause"]>().toEqualTypeOf<string>();
+  });
+
   it("exposes one gameplay engine boundary to browser and simulation consumers", () => {
     interface BrowserConsumer {
       readonly engine: GameplayEngine;

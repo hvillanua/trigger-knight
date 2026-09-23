@@ -39,6 +39,14 @@ describe("gameplay engine", () => {
     ).toThrowError('Unsupported ruleset "walking-skeleton-v1"');
   });
 
+  it("rejects malformed runtime configuration before resolving a ruleset", () => {
+    const invalid = { ...config, seed: 7 } as unknown as RunConfig;
+
+    expect(() => gameplayEngine.createRun(invalid)).toThrowError(
+      "Run config seed must be a string",
+    );
+  });
+
   it("rejects an unsupported ruleset before stepping restored state", () => {
     expect(() =>
       gameplayEngine.step(createUnsupportedState(), []),

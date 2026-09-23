@@ -170,7 +170,7 @@ describe("versioned profiles", () => {
 
   it("produces identical gameplay from minimal and expanded explicit inputs", () => {
     const minimal = {
-      schemaVersion: 1,
+      schemaVersion: 1 as const,
       scoreMultiplier: 1.75,
       tutorialPreference: "disabled" as const,
     };
