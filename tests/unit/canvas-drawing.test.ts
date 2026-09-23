@@ -18,6 +18,7 @@ import {
   drawOriginalHitEffect,
   drawOriginalTimelineFrame,
   drawScenery,
+  drawUiImageAsset,
   encounterQueueItems,
   originalEventVisual,
   sessionOverPointerPosition,
@@ -140,17 +141,26 @@ interface FakeImage extends HTMLImageElement {
   readonly name: string;
 }
 
+interface FakeVisualImage {
+  readonly image: FakeImage;
+  readonly pixelDensity: 1 | 2 | 4;
+}
+
 function fakeImage(
   name: string,
   naturalWidth = 1,
   naturalHeight = 1,
-): FakeImage {
+  pixelDensity: 1 | 2 | 4 = 1,
+): FakeVisualImage {
   return {
-    name,
-    complete: true,
-    naturalWidth,
-    naturalHeight,
-  } as FakeImage;
+    image: {
+      name,
+      complete: true,
+      naturalWidth,
+      naturalHeight,
+    } as FakeImage,
+    pixelDensity,
+  };
 }
 
 const BASE_OBSERVATION: GameObservation = {
@@ -301,6 +311,34 @@ describe("Canvas drawing decisions", () => {
         .filter(({ method }) => method === "strokeRect")
         .map(({ strokeStyle, args }) => [strokeStyle, ...args]),
     ).toEqual([["#545401", 224.5, 159.5, 51, 7]]);
+  });
+
+  it("uses source density to preserve logical UI dimensions", () => {
+    const context = createRecordingContext();
+
+    expect(drawUiImageAsset(context, fakeImage("ui", 40, 20, 4), 5, 6)).toBe(
+      true,
+    );
+    expect(drawImages(context)[0]?.args.slice(1)).toEqual([5, 6, 10, 5]);
+  });
+
+  it("uses source density to preserve logical building dimensions", () => {
+    const context = createRecordingContext();
+
+    drawScenery(
+      context,
+      BASE_OBSERVATION.camera,
+      0,
+      {
+        mountains: fakeImage("mountains"),
+        building: fakeImage("building", 478 * 4, 203 * 4, 4),
+        ground: fakeImage("ground"),
+      },
+      180,
+      234,
+    );
+
+    expect(drawImages(context)[1]?.args.slice(1)).toEqual([-59, 31, 478, 203]);
   });
 
   it("maps encounter queue icons and action pointer frames from public state", () => {
@@ -472,7 +510,7 @@ describe("Canvas drawing decisions", () => {
         1.2,
       ),
     ).toBe(true);
-    expect(drawImages(context)[0]?.args.slice(1)).toEqual([84, 68]);
+    expect(drawImages(context)[0]?.args.slice(1)).toEqual([84, 68, 32, 24]);
     expect(
       drawOriginalActionEffect(context, [action], { x: 100, y: 80 }, 0),
     ).toBe(true);

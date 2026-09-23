@@ -12,6 +12,7 @@ import {
   type OriginalActionEffectId,
   type OriginalUiImageId,
   type VisualSpriteId,
+  type VisualImage,
 } from "./visual-atlas.js";
 import {
   CanvasDiagnostics,
@@ -194,7 +195,7 @@ function battleActorX(
 function uiImageReady(
   atlas: VisualAtlas,
   imageId: OriginalUiImageId,
-): HTMLImageElement | undefined {
+): VisualImage | undefined {
   const image = atlas.uiImages[imageId];
   return drawingImageReady(image) ? image : undefined;
 }
@@ -310,6 +311,8 @@ function drawAtlasSprite(
         ? atlas.uiImages[icon]
         : atlas.originalImages[spriteId];
   if (!drawingImageReady(originalImage)) return false;
+  const image = originalImage.image;
+  const pixelDensity = originalImage.pixelDensity;
   const scale = options.scale ?? 1;
   // Each entity's frames share a padded registration canvas. These anchors are
   // the bottom center of the embedded shadow; never fit or recenter a pose.
@@ -320,18 +323,19 @@ function drawAtlasSprite(
     golem: [86.5, 103],
     wolf: [64.5, 65],
   };
-  const anchor = (isActorSpriteId(spriteId)
-    ? anchors[spriteId]
-    : undefined) ?? [
-    originalImage.naturalWidth / 2,
-    originalImage.naturalHeight,
-  ];
+  const anchor: readonly [number, number] = isActorSpriteId(spriteId)
+    ? [anchors[spriteId][0] * pixelDensity, anchors[spriteId][1] * pixelDensity]
+    : [image.naturalWidth / 2, image.naturalHeight];
   context.save();
   context.globalAlpha = options.alpha ?? 1;
   context.translate(x, baselineY);
-  context.scale(options.flipX === true ? -scale : scale, scale);
+  const logicalScale = scale / pixelDensity;
+  context.scale(
+    options.flipX === true ? -logicalScale : logicalScale,
+    logicalScale,
+  );
   try {
-    context.drawImage(originalImage, -anchor[0], -anchor[1]);
+    context.drawImage(image, -anchor[0], -anchor[1]);
   } catch {
     context.restore();
     return false;
@@ -1694,7 +1698,7 @@ export class CanvasPresentation implements PresentationPort {
   #sessionOverAnimationProgress = 1;
   #sessionOverAnimationFrame: number | undefined;
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, treatment?: VisualAtlas["treatment"]) {
     this.#canvas = canvas;
     this.#diagnostics = new CanvasDiagnostics(canvas);
     const resources = createCanvasResources((change) => {
@@ -1705,9 +1709,13 @@ export class CanvasPresentation implements PresentationPort {
       }
       this.#lastDrawnVisualSignature = undefined;
       this.#draw();
-    });
+    }, treatment);
     this.#atlas = resources.atlas;
-    this.#diagnostics.initialize(resources.atlas.status, resources.fontStatus);
+    this.#diagnostics.initialize(
+      resources.atlas.status,
+      resources.fontStatus,
+      resources.atlas.treatment,
+    );
     this.#canvas.addEventListener("pointermove", (event) => {
       const frame = this.#frame;
       if (frame === undefined) return;
@@ -1839,6 +1847,8 @@ export class CanvasPresentation implements PresentationPort {
     }
 
     context.setTransform(1, 0, 0, 1, 0, 0);
+    context.imageSmoothingEnabled =
+      this.#atlas.treatment.filtering === "linear";
     context.clearRect(0, 0, layer.width, layer.height);
     context.save();
     context.beginPath();
@@ -1949,6 +1959,8 @@ export class CanvasPresentation implements PresentationPort {
     }
 
     context.setTransform(1, 0, 0, 1, 0, 0);
+    context.imageSmoothingEnabled =
+      this.#atlas.treatment.filtering === "linear";
     context.fillStyle = "#05070d";
     context.fillRect(0, 0, this.#canvas.width, this.#canvas.height);
 

@@ -5,6 +5,7 @@ import type {
 } from "../application/contracts.js";
 import { describeGameEvent } from "./hud.js";
 import { actionPointerImageId } from "./canvas-drawing.js";
+import type { AssetTreatment } from "./asset-treatment.js";
 import type { VisualAtlasStatus } from "./visual-atlas.js";
 
 function formatProjectionValue(value: number): string {
@@ -143,10 +144,21 @@ export class CanvasDiagnostics {
   initialize(
     assetStatus: VisualAtlasStatus,
     fontStatus: "loading" | "ready" | "fallback",
+    treatment: AssetTreatment,
   ): void {
     this.#set("renderer", "canvas-2d");
-    this.#set("visualVersion", "original-assets-v1");
-    this.#set("assetSource", "original-runtime-assets");
+    this.#set(
+      "visualVersion",
+      treatment.directory === undefined
+        ? "original-assets-v1"
+        : `${treatment.id}-assets-v1`,
+    );
+    this.#set(
+      "assetSource",
+      treatment.directory === undefined
+        ? "original-runtime-assets"
+        : `${treatment.id}-runtime-assets`,
+    );
     this.#set("fontStatus", fontStatus);
     this.setAssetStatus(assetStatus);
     this.setReducedMotion(false);

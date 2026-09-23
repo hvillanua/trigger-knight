@@ -57,6 +57,8 @@ import { ORIGINAL_V13_RULESET_ID, ruleSetRegistry } from "./domain/rulesets.js";
 import { createBrowserProfileStore } from "./persistence/browser-profile-store.js";
 import { createBrowserSettingsStore } from "./persistence/browser-settings-store.js";
 import { createBrowserSoundEffects } from "./sound/sound-effects.js";
+import { parseAssetTreatment } from "./browser/asset-treatment.js";
+import { applyVisualStyleTreatment } from "./browser/asset-style.js";
 import "./browser/style.css";
 
 const gameplayEngine = createGameplayEngine(ruleSetRegistry);
@@ -298,7 +300,11 @@ const keyboardRouter = createKeyboardCommandRouter(currentSettings.bindings);
 let latestObservation: Readonly<GameObservation> | undefined;
 let latestFeedback = "";
 
-const presentation = new CanvasPresentation(canvas);
+const assetTreatment = parseAssetTreatment(
+  import.meta.env.VITE_ASSET_TREATMENT,
+);
+applyVisualStyleTreatment(assetTreatment);
+const presentation = new CanvasPresentation(canvas, assetTreatment);
 const reducedMotionQuery =
   typeof window.matchMedia === "function"
     ? window.matchMedia("(prefers-reduced-motion: reduce)")

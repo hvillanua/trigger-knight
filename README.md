@@ -19,6 +19,22 @@ npm run dev
 On a fresh Linux host that needs Chromium system dependencies, use
 `npm run setup:browser -- --with-deps` for the browser setup step.
 
+### Compare image treatments
+
+The browser uses the original images by default. Select a generated treatment
+when its directory is available under `src/assets/generated/`:
+
+```sh
+VITE_ASSET_TREATMENT=realesrgan-4x npm run dev
+```
+
+Supported treatment ids are `original-filtered`, `original-nearest`, `ffdec-2x`,
+`ffdec-4x`, `lanczos-4x`, `ai-4x`, `esrgan-4x`, `realesrgan-4x`,
+`realesrgan-anime-4x`, `srgan-4x`, and `swinir-4x`. Missing generated files
+fall back to their original image. Canvas assets use their recorded pixel
+density to preserve the original logical layout. CSS-owned screen art uses the
+same treatment; fonts and sounds remain original.
+
 ## Validation
 
 Run commands from the repository root:
