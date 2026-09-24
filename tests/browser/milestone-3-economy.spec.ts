@@ -52,6 +52,7 @@ test("exposes a disabled purchase activation until public eligibility allows it"
   page,
 }) => {
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
 
   await expect(
     page.getByRole("button", { name: "Purchase current shop" }),
@@ -134,6 +135,7 @@ test("keeps policy outcomes fixed across Canvas size, DPR, and redraw cadence", 
 
       try {
         await page.goto("/?manual=1");
+        await page.getByRole("button", { name: "Start run" }).click();
         return await page.evaluate(
           async ({ runConfig, schedule, redraws }) => {
             const enginePath = "/src/application/gameplay-engine.ts";

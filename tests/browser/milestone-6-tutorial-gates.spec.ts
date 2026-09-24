@@ -40,6 +40,7 @@ test("displays and dismisses the initial public tutorial gate", async ({
   page,
 }) => {
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
 
   const canvas = page.getByRole("img", { name: "Trigger Knight game view" });
   await expect(canvas).toHaveAttribute("data-tutorial-page", "0");

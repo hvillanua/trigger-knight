@@ -108,6 +108,7 @@ test("keeps fullscreen active while moving from a finished run to achievements",
   await installFullscreenStub(page, "working");
   await seedDisabledTutorialProfile(page);
   await page.goto("/?manual=1&seed=milestone-2-lifecycle-2&diagnostics=1");
+  await page.getByRole("button", { name: "Start run" }).click();
 
   await page.getByRole("button", { name: "Enter fullscreen" }).click();
   await expect
@@ -161,6 +162,7 @@ test("re-enters fullscreen from menu, achievements, and settings screens", async
   await installFullscreenStub(page, "working");
   await seedDisabledTutorialProfile(page);
   await page.goto("/?manual=1&seed=milestone-2-lifecycle-2&diagnostics=1");
+  await page.getByRole("button", { name: "Start run" }).click();
 
   await page.getByRole("button", { name: "Enter fullscreen" }).click();
   await expect
@@ -368,6 +370,7 @@ test("exposes fullscreen controls and the reduced-motion presentation state", as
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
 
   await expect(
     page.getByRole("button", { name: "Enter fullscreen" }),
@@ -422,8 +425,6 @@ test("keeps fullscreen control anchored to every active screen", async ({
 
   await expectFullscreenControl();
 
-  await page.keyboard.press("p");
-  await page.getByRole("button", { name: "Main menu", exact: true }).click();
   await expect(page.locator("#title-screen")).toBeVisible();
   await expectFullscreenControl();
 
@@ -440,8 +441,6 @@ test("keeps fullscreen control anchored to every active screen", async ({
 test("scales the main menu presentation in fullscreen", async ({ page }) => {
   await seedDisabledTutorialProfile(page);
   await page.goto("/?manual=1");
-  await page.keyboard.press("p");
-  await page.getByRole("button", { name: "Main menu", exact: true }).click();
   await expect(page.locator("#title-screen")).toBeVisible();
 
   const readMenuLayout = async () =>
@@ -502,6 +501,7 @@ test("handles fullscreen entry, exit, resize, and denied or unsupported hosts", 
     try {
       await installFullscreenStub(page, mode);
       await page.goto("/?manual=1");
+      await page.getByRole("button", { name: "Start run" }).click();
       const button = page.locator("#toggle-fullscreen");
       if (mode === "working") {
         await expect(button).toBeEnabled();
@@ -555,6 +555,7 @@ test("handles fullscreen entry, exit, resize, and denied or unsupported hosts", 
 test("keeps the fullscreen stage within the viewport", async ({ page }) => {
   await page.setViewportSize({ width: 640, height: 360 });
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
 
   await page.getByRole("button", { name: "Enter fullscreen" }).click();
   await expect(page.locator("#gameplay-screen")).toBeVisible();
@@ -602,6 +603,7 @@ test("keeps assembled screens readable and operable at representative sizes", as
     const page = await context.newPage();
     try {
       await page.goto("/?manual=1");
+      await page.getByRole("button", { name: "Start run" }).click();
       const layout = await page.evaluate(() => {
         const visibleButtons = [...document.querySelectorAll("button")].filter(
           (button) => !button.hidden && button.getClientRects().length > 0,
@@ -688,6 +690,7 @@ test("reduced motion keeps timing and committed results durable", async ({
     await reducedPage.emulateMedia({ reducedMotion: "reduce" });
     await seedDisabledTutorialProfile(reducedPage);
     await reducedPage.goto("/?manual=1&seed=m4-policy-3&diagnostics=1");
+    await reducedPage.getByRole("button", { name: "Start run" }).click();
     const reducedSummary = await advanceUntilResult(reducedPage, 12_000, true);
     const reducedTrace = await readTraceParity(reducedPage);
 
@@ -708,6 +711,7 @@ test("reduced motion keeps timing and committed results durable", async ({
 
     await normalPage.emulateMedia({ reducedMotion: "no-preference" });
     await normalPage.goto("/?manual=1");
+    await normalPage.getByRole("button", { name: "Start run" }).click();
     const normalReplay = await replayWithSampledCanvas(normalPage, {
       config: reducedTrace.config,
       commands: reducedTrace.commands,
@@ -784,6 +788,7 @@ test("dismisses the original session-over screen with keyboard activation", asyn
   test.setTimeout(60_000);
   await seedDisabledTutorialProfile(page);
   await page.goto("/?manual=1&seed=milestone-2-lifecycle-2");
+  await page.getByRole("button", { name: "Start run" }).click();
 
   const ended = await page.evaluate(() => {
     const advance = document.querySelector<HTMLButtonElement>("#advance-run");
@@ -842,6 +847,7 @@ test("completes the combat death path and starts another real browser run", asyn
     try {
       await seedDisabledTutorialProfile(page);
       await page.goto(`/?manual=1&seed=${scenario.seed}&diagnostics=1`);
+      await page.getByRole("button", { name: "Start run" }).click();
       const summary = await advanceUntilResult(page, scenario.maxSteps, true);
       expect(summary.seed).toBe(scenario.seed);
       expect(summary.terminalReason, JSON.stringify(summary)).toBe(

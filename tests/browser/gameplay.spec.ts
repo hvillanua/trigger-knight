@@ -13,6 +13,7 @@ test("drives one fixed shared-engine step from the browser", async ({
   page,
 }) => {
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
 
   const canvas = page.getByRole("img", { name: "Trigger Knight game view" });
   await expect(canvas).toHaveAttribute("data-observation-step", "0");
@@ -41,6 +42,7 @@ test("physical Canvas size does not change the engine result", async ({
 
       try {
         await page.goto("/?manual=1");
+        await page.getByRole("button", { name: "Start run" }).click();
         const canvas = page.getByRole("img", {
           name: "Trigger Knight game view",
         });
@@ -124,6 +126,7 @@ test("matches browser and headless diagnostic traces", async ({ page }) => {
   });
 
   await page.goto("/?manual=1&diagnostics=1");
+  await page.getByRole("button", { name: "Start run" }).click();
   const advance = page.getByRole("button", { name: "Advance run" });
   await advance.click();
   await advance.click();

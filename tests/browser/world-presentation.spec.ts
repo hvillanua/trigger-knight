@@ -6,6 +6,7 @@ const VISUAL_DEVICE_SCALE_FACTOR = 1;
 
 async function openReadyWorld(page: Page) {
   await page.goto("/?manual=1&diagnostics=1");
+  await page.getByRole("button", { name: "Start run" }).click();
   const canvas = page.getByRole("img", { name: "Trigger Knight game view" });
   await expect(canvas).toHaveAttribute(
     "data-asset-source",
@@ -28,6 +29,7 @@ async function openStableWorld(browser: Browser) {
   const page = await context.newPage();
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/?manual=1&seed=issue-144-visual");
+  await page.getByRole("button", { name: "Start run" }).click();
 
   const canvas = page.getByRole("img", { name: "Trigger Knight game view" });
   await expect(canvas).toHaveAttribute(
@@ -232,6 +234,7 @@ test("uses one offscreen canvas for the static scenery cache", async ({
   page,
 }) => {
   await page.goto("/?manual=1&diagnostics=1");
+  await page.getByRole("button", { name: "Start run" }).click();
 
   const cachedCanvasDraws = await page.evaluate(async (modulePath) => {
     const { CanvasPresentation } = (await import(
@@ -530,6 +533,7 @@ test("omits a missing original building without drawing a fallback", async ({
       : route.continue(),
   );
   await page.goto("/?manual=1&diagnostics=1");
+  await page.getByRole("button", { name: "Start run" }).click();
 
   const fallbackCalls = await page.evaluate(async (modulePath) => {
     const { CanvasPresentation } = (await import(
@@ -1344,6 +1348,7 @@ test("omits a missing hit frame without substituting a burst", async ({
       : route.continue(),
   );
   await page.goto("/?manual=1&diagnostics=1");
+  await page.getByRole("button", { name: "Start run" }).click();
 
   const result = await page.evaluate(async (modulePath) => {
     const { CanvasPresentation } = (await import(

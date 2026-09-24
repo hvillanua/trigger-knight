@@ -5,9 +5,6 @@ test("keeps the reference-backed screens composed and interactive", async ({
 }, testInfo) => {
   await page.emulateMedia({ reducedMotion: "no-preference" });
   await page.goto("/?manual=1");
-  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
-  await page.keyboard.press("p");
-  await page.getByRole("button", { name: "Main menu", exact: true }).click();
 
   const titleAssets = await page.locator("#title-screen").evaluate(() => {
     const readBackground = (selector: string): string => {
@@ -324,9 +321,6 @@ test("keeps the original knight-shaped sky extension on the profile screen", asy
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/?manual=1");
-  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
-  await page.keyboard.press("p");
-  await page.getByRole("button", { name: "Main menu", exact: true }).click();
   await page.getByRole("button", { name: "View achievements" }).click();
 
   const screenshot = await page.locator("#collections-screen").screenshot();
@@ -368,9 +362,6 @@ test("keeps the title actions inside the stage at narrow widths", async ({
 }) => {
   await page.setViewportSize({ width: 320, height: 700 });
   await page.goto("/?manual=1");
-  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
-  await page.keyboard.press("p");
-  await page.getByRole("button", { name: "Main menu", exact: true }).click();
 
   const stage = page.locator("#title-screen");
   const stageBox = await stage.boundingBox();

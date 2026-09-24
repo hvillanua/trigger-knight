@@ -51,9 +51,6 @@ test("browses collections and defined achievements from the main menu", async ({
   );
   await page.goto("/?manual=1");
 
-  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
-  await page.keyboard.press("p");
-  await page.getByRole("button", { name: "Main menu", exact: true }).click();
   await expect(page.locator("#title-screen")).toBeVisible();
   await expect(page.locator("#gameplay-screen")).toBeHidden();
   await expect(page.locator("#result-collections")).toHaveCount(1);
@@ -88,14 +85,131 @@ test("browses collections and defined achievements from the main menu", async ({
   );
 });
 
+test("keeps settings in the same readable menu frame as achievements", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "View achievements" }).click();
+
+  const achievementsFrame = await page
+    .locator("#collections-screen")
+    .evaluate((element) => {
+      const style = getComputedStyle(element);
+      const rect = element.getBoundingClientRect();
+      const back = element.querySelector<HTMLElement>("#collections-back");
+      if (back === null) {
+        throw new Error("Missing Achievements back control");
+      }
+      const backRect = back.getBoundingClientRect();
+      const backStyle = getComputedStyle(back);
+      return {
+        width: rect.width,
+        height: rect.height,
+        backgroundImage: style.backgroundImage,
+        backgroundColor: style.backgroundColor,
+        color: style.color,
+        back: {
+          x: backRect.x - rect.x,
+          y: backRect.y - rect.y,
+          width: backRect.width,
+          height: backRect.height,
+          fontFamily: backStyle.fontFamily,
+          fontSize: backStyle.fontSize,
+          color: backStyle.color,
+          backgroundColor: backStyle.backgroundColor,
+          border: backStyle.borderTopWidth,
+          borderRadius: backStyle.borderRadius,
+        },
+      };
+    });
+
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+
+  const settingsFrame = await page
+    .locator("#settings-screen")
+    .evaluate((element) => {
+      const style = getComputedStyle(element);
+      const rect = element.getBoundingClientRect();
+      const helpText = element.querySelector<HTMLElement>(".help-text");
+      const bindingLabel =
+        element.querySelector<HTMLElement>(".binding-row label");
+      const back = element.querySelector<HTMLElement>("#settings-back");
+      const heading = element.querySelector<HTMLElement>("#settings-heading");
+      const headingRow = element.querySelector<HTMLElement>(
+        ".screen-heading-row",
+      );
+      if (
+        helpText === null ||
+        bindingLabel === null ||
+        back === null ||
+        heading === null ||
+        headingRow === null
+      ) {
+        throw new Error("Missing Settings text roles");
+      }
+      const backRect = back.getBoundingClientRect();
+      const backStyle = getComputedStyle(back);
+      const headingStyle = getComputedStyle(heading);
+      const headingRowStyle = getComputedStyle(headingRow);
+      return {
+        width: rect.width,
+        height: rect.height,
+        backgroundImage: style.backgroundImage,
+        backgroundColor: style.backgroundColor,
+        color: style.color,
+        helpTextColor: getComputedStyle(helpText).color,
+        bindingLabelColor: getComputedStyle(bindingLabel).color,
+        back: {
+          x: backRect.x - rect.x,
+          y: backRect.y - rect.y,
+          width: backRect.width,
+          height: backRect.height,
+          fontFamily: backStyle.fontFamily,
+          fontSize: backStyle.fontSize,
+          color: backStyle.color,
+          backgroundColor: backStyle.backgroundColor,
+          border: backStyle.borderTopWidth,
+          borderRadius: backStyle.borderRadius,
+        },
+        heading: {
+          text: heading.textContent,
+          fontFamily: headingStyle.fontFamily,
+          fontSize: headingStyle.fontSize,
+          color: headingStyle.color,
+        },
+        headingRow: {
+          backgroundColor: headingRowStyle.backgroundColor,
+          boxShadow: headingRowStyle.boxShadow,
+        },
+      };
+    });
+
+  expect(settingsFrame.width).toBeCloseTo(achievementsFrame.width, 0);
+  expect(settingsFrame.height).toBeCloseTo(achievementsFrame.height, 0);
+  expect(settingsFrame.backgroundImage).toBe(achievementsFrame.backgroundImage);
+  expect(settingsFrame.backgroundColor).toBe(achievementsFrame.backgroundColor);
+  expect(settingsFrame.color).toBe(achievementsFrame.color);
+  expect(settingsFrame.helpTextColor).toBe(achievementsFrame.color);
+  expect(settingsFrame.bindingLabelColor).toBe(achievementsFrame.color);
+  expect(settingsFrame.back).toEqual(achievementsFrame.back);
+  expect(settingsFrame.heading).toMatchObject({
+    text: "Settings",
+    fontFamily: '"Trigger Knight Calibri", sans-serif',
+    fontSize: "30px",
+    color: "rgb(0, 0, 0)",
+  });
+  expect(settingsFrame.headingRow).toEqual({
+    backgroundColor: "rgba(0, 0, 0, 0)",
+    boxShadow: "none",
+  });
+});
+
 test("starts a run from the title and presents readable tutorial and pause states", async ({
   page,
 }) => {
   await page.goto("/?manual=1");
 
-  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
-  await page.keyboard.press("p");
-  await page.getByRole("button", { name: "Main menu", exact: true }).click();
   await page.getByRole("button", { name: "Start run" }).click();
   await expect(page.locator("#gameplay-screen")).toBeVisible();
   await expect(page.locator("#gameplay-screen")).toBeFocused();
@@ -125,9 +239,6 @@ test("persists settings independently and reloads them through the menu", async 
   page,
 }) => {
   await page.goto("/?manual=1");
-  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
-  await page.keyboard.press("p");
-  await page.getByRole("button", { name: "Main menu", exact: true }).click();
   await page.getByRole("button", { name: "Settings", exact: true }).click();
 
   await page.locator("#tutorial-preference").uncheck();
@@ -160,8 +271,6 @@ test("persists settings independently and reloads them through the menu", async 
   });
 
   await page.reload();
-  await page.keyboard.press("q");
-  await page.getByRole("button", { name: "Main menu", exact: true }).click();
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   await expect(page.locator("#tutorial-preference")).not.toBeChecked();
   await expect(page.locator("#sound-muted")).toBeChecked();
@@ -179,9 +288,6 @@ test("persists the visual asset choice and reports reload state", async ({
   page,
 }) => {
   await page.goto("/?manual=1");
-  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
-  await page.keyboard.press("p");
-  await page.getByRole("button", { name: "Main menu", exact: true }).click();
   await page.getByRole("button", { name: "Settings", exact: true }).click();
 
   await page.locator("#visual-assets").selectOption("high-res");
@@ -201,9 +307,6 @@ test("persists the visual asset choice and reports reload state", async ({
     .toMatchObject({ visualAssets: "high-res" });
 
   await page.reload();
-  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
-  await page.keyboard.press("p");
-  await page.getByRole("button", { name: "Main menu", exact: true }).click();
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   await expect(page.locator("#visual-assets")).toHaveValue("high-res");
   const visualStatus = await page
@@ -232,6 +335,5 @@ test("does not request generated assets for an Original startup", async ({
   });
 
   await page.goto("/?manual=1");
-  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
   await expect.poll(() => generatedRequests).toEqual([]);
 });

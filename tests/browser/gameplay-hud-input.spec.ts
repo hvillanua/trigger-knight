@@ -4,6 +4,7 @@ test("shows readable public HUD values and keeps queued battles generic", async 
   page,
 }) => {
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
 
   await expect(page.locator("#hud-hero-hp")).toHaveText("1,908/1,908");
   await expect(page.locator("#hud-lifespan")).toHaveText("99.99%");
@@ -26,6 +27,7 @@ test("routes keyboard bindings once and ignores held-key repeats", async ({
   page,
 }) => {
   await page.goto("/?manual=1&diagnostics=1");
+  await page.getByRole("button", { name: "Start run" }).click();
 
   await page.keyboard.down("Enter");
   await page.keyboard.down("Enter");
@@ -53,6 +55,7 @@ test("hides pause and main-menu controls during an active run", async ({
   page,
 }) => {
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
 
   const geometry = await page.evaluate(() => {
@@ -89,6 +92,7 @@ test("hides pause and main-menu controls during an active run", async ({
 
 test("hides the physical cursor over the gameplay canvas", async ({ page }) => {
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
 
   await expect(page.locator("#game-canvas")).toHaveCSS("cursor", "none");
@@ -98,6 +102,7 @@ test("uses the original hand cursor on the title and tutorial screens", async ({
   page,
 }) => {
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
 
   const cursorsWhileTutorial = await page.evaluate(() => {
     const stage = document.querySelector<HTMLElement>(".gameplay-stage");
@@ -135,6 +140,7 @@ test("keeps the original hand cursor visible over pause and fullscreen controls"
   page,
 }) => {
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
 
   const activeCursors = await page.evaluate(() => {
@@ -178,6 +184,7 @@ test("dismisses the first tutorial dialog from any stage click", async ({
   page,
 }) => {
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
   await expect(page.locator("#tutorial-panel")).toBeVisible();
 
   await page.locator(".gameplay-stage").dispatchEvent("pointerup", {
@@ -193,6 +200,7 @@ test("keeps the keyboard pause shortcut active while controls are hidden", async
   page,
 }) => {
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
 
   await page.keyboard.press("p");
@@ -209,6 +217,7 @@ test("prevents held Enter from repeating a focused gameplay button", async ({
   page,
 }) => {
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
 
   await page.keyboard.press("p");
@@ -228,6 +237,7 @@ test("captures, cancels, and rejects conflicting keyboard remaps", async ({
   page,
 }) => {
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
   await page.keyboard.press("p");
   await page.getByRole("button", { name: "Main menu", exact: true }).click();
@@ -254,14 +264,13 @@ test("captures, cancels, and rejects conflicting keyboard remaps", async ({
   await page.getByRole("button", { name: "Save settings" }).click();
   await expect(page.locator("#settings-status")).toHaveText("Settings saved.");
   await page.reload();
-  await page.keyboard.press("q");
-  await page.getByRole("button", { name: "Main menu", exact: true }).click();
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   await expect(page.locator("#binding-toggle-pause")).toHaveValue("KeyQ");
 });
 
 test("purchases the current shop from any Canvas click", async ({ page }) => {
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
 
   const found = await page.evaluate(() => {
@@ -307,6 +316,7 @@ test("uses the Canvas item prompt for one touch-style battle activation", async 
   page,
 }) => {
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
 
   const found = await page.evaluate(() => {
