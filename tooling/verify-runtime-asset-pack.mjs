@@ -11,7 +11,7 @@ function argumentValue(name, fallback) {
 
 const packRoot = path.resolve(
   projectRoot,
-  argumentValue("--pack", "src/assets/generated/swinir-2x"),
+  argumentValue("--pack", "src/assets/generated/high-res"),
 );
 const originalRoot = path.resolve(
   projectRoot,
@@ -74,7 +74,7 @@ async function verify() {
   try {
     await fs.access(packRoot);
   } catch {
-    console.log(`Optional SwinIR 2x pack is not staged at ${path.relative(projectRoot, packRoot)}.`);
+    console.log(`Optional high-resolution pack is not staged at ${path.relative(projectRoot, packRoot)}.`);
     return;
   }
 
@@ -82,15 +82,17 @@ async function verify() {
   const manifest = await readJson(manifestPath);
   if (
     manifest.schemaVersion !== 1 ||
-    manifest.treatment !== "swinir-2x" ||
+    typeof manifest.treatment !== "string" ||
+    !/^[a-z0-9][a-z0-9._-]*$/i.test(manifest.treatment) ||
     manifest.status !== "generated" ||
-    manifest.pixelDensity !== 2
+    ![2, 4].includes(manifest.pixelDensity) ||
+    !["filtered", "linear", "nearest"].includes(manifest.filtering)
   ) {
-    fail("The runtime pack manifest does not describe SwinIR 2x.");
+    fail("The runtime pack manifest does not describe a valid high-resolution pack.");
   }
   if (
-    manifest.rightsStatus !==
-    "Derived from staged assets; see assets/original/provenance.json."
+    typeof manifest.rightsStatus !== "string" ||
+    manifest.rightsStatus.trim() === ""
   ) {
     fail("The runtime pack manifest has no approved provenance status.");
   }
@@ -106,25 +108,40 @@ async function verify() {
   if (!Array.isArray(sourceFiles) || !Array.isArray(outputFiles) || outputFiles.length === 0) {
     fail("The runtime pack manifest has no complete source and output file lists.");
   }
-  if (manifest.outputs.root !== "assets/generated/swinir-2x") {
+  if (!isSafeRelativePath(manifest.outputs.root)) {
     fail("The runtime pack manifest has an unexpected output root.");
   }
 
-  const expectedOutputs = new Set();
+  const expectedOutputPaths = new Set();
+  const imageOutputEntries = [];
+  const expectedImages = new Set();
   for (const entry of outputFiles) {
     if (
       typeof entry !== "object" ||
       entry === null ||
       !isSafeRelativePath(entry.path) ||
-      !imagePath(entry.path) ||
-      entry.pixelDensity !== 2 ||
       typeof entry.sha256 !== "string" ||
       typeof entry.bytes !== "number" ||
-      expectedOutputs.has(entry.path)
+      expectedOutputPaths.has(entry.path)
     ) {
       fail("The runtime pack manifest contains an invalid or duplicate output entry.");
     }
-    expectedOutputs.add(entry.path);
+    expectedOutputPaths.add(entry.path);
+    if (imagePath(entry.path)) {
+      if (
+        ![1, 2, 4].includes(entry.pixelDensity) ||
+        (entry.pixelDensity !== 1 && entry.pixelDensity !== manifest.pixelDensity)
+      ) {
+        fail(`Image density does not match the manifest: ${entry.path}`);
+      }
+      imageOutputEntries.push(entry);
+      expectedImages.add(entry.path);
+    }
+  }
+  if (imageOutputEntries.length === 0) {
+    fail("The runtime pack manifest has no image outputs.");
+  }
+  for (const entry of imageOutputEntries) {
     if (!inside(packRoot, entry.path)) fail(`Output path escapes the pack: ${entry.path}`);
     const outputPath = path.join(packRoot, entry.path);
     const actual = await fileBytes(outputPath);
@@ -136,14 +153,15 @@ async function verify() {
   const actualImages = new Set(
     (await walkFiles(packRoot)).filter((file) => imagePath(file)),
   );
-  if (actualImages.size !== expectedOutputs.size) {
-    fail("The runtime pack contains image files that are not listed in the manifest.");
+  if (actualImages.size !== expectedImages.size) {
+    fail("The runtime pack image list does not match the manifest.");
   }
   for (const file of actualImages) {
-    if (!expectedOutputs.has(file)) fail(`Unlisted runtime image: ${file}`);
+    if (!expectedImages.has(file)) fail(`Unlisted runtime image: ${file}`);
   }
 
   const expectedSources = new Set();
+  let verifiedSourceCount = 0;
   for (const entry of sourceFiles) {
     if (
       typeof entry !== "object" ||
@@ -155,15 +173,18 @@ async function verify() {
       fail("The runtime pack manifest contains an invalid or duplicate source entry.");
     }
     expectedSources.add(entry.path);
+    if (!imagePath(entry.path)) continue;
     if (!inside(originalRoot, entry.path)) fail(`Source path escapes the original root: ${entry.path}`);
     const actual = await fileBytes(path.join(originalRoot, entry.path));
     if (actual.sha256 !== entry.sha256) {
       fail(`Source hash does not match the provenance record: ${entry.path}`);
     }
+    verifiedSourceCount += 1;
   }
+  if (verifiedSourceCount === 0) fail("The runtime pack has no image source records.");
 
   console.log(
-    `Verified SwinIR 2x runtime pack with ${expectedOutputs.size} outputs and ${expectedSources.size} staged sources.`,
+    `Verified high-resolution ${manifest.treatment} pack at ${manifest.pixelDensity}x with ${expectedImages.size} images and ${verifiedSourceCount} staged image sources.`,
   );
 }
 

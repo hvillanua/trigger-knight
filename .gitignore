@@ -23,5 +23,9 @@ Thumbs.db
 /test-results/
 /.vite/
 
+# User-installed high-resolution runtime pack. The source and provenance live
+# in the public asset experiment repository.
+/src/assets/generated/high-res/
+
 # Local visual references and investigation notes.
 /.local-references/

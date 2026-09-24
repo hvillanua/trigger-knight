@@ -18,20 +18,22 @@ describe("asset treatment selection", () => {
     expect(parseAssetTreatment("original-filtered")).toBe(
       ORIGINAL_ASSET_TREATMENT,
     );
-    expect(parseAssetTreatment("swinir-2x")).toEqual({
-      id: "swinir-2x",
-      directory: "swinir-2x",
+    expect(parseAssetTreatment("high-res")).toEqual({
+      id: "high-res",
+      directory: "high-res",
       filtering: "linear",
     });
-    expect(assetTreatmentForPreference("swinir-2x").id).toBe("swinir-2x");
+    expect(assetTreatmentForPreference("high-res").id).toBe("high-res");
+    expect(parseAssetTreatment("swinir-2x").id).toBe("high-res");
   });
 
   it("lets a development override replace the saved preference", () => {
-    expect(visualPreferenceFromStartup("swinir-2x", undefined)).toBe(
-      "swinir-2x",
-    );
-    expect(visualPreferenceFromStartup("swinir-2x", "original")).toBe(
+    expect(visualPreferenceFromStartup("high-res", undefined)).toBe("high-res");
+    expect(visualPreferenceFromStartup("high-res", "original")).toBe(
       "original",
+    );
+    expect(visualPreferenceFromStartup("high-res", "swinir-2x")).toBe(
+      "high-res",
     );
   });
 

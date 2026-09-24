@@ -1,7 +1,10 @@
 import type { VisualAssetPreference } from "../application/settings.js";
 import {
+  assetTreatmentForHighResolution,
   assetTreatmentForPreference,
+  HIGH_RESOLUTION_ASSET_DIRECTORY,
   type AssetTreatment,
+  type ImageFiltering,
 } from "./asset-treatment.js";
 export type PixelDensity = 1 | 2 | 4;
 
@@ -12,7 +15,7 @@ export interface VisualImageSource {
 
 export type VisualPackSelection =
   | Readonly<{ kind: "original" }>
-  | Readonly<{ kind: "swinir-2x" }>
+  | Readonly<{ kind: "high-res" }>
   | Readonly<{
       kind: "fallback";
       reason: "missing" | "invalid" | "load-failed";
@@ -36,6 +39,7 @@ export interface VisualAssetPackDependencies {
 
 const ORIGINAL_IMAGE_ROOT = "../assets/original/";
 const GENERATED_IMAGE_ROOT = "../assets/generated/";
+const HIGH_RESOLUTION_IMAGE_ROOT = `${GENERATED_IMAGE_ROOT}${HIGH_RESOLUTION_ASSET_DIRECTORY}/`;
 
 const ORIGINAL_IMAGE_URLS = Object.freeze({
   ...import.meta.glob<string>("../assets/original/**/*.png", {
@@ -106,19 +110,49 @@ function isImagePath(path: string): boolean {
   return /\.(?:png|jpe?g|svg)$/i.test(path);
 }
 
-function parseSwinirManifest(raw: string): ReadonlyMap<string, PixelDensity> {
+interface ParsedHighResolutionManifest {
+  readonly densities: ReadonlyMap<string, PixelDensity>;
+  readonly filtering: ImageFiltering;
+}
+
+function isHighResolutionDensity(
+  value: unknown,
+): value is Exclude<PixelDensity, 1> {
+  return value === 2 || value === 4;
+}
+
+function isPixelDensity(value: unknown): value is PixelDensity {
+  return value === 1 || value === 2 || value === 4;
+}
+
+function manifestFiltering(value: unknown): ImageFiltering {
+  if (value === undefined || value === "linear" || value === "filtered") {
+    return "linear";
+  }
+  if (value === "nearest") return "nearest";
+  throw new Error("Manifest filtering mode is invalid");
+}
+
+function parseHighResolutionManifest(
+  raw: string,
+): ParsedHighResolutionManifest {
   const value: unknown = JSON.parse(raw);
   if (!isRecord(value)) throw new Error("Manifest is not a record");
   if (
     value.schemaVersion !== 1 ||
-    value.treatment !== "swinir-2x" ||
+    typeof value.treatment !== "string" ||
+    value.treatment.length === 0 ||
     value.status !== "generated" ||
-    value.pixelDensity !== 2
+    !isHighResolutionDensity(value.pixelDensity)
   ) {
-    throw new Error("Manifest does not describe the SwinIR 2x pack");
+    throw new Error("Manifest does not describe a high-resolution pack");
   }
   const outputs = value.outputs;
-  if (!isRecord(outputs) || outputs.root !== "assets/generated/swinir-2x") {
+  if (
+    !isRecord(outputs) ||
+    typeof outputs.root !== "string" ||
+    !isSafeAssetPath(outputs.root)
+  ) {
     throw new Error("Manifest output root is invalid");
   }
   const files = outputs.files;
@@ -132,23 +166,34 @@ function parseSwinirManifest(raw: string): ReadonlyMap<string, PixelDensity> {
       !isRecord(file) ||
       typeof file.path !== "string" ||
       !isSafeAssetPath(file.path) ||
-      !isImagePath(file.path) ||
-      file.pixelDensity !== 2 ||
       densities.has(file.path)
     ) {
       throw new Error("Manifest contains an invalid output file");
     }
-    densities.set(file.path, 2);
+    if (isImagePath(file.path)) {
+      if (
+        !isPixelDensity(file.pixelDensity) ||
+        (file.pixelDensity !== 1 && file.pixelDensity !== value.pixelDensity)
+      ) {
+        throw new Error("Manifest contains an invalid output file");
+      }
+      densities.set(file.path, file.pixelDensity);
+    }
   }
-  return densities;
+  if (densities.size === 0) {
+    throw new Error("Manifest contains no runtime images");
+  }
+  return Object.freeze({
+    densities,
+    filtering: manifestFiltering(value.filtering),
+  });
 }
 
 function catalogImagePath(key: string): string {
-  const prefix = `${GENERATED_IMAGE_ROOT}swinir-2x/`;
-  if (!key.startsWith(prefix)) {
+  if (!key.startsWith(HIGH_RESOLUTION_IMAGE_ROOT)) {
     throw new Error(`Catalog contains an unexpected image path: ${key}`);
   }
-  return key.slice(prefix.length);
+  return key.slice(HIGH_RESOLUTION_IMAGE_ROOT.length);
 }
 
 function packFromCatalog(catalog: VisualAssetCatalog): VisualAssetPack {
@@ -156,26 +201,30 @@ function packFromCatalog(catalog: VisualAssetCatalog): VisualAssetPack {
     catalog.manifestText === undefined ||
     Object.keys(catalog.imageUrls).length === 0
   ) {
-    throw new Error("SwinIR 2x pack is missing");
+    throw new Error("High-resolution pack is missing");
   }
-  const densities = parseSwinirManifest(catalog.manifestText);
+  const manifest = parseHighResolutionManifest(catalog.manifestText);
   const generatedSources = new Map<string, VisualImageSource>();
   for (const [key, url] of Object.entries(catalog.imageUrls)) {
     const path = catalogImagePath(key);
-    if (!densities.has(path) || typeof url !== "string" || url === "") {
+    if (
+      !manifest.densities.has(path) ||
+      typeof url !== "string" ||
+      url === ""
+    ) {
       throw new Error("Catalog and manifest do not match");
     }
-    const density = densities.get(path);
+    const density = manifest.densities.get(path);
     if (density === undefined) throw new Error("Catalog density is missing");
     generatedSources.set(path, Object.freeze({ url, pixelDensity: density }));
   }
-  if (generatedSources.size !== densities.size) {
+  if (generatedSources.size !== manifest.densities.size) {
     throw new Error("Manifest contains images missing from the catalog");
   }
 
   return Object.freeze({
-    selection: Object.freeze({ kind: "swinir-2x" }),
-    treatment: assetTreatmentForPreference("swinir-2x"),
+    selection: Object.freeze({ kind: "high-res" }),
+    treatment: assetTreatmentForHighResolution(manifest.filtering),
     image(path: string): VisualImageSource {
       return generatedSources.get(path) ?? originalImageSource(path);
     },
@@ -192,7 +241,7 @@ function fallbackPack(
   });
 }
 
-export function createSwinirVisualAssetPack(
+export function createHighResolutionVisualAssetPack(
   catalog: VisualAssetCatalog,
 ): VisualAssetPack {
   try {
@@ -200,7 +249,7 @@ export function createSwinirVisualAssetPack(
   } catch (error) {
     if (
       error instanceof Error &&
-      error.message === "SwinIR 2x pack is missing"
+      error.message === "High-resolution pack is missing"
     ) {
       return fallbackPack("missing");
     }
@@ -220,20 +269,23 @@ export async function resolveVisualAssetPack(
       fetch: globalThis.fetch.bind(globalThis),
       baseUrl: new URL(import.meta.env.BASE_URL, window.location.href),
     });
-  const packRoot = new URL("assets/generated/swinir-2x/", runtime.baseUrl);
+  const packRoot = new URL(
+    `assets/generated/${HIGH_RESOLUTION_ASSET_DIRECTORY}/`,
+    runtime.baseUrl,
+  );
   try {
     const response = await runtime.fetch(new URL("manifest.json", packRoot));
     if (response.status === 404) return fallbackPack("missing");
     if (!response.ok) return fallbackPack("load-failed");
     const manifestText = await response.text();
-    const densities = parseSwinirManifest(manifestText);
+    const manifest = parseHighResolutionManifest(manifestText);
     const imageUrls = Object.fromEntries(
-      [...densities.keys()].map((path) => [
-        `${GENERATED_IMAGE_ROOT}swinir-2x/${path}`,
+      [...manifest.densities.keys()].map((path) => [
+        `${HIGH_RESOLUTION_IMAGE_ROOT}${path}`,
         new URL(path, packRoot).href,
       ]),
     );
-    return createSwinirVisualAssetPack({ imageUrls, manifestText });
+    return createHighResolutionVisualAssetPack({ imageUrls, manifestText });
   } catch {
     return fallbackPack("load-failed");
   }

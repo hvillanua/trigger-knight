@@ -65,7 +65,7 @@ describe("versioned browser settings storage", () => {
         useCarriedItem: "KeyI",
       },
       sound: { muted: true, volume: 0.35 },
-      visualAssets: "swinir-2x",
+      visualAssets: "high-res",
     });
 
     expect(store.save(settings)).toEqual({ status: "saved", settings });
@@ -73,6 +73,28 @@ describe("versioned browser settings storage", () => {
     expect(JSON.parse(storage.getItem(SETTINGS_STORAGE_KEY) as string)).toEqual(
       settings,
     );
+  });
+
+  it("canonicalizes the previous SwinIR setting to High resolution", () => {
+    const storage = new MemoryStorage();
+    storage.setItem(
+      SETTINGS_STORAGE_KEY,
+      JSON.stringify({
+        schemaVersion: SETTINGS_STORAGE_VERSION,
+        bindings: createDefaultSettings().bindings,
+        sound: createDefaultSettings().sound,
+        visualAssets: "swinir-2x",
+      }),
+    );
+    const store = createBrowserSettingsStore(storage);
+
+    expect(store.load()).toEqual({
+      status: "loaded",
+      settings: {
+        ...createDefaultSettings(),
+        visualAssets: "high-res",
+      },
+    });
   });
 
   it("migrates an exact version 1 record to original visual assets", () => {

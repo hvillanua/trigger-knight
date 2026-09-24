@@ -10,6 +10,15 @@ music or sound exports, and 8 font exports. The browser sound adapter consumes
 the staged original sound exports under [`original/sounds/`](original/sounds/)
 and keeps their recorded export names in its registry.
 
+The optional high-resolution runtime pack is not shipped in this repository.
+Install one complete generated treatment from the public asset experiment
+repository under `generated/high-res/`, including its `manifest.json`, then run
+`npm run verify:asset-pack`. The runtime treats that fixed directory as one
+high-resolution slot while the manifest retains the selected generator and
+provenance metadata. Only generated image files are runtime inputs; original
+fonts and sounds remain under `original/`. The directory is ignored so
+generated image packs do not enter application commits accidentally.
+
 The Canvas presentation loads the numbered Hero, Dragon, Goblin, Golem, and Wolf
 frames from their existing entity directories. It selects pose sequences using
 `src/browser/sprite-animation.ts` and keeps a fixed origin per entity. That

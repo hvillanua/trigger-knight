@@ -1,8 +1,10 @@
 import type { VisualAssetPreference } from "../application/settings.js";
 
-export type AssetTreatmentId = "original-filtered" | "swinir-2x";
+export type AssetTreatmentId = "original-filtered" | "high-res";
 
-export type ImageFiltering = "linear";
+export type ImageFiltering = "linear" | "nearest";
+
+export const HIGH_RESOLUTION_ASSET_DIRECTORY = "high-res";
 
 export interface AssetTreatment {
   readonly id: AssetTreatmentId;
@@ -17,9 +19,9 @@ const ASSET_TREATMENTS: Readonly<Record<AssetTreatmentId, AssetTreatment>> =
       directory: undefined,
       filtering: "linear",
     }),
-    "swinir-2x": Object.freeze({
-      id: "swinir-2x",
-      directory: "swinir-2x",
+    "high-res": Object.freeze({
+      id: "high-res",
+      directory: HIGH_RESOLUTION_ASSET_DIRECTORY,
       filtering: "linear",
     }),
   });
@@ -32,9 +34,17 @@ export function assetTreatmentForPreference(
   switch (preference) {
     case "original":
       return ORIGINAL_ASSET_TREATMENT;
-    case "swinir-2x":
-      return ASSET_TREATMENTS["swinir-2x"];
+    case "high-res":
+      return ASSET_TREATMENTS["high-res"];
   }
+}
+
+export function assetTreatmentForHighResolution(
+  filtering: ImageFiltering,
+): AssetTreatment {
+  const defaultTreatment = ASSET_TREATMENTS["high-res"];
+  if (filtering === defaultTreatment.filtering) return defaultTreatment;
+  return Object.freeze({ ...defaultTreatment, filtering });
 }
 
 export function visualPreferenceFromStartup(
@@ -45,7 +55,9 @@ export function visualPreferenceFromStartup(
   if (override === "original" || override === "original-filtered") {
     return "original";
   }
-  if (override === "swinir-2x") return "swinir-2x";
+  if (override === "high-res" || override === "swinir-2x") {
+    return "high-res";
+  }
   if (typeof override !== "string") {
     throw new Error("VITE_ASSET_TREATMENT must be a supported treatment id");
   }

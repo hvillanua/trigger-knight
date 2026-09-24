@@ -11,24 +11,25 @@ import {
   ORIGINAL_ANIMATION_URLS,
   ORIGINAL_UI_IMAGE_URLS,
 } from "../../src/browser/visual-atlas.js";
-import { createSwinirVisualAssetPack } from "../../src/browser/visual-assets.js";
+import { createHighResolutionVisualAssetPack } from "../../src/browser/visual-assets.js";
 
-const swinirPack = createSwinirVisualAssetPack({
+const highResolutionPack = createHighResolutionVisualAssetPack({
   imageUrls: {
-    "../assets/generated/swinir-2x/key-sprites/DefineSprite_497_Hero/1.png":
-      "/swinir/hero-1.png",
-    "../assets/generated/swinir-2x/images/357.jpg": "/swinir/sky.jpg",
+    "../assets/generated/high-res/key-sprites/DefineSprite_497_Hero/1.png":
+      "/high-res/hero-1.png",
+    "../assets/generated/high-res/images/357.jpg": "/high-res/sky.jpg",
   },
   manifestText: JSON.stringify({
     schemaVersion: 1,
-    treatment: "swinir-2x",
+    treatment: "waifu2x-4x",
     status: "generated",
-    pixelDensity: 2,
+    filtering: "filtered",
+    pixelDensity: 4,
     outputs: {
-      root: "assets/generated/swinir-2x",
+      root: "assets/generated/waifu2x-4x",
       files: [
-        { path: "key-sprites/DefineSprite_497_Hero/1.png", pixelDensity: 2 },
-        { path: "images/357.jpg", pixelDensity: 2 },
+        { path: "key-sprites/DefineSprite_497_Hero/1.png", pixelDensity: 4 },
+        { path: "images/357.jpg", pixelDensity: 4 },
       ],
     },
   }),
@@ -104,7 +105,7 @@ describe("approved visual atlas", () => {
     expect(atlas.originalFrames.hero?.[18]).toBeDefined();
   });
 
-  it("selects SwinIR artwork and keeps per-file density metadata", async () => {
+  it("selects high-resolution artwork and keeps per-file density metadata", async () => {
     const requests: string[] = [];
     vi.stubGlobal(
       "Image",
@@ -118,13 +119,13 @@ describe("approved visual atlas", () => {
       },
     );
 
-    const atlas = createVisualAtlas(() => undefined, swinirPack);
+    const atlas = createVisualAtlas(() => undefined, highResolutionPack);
     await Promise.resolve();
 
-    expect(atlas.treatment.id).toBe("swinir-2x");
-    expect(requests).toContain("/swinir/hero-1.png");
-    expect(atlas.originalFrames.hero?.[0]?.pixelDensity).toBe(2);
-    expect(atlas.sceneImages.sky?.pixelDensity).toBe(2);
+    expect(atlas.treatment.id).toBe("high-res");
+    expect(requests).toContain("/high-res/hero-1.png");
+    expect(atlas.originalFrames.hero?.[0]?.pixelDensity).toBe(4);
+    expect(atlas.sceneImages.sky?.pixelDensity).toBe(4);
   });
 
   it("maps the original character and scene exports into runtime assets", () => {

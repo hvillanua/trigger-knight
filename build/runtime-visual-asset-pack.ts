@@ -3,8 +3,8 @@ import path from "node:path";
 
 import type { Plugin } from "vite";
 
-const RUNTIME_ASSET_PREFIX = "/assets/generated/swinir-2x/";
-const PACK_RELATIVE_ROOT = "src/assets/generated/swinir-2x";
+const RUNTIME_ASSET_PREFIX = "/assets/generated/high-res/";
+const PACK_RELATIVE_ROOT = "src/assets/generated/high-res";
 
 function isSafeRelativePath(value: string): boolean {
   return (
@@ -77,7 +77,7 @@ function requestedRelativePath(requestUrl: string): string | undefined {
   }
 }
 
-/** Serves only the approved optional SwinIR pack without enabling publicDir. */
+/** Serves only the approved optional high-resolution pack without publicDir. */
 export function runtimeVisualAssetPack(projectRoot: string): Plugin {
   const packRoot = path.resolve(projectRoot, PACK_RELATIVE_ROOT);
 

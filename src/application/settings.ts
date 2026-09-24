@@ -5,7 +5,7 @@ export const LEGACY_SETTINGS_SCHEMA_VERSION = 1 as const;
 
 export const VISUAL_ASSET_PREFERENCES = Object.freeze([
   "original",
-  "swinir-2x",
+  "high-res",
 ] as const);
 
 export type VisualAssetPreference = (typeof VISUAL_ASSET_PREFERENCES)[number];
@@ -231,7 +231,9 @@ function binding(value: unknown, field: string): KeyboardCode {
 
 function visualAssetPreference(value: unknown): VisualAssetPreference {
   if (value === "original") return "original";
-  if (value === "swinir-2x") return "swinir-2x";
+  if (value === "high-res" || value === "swinir-2x") {
+    return "high-res";
+  }
   throw new TypeError("Settings visualAssets must be a supported preference");
 }
 

@@ -775,7 +775,7 @@ if (settingsLoad.status === "failed") {
 settingsController?.setStatus(settingsStatusText(settingsLoad));
 if (visualAssetPack.selection.kind === "fallback") {
   settingsController?.setStatus(
-    `SwinIR 2× is unavailable. Using Original. (${visualAssetPack.selection.reason})`,
+    `High-resolution assets are unavailable. Using Original. (${visualAssetPack.selection.reason})`,
   );
 }
 renderStorageNotice();

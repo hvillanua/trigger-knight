@@ -184,7 +184,7 @@ test("persists the visual asset choice and reports reload state", async ({
   await page.getByRole("button", { name: "Main menu", exact: true }).click();
   await page.getByRole("button", { name: "Settings", exact: true }).click();
 
-  await page.locator("#visual-assets").selectOption("swinir-2x");
+  await page.locator("#visual-assets").selectOption("high-res");
   await page.getByRole("button", { name: "Save settings" }).click();
   await expect(page.locator("#settings-status")).toHaveText(
     "Settings saved. Reload the page to apply visual assets.",
@@ -198,21 +198,21 @@ test("persists the visual asset choice and reports reload state", async ({
           : (JSON.parse(raw) as { visualAssets?: string });
       }, SETTINGS_STORAGE_KEY),
     )
-    .toMatchObject({ visualAssets: "swinir-2x" });
+    .toMatchObject({ visualAssets: "high-res" });
 
   await page.reload();
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
   await page.keyboard.press("p");
   await page.getByRole("button", { name: "Main menu", exact: true }).click();
   await page.getByRole("button", { name: "Settings", exact: true }).click();
-  await expect(page.locator("#visual-assets")).toHaveValue("swinir-2x");
+  await expect(page.locator("#visual-assets")).toHaveValue("high-res");
   const visualStatus = await page
     .locator("#game-status")
     .getAttribute("data-visual-assets-status");
-  expect(["swinir-2x", "fallback"]).toContain(visualStatus);
+  expect(["high-res", "fallback"]).toContain(visualStatus);
   if (visualStatus === "fallback") {
     await expect(page.locator("#settings-status")).toContainText(
-      "SwinIR 2× is unavailable. Using Original.",
+      "High-resolution assets are unavailable. Using Original.",
     );
   } else {
     await expect(page.locator("#settings-status")).toHaveText(

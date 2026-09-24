@@ -1,21 +1,22 @@
 import { describe, expect, it } from "vitest";
 
 import { applyVisualStyleTreatment } from "../../src/browser/asset-style.js";
-import { createSwinirVisualAssetPack } from "../../src/browser/visual-assets.js";
+import { createHighResolutionVisualAssetPack } from "../../src/browser/visual-assets.js";
 
-const pack = createSwinirVisualAssetPack({
+const pack = createHighResolutionVisualAssetPack({
   imageUrls: {
-    "../assets/generated/swinir-2x/images/529.jpg": "/swinir/529.jpg",
-    "../assets/generated/swinir-2x/images/533.png": "/swinir/533.png",
-    "../assets/generated/swinir-2x/images/357.jpg": "/swinir/357.jpg",
-    "../assets/generated/swinir-2x/shapes/350.svg": "/swinir/350.svg",
-    "../assets/generated/swinir-2x/images/268.png": "/swinir/268.png",
-    "../assets/generated/swinir-2x/images/12.png": "/swinir/12.png",
+    "../assets/generated/high-res/images/529.jpg": "/high-res/529.jpg",
+    "../assets/generated/high-res/images/533.png": "/high-res/533.png",
+    "../assets/generated/high-res/images/357.jpg": "/high-res/357.jpg",
+    "../assets/generated/high-res/shapes/350.svg": "/high-res/350.svg",
+    "../assets/generated/high-res/images/268.png": "/high-res/268.png",
+    "../assets/generated/high-res/images/12.png": "/high-res/12.png",
   },
   manifestText: JSON.stringify({
     schemaVersion: 1,
     treatment: "swinir-2x",
     status: "generated",
+    filtering: "filtered",
     pixelDensity: 2,
     outputs: {
       root: "assets/generated/swinir-2x",
@@ -45,12 +46,14 @@ describe("CSS-owned visual treatment", () => {
     applyVisualStyleTreatment(pack, root);
 
     expect(properties.get("--trigger-knight-parchment-image")).toContain(
-      "/swinir/",
+      "/high-res/",
     );
     expect(properties.get("--trigger-knight-title-hero-image")).toContain(
-      "/swinir/",
+      "/high-res/",
     );
-    expect(properties.get("--trigger-knight-sky-image")).toContain("/swinir/");
+    expect(properties.get("--trigger-knight-sky-image")).toContain(
+      "/high-res/",
+    );
     expect(properties.get("--trigger-knight-hand-cursor")).toContain(
       "/assets/original/images/12.png",
     );

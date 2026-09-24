@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  createSwinirVisualAssetPack,
+  createHighResolutionVisualAssetPack,
   ORIGINAL_VISUAL_ASSET_PACK,
   resolveVisualAssetPack,
 } from "../../src/browser/visual-assets.js";
@@ -9,12 +9,13 @@ import {
 function manifest(paths: readonly string[]): string {
   return JSON.stringify({
     schemaVersion: 1,
-    treatment: "swinir-2x",
+    treatment: "realesrgan-4x",
     status: "generated",
-    pixelDensity: 2,
+    filtering: "filtered",
+    pixelDensity: 4,
     outputs: {
-      root: "assets/generated/swinir-2x",
-      files: paths.map((path) => ({ path, pixelDensity: 2 })),
+      root: "assets/generated/realesrgan-4x",
+      files: paths.map((path) => ({ path, pixelDensity: 4 })),
     },
   });
 }
@@ -28,9 +29,9 @@ describe("runtime visual asset packs", () => {
     expect(pack.image("images/12.png").url).toContain("/assets/original/");
   });
 
-  it("loads the selected pack from its runtime manifest", async () => {
+  it("loads any generated treatment into the fixed high-resolution slot", async () => {
     const requestedUrls: URL[] = [];
-    const pack = await resolveVisualAssetPack("swinir-2x", {
+    const pack = await resolveVisualAssetPack("high-res", {
       fetch: (input) => {
         const requestedUrl =
           typeof input === "string"
@@ -48,18 +49,47 @@ describe("runtime visual asset packs", () => {
 
     expect(requestedUrls).toEqual([
       new URL(
-        "https://example.test/game/assets/generated/swinir-2x/manifest.json",
+        "https://example.test/game/assets/generated/high-res/manifest.json",
       ),
     ]);
-    expect(pack.selection).toEqual({ kind: "swinir-2x" });
+    expect(pack.selection).toEqual({ kind: "high-res" });
     expect(pack.image("images/12.png")).toEqual({
-      url: "https://example.test/game/assets/generated/swinir-2x/images/12.png",
-      pixelDensity: 2,
+      url: "https://example.test/game/assets/generated/high-res/images/12.png",
+      pixelDensity: 4,
     });
   });
 
+  it("preserves original-density images in partial high-resolution treatments", () => {
+    const pack = createHighResolutionVisualAssetPack({
+      imageUrls: {
+        "../assets/generated/high-res/key-sprites/hero/1.png":
+          "/high-res/hero-1.png",
+        "../assets/generated/high-res/images/350.svg": "/high-res/350.svg",
+      },
+      manifestText: JSON.stringify({
+        schemaVersion: 1,
+        treatment: "ffdec-2x",
+        status: "generated",
+        filtering: "nearest",
+        pixelDensity: 2,
+        outputs: {
+          root: "assets/generated/ffdec-2x",
+          files: [
+            { path: "key-sprites/hero/1.png", pixelDensity: 2 },
+            { path: "images/350.svg", pixelDensity: 1 },
+            { path: "provenance.json" },
+          ],
+        },
+      }),
+    });
+
+    expect(pack.selection).toEqual({ kind: "high-res" });
+    expect(pack.image("key-sprites/hero/1.png").pixelDensity).toBe(2);
+    expect(pack.image("images/350.svg").pixelDensity).toBe(1);
+  });
+
   it("falls back to Original when the runtime manifest is absent", async () => {
-    const pack = await resolveVisualAssetPack("swinir-2x", {
+    const pack = await resolveVisualAssetPack("high-res", {
       fetch: () => Promise.resolve(new Response(null, { status: 404 })),
       baseUrl: new URL("https://example.test/game/"),
     });
@@ -69,7 +99,7 @@ describe("runtime visual asset packs", () => {
   });
 
   it("falls back to Original when the selected pack is missing", () => {
-    const pack = createSwinirVisualAssetPack({
+    const pack = createHighResolutionVisualAssetPack({
       imageUrls: {},
       manifestText: undefined,
     });
@@ -79,9 +109,9 @@ describe("runtime visual asset packs", () => {
   });
 
   it("rejects malformed selected metadata", () => {
-    const pack = createSwinirVisualAssetPack({
+    const pack = createHighResolutionVisualAssetPack({
       imageUrls: {
-        "../assets/generated/swinir-2x/images/12.png": "/swinir/12.png",
+        "../assets/generated/high-res/images/12.png": "/high-res/12.png",
       },
       manifestText: manifest(["images/12.png", "../outside.png"]),
     });
@@ -90,17 +120,17 @@ describe("runtime visual asset packs", () => {
   });
 
   it("uses generated sources only for manifest-approved paths", () => {
-    const pack = createSwinirVisualAssetPack({
+    const pack = createHighResolutionVisualAssetPack({
       imageUrls: {
-        "../assets/generated/swinir-2x/images/12.png": "/swinir/12.png",
+        "../assets/generated/high-res/images/12.png": "/high-res/12.png",
       },
       manifestText: manifest(["images/12.png"]),
     });
 
-    expect(pack.selection).toEqual({ kind: "swinir-2x" });
+    expect(pack.selection).toEqual({ kind: "high-res" });
     expect(pack.image("images/12.png")).toEqual({
-      url: "/swinir/12.png",
-      pixelDensity: 2,
+      url: "/high-res/12.png",
+      pixelDensity: 4,
     });
     expect(pack.image("images/529.jpg").url).toContain("/assets/original/");
     expect(pack.image("images/529.jpg").pixelDensity).toBe(1);
