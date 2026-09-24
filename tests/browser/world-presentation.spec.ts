@@ -524,8 +524,10 @@ test("clips the health fill inside its original frame", async ({ page }) => {
 test("omits a missing original building without drawing a fallback", async ({
   page,
 }) => {
-  await page.route("**/assets/original/images/366.png", (route) =>
-    route.abort(),
+  await page.route("**/assets/original/images/366.png**", (route) =>
+    route.request().resourceType() === "image"
+      ? route.abort()
+      : route.continue(),
   );
   await page.goto("/?manual=1&diagnostics=1");
 
@@ -1336,8 +1338,10 @@ test("uses original action feedback without procedural substitutes", async ({
 test("omits a missing hit frame without substituting a burst", async ({
   page,
 }) => {
-  await page.route("**/assets/original/images/119.png", (route) =>
-    route.abort(),
+  await page.route("**/assets/original/images/119.png**", (route) =>
+    route.request().resourceType() === "image"
+      ? route.abort()
+      : route.continue(),
   );
   await page.goto("/?manual=1&diagnostics=1");
 

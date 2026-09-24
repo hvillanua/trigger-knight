@@ -65,6 +65,7 @@ describe("versioned browser settings storage", () => {
         useCarriedItem: "KeyI",
       },
       sound: { muted: true, volume: 0.35 },
+      visualAssets: "high-res",
     });
 
     expect(store.save(settings)).toEqual({ status: "saved", settings });
@@ -74,9 +75,81 @@ describe("versioned browser settings storage", () => {
     );
   });
 
+  it("canonicalizes the previous SwinIR setting to High resolution", () => {
+    const storage = new MemoryStorage();
+    storage.setItem(
+      SETTINGS_STORAGE_KEY,
+      JSON.stringify({
+        schemaVersion: SETTINGS_STORAGE_VERSION,
+        bindings: createDefaultSettings().bindings,
+        sound: createDefaultSettings().sound,
+        visualAssets: "swinir-2x",
+      }),
+    );
+    const store = createBrowserSettingsStore(storage);
+
+    expect(store.load()).toEqual({
+      status: "loaded",
+      settings: {
+        ...createDefaultSettings(),
+        visualAssets: "high-res",
+      },
+    });
+  });
+
+  it("migrates an exact version 1 record to original visual assets", () => {
+    const storage = new MemoryStorage();
+    storage.setItem(
+      SETTINGS_STORAGE_KEY,
+      JSON.stringify({
+        schemaVersion: 1,
+        bindings: {
+          togglePause: "KeyQ",
+          dismissTutorial: "Space",
+          purchaseCurrentEncounter: "KeyB",
+          useCarriedItem: "KeyI",
+        },
+        sound: { muted: true, volume: 0.35 },
+      }),
+    );
+    const store = createBrowserSettingsStore(storage);
+
+    expect(store.load()).toEqual({
+      status: "loaded",
+      settings: {
+        schemaVersion: 2,
+        bindings: {
+          togglePause: "KeyQ",
+          dismissTutorial: "Space",
+          purchaseCurrentEncounter: "KeyB",
+          useCarriedItem: "KeyI",
+        },
+        sound: { muted: true, volume: 0.35 },
+        visualAssets: "original",
+      },
+    });
+  });
+
   it.each([
     ["unsupported-version", { schemaVersion: 99 }],
     ["invalid-record", {}],
+    [
+      "invalid-record",
+      {
+        schemaVersion: 1,
+        bindings: createDefaultSettings().bindings,
+        sound: createDefaultSettings().sound,
+        visualAssets: "swinir-2x",
+      },
+    ],
+    [
+      "invalid-record",
+      {
+        schemaVersion: SETTINGS_STORAGE_VERSION,
+        bindings: createDefaultSettings().bindings,
+        sound: createDefaultSettings().sound,
+      },
+    ],
     [
       "invalid-record",
       {
@@ -86,6 +159,7 @@ describe("versioned browser settings storage", () => {
           togglePause: "NotARealKey",
         },
         sound: createDefaultSettings().sound,
+        visualAssets: "not-a-pack",
       },
     ],
     [
@@ -175,7 +249,7 @@ describe("versioned browser settings storage", () => {
 
   it("does not accept a profile-shaped object as settings", () => {
     expect(() => normalizeSettings(createFreshProfile())).toThrow(
-      "Unsupported settings schemaVersion",
+      "Settings contains unsupported fields",
     );
   });
 });

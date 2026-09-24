@@ -9,6 +9,7 @@ import type {
   OriginalEffectImageId,
   OriginalSceneAssetId,
   OriginalUiImageId,
+  VisualImage,
 } from "./visual-atlas.js";
 
 export interface WorldPoint {
@@ -24,7 +25,7 @@ export interface MovingBackgroundLayer {
 }
 
 export type SceneImages = Readonly<
-  Partial<Record<OriginalSceneAssetId, HTMLImageElement>>
+  Partial<Record<OriginalSceneAssetId, VisualImage>>
 >;
 
 export interface EncounterQueueItem {
@@ -89,15 +90,17 @@ function positiveModulo(value: number, divisor: number): number {
 }
 
 export function imageReady(
-  image: HTMLImageElement | undefined,
-): image is HTMLImageElement {
-  return image !== undefined && image.complete && image.naturalWidth > 0;
+  image: VisualImage | undefined,
+): image is VisualImage {
+  return (
+    image !== undefined && image.image.complete && image.image.naturalWidth > 0
+  );
 }
 
 /** Draws a UI asset while leaving unavailable artwork absent. */
 export function drawUiImageAsset(
   context: CanvasRenderingContext2D,
-  image: HTMLImageElement | undefined,
+  image: VisualImage | undefined,
   x: number,
   y: number,
   width?: number,
@@ -105,12 +108,12 @@ export function drawUiImageAsset(
   alpha = 1,
 ): boolean {
   if (!imageReady(image)) return false;
-  const targetWidth = width ?? image.naturalWidth;
-  const targetHeight = height ?? image.naturalHeight;
+  const targetWidth = width ?? image.image.naturalWidth / image.pixelDensity;
+  const targetHeight = height ?? image.image.naturalHeight / image.pixelDensity;
   context.save();
   context.globalAlpha = alpha;
   try {
-    context.drawImage(image, x, y, targetWidth, targetHeight);
+    context.drawImage(image.image, x, y, targetWidth, targetHeight);
   } catch {
     context.restore();
     return false;
@@ -121,7 +124,7 @@ export function drawUiImageAsset(
 
 export function drawSceneImage(
   context: CanvasRenderingContext2D,
-  image: HTMLImageElement | undefined,
+  image: VisualImage | undefined,
   x: number,
   y: number,
   width: number,
@@ -129,7 +132,7 @@ export function drawSceneImage(
 ): boolean {
   if (!imageReady(image)) return false;
   try {
-    context.drawImage(image, x, y, width, height);
+    context.drawImage(image.image, x, y, width, height);
     return true;
   } catch {
     return false;
@@ -138,7 +141,7 @@ export function drawSceneImage(
 
 export function drawMovingBackgroundLayer(
   context: CanvasRenderingContext2D,
-  image: HTMLImageElement | undefined,
+  image: VisualImage | undefined,
   camera: Readonly<GameObservation["camera"]>,
   distance: number,
   layer: Readonly<MovingBackgroundLayer>,
@@ -162,15 +165,21 @@ export function drawMovingBackgroundLayer(
 
 export function drawOriginalBuilding(
   context: CanvasRenderingContext2D,
-  image: HTMLImageElement | undefined,
+  image: VisualImage | undefined,
   x: number,
   groundY: number,
 ): boolean {
   if (!imageReady(image)) return false;
-  const width = image.naturalWidth;
-  const height = image.naturalHeight;
+  const width = image.image.naturalWidth / image.pixelDensity;
+  const height = image.image.naturalHeight / image.pixelDensity;
   try {
-    context.drawImage(image, x - width / 2, groundY - height, width, height);
+    context.drawImage(
+      image.image,
+      x - width / 2,
+      groundY - height,
+      width,
+      height,
+    );
     return true;
   } catch {
     return false;
@@ -224,7 +233,7 @@ export function drawHealthBar(
 
 export function drawClippedLifespanFill(
   context: CanvasRenderingContext2D,
-  image: HTMLImageElement | undefined,
+  image: VisualImage | undefined,
   frameX: number,
   frameY: number,
   frameWidth: number,
@@ -271,7 +280,7 @@ export function drawClippedLifespanFill(
 
 export function drawClippedHealthFill(
   context: CanvasRenderingContext2D,
-  image: HTMLImageElement | undefined,
+  image: VisualImage | undefined,
   frameX: number,
   frameY: number,
   ratio: number,
@@ -447,7 +456,7 @@ export function calculateEffectAnchor(
 
 export function drawOriginalHitEffect(
   context: CanvasRenderingContext2D,
-  images: Readonly<Partial<Record<OriginalEffectImageId, HTMLImageElement>>>,
+  images: Readonly<Partial<Record<OriginalEffectImageId, VisualImage>>>,
   point: WorldPoint,
   age: number,
 ): boolean {
@@ -459,12 +468,16 @@ export function drawOriginalHitEffect(
   );
   const image = images[ORIGINAL_HIT_FRAME_IDS[frameIndex]!];
   if (!imageReady(image)) return false;
+  const width = image.image.naturalWidth / image.pixelDensity;
+  const height = image.image.naturalHeight / image.pixelDensity;
   context.save();
   try {
     context.drawImage(
-      image,
-      point.x - image.naturalWidth / 2,
-      point.y - image.naturalHeight / 2,
+      image.image,
+      point.x - width / 2,
+      point.y - height / 2,
+      width,
+      height,
     );
   } catch {
     context.restore();
@@ -476,7 +489,7 @@ export function drawOriginalHitEffect(
 
 export function drawOriginalTimelineFrame(
   context: CanvasRenderingContext2D,
-  frames: readonly (HTMLImageElement | undefined)[],
+  frames: readonly (VisualImage | undefined)[],
   point: WorldPoint,
   age: number,
   scale: number,
@@ -485,12 +498,12 @@ export function drawOriginalTimelineFrame(
   const frameIndex = Math.min(frames.length - 1, Math.max(0, Math.floor(age)));
   const image = frames[frameIndex];
   if (!imageReady(image)) return false;
-  const width = image.naturalWidth * scale;
-  const height = image.naturalHeight * scale;
+  const width = (image.image.naturalWidth / image.pixelDensity) * scale;
+  const height = (image.image.naturalHeight / image.pixelDensity) * scale;
   context.save();
   try {
     context.drawImage(
-      image,
+      image.image,
       point.x - width / 2,
       point.y - height / 2,
       width,
@@ -506,7 +519,7 @@ export function drawOriginalTimelineFrame(
 
 export function drawOriginalClickEffect(
   context: CanvasRenderingContext2D,
-  frames: readonly (HTMLImageElement | undefined)[],
+  frames: readonly (VisualImage | undefined)[],
   point: WorldPoint,
   age: number,
 ): boolean {
@@ -515,7 +528,7 @@ export function drawOriginalClickEffect(
 
 export function drawOriginalActionEffect(
   context: CanvasRenderingContext2D,
-  frames: readonly (HTMLImageElement | undefined)[],
+  frames: readonly (VisualImage | undefined)[],
   point: WorldPoint,
   age: number,
 ): boolean {
@@ -530,7 +543,7 @@ export function drawOriginalActionEffect(
 
 export function drawOriginalFlashEffect(
   context: CanvasRenderingContext2D,
-  frames: readonly (HTMLImageElement | undefined)[],
+  frames: readonly (VisualImage | undefined)[],
   camera: Readonly<GameObservation["camera"]>,
   age: number,
 ): boolean {

@@ -10,7 +10,7 @@
     <title>Trigger Knight</title>
   </head>
   <body>
-    <main id="app-shell" class="foundation">
+    <main id="app-shell" class="foundation" hidden aria-busy="true">
       <button
         id="toggle-fullscreen"
         class="stage-control stage-fullscreen"
@@ -526,6 +526,19 @@
             <p class="help-text">
               The first introduction is shown on every run. This setting
               controls the contextual pages.
+            </p>
+          </fieldset>
+          <fieldset>
+            <legend>Visual assets</legend>
+            <label for="visual-assets">Asset treatment</label>
+            <select id="visual-assets">
+              <option value="original">Original</option>
+              <option value="high-res">High resolution</option>
+            </select>
+            <p class="help-text">
+              Save your choice, then reload the page to apply the visual assets.
+              High-resolution assets are optional and use the original assets
+              when they are not installed.
             </p>
           </fieldset>
           <fieldset>

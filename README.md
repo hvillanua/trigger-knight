@@ -19,6 +19,53 @@ npm run dev
 On a fresh Linux host that needs Chromium system dependencies, use
 `npm run setup:browser -- --with-deps` for the browser setup step.
 
+### Choose the visual assets
+
+Open **Settings**, choose **Original** or **High resolution**, save, and reload
+the page. Original is the default. The selected pack supplies both CSS screen
+art and Canvas images, while fonts, sounds, and the hand cursor remain
+original. The Canvas keeps the original logical layout through the pack's
+recorded pixel density. If the optional high-resolution pack is absent or
+invalid, the browser uses Original.
+
+The main repository intentionally does not ship generated high-resolution
+images. The runtime always looks for one selected pack under
+`src/assets/generated/high-res/`. The pack manifest retains the actual
+generator, scale, hashes, and provenance, but the game exposes only the
+generic High resolution choice.
+
+To install a pack, clone the public
+[Trigger Knight asset experiment repository](https://github.com/hvillanua/trigger-knight-asset-experiment),
+choose one complete directory under `assets/generated/`, and copy that
+directory's contents, including `manifest.json`, into
+`src/assets/generated/high-res/`. Keep the generated files at the semantic
+paths recorded by the manifest. Then verify the installed pack before starting
+the server:
+
+```sh
+mkdir -p src/assets/generated/high-res
+rsync -a --delete \
+  ../trigger-knight-asset-experiment/assets/generated/swinir-2x/ \
+  src/assets/generated/high-res/
+npm run verify:asset-pack
+```
+
+Replace `swinir-2x` in the example with any complete treatment directory from
+the experiment repository. If `rsync` is unavailable, replace the directory's
+contents with a file manager or an equivalent copy command. Only the manifest
+and image files are used by the runtime; original fonts and sounds remain in
+the main repository.
+
+The Vite configuration serves only this approved optional directory at runtime
+and emits it under the same path for production builds. `publicDir` remains
+disabled, so unrelated files cannot bypass the clean-room asset boundary.
+
+The asset experiment repository owns the upsampling methods and comparison
+matrix. The main runtime exposes only Original and High resolution. For a
+development override, use `VITE_ASSET_TREATMENT=original` or
+`VITE_ASSET_TREATMENT=high-res`; the override does not change saved
+settings.
+
 ## Validation
 
 Run commands from the repository root:
@@ -301,12 +348,14 @@ result; load the profile before retrying so the journal can resolve to the prior
 or complete new record.
 
 Browser menu preferences are stored separately under
-`trigger-knight.settings`, using settings schema version 1. They contain the
-keyboard binding codes and sound mute/volume settings; volume is normalized to
-the range 0 through 1. The tutorial preference remains part of the progression
-record. An absent settings record uses defaults. Invalid, unsupported, or
-failing settings storage is reported in the browser and never replaces the
-progression record under `trigger-knight.profile`.
+`trigger-knight.settings`, using settings schema version 2. They contain the
+keyboard binding codes, sound mute/volume settings, and the visual asset
+preference; volume is normalized to the range 0 through 1. Valid version 1
+records migrate to Original without writing until the next successful save.
+The tutorial preference remains part of the progression record. An absent
+settings record uses defaults. Invalid, unsupported, or failing settings
+storage is reported in the browser and never replaces the progression record
+under `trigger-knight.profile`.
 
 The gameplay screen exposes the current player status, current and queued
 encounters, contextual shop or item information, and battle HP as accessible
@@ -328,17 +377,21 @@ provenance. The runtime asset policy is:
   symbols to the original gameplay and screen call sites.
 - The current reviewed production copies live under `src/assets/original/`; do
   not import directly from the archival `original/` or `exports/` directories.
+- The optional high-resolution pack is a reviewed derivative staged by the
+  user under `src/assets/generated/high-res/`. Its manifest records its source
+  hashes, generator, output hashes, rights status, and review date.
 - Add neighboring provenance metadata recording the source path, artifact hash
   or export identifier, extraction details, rights or license, and review date.
 - Keep decompiled ActionScript, generated behavioral research, and other
   unapproved research outputs outside production.
 
-The Canvas presentation plays staged original character sequences in numeric
-file order and scrolls original scene layers. Missing or failed images are
-omitted. It does not load replacement artwork. Animation ranges and exclusions
-live in `src/browser/sprite-animation.ts`; playback cadence and the death fade
-are presentation choices, not confirmed original timing. The browser font roles
-are also a project mapping; exact original text-field usage remains unverified.
+The Original selection plays staged original character sequences in numeric file
+order and scrolls original scene layers. The High resolution selection
+preserves those semantic paths and replaces only the approved image files.
+Missing or failed images are omitted. Animation ranges and exclusions live in
+`src/browser/sprite-animation.ts`; playback cadence and the death fade are
+presentation choices, not confirmed original timing. The browser font roles are
+also a project mapping; exact original text-field usage remains unverified.
 
 This project policy does not transfer copyright or grant a public license. Any
 distribution of original assets remains subject to the rights holder's terms.

@@ -5,6 +5,20 @@ import type {
   InventoryItemId,
   ShopId,
 } from "../application/contracts.js";
+import {
+  ORIGINAL_VISUAL_ASSET_PACK,
+  originalAssetPaths,
+  type VisualAssetPack,
+  type VisualImageSource,
+} from "./visual-assets.js";
+
+import type { PixelDensity } from "./visual-assets.js";
+export type { PixelDensity } from "./visual-assets.js";
+
+export interface VisualImage {
+  readonly image: HTMLImageElement;
+  readonly pixelDensity: PixelDensity;
+}
 
 export type VisualSpriteId =
   | "hero"
@@ -60,297 +74,307 @@ export type OriginalUiImageId =
   | "item-stats-icon"
   | "armor-stats-icon";
 
-export const ORIGINAL_SPRITE_URLS: Readonly<
-  Partial<Record<VisualSpriteId, string>>
-> = Object.freeze({
-  hero: new URL(
-    "../assets/original/key-sprites/DefineSprite_497_Hero/1.png",
-    import.meta.url,
-  ).href,
-  dragon: new URL(
-    "../assets/original/key-sprites/DefineSprite_397_EnemyDragon/1.png",
-    import.meta.url,
-  ).href,
-  goblin: new URL(
-    "../assets/original/key-sprites/DefineSprite_421_EnemyGoblin/1.png",
-    import.meta.url,
-  ).href,
-  golem: new URL(
-    "../assets/original/key-sprites/DefineSprite_446_EnemyGolem/1.png",
-    import.meta.url,
-  ).href,
-  wolf: new URL(
-    "../assets/original/key-sprites/DefineSprite_477_EnemyWolf/1.png",
-    import.meta.url,
-  ).href,
-});
+type AssetSource = VisualImageSource;
 
-export const ORIGINAL_SCENE_ASSET_URLS: Readonly<
-  Record<OriginalSceneAssetId, string>
-> = Object.freeze({
-  sky: new URL("../assets/original/images/357.jpg", import.meta.url).href,
-  ground: new URL("../assets/original/images/360.png", import.meta.url).href,
-  mountains: new URL("../assets/original/images/363.png", import.meta.url).href,
-  building: new URL("../assets/original/images/366.png", import.meta.url).href,
-});
+interface VisualAssetSources {
+  readonly sprites: Readonly<Record<string, AssetSource>>;
+  readonly scenes: Readonly<Record<string, AssetSource>>;
+  readonly effects: Readonly<Record<string, AssetSource>>;
+  readonly ui: Readonly<Record<string, AssetSource>>;
+  readonly clickEffectFrames: readonly AssetSource[];
+  readonly actionEffectFrames: Readonly<
+    Record<OriginalActionEffectId, readonly AssetSource[]>
+  >;
+  readonly flashEffectFrames: readonly AssetSource[];
+  readonly animationFrames: Readonly<
+    Record<ActorSpriteId, readonly AssetSource[]>
+  >;
+}
 
-/** Reviewed frames exported from the original FXHit timeline. */
-export const ORIGINAL_EFFECT_IMAGE_URLS: Readonly<
-  Record<OriginalEffectImageId, string>
-> = Object.freeze({
-  "hit-1": new URL("../assets/original/images/119.png", import.meta.url).href,
-  "hit-2": new URL("../assets/original/images/121.png", import.meta.url).href,
-  "hit-3": new URL("../assets/original/images/123.png", import.meta.url).href,
-  "hit-4": new URL("../assets/original/images/125.png", import.meta.url).href,
-  "hit-5": new URL("../assets/original/images/127.png", import.meta.url).href,
-  "hit-6": new URL("../assets/original/images/129.png", import.meta.url).href,
-  "hit-7": new URL("../assets/original/images/131.png", import.meta.url).href,
-});
+export interface VisualStyleUrls {
+  readonly parchment: string;
+  readonly titleHero: string;
+  readonly sky: string;
+  readonly skyMask: string;
+  readonly logo: string;
+  readonly cursor: string;
+}
 
-/** Reviewed interface exports used by the composed browser presentation. */
-export const ORIGINAL_UI_IMAGE_URLS: Readonly<
-  Record<OriginalUiImageId, string>
-> = Object.freeze({
-  parchment: new URL("../assets/original/images/529.jpg", import.meta.url).href,
-  "bottom-strip": new URL("../assets/original/images/200.jpg", import.meta.url)
-    .href,
-  "message-strip": new URL("../assets/original/images/190.png", import.meta.url)
-    .href,
-  "lifespan-fill": new URL("../assets/original/images/251.png", import.meta.url)
-    .href,
-  "lifespan-frame": new URL(
-    "../assets/original/images/253.png",
-    import.meta.url,
-  ).href,
-  "tutorial-lifespan-crop": new URL(
-    "../assets/original/images/318.jpg",
-    import.meta.url,
-  ).href,
-  "hp-fill": new URL("../assets/original/images/202.png", import.meta.url).href,
-  "hp-frame": new URL("../assets/original/images/204.png", import.meta.url)
-    .href,
-  portrait: new URL("../assets/original/images/194.png", import.meta.url).href,
-  logo: new URL("../assets/original/images/268.png", import.meta.url).href,
-  "gold-bag": new URL("../assets/original/images/233.png", import.meta.url)
-    .href,
-  pointer: new URL("../assets/original/images/19.png", import.meta.url).href,
-  "pointer-click": new URL("../assets/original/images/21.png", import.meta.url)
-    .href,
-  "session-over-pointer": new URL(
-    "../assets/original/images/12.png",
-    import.meta.url,
-  ).href,
-  "weapon-upgrade-icon": new URL(
-    "../assets/original/images/156.png",
-    import.meta.url,
-  ).href,
-  "armor-upgrade-icon": new URL(
-    "../assets/original/images/158.png",
-    import.meta.url,
-  ).href,
-  "shrine-icon": new URL("../assets/original/images/172.png", import.meta.url)
-    .href,
-  "elixir-icon": new URL("../assets/original/images/160.png", import.meta.url)
-    .href,
-  "divine-edge-icon": new URL(
-    "../assets/original/images/162.png",
-    import.meta.url,
-  ).href,
-  "voucher-icon": new URL("../assets/original/images/164.png", import.meta.url)
-    .href,
-  "weapon-event-icon": new URL(
-    "../assets/original/images/168.png",
-    import.meta.url,
-  ).href,
-  "armor-event-icon": new URL(
-    "../assets/original/images/170.png",
-    import.meta.url,
-  ).href,
-  "monster-icon": new URL("../assets/original/images/179.png", import.meta.url)
-    .href,
-  "weapon-stats-icon": new URL(
-    "../assets/original/images/197.png",
-    import.meta.url,
-  ).href,
-  "item-stats-icon": new URL(
-    "../assets/original/images/198.png",
-    import.meta.url,
-  ).href,
-  "armor-stats-icon": new URL(
-    "../assets/original/images/199.png",
-    import.meta.url,
-  ).href,
-});
+/** Resolves the raster and mask assets used by non-canvas screens. */
+export function createVisualStyleUrls(pack: VisualAssetPack): VisualStyleUrls {
+  const cursor = pack.image("images/12.png");
+  return Object.freeze({
+    parchment: pack.image("images/529.jpg").url,
+    titleHero: pack.image("images/533.png").url,
+    sky: pack.image("images/357.jpg").url,
+    skyMask: pack.image("shapes/350.svg").url,
+    logo: pack.image("images/268.png").url,
+    cursor:
+      cursor.pixelDensity === 1
+        ? cursor.url
+        : ORIGINAL_VISUAL_ASSET_PACK.image("images/12.png").url,
+  });
+}
 
-const frameUrls = import.meta.glob<string>(
-  "../assets/original/key-sprites/*/*.png",
-  { eager: true, query: "?url&no-inline", import: "default" },
-);
-
-const clickEffectFrameUrls = import.meta.glob<string>(
-  "../assets/original/effects/DefineSprite_311_MouseEffect/*.png",
-  { eager: true, query: "?url&no-inline", import: "default" },
-);
-
-const actionEffectFrameUrls: Readonly<
-  Record<OriginalActionEffectId, Record<string, string>>
-> = {
-  buy: import.meta.glob<string>(
-    "../assets/original/effects/DefineSprite_118_FXBuy/*.png",
-    { eager: true, query: "?url&no-inline", import: "default" },
-  ),
-  item: import.meta.glob<string>(
-    "../assets/original/effects/DefineSprite_151_FXItem/*.png",
-    { eager: true, query: "?url&no-inline", import: "default" },
-  ),
-  upgrade: import.meta.glob<string>(
-    "../assets/original/effects/DefineSprite_153_FXUpgrade/*.png",
-    { eager: true, query: "?url&no-inline", import: "default" },
-  ),
-};
-
-const flashEffectFrameUrls = import.meta.glob<string>(
-  "../assets/original/effects/DefineSprite_369_Effect-Flash/*.png",
-  { eager: true, query: "?url&no-inline", import: "default" },
-);
-
-function numberedAssetUrls(
-  entries: Readonly<Record<string, string>>,
-): readonly string[] {
+function sourceRecord<Key extends string>(
+  paths: Readonly<Record<Key, string>>,
+  pack: VisualAssetPack,
+): Readonly<Record<Key, AssetSource>> {
   return Object.freeze(
-    Object.entries(entries)
-      .sort(
-        ([a], [b]) =>
-          Number(a.split("/").at(-1)?.split(".")[0]) -
-          Number(b.split("/").at(-1)?.split(".")[0]),
-      )
-      .map(([, url]) => url),
-  );
-}
-
-/** Reviewed frames exported from the original MouseEffect click-feedback timeline. */
-export const ORIGINAL_CLICK_EFFECT_URLS: readonly string[] = Object.freeze(
-  numberedAssetUrls(clickEffectFrameUrls),
-);
-
-/** Reviewed frames exported from the original purchase and item action timelines. */
-export const ORIGINAL_ACTION_EFFECT_URLS: Readonly<
-  Record<OriginalActionEffectId, readonly string[]>
-> = Object.freeze({
-  buy: numberedAssetUrls(actionEffectFrameUrls.buy),
-  item: numberedAssetUrls(actionEffectFrameUrls.item),
-  upgrade: numberedAssetUrls(actionEffectFrameUrls.upgrade),
-});
-
-/** Reviewed frames exported from the original lifespan-restoration flash timeline. */
-export const ORIGINAL_FLASH_EFFECT_URLS: readonly string[] = Object.freeze(
-  numberedAssetUrls(flashEffectFrameUrls),
-);
-
-function entityFrames(entity: string): readonly string[] {
-  return numberedAssetUrls(
     Object.fromEntries(
-      Object.entries(frameUrls).filter(([path]) =>
-        path.includes(`/${entity}/`),
-      ),
+      Object.keys(paths).map((id) => [id, pack.image(paths[id as Key])]),
     ),
+  ) as Readonly<Record<Key, AssetSource>>;
+}
+
+function numberedAssetPaths(prefix: string): readonly string[] {
+  return originalAssetPaths(prefix);
+}
+
+function numberedAssetSources(
+  prefix: string,
+  pack: VisualAssetPack,
+): readonly AssetSource[] {
+  return Object.freeze(
+    numberedAssetPaths(prefix).map((path) => pack.image(path)),
   );
 }
 
-export const ORIGINAL_ANIMATION_URLS: Readonly<
-  Record<ActorSpriteId, readonly string[]>
-> = Object.freeze({
-  hero: entityFrames("DefineSprite_497_Hero"),
-  dragon: entityFrames("DefineSprite_397_EnemyDragon"),
-  goblin: entityFrames("DefineSprite_421_EnemyGoblin"),
-  golem: entityFrames("DefineSprite_446_EnemyGolem"),
-  wolf: entityFrames("DefineSprite_477_EnemyWolf"),
+function sourceUrls<Key extends string>(
+  sources: Readonly<Record<Key, AssetSource>>,
+): Readonly<Record<Key, string>> {
+  return Object.freeze(
+    Object.fromEntries(
+      Object.keys(sources).map((id) => [id, sources[id as Key].url]),
+    ),
+  ) as Readonly<Record<Key, string>>;
+}
+
+function sourceUrlArrays<Key extends string>(
+  sources: Readonly<Record<Key, readonly AssetSource[]>>,
+): Readonly<Record<Key, readonly string[]>> {
+  return Object.freeze(
+    Object.fromEntries(
+      Object.keys(sources).map((id) => {
+        const entries = sources[id as Key];
+        return [id, Object.freeze(entries.map((entry) => entry.url))];
+      }),
+    ),
+  ) as Readonly<Record<Key, readonly string[]>>;
+}
+
+const SPRITE_PATHS = Object.freeze({
+  hero: "key-sprites/DefineSprite_497_Hero/1.png",
+  dragon: "key-sprites/DefineSprite_397_EnemyDragon/1.png",
+  goblin: "key-sprites/DefineSprite_421_EnemyGoblin/1.png",
+  golem: "key-sprites/DefineSprite_446_EnemyGolem/1.png",
+  wolf: "key-sprites/DefineSprite_477_EnemyWolf/1.png",
 });
+
+const SCENE_PATHS = Object.freeze({
+  sky: "images/357.jpg",
+  ground: "images/360.png",
+  mountains: "images/363.png",
+  building: "images/366.png",
+});
+
+const EFFECT_PATHS = Object.freeze({
+  "hit-1": "images/119.png",
+  "hit-2": "images/121.png",
+  "hit-3": "images/123.png",
+  "hit-4": "images/125.png",
+  "hit-5": "images/127.png",
+  "hit-6": "images/129.png",
+  "hit-7": "images/131.png",
+});
+
+const UI_PATHS = Object.freeze({
+  parchment: "images/529.jpg",
+  "bottom-strip": "images/200.jpg",
+  "message-strip": "images/190.png",
+  "lifespan-fill": "images/251.png",
+  "lifespan-frame": "images/253.png",
+  "tutorial-lifespan-crop": "images/318.jpg",
+  "hp-fill": "images/202.png",
+  "hp-frame": "images/204.png",
+  portrait: "images/194.png",
+  logo: "images/268.png",
+  "gold-bag": "images/233.png",
+  pointer: "images/19.png",
+  "pointer-click": "images/21.png",
+  "session-over-pointer": "images/12.png",
+  "weapon-upgrade-icon": "images/156.png",
+  "armor-upgrade-icon": "images/158.png",
+  "shrine-icon": "images/172.png",
+  "elixir-icon": "images/160.png",
+  "divine-edge-icon": "images/162.png",
+  "voucher-icon": "images/164.png",
+  "weapon-event-icon": "images/168.png",
+  "armor-event-icon": "images/170.png",
+  "monster-icon": "images/179.png",
+  "weapon-stats-icon": "images/197.png",
+  "item-stats-icon": "images/198.png",
+  "armor-stats-icon": "images/199.png",
+});
+
+const ACTION_EFFECT_PREFIXES = Object.freeze({
+  buy: "effects/DefineSprite_118_FXBuy/",
+  item: "effects/DefineSprite_151_FXItem/",
+  upgrade: "effects/DefineSprite_153_FXUpgrade/",
+});
+
+const ACTOR_PREFIXES = Object.freeze({
+  hero: "key-sprites/DefineSprite_497_Hero/",
+  dragon: "key-sprites/DefineSprite_397_EnemyDragon/",
+  goblin: "key-sprites/DefineSprite_421_EnemyGoblin/",
+  golem: "key-sprites/DefineSprite_446_EnemyGolem/",
+  wolf: "key-sprites/DefineSprite_477_EnemyWolf/",
+});
+
+function createVisualAssetSources(pack: VisualAssetPack): VisualAssetSources {
+  const actionEffectFrames = {
+    buy: numberedAssetSources(ACTION_EFFECT_PREFIXES.buy, pack),
+    item: numberedAssetSources(ACTION_EFFECT_PREFIXES.item, pack),
+    upgrade: numberedAssetSources(ACTION_EFFECT_PREFIXES.upgrade, pack),
+  };
+  const animationFrames = {
+    hero: numberedAssetSources(ACTOR_PREFIXES.hero, pack),
+    dragon: numberedAssetSources(ACTOR_PREFIXES.dragon, pack),
+    goblin: numberedAssetSources(ACTOR_PREFIXES.goblin, pack),
+    golem: numberedAssetSources(ACTOR_PREFIXES.golem, pack),
+    wolf: numberedAssetSources(ACTOR_PREFIXES.wolf, pack),
+  };
+  return Object.freeze({
+    sprites: sourceRecord(SPRITE_PATHS, pack),
+    scenes: sourceRecord(SCENE_PATHS, pack),
+    effects: sourceRecord(EFFECT_PATHS, pack),
+    ui: sourceRecord(UI_PATHS, pack),
+    clickEffectFrames: numberedAssetSources(
+      "effects/DefineSprite_311_MouseEffect/",
+      pack,
+    ),
+    actionEffectFrames,
+    flashEffectFrames: numberedAssetSources(
+      "effects/DefineSprite_369_Effect-Flash/",
+      pack,
+    ),
+    animationFrames,
+  });
+}
+
+const ORIGINAL_ASSET_SOURCES = createVisualAssetSources(
+  ORIGINAL_VISUAL_ASSET_PACK,
+);
+
+export const ORIGINAL_SPRITE_URLS = sourceUrls(ORIGINAL_ASSET_SOURCES.sprites);
+export const ORIGINAL_SCENE_ASSET_URLS = sourceUrls(
+  ORIGINAL_ASSET_SOURCES.scenes,
+);
+/** Reviewed frames exported from the original FXHit timeline. */
+export const ORIGINAL_EFFECT_IMAGE_URLS = sourceUrls(
+  ORIGINAL_ASSET_SOURCES.effects,
+);
+/** Reviewed interface exports used by the composed browser presentation. */
+export const ORIGINAL_UI_IMAGE_URLS = sourceUrls(ORIGINAL_ASSET_SOURCES.ui);
+/** Reviewed frames exported from the original MouseEffect click-feedback timeline. */
+export const ORIGINAL_CLICK_EFFECT_URLS = Object.freeze(
+  ORIGINAL_ASSET_SOURCES.clickEffectFrames.map((source) => source.url),
+);
+/** Reviewed frames exported from the original purchase and item action timelines. */
+export const ORIGINAL_ACTION_EFFECT_URLS = sourceUrlArrays(
+  ORIGINAL_ASSET_SOURCES.actionEffectFrames,
+);
+/** Reviewed frames exported from the original lifespan-restoration flash timeline. */
+export const ORIGINAL_FLASH_EFFECT_URLS = Object.freeze(
+  ORIGINAL_ASSET_SOURCES.flashEffectFrames.map((source) => source.url),
+);
+export const ORIGINAL_ANIMATION_URLS = sourceUrlArrays(
+  ORIGINAL_ASSET_SOURCES.animationFrames,
+);
 
 export type VisualAtlasStatus = "loading" | "ready" | "partial" | "unavailable";
 
 export interface VisualAtlas {
   readonly status: VisualAtlasStatus;
+  readonly treatment: VisualAssetPack["treatment"];
   readonly originalImages: Readonly<
-    Partial<Record<VisualSpriteId, HTMLImageElement>>
+    Partial<Record<VisualSpriteId, VisualImage>>
   >;
   readonly originalFrames: Readonly<
-    Partial<Record<ActorSpriteId, readonly (HTMLImageElement | undefined)[]>>
+    Partial<Record<ActorSpriteId, readonly (VisualImage | undefined)[]>>
   >;
   readonly sceneImages: Readonly<
-    Partial<Record<OriginalSceneAssetId, HTMLImageElement>>
+    Partial<Record<OriginalSceneAssetId, VisualImage>>
   >;
   readonly effectImages: Readonly<
-    Partial<Record<OriginalEffectImageId, HTMLImageElement>>
+    Partial<Record<OriginalEffectImageId, VisualImage>>
   >;
-  readonly clickEffectFrames: Readonly<(HTMLImageElement | undefined)[]>;
+  readonly clickEffectFrames: Readonly<(VisualImage | undefined)[]>;
   readonly actionEffectFrames: Readonly<
-    Record<OriginalActionEffectId, readonly (HTMLImageElement | undefined)[]>
+    Record<OriginalActionEffectId, readonly (VisualImage | undefined)[]>
   >;
-  readonly flashEffectFrames: Readonly<(HTMLImageElement | undefined)[]>;
-  readonly uiImages: Readonly<
-    Partial<Record<OriginalUiImageId, HTMLImageElement>>
-  >;
+  readonly flashEffectFrames: Readonly<(VisualImage | undefined)[]>;
+  readonly uiImages: Readonly<Partial<Record<OriginalUiImageId, VisualImage>>>;
 }
 
 /** Failed or unmapped artwork stays absent. Gameplay never waits for images. */
 export function createVisualAtlas(
   onStatusChange: (status: VisualAtlasStatus) => void,
+  pack: VisualAssetPack = ORIGINAL_VISUAL_ASSET_PACK,
 ): VisualAtlas {
+  const sources = createVisualAssetSources(pack);
   let status: VisualAtlasStatus =
     typeof Image === "undefined" ? "unavailable" : "loading";
-  const originalImages: Partial<Record<VisualSpriteId, HTMLImageElement>> = {};
+  const originalImages: Partial<Record<VisualSpriteId, VisualImage>> = {};
   const originalFrames: Partial<
-    Record<ActorSpriteId, (HTMLImageElement | undefined)[]>
+    Record<ActorSpriteId, (VisualImage | undefined)[]>
   > = {};
-  const sceneImages: Partial<Record<OriginalSceneAssetId, HTMLImageElement>> =
-    {};
-  const effectImages: Partial<Record<OriginalEffectImageId, HTMLImageElement>> =
-    {};
-  const clickEffectFrames: (HTMLImageElement | undefined)[] = Array.from(
-    { length: ORIGINAL_CLICK_EFFECT_URLS.length },
+  const sceneImages: Partial<Record<OriginalSceneAssetId, VisualImage>> = {};
+  const effectImages: Partial<Record<OriginalEffectImageId, VisualImage>> = {};
+  const clickEffectFrames: (VisualImage | undefined)[] = Array.from(
+    { length: sources.clickEffectFrames.length },
     () => undefined,
   );
   const actionEffectFrames: Record<
     OriginalActionEffectId,
-    (HTMLImageElement | undefined)[]
+    (VisualImage | undefined)[]
   > = {
     buy: Array.from(
-      { length: ORIGINAL_ACTION_EFFECT_URLS.buy.length },
+      { length: sources.actionEffectFrames.buy.length },
       () => undefined,
     ),
     item: Array.from(
-      { length: ORIGINAL_ACTION_EFFECT_URLS.item.length },
+      { length: sources.actionEffectFrames.item.length },
       () => undefined,
     ),
     upgrade: Array.from(
-      { length: ORIGINAL_ACTION_EFFECT_URLS.upgrade.length },
+      { length: sources.actionEffectFrames.upgrade.length },
       () => undefined,
     ),
   };
-  const flashEffectFrames: (HTMLImageElement | undefined)[] = Array.from(
-    { length: ORIGINAL_FLASH_EFFECT_URLS.length },
+  const flashEffectFrames: (VisualImage | undefined)[] = Array.from(
+    { length: sources.flashEffectFrames.length },
     () => undefined,
   );
-  const uiImages: Partial<Record<OriginalUiImageId, HTMLImageElement>> = {};
+  const uiImages: Partial<Record<OriginalUiImageId, VisualImage>> = {};
   if (status === "loading") {
     let pending =
-      Object.values(ORIGINAL_ANIMATION_URLS).reduce(
-        (total, urls) => total + urls.length,
+      Object.values(sources.animationFrames).reduce(
+        (total, frames) => total + frames.length,
         0,
       ) +
-      Object.keys(ORIGINAL_SCENE_ASSET_URLS).length +
-      Object.keys(ORIGINAL_EFFECT_IMAGE_URLS).length +
-      ORIGINAL_CLICK_EFFECT_URLS.length +
-      Object.keys(ORIGINAL_UI_IMAGE_URLS).length +
-      Object.keys(ORIGINAL_ACTION_EFFECT_URLS).length +
-      (ORIGINAL_FLASH_EFFECT_URLS.length > 0 ? 1 : 0);
+      Object.keys(sources.scenes).length +
+      Object.keys(sources.effects).length +
+      sources.clickEffectFrames.length +
+      Object.keys(sources.ui).length +
+      Object.keys(sources.actionEffectFrames).length +
+      (sources.flashEffectFrames.length > 0 ? 1 : 0);
     let loaded = 0;
     let failed = 0;
     let coreSettled = false;
     const load = (
-      url: string,
-      save: (image: HTMLImageElement) => void,
+      source: AssetSource,
+      save: (image: VisualImage) => void,
     ): void => {
       const image = new Image();
       image.decoding = "async";
@@ -363,7 +387,7 @@ export function createVisualAtlas(
         onStatusChange(status);
       };
       image.onload = () => {
-        save(image);
+        save(Object.freeze({ image, pixelDensity: source.pixelDensity }));
         loaded += 1;
         settle();
       };
@@ -371,85 +395,79 @@ export function createVisualAtlas(
         failed += 1;
         settle();
       };
-      image.src = url;
+      image.src = source.url;
     };
     const loadOptional = (
-      url: string,
-      save: (image: HTMLImageElement) => void,
+      source: AssetSource,
+      save: (image: VisualImage) => void,
     ): void => {
       const image = new Image();
       image.decoding = "async";
       image.onload = () => {
-        save(image);
+        save(Object.freeze({ image, pixelDensity: source.pixelDensity }));
         if (coreSettled && status === "ready") onStatusChange(status);
       };
       image.onerror = () => undefined;
-      image.src = url;
+      image.src = source.url;
     };
-    for (const id of Object.keys(ORIGINAL_ANIMATION_URLS) as ActorSpriteId[]) {
-      const urls = ORIGINAL_ANIMATION_URLS[id];
-      const frames: (HTMLImageElement | undefined)[] = Array.from(
-        { length: urls.length },
+    for (const id of Object.keys(sources.animationFrames) as ActorSpriteId[]) {
+      const assetSources = sources.animationFrames[id];
+      const frames: (VisualImage | undefined)[] = Array.from(
+        { length: assetSources.length },
         () => undefined,
       );
       originalFrames[id] = frames;
-      urls.forEach((url, index) =>
-        load(url, (image) => {
+      assetSources.forEach((source, index) =>
+        load(source, (image) => {
           frames[index] = image;
           if (index === 0) originalImages[id] = image;
         }),
       );
     }
-    for (const id of Object.keys(
-      ORIGINAL_SCENE_ASSET_URLS,
-    ) as OriginalSceneAssetId[]) {
-      load(ORIGINAL_SCENE_ASSET_URLS[id], (image) => {
+    for (const id of Object.keys(sources.scenes) as OriginalSceneAssetId[]) {
+      load(sources.scenes[id]!, (image) => {
         sceneImages[id] = image;
       });
     }
-    for (const id of Object.keys(
-      ORIGINAL_EFFECT_IMAGE_URLS,
-    ) as OriginalEffectImageId[]) {
-      load(ORIGINAL_EFFECT_IMAGE_URLS[id], (image) => {
+    for (const id of Object.keys(sources.effects) as OriginalEffectImageId[]) {
+      load(sources.effects[id]!, (image) => {
         effectImages[id] = image;
       });
     }
-    ORIGINAL_CLICK_EFFECT_URLS.forEach((url, index) =>
-      load(url, (image) => {
+    sources.clickEffectFrames.forEach((source, index) =>
+      load(source, (image) => {
         clickEffectFrames[index] = image;
       }),
     );
-    for (const id of Object.keys(
-      ORIGINAL_UI_IMAGE_URLS,
-    ) as OriginalUiImageId[]) {
-      load(ORIGINAL_UI_IMAGE_URLS[id], (image) => {
+    for (const id of Object.keys(sources.ui) as OriginalUiImageId[]) {
+      load(sources.ui[id]!, (image) => {
         uiImages[id] = image;
       });
     }
     for (const id of Object.keys(
-      ORIGINAL_ACTION_EFFECT_URLS,
+      sources.actionEffectFrames,
     ) as OriginalActionEffectId[]) {
-      const urls = ORIGINAL_ACTION_EFFECT_URLS[id];
-      const firstUrl = urls[0];
-      if (firstUrl !== undefined) {
-        load(firstUrl, (image) => {
+      const assetSources = sources.actionEffectFrames[id];
+      const firstSource = assetSources[0];
+      if (firstSource !== undefined) {
+        load(firstSource, (image) => {
           actionEffectFrames[id][0] = image;
         });
       }
-      urls.slice(1).forEach((url, index) =>
-        loadOptional(url, (image) => {
+      assetSources.slice(1).forEach((source, index) =>
+        loadOptional(source, (image) => {
           actionEffectFrames[id][index + 1] = image;
         }),
       );
     }
-    const firstFlashUrl = ORIGINAL_FLASH_EFFECT_URLS[0];
-    if (firstFlashUrl !== undefined) {
-      load(firstFlashUrl, (image) => {
+    const firstFlashSource = sources.flashEffectFrames[0];
+    if (firstFlashSource !== undefined) {
+      load(firstFlashSource, (image) => {
         flashEffectFrames[0] = image;
       });
     }
-    ORIGINAL_FLASH_EFFECT_URLS.slice(1).forEach((url, index) =>
-      loadOptional(url, (image) => {
+    sources.flashEffectFrames.slice(1).forEach((source, index) =>
+      loadOptional(source, (image) => {
         flashEffectFrames[index + 1] = image;
       }),
     );
@@ -458,6 +476,7 @@ export function createVisualAtlas(
     get status() {
       return status;
     },
+    treatment: pack.treatment,
     originalImages,
     originalFrames,
     sceneImages,

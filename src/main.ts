@@ -57,6 +57,9 @@ import { ORIGINAL_V13_RULESET_ID, ruleSetRegistry } from "./domain/rulesets.js";
 import { createBrowserProfileStore } from "./persistence/browser-profile-store.js";
 import { createBrowserSettingsStore } from "./persistence/browser-settings-store.js";
 import { createBrowserSoundEffects } from "./sound/sound-effects.js";
+import { applyVisualStyleTreatment } from "./browser/asset-style.js";
+import { visualPreferenceFromStartup } from "./browser/asset-treatment.js";
+import { resolveVisualAssetPack } from "./browser/visual-assets.js";
 import "./browser/style.css";
 
 const gameplayEngine = createGameplayEngine(ruleSetRegistry);
@@ -177,6 +180,7 @@ const settingsBindingPrompt = requiredElement<HTMLElement>(
   "#settings-binding-prompt",
 );
 const settingsForm = requiredElement<HTMLFormElement>("#settings-form");
+const visualAssets = requiredElement<HTMLSelectElement>("#visual-assets");
 const tutorialPreference = requiredElement<HTMLInputElement>(
   "#tutorial-preference",
 );
@@ -298,7 +302,20 @@ const keyboardRouter = createKeyboardCommandRouter(currentSettings.bindings);
 let latestObservation: Readonly<GameObservation> | undefined;
 let latestFeedback = "";
 
-const presentation = new CanvasPresentation(canvas);
+gameStatus.dataset.visualAssetsStatus = "loading";
+const requestedVisualAssets = visualPreferenceFromStartup(
+  currentSettings.visualAssets,
+  import.meta.env.VITE_ASSET_TREATMENT,
+);
+const visualAssetPack = await resolveVisualAssetPack(requestedVisualAssets);
+applyVisualStyleTreatment(visualAssetPack);
+const presentation = new CanvasPresentation(canvas, visualAssetPack);
+gameStatus.dataset.visualAssetsStatus = visualAssetPack.selection.kind;
+if (visualAssetPack.selection.kind === "fallback") {
+  gameStatus.dataset.visualAssetsError = visualAssetPack.selection.reason;
+} else {
+  delete gameStatus.dataset.visualAssetsError;
+}
 const reducedMotionQuery =
   typeof window.matchMedia === "function"
     ? window.matchMedia("(prefers-reduced-motion: reduce)")
@@ -610,6 +627,7 @@ const settingsController = createSettingsController(
     form: settingsForm,
     tutorialPreference,
     titleTutorialToggle,
+    visualAssets,
     soundMuted,
     soundVolume,
     soundVolumeValue,
@@ -755,6 +773,11 @@ if (settingsLoad.status === "failed") {
   gameStatus.dataset.settingsError = settingsLoad.error.code;
 }
 settingsController?.setStatus(settingsStatusText(settingsLoad));
+if (visualAssetPack.selection.kind === "fallback") {
+  settingsController?.setStatus(
+    `High-resolution assets are unavailable. Using Original. (${visualAssetPack.selection.reason})`,
+  );
+}
 renderStorageNotice();
 screenNavigation?.updateProfileSummary(currentProfile);
 screenNavigation?.renderProfileScreens(currentProfile);
@@ -1004,6 +1027,8 @@ const resizeObserver = new ResizeObserver(([entry]) => {
 });
 resizeObserver.observe(canvas);
 
+appShell.hidden = false;
+appShell.setAttribute("aria-busy", "false");
 activeRunController?.start(currentProfile, {
   focus: false,
   startImmediately: true,

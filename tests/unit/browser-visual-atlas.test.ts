@@ -11,6 +11,29 @@ import {
   ORIGINAL_ANIMATION_URLS,
   ORIGINAL_UI_IMAGE_URLS,
 } from "../../src/browser/visual-atlas.js";
+import { createHighResolutionVisualAssetPack } from "../../src/browser/visual-assets.js";
+
+const highResolutionPack = createHighResolutionVisualAssetPack({
+  imageUrls: {
+    "../assets/generated/high-res/key-sprites/DefineSprite_497_Hero/1.png":
+      "/high-res/hero-1.png",
+    "../assets/generated/high-res/images/357.jpg": "/high-res/sky.jpg",
+  },
+  manifestText: JSON.stringify({
+    schemaVersion: 1,
+    treatment: "waifu2x-4x",
+    status: "generated",
+    filtering: "filtered",
+    pixelDensity: 4,
+    outputs: {
+      root: "assets/generated/waifu2x-4x",
+      files: [
+        { path: "key-sprites/DefineSprite_497_Hero/1.png", pixelDensity: 4 },
+        { path: "images/357.jpg", pixelDensity: 4 },
+      ],
+    },
+  }),
+});
 
 describe("approved visual atlas", () => {
   it("leaves artwork absent when the browser image API is unavailable", () => {
@@ -80,6 +103,29 @@ describe("approved visual atlas", () => {
     expect(atlas.originalFrames.hero?.[16]).toBeDefined();
     expect(atlas.originalFrames.hero?.[17]).toBeUndefined();
     expect(atlas.originalFrames.hero?.[18]).toBeDefined();
+  });
+
+  it("selects high-resolution artwork and keeps per-file density metadata", async () => {
+    const requests: string[] = [];
+    vi.stubGlobal(
+      "Image",
+      class {
+        onload?: () => void;
+        onerror?: () => void;
+        set src(url: string) {
+          requests.push(url);
+          queueMicrotask(() => this.onload?.());
+        }
+      },
+    );
+
+    const atlas = createVisualAtlas(() => undefined, highResolutionPack);
+    await Promise.resolve();
+
+    expect(atlas.treatment.id).toBe("high-res");
+    expect(requests).toContain("/high-res/hero-1.png");
+    expect(atlas.originalFrames.hero?.[0]?.pixelDensity).toBe(4);
+    expect(atlas.sceneImages.sky?.pixelDensity).toBe(4);
   });
 
   it("maps the original character and scene exports into runtime assets", () => {

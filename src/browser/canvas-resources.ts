@@ -1,5 +1,9 @@
 import { loadOriginalFonts } from "./font-assets.js";
 import {
+  ORIGINAL_VISUAL_ASSET_PACK,
+  type VisualAssetPack,
+} from "./visual-assets.js";
+import {
   createVisualAtlas,
   type VisualAtlas,
   type VisualAtlasStatus,
@@ -19,11 +23,12 @@ export interface CanvasResources {
 /** Starts the browser presentation's image and font loads in one adapter owner. */
 export function createCanvasResources(
   onChange: (change: CanvasResourceChange) => void,
+  pack: VisualAssetPack = ORIGINAL_VISUAL_ASSET_PACK,
 ): CanvasResources {
   let fontStatus: CanvasFontStatus = "loading";
   const atlas = createVisualAtlas((status) => {
     onChange({ type: "assets", status });
-  });
+  }, pack);
 
   void loadOriginalFonts().then((loaded) => {
     fontStatus = loaded ? "ready" : "fallback";
