@@ -105,6 +105,7 @@ test("starts a browser run from the stored complete profile", async ({
     { key: PROFILE_STORAGE_KEY, value: record },
   );
   await page.goto("/?manual=1&diagnostics=1");
+  await page.getByRole("button", { name: "Start run" }).click();
 
   await expect(page.getByTestId("profile-summary")).toContainText(
     "Level 5 · XP 42",
@@ -125,6 +126,7 @@ test("shows a committed result and starts the next run from its profile", async 
   await page.goto("/?manual=1&diagnostics=1");
   await page.clock.install();
   await page.clock.pauseAt(new Date(Date.now() + 1_000));
+  await page.getByRole("button", { name: "Start run" }).click();
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
   await page.evaluate(() => {
     const advance = document.querySelector<HTMLButtonElement>("#advance-run");
@@ -384,6 +386,7 @@ test("shows a committed result and starts the next run from its profile", async 
   const reloadedPage = await page.context().newPage();
   try {
     await reloadedPage.goto("/?manual=1&diagnostics=1");
+    await reloadedPage.getByRole("button", { name: "Start run" }).click();
     await expect(reloadedPage.getByTestId("profile-summary")).toContainText(
       `High score ${savedProfile.highScore}`,
     );
@@ -410,6 +413,8 @@ test("shows a committed result and starts the next run from its profile", async 
   );
   await expect(skipScoreCount).toBeHidden();
   await expect(page.locator(".result-score-actions")).toBeVisible();
+  await expect(page.locator(".result-more-games")).toHaveCount(0);
+  await expect(page.locator("#result-score-actions > button")).toHaveCount(3);
   expect(
     await page.evaluate(
       (key) => localStorage.getItem(key),
@@ -449,6 +454,7 @@ test("keeps a failed completed-run save visible until retry succeeds", async ({
     });
   }, PROFILE_STORAGE_KEY);
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
   await page.evaluate(() => {
     const advance = document.querySelector<HTMLButtonElement>("#advance-run");
@@ -493,6 +499,7 @@ test("reports an unreadable stored profile without replacing it", async ({
     { key: PROFILE_STORAGE_KEY, value: raw },
   );
   await page.goto("/?manual=1&diagnostics=1");
+  await page.getByRole("button", { name: "Start run" }).click();
 
   const status = page.getByTestId("game-status");
   await expect(status).toHaveAttribute("data-persistence-status", "failed");
@@ -527,6 +534,7 @@ test("starts gameplay when browser storage access is denied", async ({
     });
   });
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
 
   const status = page.getByTestId("game-status");
   await expect(status).toHaveAttribute("data-persistence-status", "failed");

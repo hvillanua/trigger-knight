@@ -5,6 +5,7 @@ test("draws original animation poses and preserves positions through battle tran
   page,
 }, testInfo) => {
   await page.goto("/?manual=1&diagnostics=1");
+  await page.getByRole("button", { name: "Start run" }).click();
   const result = await page.evaluate(async (modulePath) => {
     const { CanvasPresentation } = (await import(
       modulePath
@@ -163,6 +164,7 @@ test("omits failed images and never requests the authored atlas", async ({
       : route.continue(),
   );
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
   await expect(page.locator("#game-canvas")).toHaveAttribute(
     "data-asset-status",
     "unavailable",

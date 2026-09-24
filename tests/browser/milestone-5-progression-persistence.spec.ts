@@ -234,6 +234,7 @@ test("a migrated profile is committed before result presentation and survives na
   await page.goto("/?manual=1");
   await page.clock.install();
   await page.clock.pauseAt(new Date(Date.now() + 1_000));
+  await page.getByRole("button", { name: "Start run" }).click();
   await expect(page.getByTestId("profile-summary")).toContainText(
     "Level 2 · XP 159",
   );
@@ -305,6 +306,7 @@ test("a migrated profile is committed before result presentation and survives na
   // Navigate while the optional score count is still running. The next page
   // starts from the committed profile rather than the result animation.
   await page.goto("/?manual=1&diagnostics=1");
+  await page.getByRole("button", { name: "Start run" }).click();
   expect(
     await page.evaluate(
       (key) => localStorage.getItem(key),

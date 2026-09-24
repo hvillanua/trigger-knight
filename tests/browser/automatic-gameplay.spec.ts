@@ -10,7 +10,11 @@ declare global {
   }
 }
 
-async function installFrames(page: Page, url = "/"): Promise<void> {
+async function installFrames(
+  page: Page,
+  url = "/",
+  startRun = true,
+): Promise<void> {
   await page.addInitScript(() => {
     let nextId = 0;
     const callbacks = new Map<number, FrameRequestCallback>();
@@ -29,6 +33,9 @@ async function installFrames(page: Page, url = "/"): Promise<void> {
   });
   const separator = url.includes("?") ? "&" : "?";
   await page.goto(`${url}${separator}diagnostics=1`);
+  if (startRun) {
+    await page.getByRole("button", { name: "Start run" }).click();
+  }
   await expect(page.locator("#game-canvas")).toHaveAttribute(
     "data-renderer",
     "canvas-2d",
@@ -40,6 +47,7 @@ test("normal play advances automatically with no manual control", async ({
   page,
 }) => {
   await page.goto("/?diagnostics=1");
+  await page.getByRole("button", { name: "Start run" }).click();
   await expect(page.getByRole("button", { name: "Advance run" })).toHaveCount(
     0,
   );
@@ -57,10 +65,7 @@ test("normal play advances automatically with no manual control", async ({
 test("starts walking on the first logical opportunity after Start run", async ({
   page,
 }) => {
-  await installFrames(page, "/?manual=1");
-  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
-  await page.keyboard.press("p");
-  await page.getByRole("button", { name: "Main menu", exact: true }).click();
+  await installFrames(page, "/?manual=1", false);
   await page.getByRole("button", { name: "Start run" }).click();
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
 

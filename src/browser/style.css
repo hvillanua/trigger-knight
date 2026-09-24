@@ -1516,7 +1516,8 @@ body {
   background: linear-gradient(to right, #fff 0%, rgb(255 255 255 / 0%) 100%);
 }
 
-#collections-screen.player-status-screen .screen-heading-row button {
+#collections-screen.player-status-screen .screen-heading-row button,
+#settings-screen.settings-screen .screen-heading-row button {
   position: absolute;
   top: 1cqw;
   right: auto;
@@ -1528,6 +1529,64 @@ body {
   font-size: 2cqw;
   pointer-events: auto;
   text-shadow: 0 1px #080b14;
+}
+
+#settings-screen.settings-screen {
+  min-height: 0;
+  aspect-ratio: 3 / 2;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  container-type: inline-size;
+  color: #080b14;
+  scroll-padding-top: 4rem;
+  scrollbar-color: #806d3f rgb(247 241 223 / 42%);
+}
+
+#settings-screen.settings-screen > :not(.screen-heading-row) {
+  margin-inline: 0.75rem;
+}
+
+#settings-screen.settings-screen > .screen-heading-row {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1cqw;
+  padding: 0.25rem 0 0.25rem max(3rem, 15cqw);
+  background: transparent;
+  box-shadow: none;
+}
+
+#settings-screen.settings-screen h2 {
+  margin: 0;
+  color: #000;
+  font-family: "Trigger Knight Calibri", sans-serif;
+  font-size: 6.25cqw;
+  font-weight: 400;
+  letter-spacing: -0.035cqw;
+  line-height: 1;
+  -webkit-text-stroke: 1px #fff;
+  text-shadow: 0 0 3px #fff;
+}
+
+#settings-screen.settings-screen .help-text,
+#settings-screen.settings-screen .binding-row label {
+  color: #080b14;
+  text-shadow: 0 1px rgb(247 241 223 / 70%);
+}
+
+#settings-screen.settings-screen fieldset {
+  border-color: #080b14;
+  background: rgb(247 241 223 / 42%);
+}
+
+#settings-screen.settings-screen form {
+  padding-bottom: 4rem;
+}
+
+#settings-screen.settings-screen legend {
+  color: #080b14;
+  text-shadow: 0 1px #f7f1df;
 }
 
 /* The original score screen is a fixed 480x320 composition. Container query
@@ -1768,11 +1827,10 @@ body {
   gap: 0;
   justify-items: stretch;
   grid-template-columns: minmax(0, 1fr);
-  grid-template-rows: repeat(4, 4.5833cqw);
+  grid-template-rows: repeat(3, 4.5833cqw);
 }
 
-.run-result .result-score-actions button,
-.run-result .result-more-games {
+.run-result .result-score-actions button {
   min-width: 0;
   min-height: 0;
   height: 4.5833cqw;

@@ -1,7 +1,16 @@
 import { expect, test } from "@playwright/test";
 
+test("opens the main menu on a fresh load", async ({ page }) => {
+  await page.goto("/?manual=1");
+
+  await expect(page.locator("#title-screen")).toBeVisible();
+  await expect(page.locator("#gameplay-screen")).toBeHidden();
+  await expect(page.getByRole("button", { name: "Start run" })).toBeVisible();
+});
+
 test("loads the browser and Canvas foundation", async ({ page }) => {
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
 
   await expect(
     page.getByRole("heading", { name: "Trigger Knight" }),
@@ -29,6 +38,7 @@ test("projects the complete 480x320 world camera into wide and tall output", asy
   page,
 }) => {
   await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
 
   const canvas = page.getByRole("img", { name: "Trigger Knight game view" });
   await canvas.evaluate((element) => {
@@ -83,6 +93,7 @@ test("interpolates public observations without mutating gameplay", async ({
   page,
 }) => {
   await page.goto("/?manual=1&diagnostics=1");
+  await page.getByRole("button", { name: "Start run" }).click();
 
   const result = await page
     .getByRole("img", { name: "Trigger Knight game view" })
@@ -192,6 +203,7 @@ test("sizes the Canvas backing store from its content box after a DPR change", a
   page,
 }) => {
   await page.goto("/?manual=1&diagnostics=1");
+  await page.getByRole("button", { name: "Start run" }).click();
 
   const canvas = page.getByRole("img", { name: "Trigger Knight game view" });
   await expect(canvas).toHaveAttribute("data-renderer", "canvas-2d");
