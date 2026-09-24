@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { parseAssetTreatment } from "../../src/browser/asset-treatment.js";
 import {
   createVisualAtlas,
   ORIGINAL_ACTION_EFFECT_URLS,
@@ -12,6 +11,28 @@ import {
   ORIGINAL_ANIMATION_URLS,
   ORIGINAL_UI_IMAGE_URLS,
 } from "../../src/browser/visual-atlas.js";
+import { createSwinirVisualAssetPack } from "../../src/browser/visual-assets.js";
+
+const swinirPack = createSwinirVisualAssetPack({
+  imageUrls: {
+    "../assets/generated/swinir-2x/key-sprites/DefineSprite_497_Hero/1.png":
+      "/swinir/hero-1.png",
+    "../assets/generated/swinir-2x/images/357.jpg": "/swinir/sky.jpg",
+  },
+  manifestText: JSON.stringify({
+    schemaVersion: 1,
+    treatment: "swinir-2x",
+    status: "generated",
+    pixelDensity: 2,
+    outputs: {
+      root: "assets/generated/swinir-2x",
+      files: [
+        { path: "key-sprites/DefineSprite_497_Hero/1.png", pixelDensity: 2 },
+        { path: "images/357.jpg", pixelDensity: 2 },
+      ],
+    },
+  }),
+});
 
 describe("approved visual atlas", () => {
   it("leaves artwork absent when the browser image API is unavailable", () => {
@@ -83,7 +104,7 @@ describe("approved visual atlas", () => {
     expect(atlas.originalFrames.hero?.[18]).toBeDefined();
   });
 
-  it("selects generated artwork and keeps per-file density metadata", async () => {
+  it("selects SwinIR artwork and keeps per-file density metadata", async () => {
     const requests: string[] = [];
     vi.stubGlobal(
       "Image",
@@ -97,79 +118,13 @@ describe("approved visual atlas", () => {
       },
     );
 
-    const atlas = createVisualAtlas(
-      () => undefined,
-      parseAssetTreatment("ffdec-2x"),
-    );
+    const atlas = createVisualAtlas(() => undefined, swinirPack);
     await Promise.resolve();
 
-    expect(atlas.treatment.id).toBe("ffdec-2x");
-    expect(
-      requests.some((url) =>
-        url.includes(
-          "/assets/generated/ffdec-2x/key-sprites/DefineSprite_497_Hero/1.png",
-        ),
-      ),
-    ).toBe(true);
-    expect(atlas.originalFrames.hero?.[0]?.pixelDensity).toBe(2);
-    expect(atlas.sceneImages.sky?.pixelDensity).toBe(1);
-  });
-
-  it("selects neural 2x artwork for canvas and scene assets", async () => {
-    const requests: string[] = [];
-    vi.stubGlobal(
-      "Image",
-      class {
-        onload?: () => void;
-        onerror?: () => void;
-        set src(url: string) {
-          requests.push(url);
-          queueMicrotask(() => this.onload?.());
-        }
-      },
-    );
-
-    const atlas = createVisualAtlas(
-      () => undefined,
-      parseAssetTreatment("realesrgan-2x"),
-    );
-    await Promise.resolve();
-
-    expect(
-      requests.some((url) =>
-        url.includes(
-          "/assets/generated/realesrgan-2x/key-sprites/DefineSprite_497_Hero/1.png",
-        ),
-      ),
-    ).toBe(true);
+    expect(atlas.treatment.id).toBe("swinir-2x");
+    expect(requests).toContain("/swinir/hero-1.png");
     expect(atlas.originalFrames.hero?.[0]?.pixelDensity).toBe(2);
     expect(atlas.sceneImages.sky?.pixelDensity).toBe(2);
-  });
-
-  it("falls back to originals when a generated treatment has no raster output", async () => {
-    const requests: string[] = [];
-    vi.stubGlobal(
-      "Image",
-      class {
-        onload?: () => void;
-        onerror?: () => void;
-        set src(url: string) {
-          requests.push(url);
-          queueMicrotask(() => this.onload?.());
-        }
-      },
-    );
-
-    const atlas = createVisualAtlas(
-      () => undefined,
-      parseAssetTreatment("ai-4x"),
-    );
-    await Promise.resolve();
-
-    expect(
-      requests.every((url) => !url.includes("/assets/generated/ai-4x/")),
-    ).toBe(true);
-    expect(atlas.originalFrames.hero?.[0]?.pixelDensity).toBe(1);
   });
 
   it("maps the original character and scene exports into runtime assets", () => {

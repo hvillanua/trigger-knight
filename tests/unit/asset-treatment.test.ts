@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  assetTreatmentForPreference,
   ORIGINAL_ASSET_TREATMENT,
   parseAssetTreatment,
+  visualPreferenceFromStartup,
 } from "../../src/browser/asset-treatment.js";
 
 describe("asset treatment selection", () => {
@@ -11,16 +13,26 @@ describe("asset treatment selection", () => {
     expect(parseAssetTreatment("")).toBe(ORIGINAL_ASSET_TREATMENT);
   });
 
-  it("resolves a generated treatment and its renderer filtering", () => {
-    expect(parseAssetTreatment("realesrgan-2x")).toEqual({
-      id: "realesrgan-2x",
-      directory: "realesrgan-2x",
+  it("resolves the two supported visual preferences", () => {
+    expect(parseAssetTreatment("original")).toBe(ORIGINAL_ASSET_TREATMENT);
+    expect(parseAssetTreatment("original-filtered")).toBe(
+      ORIGINAL_ASSET_TREATMENT,
+    );
+    expect(parseAssetTreatment("swinir-2x")).toEqual({
+      id: "swinir-2x",
+      directory: "swinir-2x",
       filtering: "linear",
     });
-    expect(parseAssetTreatment("realesrgan-4x").directory).toBe(
-      "realesrgan-4x",
+    expect(assetTreatmentForPreference("swinir-2x").id).toBe("swinir-2x");
+  });
+
+  it("lets a development override replace the saved preference", () => {
+    expect(visualPreferenceFromStartup("swinir-2x", undefined)).toBe(
+      "swinir-2x",
     );
-    expect(parseAssetTreatment("ffdec-2x").filtering).toBe("nearest");
+    expect(visualPreferenceFromStartup("swinir-2x", "original")).toBe(
+      "original",
+    );
   });
 
   it("rejects values outside the supported treatment set", () => {

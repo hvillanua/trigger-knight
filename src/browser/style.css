@@ -424,7 +424,8 @@ h1 {
   font-weight: 650;
 }
 
-.settings-screen input[type="text"] {
+.settings-screen input[type="text"],
+.settings-screen select {
   width: 100%;
   padding: 0.55rem 0.65rem;
   border: 1px solid #526486;

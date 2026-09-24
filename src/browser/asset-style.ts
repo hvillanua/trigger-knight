@@ -1,5 +1,5 @@
-import type { AssetTreatment } from "./asset-treatment.js";
 import { createVisualStyleUrls } from "./visual-atlas.js";
+import type { VisualAssetPack } from "./visual-assets.js";
 
 const STYLE_VARIABLES = Object.freeze({
   parchment: "--trigger-knight-parchment-image",
@@ -17,10 +17,10 @@ function cssUrl(url: string): string {
 
 /** Applies the selected image treatment to the CSS-owned presentation art. */
 export function applyVisualStyleTreatment(
-  treatment: AssetTreatment,
+  pack: VisualAssetPack,
   root: HTMLElement = document.documentElement,
 ): void {
-  const urls = createVisualStyleUrls(treatment);
+  const urls = createVisualStyleUrls(pack);
   root.style.setProperty(STYLE_VARIABLES.parchment, cssUrl(urls.parchment));
   root.style.setProperty(STYLE_VARIABLES.titleHero, cssUrl(urls.titleHero));
   root.style.setProperty(STYLE_VARIABLES.sky, cssUrl(urls.sky));

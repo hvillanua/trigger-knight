@@ -57,6 +57,7 @@ import {
   type CssDimensions,
 } from "./foundation.js";
 import { ORIGINAL_FONT_FAMILIES } from "./font-assets.js";
+import type { VisualAssetPack } from "./visual-assets.js";
 
 import {
   ActorAnimation,
@@ -1698,7 +1699,7 @@ export class CanvasPresentation implements PresentationPort {
   #sessionOverAnimationProgress = 1;
   #sessionOverAnimationFrame: number | undefined;
 
-  constructor(canvas: HTMLCanvasElement, treatment?: VisualAtlas["treatment"]) {
+  constructor(canvas: HTMLCanvasElement, pack?: VisualAssetPack) {
     this.#canvas = canvas;
     this.#diagnostics = new CanvasDiagnostics(canvas);
     const resources = createCanvasResources((change) => {
@@ -1709,7 +1710,7 @@ export class CanvasPresentation implements PresentationPort {
       }
       this.#lastDrawnVisualSignature = undefined;
       this.#draw();
-    }, treatment);
+    }, pack);
     this.#atlas = resources.atlas;
     this.#diagnostics.initialize(
       resources.atlas.status,

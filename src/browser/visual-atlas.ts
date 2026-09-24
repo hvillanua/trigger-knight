@@ -6,67 +6,19 @@ import type {
   ShopId,
 } from "../application/contracts.js";
 import {
-  ORIGINAL_ASSET_TREATMENT,
-  type AssetTreatment,
-} from "./asset-treatment.js";
+  ORIGINAL_VISUAL_ASSET_PACK,
+  originalAssetPaths,
+  type VisualAssetPack,
+  type VisualImageSource,
+} from "./visual-assets.js";
 
-export type PixelDensity = 1 | 2 | 4;
+import type { PixelDensity } from "./visual-assets.js";
+export type { PixelDensity } from "./visual-assets.js";
 
 export interface VisualImage {
   readonly image: HTMLImageElement;
   readonly pixelDensity: PixelDensity;
 }
-
-const ORIGINAL_IMAGE_ROOT = "../assets/original/";
-const GENERATED_IMAGE_ROOT = "../assets/generated/";
-const ORIGINAL_IMAGE_URLS = Object.freeze({
-  ...import.meta.glob<string>("../assets/original/**/*.png", {
-    eager: true,
-    query: "?url&no-inline",
-    import: "default",
-  }),
-  ...import.meta.glob<string>("../assets/original/**/*.jpg", {
-    eager: true,
-    query: "?url&no-inline",
-    import: "default",
-  }),
-  ...import.meta.glob<string>("../assets/original/**/*.jpeg", {
-    eager: true,
-    query: "?url&no-inline",
-    import: "default",
-  }),
-  ...import.meta.glob<string>("../assets/original/**/*.svg", {
-    eager: true,
-    query: "?url&no-inline",
-    import: "default",
-  }),
-});
-const GENERATED_IMAGE_URLS = Object.freeze({
-  ...import.meta.glob<string>("../assets/generated/*/**/*.png", {
-    eager: true,
-    query: "?url&no-inline",
-    import: "default",
-  }),
-  ...import.meta.glob<string>("../assets/generated/*/**/*.jpg", {
-    eager: true,
-    query: "?url&no-inline",
-    import: "default",
-  }),
-  ...import.meta.glob<string>("../assets/generated/*/**/*.jpeg", {
-    eager: true,
-    query: "?url&no-inline",
-    import: "default",
-  }),
-  ...import.meta.glob<string>("../assets/generated/*/**/*.svg", {
-    eager: true,
-    query: "?url&no-inline",
-    import: "default",
-  }),
-});
-const GENERATED_MANIFEST_TEXTS = import.meta.glob<string>(
-  "../assets/generated/*/manifest.json",
-  { eager: true, query: "?raw", import: "default" },
-);
 
 export type VisualSpriteId =
   | "hero"
@@ -122,14 +74,7 @@ export type OriginalUiImageId =
   | "item-stats-icon"
   | "armor-stats-icon";
 
-interface AssetSource {
-  readonly url: string;
-  readonly pixelDensity: PixelDensity;
-}
-
-interface GeneratedTreatmentInfo {
-  readonly pixelDensities: ReadonlyMap<string, PixelDensity>;
-}
+type AssetSource = VisualImageSource;
 
 interface VisualAssetSources {
   readonly sprites: Readonly<Record<string, AssetSource>>;
@@ -146,92 +91,6 @@ interface VisualAssetSources {
   >;
 }
 
-function isRecord(value: unknown): value is Readonly<Record<string, unknown>> {
-  return typeof value === "object" && value !== null;
-}
-
-function pixelDensity(value: unknown, manifestPath: string): PixelDensity {
-  if (value === 1 || value === 2 || value === 4) return value;
-  throw new Error(`Invalid pixel density in ${manifestPath}`);
-}
-
-function parseGeneratedManifest(
-  manifestPath: string,
-  raw: string,
-): GeneratedTreatmentInfo {
-  const value: unknown = JSON.parse(raw);
-  const outputs = isRecord(value) ? value.outputs : undefined;
-  const files = isRecord(outputs) ? outputs.files : undefined;
-  if (!Array.isArray(files)) {
-    throw new Error(`Invalid generated asset manifest: ${manifestPath}`);
-  }
-  const densities = new Map<string, PixelDensity>();
-  for (const file of files) {
-    if (!isRecord(file) || typeof file.path !== "string") {
-      throw new Error(`Invalid generated asset record in ${manifestPath}`);
-    }
-    densities.set(file.path, pixelDensity(file.pixelDensity, manifestPath));
-  }
-  return Object.freeze({ pixelDensities: densities });
-}
-
-function generatedDirectoryAndPath(key: string): readonly [string, string] {
-  const relative = key.slice(GENERATED_IMAGE_ROOT.length);
-  const separator = relative.indexOf("/");
-  if (separator <= 0) throw new Error(`Invalid generated asset path: ${key}`);
-  return [relative.slice(0, separator), relative.slice(separator + 1)];
-}
-
-const generatedUrlsByTreatment = new Map<string, Map<string, string>>();
-for (const [key, url] of Object.entries(GENERATED_IMAGE_URLS)) {
-  const [directory, path] = generatedDirectoryAndPath(key);
-  const urls =
-    generatedUrlsByTreatment.get(directory) ?? new Map<string, string>();
-  urls.set(path, url);
-  generatedUrlsByTreatment.set(directory, urls);
-}
-const GENERATED_URLS_BY_TREATMENT: ReadonlyMap<
-  string,
-  ReadonlyMap<string, string>
-> = generatedUrlsByTreatment;
-
-const GENERATED_INFO_BY_TREATMENT = new Map<string, GeneratedTreatmentInfo>();
-for (const [key, raw] of Object.entries(GENERATED_MANIFEST_TEXTS)) {
-  const relative = key.slice(GENERATED_IMAGE_ROOT.length);
-  const separator = relative.indexOf("/");
-  if (separator <= 0 || !relative.endsWith("/manifest.json")) {
-    throw new Error(`Invalid generated manifest path: ${key}`);
-  }
-  const directory = relative.slice(0, separator);
-  GENERATED_INFO_BY_TREATMENT.set(directory, parseGeneratedManifest(key, raw));
-}
-
-function originalImageUrl(path: string): string {
-  const url = ORIGINAL_IMAGE_URLS[`${ORIGINAL_IMAGE_ROOT}${path}`];
-  if (url === undefined) throw new Error(`Missing original image: ${path}`);
-  return url;
-}
-
-function selectedImageSource(
-  path: string,
-  treatment: AssetTreatment,
-): AssetSource {
-  const directory = treatment.directory;
-  if (directory === undefined) {
-    return Object.freeze({ url: originalImageUrl(path), pixelDensity: 1 });
-  }
-  const generatedUrls = GENERATED_URLS_BY_TREATMENT.get(directory);
-  const generatedUrl = generatedUrls?.get(path);
-  if (generatedUrl === undefined) {
-    return Object.freeze({ url: originalImageUrl(path), pixelDensity: 1 });
-  }
-  const generatedInfo = GENERATED_INFO_BY_TREATMENT.get(directory);
-  return Object.freeze({
-    url: generatedUrl,
-    pixelDensity: generatedInfo?.pixelDensities.get(path) ?? 1,
-  });
-}
-
 export interface VisualStyleUrls {
   readonly parchment: string;
   readonly titleHero: string;
@@ -242,58 +101,42 @@ export interface VisualStyleUrls {
 }
 
 /** Resolves the raster and mask assets used by non-canvas screens. */
-export function createVisualStyleUrls(
-  treatment: AssetTreatment,
-): VisualStyleUrls {
-  const cursor = selectedImageSource("images/12.png", treatment);
+export function createVisualStyleUrls(pack: VisualAssetPack): VisualStyleUrls {
+  const cursor = pack.image("images/12.png");
   return Object.freeze({
-    parchment: selectedImageSource("images/529.jpg", treatment).url,
-    titleHero: selectedImageSource("images/533.png", treatment).url,
-    sky: selectedImageSource("images/357.jpg", treatment).url,
-    skyMask: selectedImageSource("shapes/350.svg", treatment).url,
-    logo: selectedImageSource("images/268.png", treatment).url,
-    // CSS cursors have no portable logical-size declaration. A high-density
-    // cursor would therefore render at four times the intended size.
+    parchment: pack.image("images/529.jpg").url,
+    titleHero: pack.image("images/533.png").url,
+    sky: pack.image("images/357.jpg").url,
+    skyMask: pack.image("shapes/350.svg").url,
+    logo: pack.image("images/268.png").url,
     cursor:
       cursor.pixelDensity === 1
         ? cursor.url
-        : originalImageUrl("images/12.png"),
+        : ORIGINAL_VISUAL_ASSET_PACK.image("images/12.png").url,
   });
 }
 
 function sourceRecord<Key extends string>(
   paths: Readonly<Record<Key, string>>,
-  treatment: AssetTreatment,
+  pack: VisualAssetPack,
 ): Readonly<Record<Key, AssetSource>> {
   return Object.freeze(
     Object.fromEntries(
-      Object.keys(paths).map((id) => [
-        id,
-        selectedImageSource(paths[id as Key], treatment),
-      ]),
+      Object.keys(paths).map((id) => [id, pack.image(paths[id as Key])]),
     ),
   ) as Readonly<Record<Key, AssetSource>>;
 }
 
 function numberedAssetPaths(prefix: string): readonly string[] {
-  return Object.keys(ORIGINAL_IMAGE_URLS)
-    .map((key) => key.slice(ORIGINAL_IMAGE_ROOT.length))
-    .filter((path) => path.startsWith(prefix))
-    .sort(
-      (left, right) =>
-        Number(left.split("/").at(-1)?.split(".")[0]) -
-        Number(right.split("/").at(-1)?.split(".")[0]),
-    );
+  return originalAssetPaths(prefix);
 }
 
 function numberedAssetSources(
   prefix: string,
-  treatment: AssetTreatment,
+  pack: VisualAssetPack,
 ): readonly AssetSource[] {
   return Object.freeze(
-    numberedAssetPaths(prefix).map((path) =>
-      selectedImageSource(path, treatment),
-    ),
+    numberedAssetPaths(prefix).map((path) => pack.image(path)),
   );
 }
 
@@ -388,41 +231,39 @@ const ACTOR_PREFIXES = Object.freeze({
   wolf: "key-sprites/DefineSprite_477_EnemyWolf/",
 });
 
-function createVisualAssetSources(
-  treatment: AssetTreatment,
-): VisualAssetSources {
+function createVisualAssetSources(pack: VisualAssetPack): VisualAssetSources {
   const actionEffectFrames = {
-    buy: numberedAssetSources(ACTION_EFFECT_PREFIXES.buy, treatment),
-    item: numberedAssetSources(ACTION_EFFECT_PREFIXES.item, treatment),
-    upgrade: numberedAssetSources(ACTION_EFFECT_PREFIXES.upgrade, treatment),
+    buy: numberedAssetSources(ACTION_EFFECT_PREFIXES.buy, pack),
+    item: numberedAssetSources(ACTION_EFFECT_PREFIXES.item, pack),
+    upgrade: numberedAssetSources(ACTION_EFFECT_PREFIXES.upgrade, pack),
   };
   const animationFrames = {
-    hero: numberedAssetSources(ACTOR_PREFIXES.hero, treatment),
-    dragon: numberedAssetSources(ACTOR_PREFIXES.dragon, treatment),
-    goblin: numberedAssetSources(ACTOR_PREFIXES.goblin, treatment),
-    golem: numberedAssetSources(ACTOR_PREFIXES.golem, treatment),
-    wolf: numberedAssetSources(ACTOR_PREFIXES.wolf, treatment),
+    hero: numberedAssetSources(ACTOR_PREFIXES.hero, pack),
+    dragon: numberedAssetSources(ACTOR_PREFIXES.dragon, pack),
+    goblin: numberedAssetSources(ACTOR_PREFIXES.goblin, pack),
+    golem: numberedAssetSources(ACTOR_PREFIXES.golem, pack),
+    wolf: numberedAssetSources(ACTOR_PREFIXES.wolf, pack),
   };
   return Object.freeze({
-    sprites: sourceRecord(SPRITE_PATHS, treatment),
-    scenes: sourceRecord(SCENE_PATHS, treatment),
-    effects: sourceRecord(EFFECT_PATHS, treatment),
-    ui: sourceRecord(UI_PATHS, treatment),
+    sprites: sourceRecord(SPRITE_PATHS, pack),
+    scenes: sourceRecord(SCENE_PATHS, pack),
+    effects: sourceRecord(EFFECT_PATHS, pack),
+    ui: sourceRecord(UI_PATHS, pack),
     clickEffectFrames: numberedAssetSources(
       "effects/DefineSprite_311_MouseEffect/",
-      treatment,
+      pack,
     ),
     actionEffectFrames,
     flashEffectFrames: numberedAssetSources(
       "effects/DefineSprite_369_Effect-Flash/",
-      treatment,
+      pack,
     ),
     animationFrames,
   });
 }
 
 const ORIGINAL_ASSET_SOURCES = createVisualAssetSources(
-  ORIGINAL_ASSET_TREATMENT,
+  ORIGINAL_VISUAL_ASSET_PACK,
 );
 
 export const ORIGINAL_SPRITE_URLS = sourceUrls(ORIGINAL_ASSET_SOURCES.sprites);
@@ -455,7 +296,7 @@ export type VisualAtlasStatus = "loading" | "ready" | "partial" | "unavailable";
 
 export interface VisualAtlas {
   readonly status: VisualAtlasStatus;
-  readonly treatment: AssetTreatment;
+  readonly treatment: VisualAssetPack["treatment"];
   readonly originalImages: Readonly<
     Partial<Record<VisualSpriteId, VisualImage>>
   >;
@@ -479,9 +320,9 @@ export interface VisualAtlas {
 /** Failed or unmapped artwork stays absent. Gameplay never waits for images. */
 export function createVisualAtlas(
   onStatusChange: (status: VisualAtlasStatus) => void,
-  treatment: AssetTreatment = ORIGINAL_ASSET_TREATMENT,
+  pack: VisualAssetPack = ORIGINAL_VISUAL_ASSET_PACK,
 ): VisualAtlas {
-  const sources = createVisualAssetSources(treatment);
+  const sources = createVisualAssetSources(pack);
   let status: VisualAtlasStatus =
     typeof Image === "undefined" ? "unavailable" : "loading";
   const originalImages: Partial<Record<VisualSpriteId, VisualImage>> = {};
@@ -635,7 +476,7 @@ export function createVisualAtlas(
     get status() {
       return status;
     },
-    treatment,
+    treatment: pack.treatment,
     originalImages,
     originalFrames,
     sceneImages,

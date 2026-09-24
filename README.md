@@ -19,22 +19,26 @@ npm run dev
 On a fresh Linux host that needs Chromium system dependencies, use
 `npm run setup:browser -- --with-deps` for the browser setup step.
 
-### Compare image treatments
+### Choose the visual assets
 
-The browser uses the original images by default. Select a generated treatment
-when its directory is available under `src/assets/generated/`:
+Open **Settings**, choose **Original** or **SwinIR 2×**, save, and reload the
+page. Original is the default. The selected pack supplies both CSS screen art
+and Canvas images, while fonts, sounds, and the hand cursor remain original.
+The Canvas keeps the original logical layout through the pack's recorded pixel
+density. If the optional SwinIR pack is absent or invalid, the browser uses
+Original and keeps the saved SwinIR preference for a later installation.
+
+The reviewed SwinIR pack is optional and remains outside Git. Stage it under
+`src/assets/generated/swinir-2x/`, then verify it before starting the server:
 
 ```sh
-VITE_ASSET_TREATMENT=realesrgan-4x npm run dev
+npm run verify:asset-pack
 ```
 
-Supported treatment ids are `original-filtered`, `original-nearest`, `ffdec-2x`,
-`ffdec-4x`, `lanczos-4x`, and `ai-4x`. Neural treatments are available at both
-2x and 4x: `esrgan`, `realesrgan`, `realesrgan-anime`, `srgan`, and `swinir`.
-For example, use `realesrgan-2x` or `realesrgan-4x`. Missing generated files
-fall back to their original image. Canvas assets use their recorded pixel
-density to preserve the original logical layout. CSS-owned screen art uses the
-same treatment; fonts and sounds remain original.
+The asset experiment repository owns the other upsampling methods and its
+comparison matrix. The main runtime exposes only Original and SwinIR 2×. For a
+development override, use `VITE_ASSET_TREATMENT=original` or
+`VITE_ASSET_TREATMENT=swinir-2x`; the override does not change saved settings.
 
 ## Validation
 
@@ -318,12 +322,14 @@ result; load the profile before retrying so the journal can resolve to the prior
 or complete new record.
 
 Browser menu preferences are stored separately under
-`trigger-knight.settings`, using settings schema version 1. They contain the
-keyboard binding codes and sound mute/volume settings; volume is normalized to
-the range 0 through 1. The tutorial preference remains part of the progression
-record. An absent settings record uses defaults. Invalid, unsupported, or
-failing settings storage is reported in the browser and never replaces the
-progression record under `trigger-knight.profile`.
+`trigger-knight.settings`, using settings schema version 2. They contain the
+keyboard binding codes, sound mute/volume settings, and the visual asset
+preference; volume is normalized to the range 0 through 1. Valid version 1
+records migrate to Original without writing until the next successful save.
+The tutorial preference remains part of the progression record. An absent
+settings record uses defaults. Invalid, unsupported, or failing settings
+storage is reported in the browser and never replaces the progression record
+under `trigger-knight.profile`.
 
 The gameplay screen exposes the current player status, current and queued
 encounters, contextual shop or item information, and battle HP as accessible
@@ -345,17 +351,21 @@ provenance. The runtime asset policy is:
   symbols to the original gameplay and screen call sites.
 - The current reviewed production copies live under `src/assets/original/`; do
   not import directly from the archival `original/` or `exports/` directories.
+- The optional SwinIR 2× pack is a reviewed derivative staged under
+  `src/assets/generated/swinir-2x/`. Its manifest records its source hashes,
+  generator, output hashes, rights status, and review date.
 - Add neighboring provenance metadata recording the source path, artifact hash
   or export identifier, extraction details, rights or license, and review date.
 - Keep decompiled ActionScript, generated behavioral research, and other
   unapproved research outputs outside production.
 
-The Canvas presentation plays staged original character sequences in numeric
-file order and scrolls original scene layers. Missing or failed images are
-omitted. It does not load replacement artwork. Animation ranges and exclusions
-live in `src/browser/sprite-animation.ts`; playback cadence and the death fade
-are presentation choices, not confirmed original timing. The browser font roles
-are also a project mapping; exact original text-field usage remains unverified.
+The Original selection plays staged original character sequences in numeric file
+order and scrolls original scene layers. The SwinIR selection preserves those
+semantic paths and replaces only the approved image files. Missing or failed
+images are omitted. Animation ranges and exclusions live in
+`src/browser/sprite-animation.ts`; playback cadence and the death fade are
+presentation choices, not confirmed original timing. The browser font roles are
+also a project mapping; exact original text-field usage remains unverified.
 
 This project policy does not transfer copyright or grant a public license. Any
 distribution of original assets remains subject to the rights holder's terms.

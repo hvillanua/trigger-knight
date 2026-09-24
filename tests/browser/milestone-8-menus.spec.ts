@@ -148,7 +148,7 @@ test("persists settings independently and reloads them through the menu", async 
     return JSON.parse(raw) as unknown;
   }, SETTINGS_STORAGE_KEY);
   expect(settings).toEqual({
-    schemaVersion: 1,
+    schemaVersion: 2,
     bindings: {
       togglePause: "KeyQ",
       dismissTutorial: "Space",
@@ -156,6 +156,7 @@ test("persists settings independently and reloads them through the menu", async 
       useCarriedItem: "KeyI",
     },
     sound: { muted: true, volume: 0.35 },
+    visualAssets: "original",
   });
 
   await page.reload();
@@ -172,4 +173,65 @@ test("persists settings independently and reloads them through the menu", async 
   await page.getByRole("button", { name: "Back", exact: true }).click();
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   await expect(page.locator("#sound-volume")).toHaveValue("0.35");
+});
+
+test("persists the visual asset choice and reports reload state", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+  await page.keyboard.press("p");
+  await page.getByRole("button", { name: "Main menu", exact: true }).click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+
+  await page.locator("#visual-assets").selectOption("swinir-2x");
+  await page.getByRole("button", { name: "Save settings" }).click();
+  await expect(page.locator("#settings-status")).toHaveText(
+    "Settings saved. Reload the page to apply visual assets.",
+  );
+  await expect
+    .poll(() =>
+      page.evaluate((key) => {
+        const raw = window.localStorage.getItem(key);
+        return raw === null
+          ? null
+          : (JSON.parse(raw) as { visualAssets?: string });
+      }, SETTINGS_STORAGE_KEY),
+    )
+    .toMatchObject({ visualAssets: "swinir-2x" });
+
+  await page.reload();
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+  await page.keyboard.press("p");
+  await page.getByRole("button", { name: "Main menu", exact: true }).click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await expect(page.locator("#visual-assets")).toHaveValue("swinir-2x");
+  const visualStatus = await page
+    .locator("#game-status")
+    .getAttribute("data-visual-assets-status");
+  expect(["swinir-2x", "fallback"]).toContain(visualStatus);
+  if (visualStatus === "fallback") {
+    await expect(page.locator("#settings-status")).toContainText(
+      "SwinIR 2× is unavailable. Using Original.",
+    );
+  } else {
+    await expect(page.locator("#settings-status")).toHaveText(
+      "Settings loaded.",
+    );
+  }
+});
+
+test("does not request generated assets for an Original startup", async ({
+  page,
+}) => {
+  const generatedRequests: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("/assets/generated/")) {
+      generatedRequests.push(request.url());
+    }
+  });
+
+  await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+  await expect.poll(() => generatedRequests).toEqual([]);
 });
