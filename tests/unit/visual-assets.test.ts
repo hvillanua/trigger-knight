@@ -28,6 +28,46 @@ describe("runtime visual asset packs", () => {
     expect(pack.image("images/12.png").url).toContain("/assets/original/");
   });
 
+  it("loads the selected pack from its runtime manifest", async () => {
+    const requestedUrls: URL[] = [];
+    const pack = await resolveVisualAssetPack("swinir-2x", {
+      fetch: (input) => {
+        const requestedUrl =
+          typeof input === "string"
+            ? new URL(input)
+            : input instanceof URL
+              ? input
+              : new URL(input.url);
+        requestedUrls.push(requestedUrl);
+        return Promise.resolve(
+          new Response(manifest(["images/12.png"]), { status: 200 }),
+        );
+      },
+      baseUrl: new URL("https://example.test/game/"),
+    });
+
+    expect(requestedUrls).toEqual([
+      new URL(
+        "https://example.test/game/assets/generated/swinir-2x/manifest.json",
+      ),
+    ]);
+    expect(pack.selection).toEqual({ kind: "swinir-2x" });
+    expect(pack.image("images/12.png")).toEqual({
+      url: "https://example.test/game/assets/generated/swinir-2x/images/12.png",
+      pixelDensity: 2,
+    });
+  });
+
+  it("falls back to Original when the runtime manifest is absent", async () => {
+    const pack = await resolveVisualAssetPack("swinir-2x", {
+      fetch: () => Promise.resolve(new Response(null, { status: 404 })),
+      baseUrl: new URL("https://example.test/game/"),
+    });
+
+    expect(pack.selection).toEqual({ kind: "fallback", reason: "missing" });
+    expect(pack.image("images/12.png").pixelDensity).toBe(1);
+  });
+
   it("falls back to Original when the selected pack is missing", () => {
     const pack = createSwinirVisualAssetPack({
       imageUrls: {},

@@ -29,6 +29,11 @@ export interface VisualAssetCatalog {
   readonly manifestText: string | undefined;
 }
 
+export interface VisualAssetPackDependencies {
+  readonly fetch: typeof fetch;
+  readonly baseUrl: URL;
+}
+
 const ORIGINAL_IMAGE_ROOT = "../assets/original/";
 const GENERATED_IMAGE_ROOT = "../assets/generated/";
 
@@ -205,11 +210,30 @@ export function createSwinirVisualAssetPack(
 
 export async function resolveVisualAssetPack(
   preference: VisualAssetPreference,
+  dependencies?: VisualAssetPackDependencies,
 ): Promise<VisualAssetPack> {
   if (preference === "original") return ORIGINAL_VISUAL_ASSET_PACK;
+
+  const runtime =
+    dependencies ??
+    Object.freeze({
+      fetch: globalThis.fetch.bind(globalThis),
+      baseUrl: new URL(import.meta.env.BASE_URL, window.location.href),
+    });
+  const packRoot = new URL("assets/generated/swinir-2x/", runtime.baseUrl);
   try {
-    const module = await import("./swinir-2x-assets.js");
-    return createSwinirVisualAssetPack(module.SWINIR_2X_ASSET_CATALOG);
+    const response = await runtime.fetch(new URL("manifest.json", packRoot));
+    if (response.status === 404) return fallbackPack("missing");
+    if (!response.ok) return fallbackPack("load-failed");
+    const manifestText = await response.text();
+    const densities = parseSwinirManifest(manifestText);
+    const imageUrls = Object.fromEntries(
+      [...densities.keys()].map((path) => [
+        `${GENERATED_IMAGE_ROOT}swinir-2x/${path}`,
+        new URL(path, packRoot).href,
+      ]),
+    );
+    return createSwinirVisualAssetPack({ imageUrls, manifestText });
   } catch {
     return fallbackPack("load-failed");
   }

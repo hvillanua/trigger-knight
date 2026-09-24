@@ -35,6 +35,10 @@ The reviewed SwinIR pack is optional and remains outside Git. Stage it under
 npm run verify:asset-pack
 ```
 
+The Vite configuration serves only this approved optional directory at runtime
+and emits it under the same path for production builds. `publicDir` remains
+disabled, so unrelated files cannot bypass the clean-room asset boundary.
+
 The asset experiment repository owns the other upsampling methods and its
 comparison matrix. The main runtime exposes only Original and SwinIR 2×. For a
 development override, use `VITE_ASSET_TREATMENT=original` or
