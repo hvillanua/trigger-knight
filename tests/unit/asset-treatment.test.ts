@@ -12,11 +12,14 @@ describe("asset treatment selection", () => {
   });
 
   it("resolves a generated treatment and its renderer filtering", () => {
-    expect(parseAssetTreatment("realesrgan-4x")).toEqual({
-      id: "realesrgan-4x",
-      directory: "realesrgan-4x",
+    expect(parseAssetTreatment("realesrgan-2x")).toEqual({
+      id: "realesrgan-2x",
+      directory: "realesrgan-2x",
       filtering: "linear",
     });
+    expect(parseAssetTreatment("realesrgan-4x").directory).toBe(
+      "realesrgan-4x",
+    );
     expect(parseAssetTreatment("ffdec-2x").filtering).toBe("nearest");
   });
 

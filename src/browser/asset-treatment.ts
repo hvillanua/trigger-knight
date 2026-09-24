@@ -5,10 +5,15 @@ export type AssetTreatmentId =
   | "ffdec-4x"
   | "lanczos-4x"
   | "ai-4x"
+  | "esrgan-2x"
   | "esrgan-4x"
+  | "realesrgan-2x"
   | "realesrgan-4x"
+  | "realesrgan-anime-2x"
   | "realesrgan-anime-4x"
+  | "srgan-2x"
   | "srgan-4x"
+  | "swinir-2x"
   | "swinir-4x";
 
 export type ImageFiltering = "linear" | "nearest";
@@ -55,9 +60,19 @@ const ASSET_TREATMENTS: Readonly<Record<AssetTreatmentId, AssetTreatment>> =
       directory: "ai-4x",
       filtering: "linear",
     }),
+    "esrgan-2x": Object.freeze({
+      id: "esrgan-2x",
+      directory: "esrgan-2x",
+      filtering: "linear",
+    }),
     "esrgan-4x": Object.freeze({
       id: "esrgan-4x",
       directory: "esrgan-4x",
+      filtering: "linear",
+    }),
+    "realesrgan-2x": Object.freeze({
+      id: "realesrgan-2x",
+      directory: "realesrgan-2x",
       filtering: "linear",
     }),
     "realesrgan-4x": Object.freeze({
@@ -65,14 +80,29 @@ const ASSET_TREATMENTS: Readonly<Record<AssetTreatmentId, AssetTreatment>> =
       directory: "realesrgan-4x",
       filtering: "linear",
     }),
+    "realesrgan-anime-2x": Object.freeze({
+      id: "realesrgan-anime-2x",
+      directory: "realesrgan-anime-2x",
+      filtering: "linear",
+    }),
     "realesrgan-anime-4x": Object.freeze({
       id: "realesrgan-anime-4x",
       directory: "realesrgan-anime-4x",
       filtering: "linear",
     }),
+    "srgan-2x": Object.freeze({
+      id: "srgan-2x",
+      directory: "srgan-2x",
+      filtering: "linear",
+    }),
     "srgan-4x": Object.freeze({
       id: "srgan-4x",
       directory: "srgan-4x",
+      filtering: "linear",
+    }),
+    "swinir-2x": Object.freeze({
+      id: "swinir-2x",
+      directory: "swinir-2x",
       filtering: "linear",
     }),
     "swinir-4x": Object.freeze({

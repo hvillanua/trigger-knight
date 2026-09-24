@@ -115,6 +115,37 @@ describe("approved visual atlas", () => {
     expect(atlas.sceneImages.sky?.pixelDensity).toBe(1);
   });
 
+  it("selects neural 2x artwork for canvas and scene assets", async () => {
+    const requests: string[] = [];
+    vi.stubGlobal(
+      "Image",
+      class {
+        onload?: () => void;
+        onerror?: () => void;
+        set src(url: string) {
+          requests.push(url);
+          queueMicrotask(() => this.onload?.());
+        }
+      },
+    );
+
+    const atlas = createVisualAtlas(
+      () => undefined,
+      parseAssetTreatment("realesrgan-2x"),
+    );
+    await Promise.resolve();
+
+    expect(
+      requests.some((url) =>
+        url.includes(
+          "/assets/generated/realesrgan-2x/key-sprites/DefineSprite_497_Hero/1.png",
+        ),
+      ),
+    ).toBe(true);
+    expect(atlas.originalFrames.hero?.[0]?.pixelDensity).toBe(2);
+    expect(atlas.sceneImages.sky?.pixelDensity).toBe(2);
+  });
+
   it("falls back to originals when a generated treatment has no raster output", async () => {
     const requests: string[] = [];
     vi.stubGlobal(

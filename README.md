@@ -29,8 +29,9 @@ VITE_ASSET_TREATMENT=realesrgan-4x npm run dev
 ```
 
 Supported treatment ids are `original-filtered`, `original-nearest`, `ffdec-2x`,
-`ffdec-4x`, `lanczos-4x`, `ai-4x`, `esrgan-4x`, `realesrgan-4x`,
-`realesrgan-anime-4x`, `srgan-4x`, and `swinir-4x`. Missing generated files
+`ffdec-4x`, `lanczos-4x`, and `ai-4x`. Neural treatments are available at both
+2x and 4x: `esrgan`, `realesrgan`, `realesrgan-anime`, `srgan`, and `swinir`.
+For example, use `realesrgan-2x` or `realesrgan-4x`. Missing generated files
 fall back to their original image. Canvas assets use their recorded pixel
 density to preserve the original logical layout. CSS-owned screen art uses the
 same treatment; fonts and sounds remain original.
