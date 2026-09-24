@@ -1027,6 +1027,8 @@ const resizeObserver = new ResizeObserver(([entry]) => {
 });
 resizeObserver.observe(canvas);
 
+appShell.hidden = false;
+appShell.setAttribute("aria-busy", "false");
 activeRunController?.start(currentProfile, {
   focus: false,
   startImmediately: true,
