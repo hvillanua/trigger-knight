@@ -42,6 +42,7 @@ import {
   commandsForTogglePauseActivation,
   bindingLabel,
   createKeyboardCommandRouter,
+  soundChannelForQuickControl,
 } from "./browser/input.js";
 import { createHudView, describeAccessibleGameEvent } from "./browser/hud.js";
 import {
@@ -847,9 +848,16 @@ document.addEventListener("keydown", (event) => {
     return;
   }
   const commands = keyboardRouter.commandsFor(event.code, observation.actions);
-  if (commands.length === 0) return;
+  if (commands.length > 0) {
+    event.preventDefault();
+    dispatch(commands);
+    return;
+  }
+  const channel = soundChannelForQuickControl(event.code);
+  if (channel === null) return;
   event.preventDefault();
-  dispatch(commands);
+  primeSound();
+  soundEffects.toggleChannel(channel);
 });
 
 gameplayStage.addEventListener("pointerup", (event) => {

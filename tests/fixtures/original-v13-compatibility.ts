@@ -902,7 +902,7 @@ const firstSettlementProfile: ProfileState = Object.freeze({
   xp: 0,
   scoreMultiplier: 1.4,
   highScore: 500,
-  tutorialPreference: "disabled",
+  tutorialPreference: "enabled",
   weaponDiscoveries: Object.freeze([
     true,
     true,
@@ -998,7 +998,7 @@ const secondSettlementProfile: ProfileState = Object.freeze({
   xp: 4,
   scoreMultiplier: 1.4,
   highScore: 500,
-  tutorialPreference: "disabled",
+  tutorialPreference: "enabled",
   weaponDiscoveries: Object.freeze([
     true,
     true,

@@ -1,4 +1,4 @@
-import type { GameCommand } from "../application/contracts.js";
+import type { GameCommand, SoundChannel } from "../application/contracts.js";
 import type { ActionEligibility } from "../application/contracts.js";
 import {
   isSupportedKeyboardCode,
@@ -21,6 +21,12 @@ const INPUT_ACTIONS = Object.freeze([
 ] as const);
 
 export type InputAction = (typeof INPUT_ACTIONS)[number];
+
+export function soundChannelForQuickControl(code: string): SoundChannel | null {
+  if (code === "KeyM") return "music";
+  if (code === "KeyS") return "effects";
+  return null;
+}
 
 const DISMISS_TUTORIAL_COMMAND = Object.freeze({
   type: "dismiss-tutorial" as const,

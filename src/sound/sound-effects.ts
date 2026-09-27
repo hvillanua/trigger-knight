@@ -1,5 +1,6 @@
 import type {
   GameEvent,
+  SoundChannel,
   SoundCue,
   SoundInitializationResult,
   SoundPort,
@@ -11,8 +12,8 @@ import type { SoundPreferences } from "../application/settings.js";
 
 const MAX_RETAINED_CUES = 256;
 const MUSIC_TARGET_GAIN = 0.9;
-const MUSIC_FADE_STEPS = 90;
-const MUSIC_FADE_INTERVAL_MS = 1000 / 30;
+const SOUND_FADE_STEPS = 60;
+const SOUND_FADE_INTERVAL_MS = 1000 / 30;
 const SCORE_CUE_INTERVAL_MS = 1000 / 30;
 
 export const ORIGINAL_SOUND_ASSET_FILE_NAMES = Object.freeze({
@@ -142,6 +143,7 @@ export interface SoundAudioDestination {
 export interface SoundAudioGain {
   readonly native?: unknown;
   setGain(value: number): void;
+  rampToGain(value: number, durationSeconds: number): void;
   connect(destination: SoundAudioDestination | SoundAudioGain): void;
 }
 
@@ -179,6 +181,7 @@ export interface SoundEffectsDiagnostics {
   readonly failedCues: readonly SoundCue[];
   readonly activeSourceCount: number;
   readonly musicPlaying: boolean;
+  readonly soundEffectsMuted: boolean;
   readonly scoreLoopPlaying: boolean;
 }
 
@@ -195,9 +198,9 @@ export interface SoundEffects extends SoundPort {
 
 function browserAudioContextConstructor():
   (new () => AudioContext) | undefined {
-  const browserGlobals = globalThis as typeof globalThis & {
+  const browserGlobals: typeof globalThis & {
     webkitAudioContext?: new () => AudioContext;
-  };
+  } = globalThis;
   return browserGlobals.AudioContext ?? browserGlobals.webkitAudioContext;
 }
 
@@ -218,15 +221,36 @@ function createBrowserAudioRuntime(): SoundAudioRuntime {
           destination,
           createGain(): SoundAudioGain {
             const nativeGain = nativeContext.createGain();
+            let currentGain = 0;
             return Object.freeze({
               native: nativeGain,
               setGain(value: number): void {
-                nativeGain.gain.value = value;
+                nativeGain.gain.cancelScheduledValues(
+                  nativeContext.currentTime,
+                );
+                nativeGain.gain.setValueAtTime(
+                  value,
+                  nativeContext.currentTime,
+                );
+                currentGain = value;
+              },
+              rampToGain(value: number, durationSeconds: number): void {
+                const now = nativeContext.currentTime;
+                nativeGain.gain.cancelScheduledValues(now);
+                nativeGain.gain.setValueAtTime(currentGain, now);
+                nativeGain.gain.linearRampToValueAtTime(
+                  value,
+                  now + durationSeconds,
+                );
+                currentGain = value;
               },
               connect(
                 nextDestination: SoundAudioDestination | SoundAudioGain,
               ): void {
-                nativeGain.connect(nextDestination.native as AudioNode);
+                if (!(nextDestination.native instanceof AudioNode)) {
+                  throw new TypeError("Invalid browser audio destination");
+                }
+                nativeGain.connect(nextDestination.native);
               },
             });
           },
@@ -240,10 +264,14 @@ function createBrowserAudioRuntime(): SoundAudioRuntime {
                   : { native: nativeSource.buffer };
               },
               set buffer(nextBuffer: SoundBuffer | null) {
-                nativeSource.buffer =
-                  nextBuffer === null
-                    ? null
-                    : (nextBuffer.native as AudioBuffer);
+                if (nextBuffer === null) {
+                  nativeSource.buffer = null;
+                  return;
+                }
+                if (!(nextBuffer.native instanceof AudioBuffer)) {
+                  throw new TypeError("Invalid browser audio buffer");
+                }
+                nativeSource.buffer = nextBuffer.native;
               },
               get loop(): boolean {
                 return nativeSource.loop;
@@ -260,7 +288,10 @@ function createBrowserAudioRuntime(): SoundAudioRuntime {
                   nextEnded === undefined ? null : () => nextEnded();
               },
               connect(nextGain: SoundAudioGain): void {
-                nativeSource.connect(nextGain.native as AudioNode);
+                if (!(nextGain.native instanceof AudioNode)) {
+                  throw new TypeError("Invalid browser audio gain");
+                }
+                nativeSource.connect(nextGain.native);
               },
               start(): void {
                 nativeSource.start();
@@ -320,6 +351,13 @@ function resultFor(
   });
 }
 
+interface ChannelPlayback {
+  muted: boolean;
+  gain: SoundAudioGain | undefined;
+  level: number;
+  fadeTimer: ReturnType<typeof setTimeout> | undefined;
+}
+
 export function createBrowserSoundEffects(
   options: SoundEffectsOptions = {},
 ): SoundEffects {
@@ -329,8 +367,10 @@ export function createBrowserSoundEffects(
   let status: SoundStatus = "uninitialized";
   let context: SoundAudioContext | undefined;
   let masterGain: SoundAudioGain | undefined;
-  let sfxGain: SoundAudioGain | undefined;
-  let musicGain: SoundAudioGain | undefined;
+  const channels: Record<SoundChannel, ChannelPlayback> = {
+    music: { muted: false, gain: undefined, level: 0, fadeTimer: undefined },
+    effects: { muted: false, gain: undefined, level: 1, fadeTimer: undefined },
+  };
   let baseStatus: Exclude<
     SoundStatus,
     "uninitialized" | "loading" | "suspended"
@@ -355,8 +395,6 @@ export function createBrowserSoundEffects(
   let scoreCueTimer: ReturnType<typeof setInterval> | undefined;
   let musicRequested = false;
   let scoreCounting = false;
-  let musicGainLevel = 0;
-  let musicFadeTimer: ReturnType<typeof setInterval> | undefined;
   let nextHitVariant = 0;
 
   const notifyStatus = (nextStatus: SoundStatus): void => {
@@ -366,8 +404,11 @@ export function createBrowserSoundEffects(
 
   options.onStatusChange?.(status);
 
+  const effectsMuted = (): boolean =>
+    preferences.muted || channels.effects.muted;
+
   const audible = (): boolean =>
-    visible && !preferences.muted && preferences.volume > 0;
+    visible && !effectsMuted() && preferences.volume > 0;
 
   const stopOneShotSources = (): void => {
     for (const source of activeSources) {
@@ -380,15 +421,75 @@ export function createBrowserSoundEffects(
     activeSources.clear();
   };
 
-  const clearMusicFade = (): void => {
-    if (musicFadeTimer !== undefined) {
-      clearInterval(musicFadeTimer);
-      musicFadeTimer = undefined;
+  const clearFade = (channel: ChannelPlayback): void => {
+    if (channel.fadeTimer !== undefined) {
+      clearTimeout(channel.fadeTimer);
+      channel.fadeTimer = undefined;
+    }
+  };
+
+  const setChannelLevel = (channel: ChannelPlayback, level: number): void => {
+    clearFade(channel);
+    channel.level = level;
+    channel.gain?.setGain(level);
+  };
+
+  const fadeChannel = (
+    channel: ChannelPlayback,
+    target: number,
+    onComplete: () => void,
+    steps = SOUND_FADE_STEPS,
+  ): void => {
+    clearFade(channel);
+    const initialLevel = channel.level;
+    const startedAt = Date.now();
+    const durationMs = Math.round(steps * SOUND_FADE_INTERVAL_MS);
+    let step = 0;
+    const failed = (): void => {
+      clearFade(channel);
+      if (status !== "unavailable" && status !== "failed") {
+        notifyStatus("degraded");
+      }
+    };
+    const schedule = (): void => {
+      const deadline = startedAt + (durationMs * (step + 1)) / steps;
+      channel.fadeTimer = setTimeout(tick, Math.ceil(deadline - Date.now()));
+    };
+    const tick = (): void => {
+      channel.fadeTimer = undefined;
+      step += 1;
+      channel.level =
+        step === steps
+          ? target
+          : initialLevel + ((target - initialLevel) * step) / steps;
+      try {
+        channel.gain?.setGain(channel.level);
+        if (step < steps) {
+          channel.gain?.rampToGain(
+            target,
+            (durationMs * (steps - step)) / steps / 1000,
+          );
+        }
+      } catch {
+        failed();
+        return;
+      }
+      if (step === steps) {
+        onComplete();
+      } else {
+        schedule();
+      }
+    };
+    try {
+      channel.gain?.rampToGain(target, durationMs / 1000);
+      schedule();
+    } catch {
+      failed();
     }
   };
 
   const stopMusicSource = (): void => {
-    clearMusicFade();
+    clearFade(channels.music);
     const source = musicSource;
     musicSource = undefined;
     if (source === undefined) return;
@@ -410,6 +511,11 @@ export function createBrowserSoundEffects(
     scoreCounting = false;
     stopOneShotSources();
     stopScoreCueTimer();
+    try {
+      setChannelLevel(channels.effects, effectsMuted() ? 0 : 1);
+    } catch {
+      // Audio teardown cannot be allowed to interrupt gameplay or navigation.
+    }
   };
 
   const stopAllSources = (): void => {
@@ -422,7 +528,7 @@ export function createBrowserSoundEffects(
       context === undefined ||
       context.state !== "running" ||
       !audible() ||
-      sfxGain === undefined
+      channels.effects.gain === undefined
     ) {
       return;
     }
@@ -448,7 +554,7 @@ export function createBrowserSoundEffects(
         source = currentSource;
         currentSource.buffer = buffer;
         currentSource.loop = false;
-        currentSource.connect(sfxGain);
+        currentSource.connect(channels.effects.gain);
         currentSource.onEnded = () => activeSources.delete(currentSource);
         activeSources.add(currentSource);
         currentSource.start();
@@ -462,39 +568,16 @@ export function createBrowserSoundEffects(
     }
   };
 
-  const startMusicFade = (): void => {
-    clearMusicFade();
-    musicGainLevel = 0;
-    musicGain?.setGain(musicGainLevel);
-    let step = 0;
-    musicFadeTimer = setInterval(() => {
-      if (!musicRequested || musicSource === undefined) {
-        clearMusicFade();
-        return;
-      }
-      step += 1;
-      musicGainLevel = Math.min(
-        MUSIC_TARGET_GAIN,
-        (MUSIC_TARGET_GAIN * step) / MUSIC_FADE_STEPS,
-      );
-      try {
-        musicGain?.setGain(musicGainLevel);
-      } catch {
-        clearMusicFade();
-      }
-      if (step >= MUSIC_FADE_STEPS) clearMusicFade();
-    }, MUSIC_FADE_INTERVAL_MS);
-  };
-
-  const startMusicSource = (): void => {
+  const startMusicSource = (fadeSteps = SOUND_FADE_STEPS): void => {
     if (
       !musicRequested ||
+      channels.music.muted ||
       musicSource !== undefined ||
       context === undefined ||
       context.state !== "running" ||
       !visible ||
       musicBuffer === undefined ||
-      musicGain === undefined
+      channels.music.gain === undefined
     ) {
       return;
     }
@@ -502,13 +585,14 @@ export function createBrowserSoundEffects(
       const source = context.createBufferSource();
       source.buffer = musicBuffer;
       source.loop = true;
-      source.connect(musicGain);
+      source.connect(channels.music.gain);
       source.onEnded = () => {
         if (musicSource === source) musicSource = undefined;
       };
       musicSource = source;
       source.start();
-      startMusicFade();
+      setChannelLevel(channels.music, 0);
+      fadeChannel(channels.music, MUSIC_TARGET_GAIN, () => {}, fadeSteps);
     } catch {
       musicSource = undefined;
       if (status !== "unavailable" && status !== "failed") {
@@ -522,9 +606,9 @@ export function createBrowserSoundEffects(
       !scoreCounting ||
       context === undefined ||
       context.state !== "running" ||
-      !visible ||
+      !audible() ||
       buffers.get("experience-loop") === undefined ||
-      sfxGain === undefined
+      channels.effects.gain === undefined
     ) {
       return;
     }
@@ -532,7 +616,7 @@ export function createBrowserSoundEffects(
       const source = context.createBufferSource();
       source.buffer = buffers.get("experience-loop") ?? null;
       source.loop = false;
-      source.connect(sfxGain);
+      source.connect(channels.effects.gain);
       source.onEnded = () => activeSources.delete(source);
       activeSources.add(source);
       source.start();
@@ -550,9 +634,9 @@ export function createBrowserSoundEffects(
       !scoreCounting ||
       context === undefined ||
       context.state !== "running" ||
-      !visible ||
+      !audible() ||
       buffers.get("experience-loop") === undefined ||
-      sfxGain === undefined
+      channels.effects.gain === undefined
     ) {
       return;
     }
@@ -603,19 +687,19 @@ export function createBrowserSoundEffects(
 
     try {
       masterGain = context.createGain();
-      sfxGain = context.createGain();
-      musicGain = context.createGain();
-      masterGain.setGain(preferences.muted ? 0 : preferences.volume);
-      sfxGain.setGain(1);
-      musicGain.setGain(musicGainLevel);
-      sfxGain.connect(masterGain);
-      musicGain.connect(masterGain);
+      channels.effects.gain = context.createGain();
+      channels.music.gain = context.createGain();
+      masterGain.setGain(preferences.volume);
+      setChannelLevel(channels.effects, effectsMuted() ? 0 : 1);
+      channels.music.gain.setGain(channels.music.level);
+      channels.effects.gain.connect(masterGain);
+      channels.music.gain.connect(masterGain);
       masterGain.connect(context.destination);
     } catch {
       context = undefined;
       masterGain = undefined;
-      sfxGain = undefined;
-      musicGain = undefined;
+      channels.effects.gain = undefined;
+      channels.music.gain = undefined;
       baseStatus = "failed";
       notifyStatus("failed");
       return resultFor(status, failedCues);
@@ -685,7 +769,31 @@ export function createBrowserSoundEffects(
 
   return Object.freeze({
     initialize,
+    toggleChannel(channel: SoundChannel): void {
+      const playback = channels[channel];
+      playback.muted = !playback.muted;
+      clearFade(playback);
+      if (channel === "music") {
+        if (playback.muted) {
+          fadeChannel(playback, 0, stopMusicSource);
+        } else if (musicSource === undefined) {
+          startMusicSource(SOUND_FADE_STEPS);
+        } else {
+          fadeChannel(playback, MUSIC_TARGET_GAIN, () => {});
+        }
+        return;
+      }
+      if (effectsMuted()) {
+        pendingCues = [];
+        stopScoreCueTimer();
+        fadeChannel(playback, 0, stopOneShotSources);
+      } else {
+        fadeChannel(playback, 1, () => {});
+        startScoreCueTimer();
+      }
+    },
     setPreferences(nextPreferences: Readonly<SoundPreferences>): void {
+      const wasMuted = effectsMuted();
       preferences = Object.freeze({
         muted: nextPreferences.muted,
         volume:
@@ -694,7 +802,16 @@ export function createBrowserSoundEffects(
             : 0,
       });
       try {
-        masterGain?.setGain(preferences.muted ? 0 : preferences.volume);
+        masterGain?.setGain(preferences.volume);
+        if (wasMuted !== effectsMuted()) {
+          if (effectsMuted()) {
+            pendingCues = [];
+            stopScoreCueTimer();
+            fadeChannel(channels.effects, 0, stopOneShotSources);
+          } else {
+            fadeChannel(channels.effects, 1, startScoreCueTimer);
+          }
+        }
       } catch {
         if (status !== "unavailable" && status !== "failed") {
           notifyStatus("degraded");
@@ -702,7 +819,12 @@ export function createBrowserSoundEffects(
       }
       if (!audible()) {
         pendingCues = [];
-        stopOneShotSources();
+        if (wasMuted === effectsMuted()) {
+          stopOneShotSources();
+          stopScoreCueTimer();
+        }
+      } else if (wasMuted === effectsMuted()) {
+        startScoreCueTimer();
       }
     },
     setSession(nextSessionId: string | null): void {
@@ -824,6 +946,7 @@ export function createBrowserSoundEffects(
         activeSourceCount:
           activeSources.size + (musicSource === undefined ? 0 : 1),
         musicPlaying: musicSource !== undefined,
+        soundEffectsMuted: effectsMuted(),
         scoreLoopPlaying: scoreCueTimer !== undefined,
       });
     },

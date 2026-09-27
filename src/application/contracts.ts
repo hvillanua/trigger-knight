@@ -116,6 +116,7 @@ export type {
   PresentationTransition,
 } from "./presentation.js";
 export type {
+  SoundChannel,
   SoundCue,
   SoundInitializationResult,
   SoundPort,
