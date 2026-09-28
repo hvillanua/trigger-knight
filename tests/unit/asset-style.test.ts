@@ -57,6 +57,5 @@ describe("CSS-owned visual treatment", () => {
     expect(properties.get("--trigger-knight-hand-cursor")).toContain(
       "/assets/original/images/12.png",
     );
-    expect(properties.get("--trigger-knight-result-cursor")).toMatch(/, none$/);
   });
 });

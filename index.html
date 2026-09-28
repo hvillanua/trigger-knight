@@ -11,27 +11,6 @@
   </head>
   <body>
     <main id="app-shell" class="foundation" hidden aria-busy="true">
-      <button
-        id="toggle-fullscreen"
-        class="stage-control stage-fullscreen"
-        type="button"
-        aria-pressed="false"
-        aria-describedby="fullscreen-status"
-      >
-        <span id="fullscreen-label" class="visually-hidden">
-          Enter fullscreen
-        </span>
-      </button>
-      <button
-        id="exit-fullscreen"
-        class="fullscreen-exit-control"
-        type="button"
-        aria-label="Exit fullscreen"
-        aria-describedby="fullscreen-status"
-        hidden
-      >
-        EXIT FULLSCREEN
-      </button>
       <p
         id="fullscreen-status"
         class="help-text accessible-stage-status"
@@ -49,14 +28,12 @@
 
       <section
         id="title-screen"
-        class="screen menu-screen"
+        class="screen illustrated-page menu-screen"
         aria-labelledby="title-screen-heading"
         tabindex="-1"
         hidden
       >
         <h2 id="title-screen-heading" class="visually-hidden">Main menu</h2>
-        <div class="title-sky" aria-hidden="true"></div>
-        <div class="title-hero-art" aria-hidden="true"></div>
         <div class="title-logo" aria-hidden="true"></div>
         <div class="title-actions controls" aria-label="Main menu actions">
           <button id="start-run" type="button" aria-label="Start run">
@@ -90,13 +67,17 @@
           </label>
           <p
             class="title-footer"
-            aria-label="| M/S to mute Music/SFX, P to Pause"
+            aria-label="| M/S to mute Music/SFX, F to toggle fullscreen, P to Pause"
           >
             <span aria-hidden="true">|</span>
             <span aria-hidden="true">M/S</span>
             <span aria-hidden="true">to</span>
             <span aria-hidden="true">mute</span>
             <span aria-hidden="true">Music/SFX,</span>
+            <span aria-hidden="true">F</span>
+            <span aria-hidden="true">to</span>
+            <span aria-hidden="true">toggle</span>
+            <span aria-hidden="true">fullscreen,</span>
             <span aria-hidden="true">P</span>
             <span aria-hidden="true">to</span>
             <span aria-hidden="true">Pause</span>
@@ -106,50 +87,44 @@
 
       <section
         id="credits-screen"
-        class="screen credits-screen"
+        class="screen illustrated-page credits-screen"
         aria-labelledby="credits-heading"
         tabindex="-1"
         hidden
       >
-        <div class="credits-artwork">
-          <div class="credits-original-art">
-            <div class="credits-sky" aria-hidden="true"></div>
-            <div class="credits-hero" aria-hidden="true"></div>
-            <div class="credits-heading-row">
-              <h2 id="credits-heading"><span>GAME CREDITS</span></h2>
-              <button id="credits-back" type="button">Back</button>
-            </div>
-            <div class="credits-original-copy">
-              <h3>[STUDIO MINTSPHERE]</h3>
-              <p>http://www.mintsphere.com/</p>
-              <h3>[Designer, Programer, Music]</h3>
-              <p>FanFan</p>
-              <h3>[UI Artist, Sprite, Effects]</h3>
-              <p>Vresu</p>
-              <h3>[Special Thanks To]</h3>
-              <p>Rudy Sudarto</p>
-              <p>Various Free Sound Source</p>
-              <p>Lots of Beta Testers</p>
-              <p>and You!</p>
-              <p class="credits-copyright visually-hidden">
-                © 2011 MINTSPHERE. All rights reserved.
-              </p>
-            </div>
-          </div>
-          <div class="credits-adaptation">
-            <a
-              href="https://www.facebook.com/Mintsphere"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Mintsphere on Facebook (opens in a new tab)"
-            >
-              Mintsphere on Facebook
-            </a>
-            <p>
-              This browser version is a fan-made adaptation of Trigger Knight
-              for modern browsers. It is not the original Flash release.
-            </p>
-          </div>
+        <div class="credits-heading-row">
+          <h2 id="credits-heading"><span>GAME CREDITS</span></h2>
+          <button id="credits-back" type="button">Back</button>
+        </div>
+        <div class="credits-original-copy">
+          <h3>[STUDIO MINTSPHERE]</h3>
+          <p>http://www.mintsphere.com/</p>
+          <h3>[Designer, Programer, Music]</h3>
+          <p>FanFan</p>
+          <h3>[UI Artist, Sprite, Effects]</h3>
+          <p>Vresu</p>
+          <h3>[Special Thanks To]</h3>
+          <p>Rudy Sudarto</p>
+          <p>Various Free Sound Source</p>
+          <p>Lots of Beta Testers</p>
+          <p>and You!</p>
+          <p class="credits-copyright visually-hidden">
+            © 2011 MINTSPHERE. All rights reserved.
+          </p>
+        </div>
+        <div class="credits-adaptation">
+          <a
+            href="https://www.facebook.com/Mintsphere"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Mintsphere on Facebook (opens in a new tab)"
+          >
+            Mintsphere on Facebook
+          </a>
+          <p>
+            This browser version is a fan-made adaptation of Trigger Knight for
+            modern browsers. It is not the original Flash release.
+          </p>
         </div>
       </section>
 
@@ -494,13 +469,11 @@
 
       <section
         id="collections-screen"
-        class="screen profile-screen player-status-screen"
+        class="screen illustrated-page profile-screen player-status-screen"
         aria-labelledby="collections-heading"
         tabindex="-1"
         hidden
       >
-        <div class="player-status-sky" aria-hidden="true"></div>
-        <div class="player-status-hero" aria-hidden="true"></div>
         <div class="player-status-xp-block">
           <p id="player-status-level" class="player-status-level"></p>
           <div class="player-status-xp-bracket" aria-hidden="true">
@@ -553,120 +526,128 @@
 
       <section
         id="settings-screen"
-        class="screen profile-screen settings-screen"
+        class="screen illustrated-page profile-screen settings-screen"
         aria-labelledby="settings-heading"
         tabindex="-1"
         hidden
       >
-        <div class="screen-heading-row">
-          <h2 id="settings-heading">Settings</h2>
-          <button id="settings-back" type="button">Back</button>
-        </div>
-        <p id="settings-status" aria-live="polite"></p>
-        <p
-          id="settings-binding-prompt"
-          class="help-text"
-          role="status"
-          aria-live="polite"
-        >
-          Choose Remap, then press a supported key. Press Escape to cancel.
-        </p>
-        <form id="settings-form">
-          <fieldset>
-            <legend>Tutorials</legend>
-            <label>
-              <input id="tutorial-preference" type="checkbox" />
-              Show contextual tutorials
-            </label>
-            <p class="help-text">
-              The first introduction is shown on every run. This setting
-              controls the contextual pages.
-            </p>
-          </fieldset>
-          <fieldset>
-            <legend>Visual assets</legend>
-            <label for="visual-assets">Asset treatment</label>
-            <select id="visual-assets">
-              <option value="original">Original</option>
-              <option value="high-res">High resolution</option>
-            </select>
-            <p class="help-text">
-              Save your choice, then reload the page to apply the visual assets.
-              High-resolution assets are optional and use the original assets
-              when they are not installed.
-            </p>
-          </fieldset>
-          <fieldset>
-            <legend>Sound preferences</legend>
-            <p
-              id="sound-status"
-              class="help-text"
-              role="status"
-              aria-live="polite"
-            >
-              Original music and sound start after the first player interaction.
-            </p>
-            <label>
-              <input id="sound-muted" type="checkbox" />
-              Mute sound effects
-            </label>
-            <label for="sound-volume">Sound volume</label>
-            <div class="range-row">
-              <input
-                id="sound-volume"
-                type="range"
-                min="0"
-                max="1"
-                step="0.01"
-              />
-              <output id="sound-volume-value" for="sound-volume">100%</output>
-            </div>
-          </fieldset>
-          <fieldset>
-            <legend>Keyboard bindings</legend>
-            <div class="binding-row">
-              <label for="binding-toggle-pause">Pause</label>
-              <input id="binding-toggle-pause" type="text" autocomplete="off" />
-              <button type="button" data-remap-action="togglePause">
-                Remap
-              </button>
-            </div>
-            <div class="binding-row">
-              <label for="binding-dismiss-tutorial">Dismiss tutorial</label>
-              <input
-                id="binding-dismiss-tutorial"
-                type="text"
-                autocomplete="off"
-              />
-              <button type="button" data-remap-action="dismissTutorial">
-                Remap
-              </button>
-            </div>
-            <div class="binding-row">
-              <label for="binding-purchase">Purchase current encounter</label>
-              <input id="binding-purchase" type="text" autocomplete="off" />
-              <button
-                type="button"
-                data-remap-action="purchaseCurrentEncounter"
-              >
-                Remap
-              </button>
-            </div>
-            <div class="binding-row">
-              <label for="binding-use-item">Use carried item</label>
-              <input id="binding-use-item" type="text" autocomplete="off" />
-              <button type="button" data-remap-action="useCarriedItem">
-                Remap
-              </button>
-            </div>
-          </fieldset>
-          <div class="controls">
-            <button id="save-settings" type="submit">Save settings</button>
-            <button id="restore-default-settings" type="button">
-              Restore defaults
-            </button>
+        <div class="settings-content">
+          <div class="screen-heading-row">
+            <h2 id="settings-heading">Settings</h2>
+            <button id="settings-back" type="button">Back</button>
           </div>
-        </form>
+          <p id="settings-status" aria-live="polite"></p>
+          <p
+            id="settings-binding-prompt"
+            class="help-text"
+            role="status"
+            aria-live="polite"
+          >
+            Choose Remap, then press a supported key. M, S, and F are reserved.
+            Press Escape to cancel.
+          </p>
+          <form id="settings-form">
+            <fieldset>
+              <legend>Tutorials</legend>
+              <label>
+                <input id="tutorial-preference" type="checkbox" />
+                Show contextual tutorials
+              </label>
+              <p class="help-text">
+                The first introduction is shown on every run. This setting
+                controls the contextual pages.
+              </p>
+            </fieldset>
+            <fieldset>
+              <legend>Visual assets</legend>
+              <label for="visual-assets">Asset treatment</label>
+              <select id="visual-assets">
+                <option value="original">Original</option>
+                <option value="high-res">High resolution</option>
+              </select>
+              <p class="help-text">
+                Save your choice, then reload the page to apply the visual
+                assets. High-resolution assets are optional and use the original
+                assets when they are not installed.
+              </p>
+            </fieldset>
+            <fieldset>
+              <legend>Sound preferences</legend>
+              <p
+                id="sound-status"
+                class="help-text"
+                role="status"
+                aria-live="polite"
+              >
+                Original music and sound start after the first player
+                interaction.
+              </p>
+              <label>
+                <input id="sound-muted" type="checkbox" />
+                Mute sound effects
+              </label>
+              <label for="sound-volume">Sound volume</label>
+              <div class="range-row">
+                <input
+                  id="sound-volume"
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                />
+                <output id="sound-volume-value" for="sound-volume">100%</output>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Keyboard bindings</legend>
+              <div class="binding-row">
+                <label for="binding-toggle-pause">Pause</label>
+                <input
+                  id="binding-toggle-pause"
+                  type="text"
+                  autocomplete="off"
+                />
+                <button type="button" data-remap-action="togglePause">
+                  Remap
+                </button>
+              </div>
+              <div class="binding-row">
+                <label for="binding-dismiss-tutorial">Dismiss tutorial</label>
+                <input
+                  id="binding-dismiss-tutorial"
+                  type="text"
+                  autocomplete="off"
+                />
+                <button type="button" data-remap-action="dismissTutorial">
+                  Remap
+                </button>
+              </div>
+              <div class="binding-row">
+                <label for="binding-purchase">Purchase current encounter</label>
+                <input id="binding-purchase" type="text" autocomplete="off" />
+                <button
+                  type="button"
+                  data-remap-action="purchaseCurrentEncounter"
+                >
+                  Remap
+                </button>
+              </div>
+              <div class="binding-row">
+                <label for="binding-use-item">Use carried item</label>
+                <input id="binding-use-item" type="text" autocomplete="off" />
+                <button type="button" data-remap-action="useCarriedItem">
+                  Remap
+                </button>
+              </div>
+            </fieldset>
+            <div class="controls">
+              <button id="save-settings" type="submit">Save settings</button>
+              <button id="restore-default-settings" type="button">
+                Restore defaults
+              </button>
+            </div>
+          </form>
+        </div>
       </section>
     </main>
     <script type="module" src="/src/main.ts"></script>

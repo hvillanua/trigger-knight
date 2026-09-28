@@ -7,8 +7,6 @@
   --trigger-knight-logo-image: url("../assets/original/images/268.png");
   --trigger-knight-hand-cursor:
     url("../assets/original/images/12.png") 4 2, pointer;
-  --trigger-knight-result-cursor:
-    url("../assets/original/images/12.png") 4 2, none;
 }
 
 @font-face {
@@ -608,33 +606,36 @@ body {
   border: 0;
   border-radius: 0;
   color: #080b14;
-  background-color: #e5c98f;
-  background-image: var(--trigger-knight-parchment-image);
-  background-size: 100% 100%;
   text-align: left;
   box-shadow: 0 1rem 3rem rgb(0 0 0 / 45%);
 }
 
-.menu-screen {
+.illustrated-page {
+  --illustrated-character-width: 68%;
+  --illustrated-character-position: left bottom;
+  --illustrated-character-size: auto 100%;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   container-type: inline-size;
   aspect-ratio: 3 / 2;
   min-height: 0;
   padding: 0;
+  background-color: #e5c98f;
+  background-image: var(--trigger-knight-parchment-image);
+  background-size: 100% 100%;
 }
 
-.title-hero-art {
+.illustrated-page::before,
+.illustrated-page::after {
   position: absolute;
-  inset: 0 auto 0 0;
-  width: 68%;
-  background: var(--trigger-knight-title-hero-image) left bottom / auto 100%
-    no-repeat;
+  pointer-events: none;
 }
 
-.title-sky,
-.player-status-sky,
-.credits-sky {
-  position: absolute;
+.illustrated-page::before {
   inset: 0;
+  z-index: 0;
+  content: "";
   background: var(--trigger-knight-sky-image) 0 0 / auto 100% repeat-x;
   mask-image:
     var(--trigger-knight-sky-mask-image), var(--trigger-knight-sky-mask-image);
@@ -646,6 +647,17 @@ body {
   animation: menu-sky-drift 18s linear infinite;
 }
 
+.illustrated-page::after {
+  inset: 0 auto 0 0;
+  z-index: 1;
+  width: var(--illustrated-character-width);
+  content: "";
+  background-image: var(--trigger-knight-title-hero-image);
+  background-position: var(--illustrated-character-position);
+  background-size: var(--illustrated-character-size);
+  background-repeat: no-repeat;
+}
+
 @keyframes menu-sky-drift {
   to {
     background-position-x: -480px;
@@ -653,9 +665,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .title-sky,
-  .player-status-sky,
-  .credits-sky {
+  .illustrated-page::before {
     animation: none;
   }
 }
@@ -664,6 +674,7 @@ body {
   position: absolute;
   top: 0.2rem;
   right: 0.2rem;
+  z-index: 2;
   width: 58%;
   height: 10.5rem;
   background: var(--trigger-knight-logo-image) center / contain no-repeat;
@@ -673,7 +684,7 @@ body {
   position: absolute;
   top: clamp(5.5rem, 43%, 9rem);
   right: 0.7rem;
-  z-index: 1;
+  z-index: 2;
   display: grid;
   width: 48%;
   gap: clamp(0rem, 0.5vw, 0.2rem);
@@ -722,7 +733,7 @@ body {
   right: 0.6rem;
   bottom: 0.25rem;
   left: 0.6rem;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -733,7 +744,7 @@ body {
   right: 0.6rem;
   bottom: 1.9rem;
   width: 48%;
-  z-index: 1;
+  z-index: 2;
   margin: 0;
   padding: 0.15rem 0.3rem;
   color: #e4d5b2;
@@ -854,14 +865,9 @@ body {
 }
 
 #credits-screen.credits-screen {
-  aspect-ratio: 3 / 2;
+  --illustrated-character-width: 62%;
   max-height: none;
-  overflow-x: hidden;
-  overflow-y: hidden;
-  container-type: inline-size;
   color: #080b14;
-  background: transparent;
-  box-shadow: none;
   scroll-padding: 0.75rem;
   scrollbar-color: #806d3f rgb(247 241 223 / 42%);
 }
@@ -870,44 +876,6 @@ body {
   position: absolute;
   inset: 0;
   z-index: 4;
-  pointer-events: none;
-}
-
-.credits-artwork {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 3 / 2;
-  overflow: hidden;
-  background: #e5c98f;
-}
-
-.credits-original-art {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 3 / 2;
-  overflow: hidden;
-  background: #e5c98f var(--trigger-knight-parchment-image) center / 100% 100%;
-}
-
-.credits-hero {
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 62%;
-  background-color: transparent;
-  background-image: var(--trigger-knight-title-hero-image);
-  background-position: left bottom;
-  background-size: auto 100%;
-  background-repeat: no-repeat;
-  -webkit-mask-image: var(--trigger-knight-title-hero-image);
-  mask-image: var(--trigger-knight-title-hero-image);
-  -webkit-mask-position: left bottom;
-  mask-position: left bottom;
-  -webkit-mask-size: auto 100%;
-  mask-size: auto 100%;
-  -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
-  -webkit-mask-mode: alpha;
-  mask-mode: alpha;
   pointer-events: none;
 }
 
@@ -947,7 +915,8 @@ body {
 #credits-screen.credits-screen .credits-heading-row button {
   position: absolute;
   top: 1cqw;
-  left: 1cqw;
+  right: 1cqw;
+  left: auto;
   min-height: 0;
   padding: 0.25cqw 0.5cqw;
   border: 0;
@@ -962,6 +931,7 @@ body {
   position: absolute;
   top: 6%;
   right: 3%;
+  z-index: 2;
   width: 40%;
   color: #080b14;
   font-family: "Trigger Knight Calibri 14", sans-serif;
@@ -1073,25 +1043,20 @@ body {
 .gameplay-stage canvas {
   width: 100%;
   height: 100%;
-  cursor: none;
+  cursor: var(--trigger-knight-hand-cursor);
   border: 1px solid transparent;
   border-radius: 0;
   box-shadow: none;
 }
 
-.gameplay-stage,
-.gameplay-stage * {
+.gameplay-stage:not([data-tutorial-page]):not([data-paused="true"])
+  canvas[data-pointer-region="world"] {
   cursor: none;
 }
 
-#title-screen,
-#title-screen *,
-.gameplay-stage[data-tutorial-page],
-.gameplay-stage[data-tutorial-page] *,
-.gameplay-stage[data-paused="true"],
-.gameplay-stage[data-paused="true"] *,
-.stage-fullscreen,
-.fullscreen-exit-control {
+/* The original SWF attaches one default cursor movie clip for every screen. */
+.foundation,
+.foundation * {
   cursor: var(--trigger-knight-hand-cursor);
 }
 
@@ -1199,65 +1164,6 @@ body {
 
 .stage-quit {
   bottom: 0.1rem;
-}
-
-.stage-fullscreen {
-  position: absolute;
-  top: calc(var(--foundation-padding) + 0.15rem);
-  right: calc(var(--foundation-padding) + 0.15rem);
-  z-index: 20;
-  min-width: 2.75rem;
-  width: 2.75rem;
-  min-height: 2.75rem;
-  padding: 0;
-  border: 0;
-  color: #f7f1df;
-  background: transparent;
-  font-family: "Trigger Knight Hooge", sans-serif;
-  font-size: 1.35rem;
-  font-weight: 650;
-  line-height: 1;
-  text-shadow:
-    -1px -1px 0 #080b14,
-    1px -1px 0 #080b14,
-    -1px 1px 0 #080b14,
-    1px 1px 0 #080b14;
-}
-
-.stage-fullscreen::before {
-  content: "⛶";
-  display: block;
-  font-size: 1.35rem;
-  line-height: 1;
-}
-
-.fullscreen-exit-control {
-  position: absolute;
-  top: calc(var(--foundation-padding) + 0.15rem);
-  right: calc(var(--foundation-padding) + 0.15rem);
-  z-index: 20;
-  min-width: 8.5rem;
-  min-height: 2.75rem;
-  padding: 0.2rem 0.35rem;
-  border: 0;
-  color: #f7f1df;
-  background: transparent;
-  font-family: "Trigger Knight Hooge", sans-serif;
-  font-size: clamp(0.85rem, 3vw, 1.1rem);
-  font-weight: 650;
-  text-shadow:
-    -1px -1px 0 #080b14,
-    1px -1px 0 #080b14,
-    -1px 1px 0 #080b14,
-    1px 1px 0 #080b14;
-}
-
-.stage-fullscreen:hover,
-.stage-fullscreen:focus-visible,
-.fullscreen-exit-control:hover,
-.fullscreen-exit-control:focus-visible {
-  color: #57c8ee;
-  background: rgb(8 11 20 / 16%);
 }
 
 .stage-action {
@@ -1433,25 +1339,16 @@ body {
 
 #collections-screen.player-status-screen {
   min-height: 0;
-  aspect-ratio: 3 / 2;
   padding: 0;
-  overflow: hidden;
-  container-type: inline-size;
+  --illustrated-character-width: 100%;
+  --illustrated-character-position: 0 0;
+  --illustrated-character-size: 100% 100%;
 }
 
 #collections-screen.player-status-screen .screen-heading-row {
   position: absolute;
   inset: 0;
   z-index: 4;
-  pointer-events: none;
-}
-
-#collections-screen.player-status-screen .player-status-hero {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  width: 100%;
-  background: var(--trigger-knight-title-hero-image) 0 0 / 100% 100% no-repeat;
   pointer-events: none;
 }
 
@@ -1764,8 +1661,8 @@ body {
 #settings-screen.settings-screen .screen-heading-row button {
   position: absolute;
   top: 1cqw;
-  right: auto;
-  left: 1cqw;
+  right: 1cqw;
+  left: auto;
   padding: 0.25cqw 0.5cqw;
   border: 0;
   color: #f7f1df;
@@ -1777,26 +1674,30 @@ body {
 
 #settings-screen.settings-screen {
   min-height: 0;
-  aspect-ratio: 3 / 2;
   padding: 0;
+  --settings-content-start: 60%;
+}
+
+#settings-screen.settings-screen .settings-content {
+  position: absolute;
+  inset: 0 0 0 var(--settings-content-start);
+  z-index: 2;
+  min-width: 0;
+  padding: 1cqw 2cqw 4cqw 1.5cqw;
   overflow-x: hidden;
   overflow-y: auto;
-  container-type: inline-size;
   color: #080b14;
-  scroll-padding-top: 4rem;
+  scroll-padding-top: 1cqw;
   scrollbar-color: #806d3f rgb(247 241 223 / 42%);
 }
 
-#settings-screen.settings-screen > :not(.screen-heading-row) {
-  margin-inline: 0.75rem;
-}
-
-#settings-screen.settings-screen > .screen-heading-row {
+#settings-screen.settings-screen .screen-heading-row {
+  position: relative;
   flex-direction: row;
   align-items: center;
   justify-content: flex-start;
-  gap: 1cqw;
-  padding: 0.25rem 0 0.25rem max(3rem, 15cqw);
+  min-height: 8cqw;
+  padding: 0 8cqw 1cqw 0;
   background: transparent;
   box-shadow: none;
 }
@@ -1813,6 +1714,26 @@ body {
   text-shadow: 0 0 3px #fff;
 }
 
+#settings-screen.settings-screen .screen-heading-row button {
+  top: 0;
+  right: 1cqw;
+}
+
+#settings-screen.settings-screen .settings-content > p,
+#settings-screen.settings-screen #settings-form {
+  width: 100%;
+  min-width: 0;
+  margin-inline: 0;
+}
+
+#settings-screen.settings-screen #settings-status {
+  margin-block: 0 0.5cqw;
+}
+
+#settings-screen.settings-screen #settings-binding-prompt {
+  margin-block: 0 1cqw;
+}
+
 #settings-screen.settings-screen .help-text,
 #settings-screen.settings-screen .binding-row label {
   color: #080b14;
@@ -1820,12 +1741,45 @@ body {
 }
 
 #settings-screen.settings-screen fieldset {
+  min-inline-size: 0;
+  min-width: 0;
   border-color: #080b14;
   background: rgb(247 241 223 / 42%);
 }
 
+#settings-screen.settings-screen fieldset > * {
+  min-inline-size: 0;
+  min-width: 0;
+}
+
 #settings-screen.settings-screen form {
   padding-bottom: 4rem;
+}
+
+#settings-screen.settings-screen .binding-row {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+#settings-screen.settings-screen .binding-row label {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 34rem) {
+  #settings-screen.settings-screen .binding-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+#settings-screen.settings-screen .binding-row input,
+#settings-screen.settings-screen .binding-row button,
+#settings-screen.settings-screen .range-row input {
+  min-width: 0;
+}
+
+#settings-screen.settings-screen form > .controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5cqw;
 }
 
 #settings-screen.settings-screen legend {
@@ -1835,11 +1789,6 @@ body {
 
 /* The original score screen is a fixed 480x320 composition. Container query
  * units keep its artwork and typography aligned when the stage scales down. */
-#run-result,
-#run-result * {
-  cursor: var(--trigger-knight-result-cursor);
-}
-
 #run-result.run-result {
   width: 100%;
   height: auto;

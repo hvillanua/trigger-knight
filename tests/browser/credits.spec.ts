@@ -14,10 +14,10 @@ test("opens credits and returns to the title with focus restored", async ({
   const credits = page.locator("#credits-screen");
   await expect(credits).toBeVisible();
   await expect(page.locator("#title-screen")).toBeHidden();
-  const artworkBox = await credits.locator(".credits-artwork").boundingBox();
-  if (artworkBox === null) throw new Error("Missing credits artwork bounds");
-  expect(artworkBox.width).toBeCloseTo(480, 0);
-  expect(artworkBox.height).toBeCloseTo(320, 0);
+  const creditsBox = await credits.boundingBox();
+  if (creditsBox === null) throw new Error("Missing credits bounds");
+  expect(creditsBox.width).toBeCloseTo(480, 0);
+  expect(creditsBox.height).toBeCloseTo(320, 0);
   await expect(credits).toHaveAttribute("aria-labelledby", "credits-heading");
   await expect(
     credits.getByRole("heading", { name: "Game Credits" }),
@@ -36,47 +36,42 @@ test("opens credits and returns to the title with focus restored", async ({
     "This browser version is a fan-made adaptation of Trigger Knight for modern browsers. It is not the original Flash release.",
   );
   const creditsAssets = await credits.evaluate(() => {
-    const sky = document.querySelector<HTMLElement>(".credits-sky");
-    const hero = document.querySelector<HTMLElement>(".credits-hero");
-    if (sky === null || hero === null) throw new Error("Missing credits art");
+    const screen = document.querySelector<HTMLElement>("#credits-screen");
+    if (screen === null) throw new Error("Missing credits screen");
+    const before = getComputedStyle(screen, "::before");
+    const after = getComputedStyle(screen, "::after");
     return {
-      sky: getComputedStyle(sky).backgroundImage,
-      hero: getComputedStyle(hero).backgroundImage,
-      heroBackgroundColor: getComputedStyle(hero).backgroundColor,
-      heroMask: getComputedStyle(hero).maskImage,
+      sky: before.backgroundImage,
+      skyMask: before.maskImage,
+      hero: after.backgroundImage,
+      heroPointerEvents: after.pointerEvents,
     };
   });
   expect(creditsAssets.sky).toContain("357.jpg");
+  expect(creditsAssets.skyMask).toContain("350.svg");
   expect(creditsAssets.hero).toContain("533.png");
-  expect(creditsAssets.heroBackgroundColor).toBe("rgba(0, 0, 0, 0)");
-  expect(creditsAssets.heroMask).toContain("533.png");
-  await expect(
-    credits.locator(".credits-artwork .credits-adaptation"),
-  ).toBeVisible();
-  const layout = await credits
-    .locator(".credits-artwork")
-    .evaluate((artwork) => {
-      const original = artwork.querySelector<HTMLElement>(
-        ".credits-original-copy",
-      );
-      const adaptation = artwork.querySelector<HTMLElement>(
-        ".credits-adaptation",
-      );
-      if (original === null || adaptation === null) {
-        throw new Error("Missing credits copy layout");
-      }
-      return {
-        artworkHeight: artwork.getBoundingClientRect().height,
-        artworkScrollHeight: artwork.scrollHeight,
-        originalBottom: original.getBoundingClientRect().bottom,
-        adaptationTop: adaptation.getBoundingClientRect().top,
-        adaptationBottom: adaptation.getBoundingClientRect().bottom,
-        artworkBottom: artwork.getBoundingClientRect().bottom,
-      };
-    });
-  expect(layout.artworkScrollHeight).toBeCloseTo(layout.artworkHeight, 0);
+  expect(creditsAssets.heroPointerEvents).toBe("none");
+  await expect(credits.locator(".credits-adaptation")).toBeVisible();
+  const layout = await credits.evaluate((screen) => {
+    const original = screen.querySelector<HTMLElement>(
+      ".credits-original-copy",
+    );
+    const adaptation = screen.querySelector<HTMLElement>(".credits-adaptation");
+    if (original === null || adaptation === null) {
+      throw new Error("Missing credits copy layout");
+    }
+    return {
+      screenHeight: screen.getBoundingClientRect().height,
+      screenScrollHeight: screen.scrollHeight,
+      originalBottom: original.getBoundingClientRect().bottom,
+      adaptationTop: adaptation.getBoundingClientRect().top,
+      adaptationBottom: adaptation.getBoundingClientRect().bottom,
+      screenBottom: screen.getBoundingClientRect().bottom,
+    };
+  });
+  expect(layout.screenScrollHeight).toBeCloseTo(layout.screenHeight, 0);
   expect(layout.originalBottom).toBeLessThan(layout.adaptationTop);
-  expect(layout.adaptationBottom).toBeLessThanOrEqual(layout.artworkBottom);
+  expect(layout.adaptationBottom).toBeLessThanOrEqual(layout.screenBottom);
 
   const facebook = credits.getByRole("link", {
     name: "Mintsphere on Facebook (opens in a new tab)",

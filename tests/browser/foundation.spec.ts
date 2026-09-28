@@ -89,6 +89,264 @@ test("projects the complete 480x320 world camera into wide and tall output", asy
   await expect(canvas).toHaveAttribute("data-events", "");
 });
 
+test("keeps the original game cursor over letterboxed gameplay edges", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+
+  const canvas = page.getByRole("img", { name: "Trigger Knight game view" });
+  await canvas.evaluate((element) => {
+    element.style.width = "640px";
+    element.style.height = "360px";
+    element.style.aspectRatio = "auto";
+    element.style.border = "0";
+  });
+  await expect(canvas).toHaveAttribute(
+    "data-projection-viewport",
+    "50,0,540,360",
+  );
+
+  const cursors = await canvas.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    const dispatchMove = (clientX: number): void => {
+      element.dispatchEvent(
+        new PointerEvent("pointermove", {
+          bubbles: true,
+          clientX,
+          clientY: rect.top + rect.height / 2,
+          pointerId: 1,
+          pointerType: "mouse",
+        }),
+      );
+    };
+
+    dispatchMove(rect.left + 1);
+    const letterbox = {
+      cursor: getComputedStyle(element).cursor,
+      region: element.getAttribute("data-pointer-region"),
+    };
+    dispatchMove(rect.left + rect.width / 2);
+    return {
+      letterbox,
+      world: {
+        cursor: getComputedStyle(element).cursor,
+        region: element.getAttribute("data-pointer-region"),
+      },
+    };
+  });
+
+  expect(cursors.letterbox.region).toBe("letterbox");
+  expect(cursors.letterbox.cursor).toContain("/12.png");
+  expect(cursors.world).toEqual({ cursor: "none", region: "world" });
+});
+
+test("keeps the game cursor over the world-space gameplay margins", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+
+  const cursors = await page
+    .getByRole("img", { name: "Trigger Knight game view" })
+    .evaluate((element) => {
+      if (!(element instanceof HTMLCanvasElement)) {
+        throw new Error("Expected a Canvas element");
+      }
+
+      const rect = element.getBoundingClientRect();
+      const camera = element.dataset.worldCamera?.split(",").map(Number);
+      const projection = element.dataset.projectionViewport
+        ?.split(",")
+        .map(Number);
+      if (camera === undefined || projection === undefined) {
+        throw new Error("Missing public Canvas projection");
+      }
+
+      const scale = projection[2]! / camera[2]!;
+      const styles = getComputedStyle(element);
+      const borderLeft = Number.parseFloat(styles.borderLeftWidth) || 0;
+      const borderTop = Number.parseFloat(styles.borderTopWidth) || 0;
+      const moveToWorldX = (worldX: number) => {
+        const backingX = projection[0]! + (worldX - camera[0]!) * scale;
+        element.dispatchEvent(
+          new PointerEvent("pointermove", {
+            bubbles: true,
+            clientX:
+              rect.left +
+              borderLeft +
+              (backingX / element.width) * element.clientWidth,
+            clientY:
+              rect.top +
+              borderTop +
+              ((projection[1]! + (160 - camera[1]!) * scale) / element.height) *
+                element.clientHeight,
+            pointerId: 3,
+            pointerType: "mouse",
+          }),
+        );
+        return {
+          cursor: getComputedStyle(element).cursor,
+          region: element.getAttribute("data-pointer-region"),
+        };
+      };
+
+      return {
+        leftMargin: moveToWorldX(12),
+        center: moveToWorldX(240),
+        rightMargin: moveToWorldX(468),
+      };
+    });
+
+  expect(cursors).toEqual({
+    leftMargin: { cursor: "none", region: "world" },
+    center: { cursor: "none", region: "world" },
+    rightMargin: { cursor: "none", region: "world" },
+  });
+});
+
+test("keeps the last in-world cursor position after leaving gameplay", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1&diagnostics=1");
+  await page.getByRole("button", { name: "Start run" }).click();
+
+  const pointerPositions = await page.evaluate(async (modulePath) => {
+    const trace = window.triggerKnightDiagnostics?.read();
+    const base = trace?.checkpoints[0]?.observation;
+    if (base === undefined) {
+      throw new Error("Expected browser diagnostics");
+    }
+
+    const { CanvasPresentation } = (await import(
+      modulePath
+    )) as typeof import("../../src/browser/canvas-presentation.js");
+    const canvas = document.createElement("canvas");
+    canvas.width = 640;
+    canvas.height = 360;
+    canvas.style.width = "640px";
+    canvas.style.height = "360px";
+    document.body.append(canvas);
+
+    const presentation = new CanvasPresentation(canvas);
+    for (let attempt = 0; attempt < 100; attempt += 1) {
+      if (canvas.dataset.assetStatus === "ready") break;
+      await new Promise((resolve) => setTimeout(resolve, 10));
+    }
+    if (canvas.dataset.assetStatus !== "ready") {
+      throw new Error(
+        `Timed out waiting for renderer assets: ${canvas.dataset.assetStatus ?? "missing status"}`,
+      );
+    }
+
+    const current = Object.freeze({
+      ...base,
+      lifecycle: Object.freeze({
+        ...base.lifecycle,
+        phase: "running" as const,
+        paused: false,
+        tutorialPage: null,
+        activeGameplay: true,
+      }),
+      encounters: Object.freeze({
+        ...base.encounters,
+        current: Object.freeze({
+          kind: "shop" as const,
+          shop: "pharmacy" as const,
+          cachedPrice: 150,
+          x: 100,
+          used: false,
+        }),
+      }),
+      actions: Object.freeze({
+        ...base.actions,
+        canPurchaseCurrentEncounter: true,
+      }),
+    });
+
+    const drawImageDescriptor = Object.getOwnPropertyDescriptor(
+      CanvasRenderingContext2D.prototype,
+      "drawImage",
+    );
+    if (typeof drawImageDescriptor?.value !== "function") {
+      throw new Error("Expected Canvas 2D drawImage");
+    }
+    const originalDrawImage =
+      drawImageDescriptor.value as CanvasRenderingContext2D["drawImage"];
+    const pointerPositions: { x: number; y: number }[] = [];
+    CanvasRenderingContext2D.prototype.drawImage = function (
+      image: CanvasImageSource,
+      ...args: number[]
+    ) {
+      if (image instanceof HTMLImageElement) {
+        const source = image.currentSrc || image.src;
+        if (source.includes("/19.png") || source.includes("/21.png")) {
+          pointerPositions.push({ x: args[0]!, y: args[1]! });
+        }
+      }
+      originalDrawImage.apply(this, [image, ...args] as Parameters<
+        typeof originalDrawImage
+      >);
+    };
+
+    try {
+      presentation.present({
+        previous: current,
+        current,
+        interpolation: 1,
+        events: [],
+      });
+      pointerPositions.length = 0;
+
+      const rect = canvas.getBoundingClientRect();
+      canvas.dispatchEvent(
+        new PointerEvent("pointermove", {
+          bubbles: true,
+          clientX: rect.left + 320,
+          clientY: rect.top + 180,
+          pointerId: 1,
+          pointerType: "mouse",
+        }),
+      );
+      const inWorld = pointerPositions.at(-1);
+      pointerPositions.length = 0;
+
+      canvas.dispatchEvent(
+        new PointerEvent("pointermove", {
+          bubbles: true,
+          clientX: rect.left + 1,
+          clientY: rect.top + 180,
+          pointerId: 1,
+          pointerType: "mouse",
+        }),
+      );
+      const inLetterbox = pointerPositions.at(-1);
+      pointerPositions.length = 0;
+
+      canvas.dispatchEvent(
+        new PointerEvent("pointerleave", {
+          bubbles: true,
+          clientX: rect.left + 1,
+          clientY: rect.top + 180,
+          pointerId: 1,
+          pointerType: "mouse",
+        }),
+      );
+      const afterLeave = pointerPositions.at(-1);
+      return { inWorld, inLetterbox, afterLeave };
+    } finally {
+      CanvasRenderingContext2D.prototype.drawImage = originalDrawImage;
+    }
+  }, "/src/browser/canvas-presentation.ts");
+
+  expect(pointerPositions.inWorld?.x).toBe(231);
+  expect(pointerPositions.inWorld?.y).toBeCloseTo(150, 0);
+  expect(pointerPositions.inLetterbox).toEqual(pointerPositions.inWorld);
+  expect(pointerPositions.afterLeave).toEqual(pointerPositions.inWorld);
+});
+
 test("interpolates public observations without mutating gameplay", async ({
   page,
 }) => {

@@ -117,6 +117,25 @@ const SUPPORTED_KEYBOARD_CODES = Object.freeze([
 
 export type KeyboardCode = (typeof SUPPORTED_KEYBOARD_CODES)[number];
 
+/** Keyboard shortcuts reserved by the browser presentation shell. */
+export const RESERVED_KEYBOARD_CODES = Object.freeze([
+  "KeyF",
+  "KeyM",
+  "KeyS",
+] as const);
+
+export type ReservedKeyboardCode = (typeof RESERVED_KEYBOARD_CODES)[number];
+
+/** Returns whether a code is owned by a global browser shortcut. */
+export function isReservedKeyboardCode(
+  value: unknown,
+): value is ReservedKeyboardCode {
+  return (
+    typeof value === "string" &&
+    RESERVED_KEYBOARD_CODES.some((code) => code === value)
+  );
+}
+
 /** Device-independent browser bindings persisted outside gameplay state. */
 export interface InputBindings {
   readonly togglePause: KeyboardCode;
@@ -225,6 +244,12 @@ function hasExactKeys(
 function binding(value: unknown, field: string): KeyboardCode {
   if (!isSupportedKeyboardCode(value)) {
     throw new TypeError(`Settings ${field} must be a supported keyboard code`);
+  }
+  if (isReservedKeyboardCode(value)) {
+    const shortcut = value === "KeyF" ? "fullscreen" : "sound control";
+    throw new TypeError(
+      `Settings ${field} cannot use ${value}; it is reserved for ${shortcut}`,
+    );
   }
   return value;
 }

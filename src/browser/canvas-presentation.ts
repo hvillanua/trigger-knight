@@ -87,6 +87,7 @@ const SESSION_OVER_TOP_END_OFFSET = 0;
 const SESSION_OVER_BOTTOM_START_OFFSET = 330;
 const SESSION_OVER_BOTTOM_END_OFFSET = 280;
 const SESSION_OVER_BAND_HEIGHT = 41;
+const CONTEXT_PROMPT_HORIZONTAL_INSET = 36;
 // Project presentation roles. The original SWF text-field mapping remains unresolved.
 const CANVAS_FONT_FAMILIES = Object.freeze({
   body: `"${ORIGINAL_FONT_FAMILIES.calibri}", "${ORIGINAL_FONT_FAMILIES.calibri14}", system-ui, sans-serif`,
@@ -787,11 +788,15 @@ function drawContextPrompt(
     observation.camera.y + observation.camera.height * GROUND_RATIO;
   const current = observation.encounters.current;
   const promptMode = contextPromptMode(observation);
-  const x = clamp(
-    pointer?.x ?? current?.x ?? observation.camera.x + 235,
-    observation.camera.x + 36,
-    observation.camera.x + observation.camera.width - 36,
-  );
+  const x =
+    pointer?.x ??
+    clamp(
+      current?.x ?? observation.camera.x + 235,
+      observation.camera.x + CONTEXT_PROMPT_HORIZONTAL_INSET,
+      observation.camera.x +
+        observation.camera.width -
+        CONTEXT_PROMPT_HORIZONTAL_INSET,
+    );
   const y = pointer?.y ?? groundY - 58;
   const drawNoAction = (): void => {
     context.save();
@@ -1693,11 +1698,16 @@ export class CanvasPresentation implements PresentationPort {
       const frame = this.#frame;
       if (frame === undefined) return;
       const point = mapCanvasPointer(this.#canvas, frame.current.camera, event);
-      this.#pointerWorld = point === null ? undefined : point;
+      this.#canvas.dataset.pointerRegion =
+        point === null ? "letterbox" : "world";
+      // Only valid world positions may move the rendered in-game cursor.
+      if (point !== null) {
+        this.#pointerWorld = point;
+      }
       this.#draw();
     });
     this.#canvas.addEventListener("pointerleave", () => {
-      this.#pointerWorld = undefined;
+      delete this.#canvas.dataset.pointerRegion;
       this.#draw();
     });
   }

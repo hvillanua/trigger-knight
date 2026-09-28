@@ -208,6 +208,23 @@ describe("versioned browser settings storage", () => {
     ).toThrow("Settings bindings must not conflict");
   });
 
+  it.each(["KeyM", "KeyS", "KeyF"] as const)(
+    "rejects %s because it belongs to a global browser shortcut",
+    (code) => {
+      const defaults = createDefaultSettings();
+
+      expect(() =>
+        normalizeSettings({
+          ...defaults,
+          bindings: {
+            ...defaults.bindings,
+            togglePause: code,
+          },
+        }),
+      ).toThrow("reserved");
+    },
+  );
+
   it("reports read and write failures while leaving defaults available", () => {
     const storage = new MemoryStorage();
     const store = createBrowserSettingsStore(storage);

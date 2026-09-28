@@ -8,7 +8,6 @@ const STYLE_VARIABLES = Object.freeze({
   skyMask: "--trigger-knight-sky-mask-image",
   logo: "--trigger-knight-logo-image",
   handCursor: "--trigger-knight-hand-cursor",
-  resultCursor: "--trigger-knight-result-cursor",
 });
 
 function cssUrl(url: string): string {
@@ -29,9 +28,5 @@ export function applyVisualStyleTreatment(
   root.style.setProperty(
     STYLE_VARIABLES.handCursor,
     `${cssUrl(urls.cursor)} 4 2, pointer`,
-  );
-  root.style.setProperty(
-    STYLE_VARIABLES.resultCursor,
-    `${cssUrl(urls.cursor)} 4 2, none`,
   );
 }

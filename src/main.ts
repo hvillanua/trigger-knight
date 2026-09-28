@@ -103,11 +103,6 @@ if (advanceButton !== undefined) {
   gameplayControls.prepend(advanceButton);
 }
 const pauseButton = requiredElement<HTMLButtonElement>("#toggle-pause");
-const fullscreenButton =
-  requiredElement<HTMLButtonElement>("#toggle-fullscreen");
-const fullscreenExitButton =
-  requiredElement<HTMLButtonElement>("#exit-fullscreen");
-const fullscreenLabel = requiredElement<HTMLElement>("#fullscreen-label");
 const fullscreenStatus = requiredElement<HTMLElement>("#fullscreen-status");
 const purchaseButton = requiredElement<HTMLButtonElement>(
   "#purchase-current-encounter",
@@ -296,7 +291,9 @@ function soundStatusText(status: SoundStatus): string {
 
 const soundEffects = createBrowserSoundEffects({
   onStatusChange: (status) => {
-    soundStatus.textContent = soundStatusText(status);
+    if (status !== "suspended") {
+      soundStatus.textContent = soundStatusText(status);
+    }
     gameStatus.dataset.soundStatus = status;
   },
 });
@@ -340,22 +337,13 @@ function fullscreenStatusText(state: FullscreenState): string {
     case "available":
       return "Fullscreen is available.";
     case "active":
-      return "Fullscreen is active. Use Exit fullscreen to leave it.";
+      return "Fullscreen is active. Press F to leave it.";
     case "denied":
       return "Fullscreen request was denied. Check browser permissions and try again.";
   }
 }
 
 function renderFullscreen(change: FullscreenStateChange): void {
-  const label = change.active ? "Exit fullscreen" : "Enter fullscreen";
-  fullscreenButton.disabled = !change.supported;
-  fullscreenButton.hidden = change.active;
-  fullscreenExitButton.hidden = !change.active;
-  fullscreenExitButton.disabled = !change.active;
-  fullscreenLabel.textContent = label;
-  fullscreenButton.setAttribute("aria-label", label);
-  fullscreenButton.title = label;
-  fullscreenButton.setAttribute("aria-pressed", String(change.active));
   fullscreenStatus.textContent = fullscreenStatusText(change.state);
   fullscreenStatus.dataset.state = change.state;
 }
@@ -793,12 +781,11 @@ function nativeActivationCode(code: string): boolean {
 document.addEventListener("keydown", (event) => {
   if (settingsController?.handleKeyDown(event)) return;
 
-  if (event.isComposing || screenNavigation?.current() !== "gameplay") {
-    return;
-  }
+  if (event.isComposing) return;
   if (editableEventTarget(event.target)) return;
   if (event.repeat) {
     if (
+      screenNavigation?.current() === "gameplay" &&
       nativeActivationTarget(event.target) &&
       nativeActivationCode(event.code)
     ) {
@@ -806,6 +793,19 @@ document.addEventListener("keydown", (event) => {
     }
     return;
   }
+  if (
+    event.code === "KeyF" &&
+    !event.altKey &&
+    !event.ctrlKey &&
+    !event.metaKey
+  ) {
+    event.preventDefault();
+    runUiAction("activate", () => {
+      void fullscreenController.toggle();
+    });
+    return;
+  }
+  if (screenNavigation?.current() !== "gameplay") return;
   if (
     nativeActivationTarget(event.target) &&
     nativeActivationCode(event.code)
@@ -909,18 +909,6 @@ useItemButton.addEventListener("click", () => {
 
 pauseButton.addEventListener("click", () => {
   runUiAction("activate", () => dispatch(commandsForTogglePauseActivation()));
-});
-
-fullscreenButton.addEventListener("click", () => {
-  runUiAction("activate", () => {
-    void fullscreenController.toggle();
-  });
-});
-
-fullscreenExitButton.addEventListener("click", () => {
-  runUiAction("cancel", () => {
-    void fullscreenController.exit();
-  });
 });
 
 requiredElement<HTMLButtonElement>("#start-run").addEventListener("click", () =>

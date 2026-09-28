@@ -59,6 +59,9 @@ export interface SettingsController {
   handleKeyDown(event: KeyboardEvent): boolean;
 }
 
+const BINDING_PROMPT_DEFAULT =
+  "Choose Remap, then press a supported key. M, S, and F are reserved. Press Escape to cancel.";
+
 function bindingActionLabel(action: InputAction): string {
   switch (action) {
     case "togglePause":
@@ -174,6 +177,9 @@ export function createSettingsController(
       case "unsupported":
         elements.bindingPrompt.textContent = `${result.code || "That key"} is not supported. Choose another key or press Escape to cancel.`;
         break;
+      case "reserved":
+        elements.bindingPrompt.textContent = `${bindingLabel(result.code)} is reserved for a global shortcut. Choose another key or press Escape to cancel.`;
+        break;
       case "ignored":
         break;
     }
@@ -214,8 +220,7 @@ export function createSettingsController(
     const settings = options.readSettings();
     bindingCapture.replaceBindings(settings.bindings);
     render(settings);
-    elements.bindingPrompt.textContent =
-      "Choose Remap, then press a supported key. Press Escape to cancel.";
+    elements.bindingPrompt.textContent = BINDING_PROMPT_DEFAULT;
   };
 
   const handleKeyDown = (event: KeyboardEvent): boolean => {
@@ -242,7 +247,9 @@ export function createSettingsController(
       setStatus(
         message.includes("multiple actions")
           ? `Settings could not be saved. ${message}.`
-          : "Settings could not be saved. Check each binding and the volume.",
+          : message.includes("reserved")
+            ? `Settings could not be saved. ${message}.`
+            : "Settings could not be saved. Check each binding and the volume.",
         message.includes("multiple actions")
           ? "binding-conflict"
           : "invalid-record",
@@ -299,8 +306,7 @@ export function createSettingsController(
     bindingCapture.replaceBindings(settingsSave.settings.bindings);
     render(settingsSave.settings);
     renderKeyboardHints();
-    elements.bindingPrompt.textContent =
-      "Choose Remap, then press a supported key. Press Escape to cancel.";
+    elements.bindingPrompt.textContent = BINDING_PROMPT_DEFAULT;
     setStatus(
       visualAssetsChanged
         ? "Settings saved. Reload the page to apply visual assets."
