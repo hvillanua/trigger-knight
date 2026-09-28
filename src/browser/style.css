@@ -726,6 +726,32 @@ body {
   gap: 1rem;
 }
 
+.title-attribution {
+  position: absolute;
+  right: 0.6rem;
+  bottom: 1.9rem;
+  width: 48%;
+  z-index: 1;
+  margin: 0;
+  padding: 0.15rem 0.3rem;
+  color: #e4d5b2;
+  background: rgb(8 11 20 / 36%);
+  border-radius: 0.1rem;
+  font-family: "Trigger Knight Calibri 12", sans-serif;
+  font-size: clamp(0.48rem, 1.55vw, 0.65rem);
+  line-height: 1.15;
+  text-align: right;
+  text-shadow:
+    -1px -1px 0 #080b14,
+    1px -1px 0 #080b14,
+    -1px 1px 0 #080b14,
+    1px 1px 0 #080b14;
+}
+
+.title-attribution span {
+  display: block;
+}
+
 .title-footer {
   flex: 1 1 auto;
   min-width: 0;
@@ -794,6 +820,14 @@ body {
     gap: 2cqw;
   }
 
+  .foundation:fullscreen > #title-screen .title-attribution {
+    right: 2cqw;
+    bottom: 5.75cqw;
+    width: 48%;
+    padding: 0.5cqw 0.75cqw;
+    font-size: 2cqw;
+  }
+
   .foundation:fullscreen > #title-screen .title-footer {
     gap: 0.75cqw;
     font-size: 2.3333cqw;
@@ -808,6 +842,158 @@ body {
     width: 2.5cqw;
     height: 2.5cqw;
   }
+}
+
+@media (max-width: 34rem) {
+  .title-attribution {
+    bottom: 1.65rem;
+    font-size: 0.48rem;
+  }
+}
+
+#credits-screen.credits-screen {
+  max-height: 80vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  container-type: inline-size;
+  color: #080b14;
+  scroll-padding: 0.75rem;
+  scrollbar-color: #806d3f rgb(247 241 223 / 42%);
+}
+
+.credits-artwork {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background: #e5c98f var(--trigger-knight-parchment-image) center / 100% 100%;
+}
+
+.credits-hero {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 62%;
+  background: var(--trigger-knight-title-hero-image) left bottom / auto 100%
+    no-repeat;
+}
+
+#credits-heading {
+  position: absolute;
+  bottom: 5%;
+  left: 3%;
+  z-index: 1;
+  margin: 0;
+  color: #080b14;
+  font-family: "Trigger Knight Calibri 16", sans-serif;
+  font-size: 5.2cqw;
+  font-weight: 700;
+  letter-spacing: 0.12cqw;
+  line-height: 1;
+  -webkit-text-stroke: 0.12cqw #f7f1df;
+  text-shadow: 0 0 0.4cqw #f7f1df;
+}
+
+.credits-original-copy {
+  position: absolute;
+  top: 5%;
+  right: 3%;
+  width: 40%;
+  color: #080b14;
+  font-family: "Trigger Knight Calibri 14", sans-serif;
+  font-size: 2.45cqw;
+  line-height: 1.12;
+  text-align: center;
+}
+
+.credits-original-copy h3,
+.credits-original-copy p {
+  margin: 0 0 0.7cqw;
+}
+
+.credits-original-copy h3 {
+  font-family: "Trigger Knight Calibri 16", sans-serif;
+  font-size: 1.08em;
+  font-weight: 700;
+}
+
+.credits-original-copy .credits-copyright {
+  margin-top: 1.1cqw;
+  font-size: 0.84em;
+}
+
+.credits-adaptation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  padding: 0.75rem;
+  color: #f7f1df;
+  background: #111820;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.credits-adaptation button,
+.credits-adaptation a {
+  min-height: 2.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #806d3f;
+  color: #f7f1df;
+  background: #202b3e;
+  font: inherit;
+  text-decoration: underline;
+}
+
+.credits-adaptation button:focus-visible,
+.credits-adaptation a:focus-visible {
+  outline: 2px solid #57c8ee;
+  outline-offset: 2px;
+}
+
+.credits-adaptation p {
+  flex: 1 0 100%;
+  max-width: 38rem;
+  margin: 0 auto;
+  color: #d9d5c8;
+}
+
+@container (max-width: 24rem) {
+  .credits-artwork {
+    min-height: 38rem;
+    aspect-ratio: auto;
+  }
+
+  .credits-hero {
+    width: 100%;
+    height: 12rem;
+    background-position: left bottom;
+    opacity: 0.45;
+  }
+
+  #credits-heading {
+    top: 9.5rem;
+    bottom: auto;
+    font-size: 1.5rem;
+  }
+
+  .credits-original-copy {
+    position: relative;
+    top: auto;
+    right: auto;
+    width: auto;
+    padding: 12rem 0.75rem 0.75rem;
+    font-size: 0.9rem;
+  }
+
+  .credits-original-copy h3,
+  .credits-original-copy p {
+    margin-bottom: 0.35rem;
+  }
+}
+
+.foundation:fullscreen > #credits-screen.credits-screen {
+  max-height: 100%;
 }
 
 .gameplay-screen {
@@ -1178,7 +1364,7 @@ body {
   }
 
   .title-actions {
-    top: clamp(5.5rem, 43%, 9rem);
+    top: 34%;
     right: 0.45rem;
   }
 

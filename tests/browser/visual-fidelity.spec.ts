@@ -369,6 +369,7 @@ test("keeps the title actions inside the stage at narrow widths", async ({
   for (const selector of [
     "#start-run",
     "#title-achievements",
+    "#title-credits",
     "#title-settings",
   ]) {
     const button = page.locator(selector);

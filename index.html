@@ -69,12 +69,19 @@
           >
             ACHIEVEMENTS
           </button>
+          <button id="title-credits" type="button" aria-label="Credits">
+            CREDITS
+          </button>
           <button id="title-settings" type="button" aria-label="Settings">
             SETTINGS
           </button>
         </div>
         <p id="title-profile-summary" class="title-profile-summary">
           Loading profile…
+        </p>
+        <p class="title-attribution">
+          <span>Modern-browser adaptation.</span>
+          <span>Original game by Mintsphere.</span>
         </p>
         <div class="title-footer-row">
           <label class="title-tutorial-toggle">
@@ -93,6 +100,50 @@
             <span aria-hidden="true">P</span>
             <span aria-hidden="true">to</span>
             <span aria-hidden="true">Pause</span>
+          </p>
+        </div>
+      </section>
+
+      <section
+        id="credits-screen"
+        class="screen credits-screen"
+        aria-labelledby="credits-heading"
+        tabindex="-1"
+        hidden
+      >
+        <div class="credits-artwork">
+          <div class="credits-hero" aria-hidden="true"></div>
+          <h2 id="credits-heading">GAME CREDITS</h2>
+          <div class="credits-original-copy">
+            <h3>[STUDIO MINTSPHERE]</h3>
+            <p>http://www.mintsphere.com/</p>
+            <h3>[Designer, Programer, Music]</h3>
+            <p>FanFan</p>
+            <h3>[UI Artist, Sprite, Effects]</h3>
+            <p>Vresu</p>
+            <h3>[Special Thanks To]</h3>
+            <p>Rudy Sudarto</p>
+            <p>Various Free Sound Source</p>
+            <p>Lots of Beta Testers</p>
+            <p>and You!</p>
+            <p class="credits-copyright visually-hidden">
+              © 2011 MINTSPHERE. All rights reserved.
+            </p>
+          </div>
+        </div>
+        <div class="credits-adaptation">
+          <button id="credits-back" type="button">Back</button>
+          <a
+            href="https://www.facebook.com/Mintsphere"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Mintsphere on Facebook (opens in a new tab)"
+          >
+            Mintsphere on Facebook
+          </a>
+          <p>
+            This browser version is an adaptation of Trigger Knight for modern
+            browsers. It is not the original Flash release.
           </p>
         </div>
       </section>

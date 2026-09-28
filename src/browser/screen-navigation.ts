@@ -6,10 +6,11 @@ import type {
 import { profileExperienceThreshold } from "../domain/profile.js";
 
 export type ScreenId =
-  "title" | "gameplay" | "result" | "collections" | "settings";
+  "title" | "gameplay" | "result" | "collections" | "settings" | "credits";
 
 export interface ScreenNavigationElements {
   readonly screens: Readonly<Record<ScreenId, HTMLElement>>;
+  readonly titleCreditsButton: HTMLButtonElement;
   readonly profileSummary: HTMLElement;
   readonly titleProfileSummary: HTMLElement;
   readonly weaponCollection: HTMLUListElement;
@@ -39,6 +40,7 @@ export interface ScreenNavigation {
   showSettings(): void;
   returnFromProfileScreen(): void;
   returnFromSettings(): void;
+  returnFromCredits(): void;
   updateProfileSummary(profile: Readonly<ProfileState>): void;
   renderProfileScreens(profile: Readonly<ProfileState>): void;
 }
@@ -214,6 +216,10 @@ export function createScreenNavigation(
     returnFromSettings(): void {
       options.prepareSettings();
       show(settingsReturnScreen);
+    },
+    returnFromCredits(): void {
+      show("title", false);
+      elements.titleCreditsButton.focus();
     },
     updateProfileSummary,
     renderProfileScreens,

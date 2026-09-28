@@ -44,9 +44,14 @@ function setup() {
     result: element<"section">(),
     collections: element<"section">(),
     settings: element<"section">(),
+    credits: element<"section">(),
   };
+  const titleCreditsButton = element<"button">();
+  const titleCreditsButtonFocus = vi.fn();
+  titleCreditsButton.focus = titleCreditsButtonFocus;
   const elements = {
     screens,
+    titleCreditsButton,
     profileSummary: element<"p">(),
     titleProfileSummary: element<"p">(),
     weaponCollection: element<"ul">(),
@@ -78,7 +83,7 @@ function setup() {
     prepareSettings: vi.fn(),
     renderSettings: vi.fn(),
   });
-  return { elements, navigation, onLeaveGameplay };
+  return { elements, navigation, onLeaveGameplay, titleCreditsButtonFocus };
 }
 
 afterEach(() => {
@@ -94,6 +99,21 @@ describe("screen navigation", () => {
     navigation.show("settings");
 
     expect(onLeaveGameplay).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns from credits to the title and restores focus to its action", () => {
+    const { elements, navigation, onLeaveGameplay, titleCreditsButtonFocus } =
+      setup();
+
+    navigation.show("title");
+    navigation.show("credits");
+    navigation.returnFromCredits();
+
+    expect(navigation.current()).toBe("title");
+    expect(elements.screens.title.hidden).toBe(false);
+    expect(elements.screens.credits.hidden).toBe(true);
+    expect(titleCreditsButtonFocus).toHaveBeenCalledOnce();
+    expect(onLeaveGameplay).toHaveBeenCalledOnce();
   });
 
   it("renders the canonical player status screen", () => {
