@@ -775,7 +775,7 @@ export function createBrowserSoundEffects(
       clearFade(playback);
       if (channel === "music") {
         if (playback.muted) {
-          fadeChannel(playback, 0, stopMusicSource);
+          fadeChannel(playback, 0, () => {});
         } else if (musicSource === undefined) {
           startMusicSource(SOUND_FADE_STEPS);
         } else {
@@ -945,7 +945,7 @@ export function createBrowserSoundEffects(
         failedCues: Object.freeze([...failedCues]),
         activeSourceCount:
           activeSources.size + (musicSource === undefined ? 0 : 1),
-        musicPlaying: musicSource !== undefined,
+        musicPlaying: musicSource !== undefined && !channels.music.muted,
         soundEffectsMuted: effectsMuted(),
         scoreLoopPlaying: scoreCueTimer !== undefined,
       });

@@ -23,6 +23,7 @@ import {
   type ActiveRunCompletion,
 } from "./browser/active-run-controller.js";
 import { CanvasPresentation } from "./browser/canvas-presentation.js";
+import { TUTORIAL_PAGES } from "./browser/tutorial-content.js";
 import {
   CompletedRunPresentation,
   type PendingCompletedRunView,
@@ -360,34 +361,6 @@ const fullscreenController = createFullscreenController(appShell, {
   onStateChange: renderFullscreen,
 });
 
-const tutorialContent: Readonly<
-  Record<TutorialPage, Readonly<{ title: string; copy: string }>>
-> = Object.freeze({
-  0: {
-    title: "Basic survival",
-    copy: "Guide the Knight to survive as long as possible using only a single click every time! Game will end if your lifespan or HP becomes 0. Getting hit by the Enemy reduces your HP, while Lifespan reduces gradually over time.",
-  },
-  1: {
-    title: "Encounter and building interaction",
-    copy: "Buildings appear along the route. When the current building is in range, use its action before it passes.",
-  },
-  2: {
-    title: "Soul Shrine and lifespan restoration",
-    copy: "A Soul Shrine restores your lifespan when you reach it and can afford its cached price.",
-  },
-  3: {
-    title: "Automatic battle and item use",
-    copy: "Combat runs automatically. During a battle, use your carried item when it helps you survive.",
-  },
-  4: {
-    title: "Low lifespan warning",
-    copy: "Your lifespan is running low. Look for a Soul Shrine or prepare for the run to end.",
-  },
-  5: {
-    title: "Low HP warning",
-    copy: "Your HP is low. Use a carried item during battle if one is available.",
-  },
-});
 let renderedTutorialPage: TutorialPage | null = null;
 
 function renderTutorial(observation: Readonly<GameObservation>): void {
@@ -400,10 +373,10 @@ function renderTutorial(observation: Readonly<GameObservation>): void {
   if (renderedTutorialPage === page) {
     return;
   }
-  const content = tutorialContent[page];
+  const content = TUTORIAL_PAGES[page];
   tutorialPageLabel.textContent = `Tutorial page ${page + 1} of 6`;
   tutorialHeading.textContent = content.title;
-  tutorialCopy.textContent = content.copy;
+  tutorialCopy.textContent = content.paragraphs.join(" ");
   renderedTutorialPage = page;
 }
 

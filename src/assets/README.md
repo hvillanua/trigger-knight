@@ -6,9 +6,12 @@ asset files from the preserved game artifact and its recorded exports. The
 currently staged original set is under [`original/`](original/): 280 character
 animation frames, 138 raster image exports, 60 MouseEffect click frames, 30
 FXBuy frames, 30 FXItem frames, 30 FXUpgrade frames, 10 Effect-Flash frames, 17
-music or sound exports, and 8 font exports. The browser sound adapter consumes
-the staged original sound exports under [`original/sounds/`](original/sounds/)
-and keeps their recorded export names in its registry.
+music or sound exports, and 8 font exports. The reviewed tutorial copy is staged
+under [`tutorial/`](tutorial/) with its own source record.
+The browser sound adapter consumes the staged original sound exports under
+[`original/sounds/`](original/sounds/) and keeps their recorded export names in
+its registry. The tutorial presentation consumes the reviewed copy under
+[`tutorial/`](tutorial/).
 
 The optional high-resolution runtime pack is not shipped in this repository.
 Install one complete generated treatment from the public asset experiment

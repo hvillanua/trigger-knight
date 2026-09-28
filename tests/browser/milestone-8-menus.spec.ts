@@ -217,14 +217,12 @@ test("starts a run from the title and presents readable tutorial and pause state
   await expect(page.locator("#tutorial-page-label")).toHaveText(
     "Tutorial page 1 of 6",
   );
-  await expect(
-    page.getByRole("heading", { name: "Basic survival" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "SURVIVE!" })).toBeVisible();
   await expect(page.locator("#tutorial-copy")).toContainText(
-    "lifespan or HP becomes 0",
+    "Lifespan or HP reaches 0",
   );
   await expect(page.locator("#tutorial-copy")).toContainText(
-    "Lifespan reduces gradually",
+    "your Lifespan decreases gradually",
   );
 
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();

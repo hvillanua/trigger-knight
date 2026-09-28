@@ -32,9 +32,8 @@ class FakeSource implements SoundAudioSource {
 
 class FakeGain implements SoundAudioGain {
   readonly setGain = vi.fn<(value: number) => void>();
-  readonly rampToGain = vi.fn<
-    (value: number, durationSeconds: number) => void
-  >();
+  readonly rampToGain =
+    vi.fn<(value: number, durationSeconds: number) => void>();
 
   connect(): void {}
 }
@@ -347,7 +346,7 @@ describe("browser sound effects", () => {
     expect(sound.readDiagnostics().musicPlaying).toBe(false);
   });
 
-  it("fades music out over two seconds and safely reverses the fade", async () => {
+  it("fades music without restarting the source when the channel is toggled", async () => {
     vi.useFakeTimers();
     try {
       const { context, sound } = setup();
@@ -370,18 +369,26 @@ describe("browser sound effects", () => {
       vi.advanceTimersByTime(1_000);
       sound.toggleChannel("music");
       expect(musicSource?.stopped).toBe(false);
+      expect(sound.readDiagnostics().musicPlaying).toBe(true);
 
       context.currentTime = 5;
       vi.advanceTimersByTime(2_000);
       expect(musicSource?.stopped).toBe(false);
 
       sound.toggleChannel("music");
+      expect(sound.readDiagnostics().musicPlaying).toBe(false);
       context.currentTime = 6.999;
       vi.advanceTimersByTime(1_999);
       expect(musicSource?.stopped).toBe(false);
 
       context.currentTime = 7;
       vi.advanceTimersByTime(1);
+      expect(musicSource?.stopped).toBe(false);
+      expect(context.sources.filter((source) => source.loop)).toEqual([
+        musicSource,
+      ]);
+
+      sound.stop();
       expect(musicSource?.stopped).toBe(true);
     } finally {
       vi.useRealTimers();
