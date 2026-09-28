@@ -63,6 +63,10 @@ test("keeps the sound availability copy stable across tab visibility changes", a
       page.evaluate(() => window.triggerKnightSoundDiagnostics?.read().status),
     )
     .toMatch(/^(ready|degraded|unavailable|failed)$/);
+  await page.keyboard.press("p");
+  await expect(
+    page.getByRole("button", { name: "Resume", exact: true }),
+  ).toBeVisible();
   await page.getByRole("button", { name: "Main menu", exact: true }).click();
   await page.getByRole("button", { name: "Settings", exact: true }).click();
 

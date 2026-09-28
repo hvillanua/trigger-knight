@@ -25,18 +25,26 @@ test("shares one illustrated page composition across menu pages", async ({
       const style = getComputedStyle(screen);
       const before = getComputedStyle(screen, "::before");
       const after = getComputedStyle(screen, "::after");
+      const ratioParts = style.aspectRatio.split("/").map(Number);
+      const ratioNumerator = ratioParts[0];
+      if (ratioNumerator === undefined) {
+        throw new Error(`Missing aspect ratio for ${id}`);
+      }
+      const ratioDenominator = ratioParts[1] ?? 1;
       const back = screen.querySelector<HTMLElement>('button[id$="-back"]');
       return {
         id,
         illustratedPage: screen.classList.contains("illustrated-page"),
         backgroundImage: style.backgroundImage,
-        aspectRatio: style.aspectRatio,
+        aspectRatio: ratioNumerator / ratioDenominator,
         containerType: style.containerType,
         isolation: style.isolation,
         before: {
           backgroundImage: before.backgroundImage,
           maskImage: before.maskImage,
-          maskPosition: before.maskPosition,
+          maskPositions: before.maskPosition
+            .split(",")
+            .map((position) => position.trim()),
           pointerEvents: before.pointerEvents,
           animationName: before.animationName,
           zIndex: before.zIndex,
@@ -69,7 +77,7 @@ test("shares one illustrated page composition across menu pages", async ({
   for (const pageContract of contract) {
     expect(pageContract.illustratedPage, pageContract.id).toBe(true);
     expect(pageContract.backgroundImage, pageContract.id).toContain("529.jpg");
-    expect(pageContract.aspectRatio, pageContract.id).toBe("1.5");
+    expect(pageContract.aspectRatio, pageContract.id).toBeCloseTo(1.5);
     expect(pageContract.containerType, pageContract.id).toBe("inline-size");
     expect(pageContract.isolation, pageContract.id).toBe("isolate");
     expect(pageContract.before.backgroundImage, pageContract.id).toContain(
@@ -80,7 +88,13 @@ test("shares one illustrated page composition across menu pages", async ({
       pageContract.before.maskImage.match(/350\.svg/g) ?? [],
       pageContract.id,
     ).toHaveLength(2);
-    expect(pageContract.before.maskPosition, pageContract.id).toContain("9.5");
+    expect(pageContract.before.maskPositions, pageContract.id).toHaveLength(2);
+    expect(pageContract.before.maskPositions[0], pageContract.id).toBe(
+      "0px 0px",
+    );
+    expect(pageContract.before.maskPositions[1], pageContract.id).not.toBe(
+      "0px 0px",
+    );
     expect(pageContract.before.pointerEvents, pageContract.id).toBe("none");
     expect(pageContract.before.animationName, pageContract.id).toBe(
       "menu-sky-drift",

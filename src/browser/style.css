@@ -1741,9 +1741,15 @@ body {
 }
 
 #settings-screen.settings-screen fieldset {
+  min-inline-size: 0;
   min-width: 0;
   border-color: #080b14;
   background: rgb(247 241 223 / 42%);
+}
+
+#settings-screen.settings-screen fieldset > * {
+  min-inline-size: 0;
+  min-width: 0;
 }
 
 #settings-screen.settings-screen form {
@@ -1756,6 +1762,12 @@ body {
 
 #settings-screen.settings-screen .binding-row label {
   grid-column: 1 / -1;
+}
+
+@media (max-width: 34rem) {
+  #settings-screen.settings-screen .binding-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 #settings-screen.settings-screen .binding-row input,
