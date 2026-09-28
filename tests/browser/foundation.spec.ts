@@ -89,6 +89,57 @@ test("projects the complete 480x320 world camera into wide and tall output", asy
   await expect(canvas).toHaveAttribute("data-events", "");
 });
 
+test("restores the physical cursor over letterboxed gameplay edges", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
+
+  const canvas = page.getByRole("img", { name: "Trigger Knight game view" });
+  await canvas.evaluate((element) => {
+    element.style.width = "640px";
+    element.style.height = "360px";
+    element.style.aspectRatio = "auto";
+    element.style.border = "0";
+  });
+  await expect(canvas).toHaveAttribute(
+    "data-projection-viewport",
+    "50,0,540,360",
+  );
+
+  const cursors = await canvas.evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    const dispatchMove = (clientX: number): void => {
+      element.dispatchEvent(
+        new PointerEvent("pointermove", {
+          bubbles: true,
+          clientX,
+          clientY: rect.top + rect.height / 2,
+          pointerId: 1,
+          pointerType: "mouse",
+        }),
+      );
+    };
+
+    dispatchMove(rect.left + 1);
+    const letterbox = {
+      cursor: getComputedStyle(element).cursor,
+      region: element.getAttribute("data-pointer-region"),
+    };
+    dispatchMove(rect.left + rect.width / 2);
+    return {
+      letterbox,
+      world: {
+        cursor: getComputedStyle(element).cursor,
+        region: element.getAttribute("data-pointer-region"),
+      },
+    };
+  });
+
+  expect(cursors.letterbox).toEqual({ cursor: "default", region: "letterbox" });
+  expect(cursors.world).toEqual({ cursor: "none", region: "world" });
+});
+
 test("interpolates public observations without mutating gameplay", async ({
   page,
 }) => {

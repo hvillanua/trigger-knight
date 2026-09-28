@@ -95,6 +95,18 @@ test("hides the physical cursor over the gameplay canvas", async ({ page }) => {
   await page.getByRole("button", { name: "Start run" }).click();
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
 
+  await page.locator("#game-canvas").evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    element.dispatchEvent(
+      new PointerEvent("pointermove", {
+        bubbles: true,
+        clientX: rect.left + rect.width / 2,
+        clientY: rect.top + rect.height / 2,
+        pointerId: 1,
+        pointerType: "mouse",
+      }),
+    );
+  });
   await expect(page.locator("#game-canvas")).toHaveCSS("cursor", "none");
 });
 
@@ -143,6 +155,18 @@ test("keeps the original hand cursor visible over pause controls", async ({
   await page.getByRole("button", { name: "Start run" }).click();
   await page.getByRole("button", { name: "Dismiss tutorial" }).click();
 
+  await page.locator("#game-canvas").evaluate((element) => {
+    const rect = element.getBoundingClientRect();
+    element.dispatchEvent(
+      new PointerEvent("pointermove", {
+        bubbles: true,
+        clientX: rect.left + rect.width / 2,
+        clientY: rect.top + rect.height / 2,
+        pointerId: 2,
+        pointerType: "mouse",
+      }),
+    );
+  });
   const activeCursors = await page.evaluate(() => {
     const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
     if (canvas === null) {

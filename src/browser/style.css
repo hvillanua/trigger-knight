@@ -1045,14 +1045,14 @@ body {
 .gameplay-stage canvas {
   width: 100%;
   height: 100%;
-  cursor: none;
+  cursor: default;
   border: 1px solid transparent;
   border-radius: 0;
   box-shadow: none;
 }
 
-.gameplay-stage,
-.gameplay-stage * {
+.gameplay-stage:not([data-tutorial-page]):not([data-paused="true"])
+  canvas[data-pointer-region="world"] {
   cursor: none;
 }
 
