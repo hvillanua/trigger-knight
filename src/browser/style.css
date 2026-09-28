@@ -631,7 +631,8 @@ body {
 }
 
 .title-sky,
-.player-status-sky {
+.player-status-sky,
+.credits-sky {
   position: absolute;
   inset: 0;
   background: var(--trigger-knight-sky-image) 0 0 / auto 100% repeat-x;
@@ -653,7 +654,8 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .title-sky,
-  .player-status-sky {
+  .player-status-sky,
+  .credits-sky {
     animation: none;
   }
 }
@@ -726,6 +728,32 @@ body {
   gap: 1rem;
 }
 
+.title-attribution {
+  position: absolute;
+  right: 0.6rem;
+  bottom: 1.9rem;
+  width: 48%;
+  z-index: 1;
+  margin: 0;
+  padding: 0.15rem 0.3rem;
+  color: #e4d5b2;
+  background: rgb(8 11 20 / 36%);
+  border-radius: 0.1rem;
+  font-family: "Trigger Knight Calibri 12", sans-serif;
+  font-size: clamp(0.48rem, 1.55vw, 0.65rem);
+  line-height: 1.15;
+  text-align: right;
+  text-shadow:
+    -1px -1px 0 #080b14,
+    1px -1px 0 #080b14,
+    -1px 1px 0 #080b14,
+    1px 1px 0 #080b14;
+}
+
+.title-attribution span {
+  display: block;
+}
+
 .title-footer {
   flex: 1 1 auto;
   min-width: 0;
@@ -794,6 +822,14 @@ body {
     gap: 2cqw;
   }
 
+  .foundation:fullscreen > #title-screen .title-attribution {
+    right: 2cqw;
+    bottom: 5.75cqw;
+    width: 48%;
+    padding: 0.5cqw 0.75cqw;
+    font-size: 2cqw;
+  }
+
   .foundation:fullscreen > #title-screen .title-footer {
     gap: 0.75cqw;
     font-size: 2.3333cqw;
@@ -808,6 +844,214 @@ body {
     width: 2.5cqw;
     height: 2.5cqw;
   }
+}
+
+@media (max-width: 34rem) {
+  .title-attribution {
+    bottom: 1.65rem;
+    font-size: 0.48rem;
+  }
+}
+
+#credits-screen.credits-screen {
+  aspect-ratio: 3 / 2;
+  max-height: none;
+  overflow-x: hidden;
+  overflow-y: hidden;
+  container-type: inline-size;
+  color: #080b14;
+  background: transparent;
+  box-shadow: none;
+  scroll-padding: 0.75rem;
+  scrollbar-color: #806d3f rgb(247 241 223 / 42%);
+}
+
+#credits-screen.credits-screen .credits-heading-row {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.credits-artwork {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background: #e5c98f;
+}
+
+.credits-original-art {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background: #e5c98f var(--trigger-knight-parchment-image) center / 100% 100%;
+}
+
+.credits-hero {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 62%;
+  background-color: transparent;
+  background-image: var(--trigger-knight-title-hero-image);
+  background-position: left bottom;
+  background-size: auto 100%;
+  background-repeat: no-repeat;
+  -webkit-mask-image: var(--trigger-knight-title-hero-image);
+  mask-image: var(--trigger-knight-title-hero-image);
+  -webkit-mask-position: left bottom;
+  mask-position: left bottom;
+  -webkit-mask-size: auto 100%;
+  mask-size: auto 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-mode: alpha;
+  mask-mode: alpha;
+  pointer-events: none;
+}
+
+#credits-heading {
+  position: absolute;
+  bottom: 6.25cqw;
+  left: 1.4583cqw;
+  z-index: 0;
+  margin: 0;
+  color: #000;
+  font-family: "Trigger Knight Calibri", sans-serif;
+  font-size: 6.25cqw;
+  font-weight: 400;
+  letter-spacing: -0.035cqw;
+  line-height: 1;
+  -webkit-text-stroke: 1px #fff;
+  text-shadow: 0 0 3px #fff;
+}
+
+#credits-heading > span {
+  position: relative;
+  top: 1.0417cqw;
+  z-index: 1;
+}
+
+#credits-heading::before {
+  position: absolute;
+  top: 70%;
+  left: -1.4583cqw;
+  z-index: -1;
+  width: 48.3333cqw;
+  height: 2.7083cqw;
+  content: "";
+  background: linear-gradient(to right, #fff 0%, rgb(255 255 255 / 0%) 100%);
+}
+
+#credits-screen.credits-screen .credits-heading-row button {
+  position: absolute;
+  top: 1cqw;
+  left: 1cqw;
+  min-height: 0;
+  padding: 0.25cqw 0.5cqw;
+  border: 0;
+  color: #f7f1df;
+  background: transparent;
+  font-size: 2cqw;
+  pointer-events: auto;
+  text-shadow: 0 1px #080b14;
+}
+
+.credits-original-copy {
+  position: absolute;
+  top: 6%;
+  right: 3%;
+  width: 40%;
+  color: #080b14;
+  font-family: "Trigger Knight Calibri 14", sans-serif;
+  font-size: 2.35cqw;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.credits-original-copy h3,
+.credits-original-copy p {
+  margin: 0 0 0.9cqw;
+}
+
+.credits-original-copy h3 {
+  font-family: "Trigger Knight Calibri 16", sans-serif;
+  font-size: 1.08em;
+  font-weight: 700;
+}
+
+.credits-original-copy .credits-copyright {
+  margin-top: 1.1cqw;
+  font-size: 0.84em;
+}
+
+.credits-adaptation {
+  position: absolute;
+  top: 70%;
+  right: 3%;
+  z-index: 2;
+  width: 40%;
+  margin: 0;
+  padding: 0.15rem 0.3rem;
+  color: #e4d5b2;
+  background: rgb(8 11 20 / 36%);
+  border-radius: 0.1rem;
+  font-family: "Trigger Knight Calibri 12", sans-serif;
+  font-size: clamp(0.48rem, 1.55vw, 0.65rem);
+  line-height: 1.15;
+  text-align: right;
+  text-shadow:
+    -1px -1px 0 #080b14,
+    1px -1px 0 #080b14,
+    -1px 1px 0 #080b14,
+    1px 1px 0 #080b14;
+}
+
+.credits-adaptation a {
+  display: block;
+  color: #57c8ee;
+  font-family: system-ui, sans-serif;
+  font-size: 1.05em;
+  font-weight: 700;
+  letter-spacing: normal;
+  text-shadow: none;
+  text-decoration-line: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.15em;
+}
+
+.credits-adaptation a:focus-visible {
+  outline: 1px solid #57c8ee;
+  outline-offset: 2px;
+}
+
+.credits-adaptation p {
+  margin: 0;
+  color: #f7f1df;
+  font-family: system-ui, sans-serif;
+  font-size: 0.9em;
+  letter-spacing: normal;
+  line-height: 1.25;
+  text-shadow: none;
+}
+
+@supports (width: 1cqw) {
+  .foundation:fullscreen > #credits-screen.credits-screen .credits-adaptation {
+    padding: 0.5cqw 0.75cqw;
+    font-size: 2cqw;
+  }
+
+  .foundation:fullscreen
+    > #credits-screen.credits-screen
+    .credits-adaptation
+    a:focus-visible {
+    outline-offset: 0.4cqw;
+  }
+}
+
+.foundation:fullscreen > #credits-screen.credits-screen {
+  max-height: 100%;
 }
 
 .gameplay-screen {
@@ -1178,7 +1422,7 @@ body {
   }
 
   .title-actions {
-    top: clamp(5.5rem, 43%, 9rem);
+    top: 34%;
     right: 0.45rem;
   }
 

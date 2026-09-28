@@ -79,6 +79,8 @@ const titleScreen = requiredElement<HTMLElement>("#title-screen");
 const gameplayScreen = requiredElement<HTMLElement>("#gameplay-screen");
 const collectionsScreen = requiredElement<HTMLElement>("#collections-screen");
 const settingsScreen = requiredElement<HTMLElement>("#settings-screen");
+const creditsScreen = requiredElement<HTMLElement>("#credits-screen");
+const titleCreditsButton = requiredElement<HTMLButtonElement>("#title-credits");
 const canvas = requiredElement<HTMLCanvasElement>("#game-canvas");
 const dismissTutorialButton =
   requiredElement<HTMLButtonElement>("#dismiss-tutorial");
@@ -328,6 +330,7 @@ const screens: Readonly<Record<ScreenId, HTMLElement>> = Object.freeze({
   result: resultRoot,
   collections: collectionsScreen,
   settings: settingsScreen,
+  credits: creditsScreen,
 });
 
 function fullscreenStatusText(state: FullscreenState): string {
@@ -568,6 +571,7 @@ const resultPresentation = new CompletedRunPresentation(resultRoot, {
 const screenNavigation = createScreenNavigation(
   {
     screens,
+    titleCreditsButton,
     profileSummary,
     titleProfileSummary,
     weaponCollection,
@@ -930,6 +934,9 @@ requiredElement<HTMLButtonElement>("#title-settings").addEventListener(
   "click",
   () => runUiAction("activate", () => screenNavigation?.showSettings()),
 );
+titleCreditsButton.addEventListener("click", () =>
+  runUiAction("activate", () => screenNavigation?.show("credits")),
+);
 requiredElement<HTMLButtonElement>("#gameplay-main-menu").addEventListener(
   "click",
   () => runUiAction("cancel", () => screenNavigation?.showTitle()),
@@ -951,6 +958,10 @@ requiredElement<HTMLButtonElement>("#collections-back").addEventListener(
 requiredElement<HTMLButtonElement>("#settings-back").addEventListener(
   "click",
   () => runUiAction("cancel", () => screenNavigation?.returnFromSettings()),
+);
+requiredElement<HTMLButtonElement>("#credits-back").addEventListener(
+  "click",
+  () => runUiAction("cancel", () => screenNavigation?.returnFromCredits()),
 );
 
 function presentButtonSelect(target: EventTarget | null): void {
