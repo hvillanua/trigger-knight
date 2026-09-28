@@ -110,7 +110,7 @@ test("keeps fullscreen active while moving from a finished run to achievements",
   await page.goto("/?manual=1&seed=milestone-2-lifecycle-2&diagnostics=1");
   await page.getByRole("button", { name: "Start run" }).click();
 
-  await page.getByRole("button", { name: "Enter fullscreen" }).click();
+  await page.keyboard.press("f");
   await expect
     .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
     .toBe("app-shell");
@@ -132,9 +132,6 @@ test("keeps fullscreen active while moving from a finished run to achievements",
   await expect(
     page.getByRole("heading", { name: "ACHIEVEMENTS" }),
   ).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: "Exit fullscreen" }),
-  ).toBeVisible();
   await expect
     .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
     .toBe("app-shell");
@@ -142,14 +139,11 @@ test("keeps fullscreen active while moving from a finished run to achievements",
   await page.getByRole("button", { name: "Back" }).click();
   await page.getByRole("button", { name: "Main menu", exact: true }).click();
   await expect(page.locator("#title-collections")).toHaveCount(0);
-  await expect(
-    page.getByRole("button", { name: "Exit fullscreen" }),
-  ).toBeVisible();
   await expect
     .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
     .toBe("app-shell");
 
-  await page.getByRole("button", { name: "Exit fullscreen" }).click();
+  await page.keyboard.press("f");
   await expect
     .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
     .toBeNull();
@@ -164,7 +158,7 @@ test("re-enters fullscreen from menu, achievements, and settings screens", async
   await page.goto("/?manual=1&seed=milestone-2-lifecycle-2&diagnostics=1");
   await page.getByRole("button", { name: "Start run" }).click();
 
-  await page.getByRole("button", { name: "Enter fullscreen" }).click();
+  await page.keyboard.press("f");
   await expect
     .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
     .toBe("app-shell");
@@ -176,37 +170,31 @@ test("re-enters fullscreen from menu, achievements, and settings screens", async
     page.getByRole("heading", { name: "ACHIEVEMENTS" }),
   ).toBeVisible();
 
-  await page.getByRole("button", { name: "Exit fullscreen" }).click();
+  await page.keyboard.press("f");
   await expect
     .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
     .toBeNull();
-  await expect(
-    page.getByRole("button", { name: "Enter fullscreen" }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Enter fullscreen" }).click();
+  await page.keyboard.press("f");
   await expect
     .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
     .toBe("app-shell");
 
-  await page.getByRole("button", { name: "Exit fullscreen" }).click();
+  await page.keyboard.press("f");
   await page.getByRole("button", { name: "Back" }).click();
   await page.getByRole("button", { name: "Main menu", exact: true }).click();
   await expect(page.locator("#title-collections")).toHaveCount(0);
-  await expect(
-    page.getByRole("button", { name: "Enter fullscreen" }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Enter fullscreen" }).click();
+  await page.keyboard.press("f");
   await expect
     .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
     .toBe("app-shell");
 
   await page.getByRole("button", { name: "Settings" }).click();
   await expect(page.locator("#settings-screen")).toBeVisible();
-  await page.getByRole("button", { name: "Exit fullscreen" }).click();
-  await expect(
-    page.getByRole("button", { name: "Enter fullscreen" }),
-  ).toBeVisible();
-  await page.getByRole("button", { name: "Enter fullscreen" }).click();
+  await page.keyboard.press("f");
+  await expect
+    .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
+    .toBeNull();
+  await page.keyboard.press("f");
   await expect
     .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
     .toBe("app-shell");
@@ -365,17 +353,15 @@ async function replayWithSampledCanvas(
   }, input);
 }
 
-test("exposes fullscreen controls and the reduced-motion presentation state", async ({
+test("exposes the fullscreen status and reduced-motion presentation state", async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
   await page.goto("/?manual=1");
   await page.getByRole("button", { name: "Start run" }).click();
 
-  await expect(
-    page.getByRole("button", { name: "Enter fullscreen" }),
-  ).toBeVisible();
-  await expect(page.locator("#toggle-fullscreen")).toBeEnabled();
+  await expect(page.locator("#toggle-fullscreen")).toHaveCount(0);
+  await expect(page.locator("#exit-fullscreen")).toHaveCount(0);
   await expect(page.locator("#game-canvas")).toHaveAttribute(
     "data-reduced-motion",
     "true",
@@ -385,57 +371,37 @@ test("exposes fullscreen controls and the reduced-motion presentation state", as
   ).resolves.toBeUndefined();
 });
 
-test("keeps fullscreen control anchored to every active screen", async ({
+test("keeps the fullscreen shortcut available on every menu screen", async ({
   page,
 }) => {
+  await installFullscreenStub(page, "working");
   await seedDisabledTutorialProfile(page);
   await page.goto("/?manual=1");
 
-  const expectFullscreenControl = async (): Promise<void> => {
-    const layout = await page.evaluate(() => {
-      const screen = [
-        ...document.querySelectorAll<HTMLElement>(".screen"),
-      ].find((candidate) => !candidate.hidden);
-      const button =
-        document.querySelector<HTMLButtonElement>("#toggle-fullscreen");
-      if (screen === undefined || button === null) {
-        throw new Error("Missing active screen or fullscreen control");
-      }
-      const screenRect = screen.getBoundingClientRect();
-      const buttonRect = button.getBoundingClientRect();
-      return {
-        rightGap: screenRect.right - buttonRect.right,
-        topGap: buttonRect.top - screenRect.top,
-        hitTarget:
-          document.elementFromPoint(
-            buttonRect.left + buttonRect.width / 2,
-            buttonRect.top + buttonRect.height / 2,
-          ) === button,
-        cursor: getComputedStyle(button).cursor,
-      };
-    });
-
-    expect(layout.rightGap).toBeGreaterThanOrEqual(0);
-    expect(layout.rightGap).toBeLessThanOrEqual(8);
-    expect(layout.topGap).toBeGreaterThanOrEqual(0);
-    expect(layout.topGap).toBeLessThanOrEqual(8);
-    expect(layout.hitTarget).toBe(true);
-    expect(layout.cursor).toMatch(/,\s*pointer$/);
+  const expectShortcutToggle = async (): Promise<void> => {
+    await page.keyboard.press("f");
+    await expect
+      .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
+      .toBe("app-shell");
+    await page.keyboard.press("f");
+    await expect
+      .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
+      .toBeNull();
   };
 
-  await expectFullscreenControl();
-
+  await expect(page.locator("#toggle-fullscreen")).toHaveCount(0);
+  await expect(page.locator("#exit-fullscreen")).toHaveCount(0);
   await expect(page.locator("#title-screen")).toBeVisible();
-  await expectFullscreenControl();
+  await expectShortcutToggle();
 
   await page.getByRole("button", { name: "View achievements" }).click();
   await expect(page.locator("#collections-screen")).toBeVisible();
-  await expectFullscreenControl();
+  await expectShortcutToggle();
 
   await page.getByRole("button", { name: "Back" }).click();
   await page.getByRole("button", { name: "Settings" }).click();
   await expect(page.locator("#settings-screen")).toBeVisible();
-  await expectFullscreenControl();
+  await expectShortcutToggle();
 });
 
 test("scales the main menu presentation in fullscreen", async ({ page }) => {
@@ -472,7 +438,7 @@ test("scales the main menu presentation in fullscreen", async ({ page }) => {
     });
 
   const normal = await readMenuLayout();
-  await page.locator("#toggle-fullscreen").click();
+  await page.keyboard.press("f");
   await expect
     .poll(() => page.evaluate(() => document.fullscreenElement?.id ?? null))
     .toBe("app-shell");
@@ -502,15 +468,12 @@ test("handles fullscreen entry, exit, resize, and denied or unsupported hosts", 
       await installFullscreenStub(page, mode);
       await page.goto("/?manual=1");
       await page.getByRole("button", { name: "Start run" }).click();
-      const button = page.locator("#toggle-fullscreen");
+      await expect(page.locator("#toggle-fullscreen")).toHaveCount(0);
+      await expect(page.locator("#exit-fullscreen")).toHaveCount(0);
       if (mode === "working") {
-        await expect(button).toBeEnabled();
-        await button.click();
-        await expect(
-          page.getByRole("button", { name: "Exit fullscreen" }),
-        ).toBeVisible();
+        await page.keyboard.press("f");
         await expect(page.locator("#fullscreen-status")).toHaveText(
-          "Fullscreen is active. Use Exit fullscreen to leave it.",
+          "Fullscreen is active. Press F to leave it.",
         );
         await expect(page.locator("#game-canvas")).toHaveAttribute(
           "data-world-camera",
@@ -529,19 +492,14 @@ test("handles fullscreen entry, exit, resize, and denied or unsupported hosts", 
           "data-world-camera",
           "0,0,480,320",
         );
-        await page.getByRole("button", { name: "Exit fullscreen" }).click();
-        await expect(
-          page.getByRole("button", { name: "Enter fullscreen" }),
-        ).toBeVisible();
+        await page.keyboard.press("f");
       } else if (mode === "denied") {
-        await expect(button).toBeEnabled();
-        await button.click();
+        await page.keyboard.press("f");
         await expect(page.locator("#fullscreen-status")).toHaveText(
           "Fullscreen request was denied. Check browser permissions and try again.",
         );
-        await expect(button).toHaveText("Enter fullscreen");
       } else {
-        await expect(button).toBeDisabled();
+        await page.keyboard.press("f");
         await expect(page.locator("#fullscreen-status")).toHaveText(
           "Fullscreen is not available in this browser.",
         );
@@ -557,7 +515,7 @@ test("keeps the fullscreen stage within the viewport", async ({ page }) => {
   await page.goto("/?manual=1");
   await page.getByRole("button", { name: "Start run" }).click();
 
-  await page.getByRole("button", { name: "Enter fullscreen" }).click();
+  await page.keyboard.press("f");
   await expect(page.locator("#gameplay-screen")).toBeVisible();
 
   const layout = await page.evaluate(() => {
@@ -814,9 +772,7 @@ test("dismisses the original session-over screen with keyboard activation", asyn
   expect(ended).toBe(true);
   const canvas = page.locator("#game-canvas");
   await expect(canvas).toHaveAttribute("data-visual-scene", "ended");
-  await expect(
-    page.getByRole("button", { name: "Enter fullscreen" }),
-  ).toBeVisible();
+  await expect(page.locator("#toggle-fullscreen")).toHaveCount(0);
   await expect(page.locator("#run-result")).toBeHidden();
   const screenshot = await canvas.screenshot();
   await testInfo.attach("session-over-human-review.png", {

@@ -7,20 +7,21 @@ test("keeps the reference-backed screens composed and interactive", async ({
   await page.goto("/?manual=1");
 
   const titleAssets = await page.locator("#title-screen").evaluate(() => {
-    const readBackground = (selector: string): string => {
-      const element = document.querySelector<HTMLElement>(selector);
-      if (element === null) throw new Error(`Missing ${selector}`);
-      return getComputedStyle(element).backgroundImage;
-    };
+    const screen = document.querySelector<HTMLElement>("#title-screen");
+    if (screen === null) throw new Error("Missing title screen");
+    const logo = screen.querySelector<HTMLElement>(".title-logo");
+    if (logo === null) throw new Error("Missing title logo");
     return {
-      parchment: readBackground("#title-screen"),
-      sky: readBackground(".title-sky"),
-      hero: readBackground(".title-hero-art"),
-      logo: readBackground(".title-logo"),
+      parchment: getComputedStyle(screen).backgroundImage,
+      sky: getComputedStyle(screen, "::before").backgroundImage,
+      skyMask: getComputedStyle(screen, "::before").maskImage,
+      hero: getComputedStyle(screen, "::after").backgroundImage,
+      logo: getComputedStyle(logo).backgroundImage,
     };
   });
   expect(titleAssets.parchment).toContain("529.jpg");
   expect(titleAssets.sky).toContain("357.jpg");
+  expect(titleAssets.skyMask).toContain("350.svg");
   expect(titleAssets.hero).toContain("533.png");
   expect(titleAssets.logo).toContain("268.png");
   const titleFooterAlignment = await page
@@ -45,9 +46,9 @@ test("keeps the reference-backed screens composed and interactive", async ({
   expect(titleFooterAlignment.display).toBe("flex");
   expect(titleFooterAlignment.centerDelta).toBeLessThan(1);
   await expect(page.locator(".title-footer")).toHaveText(
-    "| M/S to mute Music/SFX, P to Pause",
+    "| M/S to mute Music/SFX, F to toggle fullscreen, P to Pause",
   );
-  await expect(page.locator(".title-footer > span")).toHaveCount(8);
+  await expect(page.locator(".title-footer > span")).toHaveCount(12);
   const footerGaps = await page.locator(".title-footer").evaluate((footer) => {
     const spans = [...footer.children].map((child) =>
       child.getBoundingClientRect(),
@@ -60,13 +61,18 @@ test("keeps the reference-backed screens composed and interactive", async ({
   });
   expect(footerGaps.every((gap) => gap >= 1)).toBe(true);
   const initialSkyPosition = await page
-    .locator(".title-sky")
-    .evaluate((element) => getComputedStyle(element).backgroundPositionX);
+    .locator("#title-screen")
+    .evaluate(
+      (element) => getComputedStyle(element, "::before").backgroundPositionX,
+    );
   await expect
     .poll(() =>
       page
-        .locator(".title-sky")
-        .evaluate((element) => getComputedStyle(element).backgroundPositionX),
+        .locator("#title-screen")
+        .evaluate(
+          (element) =>
+            getComputedStyle(element, "::before").backgroundPositionX,
+        ),
     )
     .not.toBe(initialSkyPosition);
   const titleTutorialToggle = page.locator("#title-tutorial-toggle");
@@ -87,15 +93,17 @@ test("keeps the reference-backed screens composed and interactive", async ({
     .locator("#collections-screen")
     .evaluate(() => {
       const screen = document.querySelector<HTMLElement>("#collections-screen");
-      const hero = document.querySelector<HTMLElement>(".player-status-hero");
-      if (screen === null || hero === null)
-        throw new Error("Missing player status art");
+      if (screen === null) throw new Error("Missing player status screen");
       return {
         parchment: getComputedStyle(screen).backgroundImage,
-        hero: getComputedStyle(hero).backgroundImage,
+        sky: getComputedStyle(screen, "::before").backgroundImage,
+        skyMask: getComputedStyle(screen, "::before").maskImage,
+        hero: getComputedStyle(screen, "::after").backgroundImage,
       };
     });
   expect(profileAssets.parchment).toContain("529.jpg");
+  expect(profileAssets.sky).toContain("357.jpg");
+  expect(profileAssets.skyMask).toContain("350.svg");
   expect(profileAssets.hero).toContain("533.png");
   await expect(page.locator("#collections-heading")).toHaveText("ACHIEVEMENTS");
   const achievementsLabel = await page

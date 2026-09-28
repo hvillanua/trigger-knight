@@ -136,7 +136,7 @@ test("uses the original hand cursor on the title and tutorial screens", async ({
   expect(titleCursors.start).toContain("/12.png");
 });
 
-test("keeps the original hand cursor visible over pause and fullscreen controls", async ({
+test("keeps the original hand cursor visible over pause controls", async ({
   page,
 }) => {
   await page.goto("/?manual=1");
@@ -145,39 +145,29 @@ test("keeps the original hand cursor visible over pause and fullscreen controls"
 
   const activeCursors = await page.evaluate(() => {
     const canvas = document.querySelector<HTMLCanvasElement>("#game-canvas");
-    const fullscreen =
-      document.querySelector<HTMLButtonElement>("#toggle-fullscreen");
-    if (canvas === null || fullscreen === null) {
+    if (canvas === null) {
       throw new Error("Missing active gameplay controls");
     }
     return {
       canvas: getComputedStyle(canvas).cursor,
-      fullscreen: getComputedStyle(fullscreen).cursor,
     };
   });
   expect(activeCursors.canvas).toBe("none");
-  expect(activeCursors.fullscreen).toContain("/12.png");
-  expect(activeCursors.fullscreen).toMatch(/,\s*pointer$/);
 
   await page.keyboard.press("p");
   const pausedCursors = await page.evaluate(() => {
     const stage = document.querySelector<HTMLElement>(".gameplay-stage");
     const resume = document.querySelector<HTMLButtonElement>("#toggle-pause");
-    const fullscreen =
-      document.querySelector<HTMLButtonElement>("#toggle-fullscreen");
-    if (stage === null || resume === null || fullscreen === null) {
+    if (stage === null || resume === null) {
       throw new Error("Missing paused gameplay controls");
     }
     return {
       stage: getComputedStyle(stage).cursor,
       resume: getComputedStyle(resume).cursor,
-      fullscreen: getComputedStyle(fullscreen).cursor,
     };
   });
   expect(pausedCursors.stage).toContain("/12.png");
   expect(pausedCursors.resume).toContain("/12.png");
-  expect(pausedCursors.fullscreen).toContain("/12.png");
-  expect(pausedCursors.fullscreen).toMatch(/,\s*pointer$/);
 });
 
 test("dismisses the first tutorial dialog from any stage click", async ({
@@ -249,6 +239,16 @@ test("captures, cancels, and rejects conflicting keyboard remaps", async ({
   await expect(page.locator("#settings-binding-prompt")).toContainText(
     "Pause is Q",
   );
+
+  for (const key of ["m", "s", "f"]) {
+    await page.locator('[data-remap-action="togglePause"]').click();
+    await page.keyboard.press(key);
+    await expect(page.locator("#binding-toggle-pause")).toHaveValue("KeyQ");
+    await expect(page.locator("#settings-binding-prompt")).toContainText(
+      "reserved for a global shortcut",
+    );
+    await page.keyboard.press("Escape");
+  }
 
   await page.locator('[data-remap-action="purchaseCurrentEncounter"]').click();
   await page.keyboard.press("q");

@@ -123,3 +123,22 @@ it("captures remaps with cancellation and rejects conflicts", () => {
   expect(controller.bindings().purchaseCurrentEncounter).toBe("KeyQ");
   expect(controller.activeAction()).toBeNull();
 });
+
+it.each(["KeyM", "KeyS", "KeyF"] as const)(
+  "keeps %s reserved for global browser shortcuts",
+  (code) => {
+    const controller = createBindingCaptureController(
+      createDefaultSettings().bindings,
+    );
+
+    controller.begin("togglePause");
+
+    expect(controller.handleKeyDown(code)).toEqual({
+      status: "reserved",
+      action: "togglePause",
+      code,
+    });
+    expect(controller.activeAction()).toBe("togglePause");
+    expect(controller.bindings().togglePause).toBe("KeyP");
+  },
+);

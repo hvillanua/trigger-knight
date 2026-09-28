@@ -1,6 +1,7 @@
 import type { GameCommand, SoundChannel } from "../application/contracts.js";
 import type { ActionEligibility } from "../application/contracts.js";
 import {
+  isReservedKeyboardCode,
   isSupportedKeyboardCode,
   type KeyboardCode,
   type InputBindings,
@@ -146,6 +147,11 @@ export type BindingCaptureResult =
       conflictingAction: InputAction;
     }>
   | Readonly<{ status: "unsupported"; action: InputAction; code: string }>
+  | Readonly<{
+      status: "reserved";
+      action: InputAction;
+      code: KeyboardCode;
+    }>
   | Readonly<{ status: "ignored" }>;
 
 export interface BindingCaptureController {
@@ -181,6 +187,9 @@ export function createBindingCaptureController(
       if (active === null) return Object.freeze({ status: "ignored" });
       if (code === "Escape") return cancel();
       const action = active;
+      if (isReservedKeyboardCode(code)) {
+        return Object.freeze({ status: "reserved", action, code });
+      }
       if (!isSupportedKeyboardCode(code)) {
         return Object.freeze({ status: "unsupported", action, code });
       }
