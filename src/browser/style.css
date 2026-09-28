@@ -857,11 +857,27 @@ body {
   overflow-y: auto;
   container-type: inline-size;
   color: #080b14;
+  background: transparent;
+  box-shadow: none;
   scroll-padding: 0.75rem;
   scrollbar-color: #806d3f rgb(247 241 223 / 42%);
 }
 
+#credits-screen.credits-screen .credits-heading-row {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
 .credits-artwork {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: #e5c98f;
+}
+
+.credits-original-art {
   position: relative;
   width: 100%;
   aspect-ratio: 3 / 2;
@@ -879,35 +895,66 @@ body {
 
 #credits-heading {
   position: absolute;
-  bottom: 5%;
-  left: 3%;
-  z-index: 1;
+  bottom: 6.25cqw;
+  left: 1.4583cqw;
+  z-index: 0;
   margin: 0;
-  color: #080b14;
-  font-family: "Trigger Knight Calibri 16", sans-serif;
-  font-size: 5.2cqw;
-  font-weight: 700;
-  letter-spacing: 0.12cqw;
+  color: #000;
+  font-family: "Trigger Knight Calibri", sans-serif;
+  font-size: 6.25cqw;
+  font-weight: 400;
+  letter-spacing: -0.035cqw;
   line-height: 1;
-  -webkit-text-stroke: 0.12cqw #f7f1df;
-  text-shadow: 0 0 0.4cqw #f7f1df;
+  -webkit-text-stroke: 1px #fff;
+  text-shadow: 0 0 3px #fff;
+}
+
+#credits-heading > span {
+  position: relative;
+  top: 1.0417cqw;
+  z-index: 1;
+}
+
+#credits-heading::before {
+  position: absolute;
+  top: 70%;
+  left: -1.4583cqw;
+  z-index: -1;
+  width: 48.3333cqw;
+  height: 2.7083cqw;
+  content: "";
+  background: linear-gradient(to right, #fff 0%, rgb(255 255 255 / 0%) 100%);
+}
+
+#credits-screen.credits-screen .credits-heading-row button {
+  position: absolute;
+  top: 1cqw;
+  left: 1cqw;
+  min-height: 0;
+  padding: 0.25cqw 0.5cqw;
+  border: 0;
+  color: #f7f1df;
+  background: transparent;
+  font-size: 2cqw;
+  pointer-events: auto;
+  text-shadow: 0 1px #080b14;
 }
 
 .credits-original-copy {
   position: absolute;
-  top: 5%;
+  top: 14%;
   right: 3%;
   width: 40%;
   color: #080b14;
   font-family: "Trigger Knight Calibri 14", sans-serif;
-  font-size: 2.45cqw;
-  line-height: 1.12;
+  font-size: 2.35cqw;
+  line-height: 1.1;
   text-align: center;
 }
 
 .credits-original-copy h3,
 .credits-original-copy p {
-  margin: 0 0 0.7cqw;
+  margin: 0 0 1.5cqw;
 }
 
 .credits-original-copy h3 {
@@ -922,44 +969,37 @@ body {
 }
 
 .credits-adaptation {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 0.5rem 1rem;
-  padding: 0.75rem;
-  color: #f7f1df;
-  background: #111820;
-  font-size: 0.9rem;
+  display: grid;
+  gap: 0.75cqw;
+  justify-items: center;
+  padding: 1.25cqw 3%;
+  border-top: 1px solid rgb(8 11 20 / 35%);
+  color: #080b14;
+  background: transparent;
+  font-family: "Trigger Knight Calibri 14", sans-serif;
+  font-size: 2.2cqw;
+  line-height: 1.2;
   text-align: center;
 }
 
-.credits-adaptation button,
 .credits-adaptation a {
-  min-height: 2.5rem;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid #806d3f;
-  color: #f7f1df;
-  background: #202b3e;
+  color: #080b14;
   font: inherit;
   text-decoration: underline;
 }
 
-.credits-adaptation button:focus-visible,
 .credits-adaptation a:focus-visible {
-  outline: 2px solid #57c8ee;
-  outline-offset: 2px;
+  outline: 1px solid #080b14;
+  outline-offset: 0.2cqw;
 }
 
 .credits-adaptation p {
-  flex: 1 0 100%;
   max-width: 38rem;
-  margin: 0 auto;
-  color: #d9d5c8;
+  margin: 0;
 }
 
 @container (max-width: 24rem) {
-  .credits-artwork {
+  .credits-original-art {
     min-height: 38rem;
     aspect-ratio: auto;
   }
@@ -974,7 +1014,26 @@ body {
   #credits-heading {
     top: 9.5rem;
     bottom: auto;
+    left: 0.75rem;
     font-size: 1.5rem;
+  }
+
+  #credits-heading > span {
+    top: 0.25rem;
+  }
+
+  #credits-heading::before {
+    top: 70%;
+    left: -0.75rem;
+    width: 15rem;
+    height: 0.65rem;
+  }
+
+  #credits-screen.credits-screen .credits-heading-row button {
+    top: 0.75rem;
+    left: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.9rem;
   }
 
   .credits-original-copy {
@@ -989,6 +1048,12 @@ body {
   .credits-original-copy h3,
   .credits-original-copy p {
     margin-bottom: 0.35rem;
+  }
+
+  .credits-adaptation {
+    gap: 0.5rem;
+    padding: 0.75rem;
+    font-size: 0.9rem;
   }
 }
 

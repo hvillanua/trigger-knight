@@ -6,7 +6,7 @@ test("opens credits and returns to the title with focus restored", async ({
   await page.goto("/?manual=1");
 
   await expect(page.locator(".title-attribution")).toContainText(
-    "Modern-browser adaptation. Original game by Mintsphere.",
+    "Fan made modern-browser adaptation. Original game by Mintsphere.",
   );
   const creditsButton = page.getByRole("button", { name: "Credits" });
   await creditsButton.click();
@@ -14,7 +14,9 @@ test("opens credits and returns to the title with focus restored", async ({
   const credits = page.locator("#credits-screen");
   await expect(credits).toBeVisible();
   await expect(page.locator("#title-screen")).toBeHidden();
-  const artworkBox = await credits.locator(".credits-artwork").boundingBox();
+  const artworkBox = await credits
+    .locator(".credits-original-art")
+    .boundingBox();
   if (artworkBox === null) throw new Error("Missing credits artwork bounds");
   expect(artworkBox.width).toBeCloseTo(480, 0);
   expect(artworkBox.height).toBeCloseTo(320, 0);
@@ -33,8 +35,11 @@ test("opens credits and returns to the title with focus restored", async ({
     "© 2011 MINTSPHERE. All rights reserved.",
   );
   await expect(credits).toContainText(
-    "This browser version is an adaptation of Trigger Knight for modern browsers. It is not the original Flash release.",
+    "This browser version is a fan-made adaptation of Trigger Knight for modern browsers. It is not the original Flash release.",
   );
+  await expect(
+    credits.locator(".credits-artwork .credits-adaptation"),
+  ).toBeVisible();
 
   const facebook = credits.getByRole("link", {
     name: "Mintsphere on Facebook (opens in a new tab)",
