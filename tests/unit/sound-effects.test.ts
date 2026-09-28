@@ -5,6 +5,7 @@ import {
   createBrowserSoundEffects,
   soundCuesForEvent,
   type SoundAudioContext,
+  type SoundAudioGain,
   type SoundAudioRuntime,
   type SoundAudioSource,
   type SoundBuffer,
@@ -29,9 +30,19 @@ class FakeSource implements SoundAudioSource {
   }
 }
 
+class FakeGain implements SoundAudioGain {
+  readonly setGain = vi.fn<(value: number) => void>();
+  readonly rampToGain =
+    vi.fn<(value: number, durationSeconds: number) => void>();
+
+  connect(): void {}
+}
+
 class FakeContext implements SoundAudioContext {
   state: "closed" | "interrupted" | "running" | "suspended" = "running";
+  currentTime = 0;
   readonly destination = { native: undefined };
+  readonly gains: FakeGain[] = [];
   readonly sources: FakeSource[] = [];
   readonly resume = vi.fn(() => {
     this.state = "running";
@@ -42,11 +53,10 @@ class FakeContext implements SoundAudioContext {
     return Promise.resolve();
   });
 
-  createGain() {
-    return {
-      setGain: vi.fn(),
-      connect: vi.fn(),
-    };
+  createGain(): SoundAudioGain {
+    const gain = new FakeGain();
+    this.gains.push(gain);
+    return gain;
   }
 
   createBufferSource(): SoundAudioSource {
@@ -334,6 +344,84 @@ describe("browser sound effects", () => {
     sound.setSession(null);
     expect(musicSource?.stopped).toBe(true);
     expect(sound.readDiagnostics().musicPlaying).toBe(false);
+  });
+
+  it("fades music without restarting the source when the channel is toggled", async () => {
+    vi.useFakeTimers();
+    try {
+      const { context, sound } = setup();
+      await sound.initialize();
+      sound.setSession("run-1");
+      sound.startGameplayMusic();
+
+      const musicSource = context.sources.find((source) => source.loop);
+      const musicGain = context.gains[2];
+      expect(musicSource).toBeDefined();
+      expect(musicGain).toBeDefined();
+      expect(musicGain?.rampToGain).toHaveBeenLastCalledWith(0.9, 2);
+
+      context.currentTime = 2;
+      vi.advanceTimersByTime(2_000);
+      sound.toggleChannel("music");
+      expect(musicGain?.rampToGain).toHaveBeenLastCalledWith(0, 2);
+
+      context.currentTime = 3;
+      vi.advanceTimersByTime(1_000);
+      sound.toggleChannel("music");
+      expect(musicSource?.stopped).toBe(false);
+      expect(sound.readDiagnostics().musicPlaying).toBe(true);
+
+      context.currentTime = 5;
+      vi.advanceTimersByTime(2_000);
+      expect(musicSource?.stopped).toBe(false);
+
+      sound.toggleChannel("music");
+      expect(sound.readDiagnostics().musicPlaying).toBe(false);
+      context.currentTime = 6.999;
+      vi.advanceTimersByTime(1_999);
+      expect(musicSource?.stopped).toBe(false);
+
+      context.currentTime = 7;
+      vi.advanceTimersByTime(1);
+      expect(musicSource?.stopped).toBe(false);
+      expect(context.sources.filter((source) => source.loop)).toEqual([
+        musicSource,
+      ]);
+
+      sound.stop();
+      expect(musicSource?.stopped).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("fades active sound effects out over two seconds without affecting music", async () => {
+    vi.useFakeTimers();
+    try {
+      const { context, sound } = setup();
+      await sound.initialize();
+      sound.setSession("run-1");
+      sound.startGameplayMusic();
+      sound.presentTransition("run-1", 1, [event("battle-started")]);
+
+      const musicSource = context.sources.find((source) => source.loop);
+      const effectSource = context.sources.find((source) => !source.loop);
+      expect(musicSource).toBeDefined();
+      expect(effectSource).toBeDefined();
+
+      sound.toggleChannel("effects");
+      context.currentTime = 1.999;
+      vi.advanceTimersByTime(1_999);
+      expect(effectSource?.stopped).toBe(false);
+      expect(musicSource?.stopped).toBe(false);
+
+      context.currentTime = 2;
+      vi.advanceTimersByTime(1);
+      expect(effectSource?.stopped).toBe(true);
+      expect(musicSource?.stopped).toBe(false);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("suspends and resumes visibly without replaying hidden cues", async () => {

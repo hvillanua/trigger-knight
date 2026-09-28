@@ -36,7 +36,7 @@ export const originalV13CompatibilityBaseline: OriginalV13CompatibilityBaseline 
     runResultSchemaVersion: 2,
     gameplayTraceSchemaVersion: 2,
     corpusFingerprint:
-      "sha256-v1:4ff3cf9123a8769a3c4c748151fe15051f0295c3758bf370e60c27ccc39005b3",
+      "sha256-v1:174b7670e65bac50571d363df99aea465eb9df6adff77daa4a0b8f1b439b8c5e",
   });
 
 function baselinePayload(

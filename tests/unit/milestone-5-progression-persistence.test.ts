@@ -273,7 +273,6 @@ describe("Milestone 5 progression and persistence scenarios", () => {
       const expectedProfile = normalizeProfile({
         ...loaded.profile,
         ...expected,
-        tutorialPreference: "disabled",
       });
 
       expect(result).toMatchObject({ status: "committed" });

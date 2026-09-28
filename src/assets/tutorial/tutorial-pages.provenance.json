@@ -1,0 +1,101 @@
+{
+  "assetSet": "original-runtime-tutorial-text",
+  "sourceArtifact": "original/kongregate/MonotouchKong13APPSTORE.swf",
+  "sourceArtifactSha256": "0f0630b981172fd2183b3a2ff890d98a178c11bc8e0aa3b5ed1be05c4ddb2c20",
+  "sourceExportRoot": "exports/assets/raw/texts",
+  "stagedPath": "src/assets/tutorial/tutorial-pages.json",
+  "stagedSha256": "2591578130c861a6732bb9fddefe384982293dc283236609d4b0207e567713d5",
+  "extraction": {
+    "tool": "FFDec 26.2.1",
+    "method": "Reviewed the recorded text exports associated with the six tutorial pages"
+  },
+  "sourceFiles": [
+    {
+      "path": "exports/assets/raw/texts/314.txt",
+      "sha256": "cf1e9845f5c4429ba2a99d8a56a593dd9fd582453d61be1f4eaf57d4ee36efd2"
+    },
+    {
+      "path": "exports/assets/raw/texts/315.txt",
+      "sha256": "f7877947b43b7b350fe382fbb40c05f00a27acfd8180c8d205f0dcec296b6d22"
+    },
+    {
+      "path": "exports/assets/raw/texts/316.txt",
+      "sha256": "8ae567fd99c68bea56f5fac1f04ec323e76e3aa2243ff3b9680b839bf26bb15a"
+    },
+    {
+      "path": "exports/assets/raw/texts/317.txt",
+      "sha256": "666ac895179951ae936c433cc87844f827c7acbd793b9f2a6d971534fcd29963"
+    },
+    {
+      "path": "exports/assets/raw/texts/321.txt",
+      "sha256": "2825c2fc19a48923f875823e64baac1363d05da0bd6d927f625e51afbcd2200d"
+    },
+    {
+      "path": "exports/assets/raw/texts/322.txt",
+      "sha256": "e74ddfb72e36f780e2dde597b79d78b3fbda4cb66a827379ffee2d5f3eec5028"
+    },
+    {
+      "path": "exports/assets/raw/texts/323.txt",
+      "sha256": "caabfe797b6ef73eff1c812d36845c838d28b9167cfffac064227afc949933c4"
+    },
+    {
+      "path": "exports/assets/raw/texts/324.txt",
+      "sha256": "d412464111c872092e3433b8a674be963a183ddd34e0b06b1d87042986030b3b"
+    },
+    {
+      "path": "exports/assets/raw/texts/328.txt",
+      "sha256": "fe37c6559b175c399f7841bd70866f9cf64cbb35866f880f4be14b1e5e3fa434"
+    },
+    {
+      "path": "exports/assets/raw/texts/329.txt",
+      "sha256": "60aa98e016f9386b1b751083705622506e70d5f28e4effae153492015e0335fe"
+    },
+    {
+      "path": "exports/assets/raw/texts/330.txt",
+      "sha256": "802d0d633ae259bb65d5b3cd42fc1f818aaf6df2ae453d036a2ee1f1815e9c85"
+    },
+    {
+      "path": "exports/assets/raw/texts/333.txt",
+      "sha256": "bb6f67f78b053c929ab7c9b7d1000662f82d5455558b40ceea946d32661ef874"
+    },
+    {
+      "path": "exports/assets/raw/texts/334.txt",
+      "sha256": "ddb56debf2706b67d4d1e4ba75208643d3bf9821967530d3673d26ca14c28cff"
+    },
+    {
+      "path": "exports/assets/raw/texts/335.txt",
+      "sha256": "3b26180357c771b960618578b7fad7df48b0d823c47bd02866093e15797b9774"
+    },
+    {
+      "path": "exports/assets/raw/texts/336.txt",
+      "sha256": "a4771b56deebeef7af64ade0800c34132fc3a1ab80a25bcd8c670a4613bc3473"
+    },
+    {
+      "path": "exports/assets/raw/texts/339.txt",
+      "sha256": "bfd7bdc952a3f10f64563006dcefb2d99aa910b4723c119347448685df250827"
+    },
+    {
+      "path": "exports/assets/raw/texts/340.txt",
+      "sha256": "1dc914b8330e27cc435abba9a2a10dd900860274b43bff71ab643f601e0bf8c4"
+    },
+    {
+      "path": "exports/assets/raw/texts/341.txt",
+      "sha256": "df29bc36e0ebd0e79b4bbd59d85379f8bbfc5f15790d87566d131423c5c78d87"
+    },
+    {
+      "path": "exports/assets/raw/texts/344.txt",
+      "sha256": "5d311b7c1a4dbfe1019fef1e3652dc6a5002eddf4f9de89ee8888f1558a3b418"
+    },
+    {
+      "path": "exports/assets/raw/texts/345.txt",
+      "sha256": "a4a623a07143972c98bf845b0d50e1d94c5a5809a80a01a585404835ff8ac877"
+    },
+    {
+      "path": "exports/assets/raw/texts/346.txt",
+      "sha256": "f792c31358e3adc41a3b83c8a654bde99a19ee81ef166cb9352bfce6ac01860c"
+    }
+  ],
+  "rightsOrLicense": "Original Trigger Knight text exports. Redistribution rights are unverified; copyright remains with applicable rights holders and this repository does not grant a separate public license.",
+  "reviewDate": "2026-09-28",
+  "transformations": "Replaced FFDec record separators with spaces, trimmed export whitespace around those separators, and applied the user-approved English corrections while preserving the recovered meaning."
+}

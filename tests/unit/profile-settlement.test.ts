@@ -109,7 +109,7 @@ describe("completed-run profile settlement", () => {
         xp: 1,
         scoreMultiplier: 1.2,
         highScore: 125,
-        tutorialPreference: "disabled",
+        tutorialPreference: "enabled",
       });
       expect(settled.weaponDiscoveries).toEqual(initial.weaponDiscoveries);
       expect(settled.armorDiscoveries).toEqual(initial.armorDiscoveries);
@@ -162,7 +162,7 @@ describe("completed-run profile settlement", () => {
     expect(settled).toMatchObject({
       ...scenario.expected,
       highScore: 0,
-      tutorialPreference: "disabled",
+      tutorialPreference: "enabled",
     });
   });
 
@@ -189,18 +189,21 @@ describe("completed-run profile settlement", () => {
     },
   );
 
-  it("keeps the unconditional introductory tutorial on the next run", () => {
-    const settled = settleCompletedRun(
-      profileWith({ tutorialPreference: "enabled" }),
-      completedRun("lifespan"),
-    );
+  it.each(["enabled", "disabled"] as const)(
+    "preserves the %s contextual tutorial preference after settlement",
+    (tutorialPreference) => {
+      const settled = settleCompletedRun(
+        profileWith({ tutorialPreference }),
+        completedRun("lifespan"),
+      );
 
-    expect(settled.tutorialPreference).toBe("disabled");
-    expect(
-      gameplayEngine.createRun({ ...config, initialProfile: settled }).lifecycle
-        .tutorialPage,
-    ).toBe(0);
-  });
+      expect(settled.tutorialPreference).toBe(tutorialPreference);
+      expect(
+        gameplayEngine.createRun({ ...config, initialProfile: settled })
+          .lifecycle.tutorialPage,
+      ).toBe(0);
+    },
+  );
 
   it("rejects active runs and keeps step-limit results outside settlement", () => {
     const initial = createFreshProfile();

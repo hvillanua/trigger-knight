@@ -373,7 +373,6 @@ export function settleCompletedRun(
     xp,
     scoreMultiplier,
     highScore: Math.max(profile.highScore, run.score),
-    tutorialPreference: "disabled",
     weaponDiscoveries: mergeFlags(
       profile.weaponDiscoveries,
       runUnlocks.weaponDiscoveries,

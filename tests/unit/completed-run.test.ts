@@ -135,7 +135,7 @@ describe("completed-run coordination", () => {
 
       expect(first).toMatchObject({
         status: "committed",
-        profile: { level: 2, xp: 0, tutorialPreference: "disabled" },
+        profile: { level: 2, xp: 0, tutorialPreference: "enabled" },
       });
     },
   );

@@ -77,6 +77,17 @@ Implementation and evidence: [tutorial research](../research/presentation.md#tut
 [tutorial gate tests](../tests/unit/gameplay-tutorials.test.ts), and
 [browser parity](../tests/browser/milestone-6-tutorial-gates.spec.ts).
 
+The recovered presentation path turns the contextual-tutorial preference off
+after a completed run. The browser setting is labeled "Show contextual
+tutorials" and is presented as a persistent preference, so the implementation
+preserves the player's enabled or disabled choice through settlement. This is
+an intentional product choice over the recovered presentation detail. Page 0
+remains unconditional, and pages 1 through 5 retain the preference gate.
+
+Implementation and evidence: [profile settlement](../src/domain/profile.ts),
+[settlement tests](../tests/unit/profile-settlement.test.ts), and
+[settings controller](../src/browser/settings-controller.ts).
+
 ## Pregame gates
 
 The [timing research](../research/presentation.md#swf-and-frame-timing) confirms

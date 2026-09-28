@@ -9,6 +9,7 @@ import {
   commandsForKeyboardActivation,
   createBindingCaptureController,
   findBindingConflict,
+  soundChannelForQuickControl,
 } from "../../src/browser/input.js";
 import { createDefaultSettings } from "../../src/application/settings.js";
 import {
@@ -84,6 +85,12 @@ it("maps keyboard bindings only when the public action is eligible", () => {
       eligible,
     ),
   ).toEqual(commandsForPurchaseActivation());
+});
+
+it("keeps the advertised sound shortcuts outside gameplay commands", () => {
+  expect(soundChannelForQuickControl("KeyM")).toBe("music");
+  expect(soundChannelForQuickControl("KeyS")).toBe("effects");
+  expect(soundChannelForQuickControl("KeyP")).toBeNull();
 });
 
 it("captures remaps with cancellation and rejects conflicts", () => {

@@ -4,9 +4,9 @@ import type {
   PresentationFrame,
   PresentationPort,
   PresentationTransition,
-  TutorialPage,
 } from "../application/contracts.js";
 import { itemDescription, itemName, shopDescription, shopName } from "./hud.js";
+import { TUTORIAL_PAGES } from "./tutorial-content.js";
 import {
   type VisualAtlas,
   type OriginalActionEffectId,
@@ -1270,42 +1270,6 @@ function drawEffects(
   effects.forEach((effect) => drawEffect(context, atlas, frame, effect));
 }
 
-const TUTORIAL_COPY: Readonly<
-  Record<
-    TutorialPage,
-    Readonly<{ title: string; copy: string; guidance?: readonly string[] }>
-  >
-> = Object.freeze({
-  0: {
-    title: "SURVIVE!",
-    copy: "Guide the Knight to survive as long as possible using only a single click every time!",
-    guidance: [
-      "Game will end if your lifespan or HP becomes 0, so be careful.",
-      "Getting hit by the Enemy reduces your HP, while Lifespan reduces gradually over time.",
-    ],
-  },
-  1: {
-    title: "BUILDINGS",
-    copy: "Buildings appear along the route. Click when an action is available to use the current building.",
-  },
-  2: {
-    title: "SOUL SHRINE",
-    copy: "A Soul Shrine restores lifespan when you reach it and can afford its cached price.",
-  },
-  3: {
-    title: "AUTOMATIC BATTLE",
-    copy: "Combat runs automatically. Use a carried item during battle when it helps you survive.",
-  },
-  4: {
-    title: "LOW LIFESPAN",
-    copy: "Your lifespan is running low. Look for a Soul Shrine before the run ends.",
-  },
-  5: {
-    title: "LOW HP",
-    copy: "Your HP is low. Use a carried item during battle if one is available.",
-  },
-});
-
 function drawTutorialWrappedText(
   context: CanvasRenderingContext2D,
   text: string,
@@ -1313,7 +1277,7 @@ function drawTutorialWrappedText(
   y: number,
   maxCharacters: number,
   lineHeight: number,
-): void {
+): number {
   const words = text.split(" ");
   let line = "";
   let lineIndex = 0;
@@ -1335,7 +1299,9 @@ function drawTutorialWrappedText(
       font: `600 11px ${CANVAS_FONT_FAMILIES.body}`,
       lineWidth: 2,
     });
+    return lineIndex + 1;
   }
+  return 0;
 }
 
 function drawTutorialSurvivalIllustrations(
@@ -1416,7 +1382,7 @@ function drawTutorialOverlay(
   context.fillRect(panelX, panelY, panelWidth, panelHeight);
   context.globalAlpha = 1;
   context.restore();
-  const content = TUTORIAL_COPY[page];
+  const content = TUTORIAL_PAGES[page];
   drawOutlinedText(context, content.title, panelX + 20, panelY + 35, {
     font: `700 20px ${CANVAS_FONT_FAMILIES.displayMedium}`,
     lineWidth: 2,
@@ -1432,16 +1398,9 @@ function drawTutorialOverlay(
       lineWidth: 2,
     },
   );
-  drawTutorialWrappedText(
-    context,
-    content.copy,
-    panelX + 28,
-    panelY + 72,
-    54,
-    18,
-  );
-  if (page === 0 && content.guidance !== undefined) {
-    const [firstGuidance, secondGuidance] = content.guidance;
+  if (page === 0) {
+    const [intro, firstGuidance, secondGuidance] = content.paragraphs;
+    drawTutorialWrappedText(context, intro, panelX + 28, panelY + 72, 54, 18);
     drawTutorialSurvivalIllustrations(
       context,
       atlas,
@@ -1468,6 +1427,19 @@ function drawTutorialOverlay(
         48,
         16,
       );
+    }
+  } else {
+    let bodyY = panelY + 72;
+    for (const paragraph of content.paragraphs) {
+      const lineCount = drawTutorialWrappedText(
+        context,
+        paragraph,
+        panelX + 28,
+        bodyY,
+        54,
+        18,
+      );
+      bodyY += lineCount * 18 + 8;
     }
   }
   drawOutlinedText(

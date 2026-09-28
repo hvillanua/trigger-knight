@@ -22,6 +22,9 @@ export type SoundCue =
 /** @playerVisible Browser actions that need feedback without changing gameplay state. */
 export type SoundUiAction = "activate" | "confirm" | "cancel" | "select";
 
+/** @playerVisible Independently controlled audio channel. */
+export type SoundChannel = "music" | "effects";
+
 /** @playerVisible Sound availability state surfaced by the browser UI. */
 export type SoundStatus =
   | "uninitialized"
@@ -42,6 +45,7 @@ export interface SoundInitializationResult {
 export interface SoundPort {
   initialize(): Promise<SoundInitializationResult>;
   setPreferences(preferences: Readonly<SoundPreferences>): void;
+  toggleChannel(channel: SoundChannel): void;
   setSession(sessionId: string | null): void;
   startGameplayMusic(): void;
   presentTutorial(): void;
