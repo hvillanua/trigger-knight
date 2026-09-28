@@ -14,9 +14,7 @@ test("opens credits and returns to the title with focus restored", async ({
   const credits = page.locator("#credits-screen");
   await expect(credits).toBeVisible();
   await expect(page.locator("#title-screen")).toBeHidden();
-  const artworkBox = await credits
-    .locator(".credits-original-art")
-    .boundingBox();
+  const artworkBox = await credits.locator(".credits-artwork").boundingBox();
   if (artworkBox === null) throw new Error("Missing credits artwork bounds");
   expect(artworkBox.width).toBeCloseTo(480, 0);
   expect(artworkBox.height).toBeCloseTo(320, 0);
@@ -40,6 +38,30 @@ test("opens credits and returns to the title with focus restored", async ({
   await expect(
     credits.locator(".credits-artwork .credits-adaptation"),
   ).toBeVisible();
+  const layout = await credits
+    .locator(".credits-artwork")
+    .evaluate((artwork) => {
+      const original = artwork.querySelector<HTMLElement>(
+        ".credits-original-copy",
+      );
+      const adaptation = artwork.querySelector<HTMLElement>(
+        ".credits-adaptation",
+      );
+      if (original === null || adaptation === null) {
+        throw new Error("Missing credits copy layout");
+      }
+      return {
+        artworkHeight: artwork.getBoundingClientRect().height,
+        artworkScrollHeight: artwork.scrollHeight,
+        originalBottom: original.getBoundingClientRect().bottom,
+        adaptationTop: adaptation.getBoundingClientRect().top,
+        adaptationBottom: adaptation.getBoundingClientRect().bottom,
+        artworkBottom: artwork.getBoundingClientRect().bottom,
+      };
+    });
+  expect(layout.artworkScrollHeight).toBeCloseTo(layout.artworkHeight, 0);
+  expect(layout.originalBottom).toBeLessThan(layout.adaptationTop);
+  expect(layout.adaptationBottom).toBeLessThanOrEqual(layout.artworkBottom);
 
   const facebook = credits.getByRole("link", {
     name: "Mintsphere on Facebook (opens in a new tab)",
@@ -71,7 +93,7 @@ test("keeps credits controls reachable in a short narrow viewport", async ({
     scrollWidth: element.scrollWidth,
     clientWidth: element.clientWidth,
   }));
-  expect(overflow.scrollHeight).toBeGreaterThan(overflow.clientHeight);
+  expect(overflow.scrollHeight).toBeCloseTo(overflow.clientHeight, 0);
   expect(overflow.scrollWidth).toBeLessThanOrEqual(overflow.clientWidth);
 
   const back = credits.getByRole("button", { name: "Back" });

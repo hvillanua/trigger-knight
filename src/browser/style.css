@@ -852,9 +852,10 @@ body {
 }
 
 #credits-screen.credits-screen {
-  max-height: 80vh;
+  aspect-ratio: 3 / 2;
+  max-height: none;
   overflow-x: hidden;
-  overflow-y: auto;
+  overflow-y: hidden;
   container-type: inline-size;
   color: #080b14;
   background: transparent;
@@ -873,6 +874,7 @@ body {
 .credits-artwork {
   position: relative;
   width: 100%;
+  aspect-ratio: 3 / 2;
   overflow: hidden;
   background: #e5c98f;
 }
@@ -889,8 +891,12 @@ body {
   position: absolute;
   inset: 0 auto 0 0;
   width: 62%;
-  background: var(--trigger-knight-title-hero-image) left bottom / auto 100%
-    no-repeat;
+  background-color: transparent;
+  background-image: var(--trigger-knight-title-hero-image);
+  background-position: left bottom;
+  background-size: auto 100%;
+  background-repeat: no-repeat;
+  pointer-events: none;
 }
 
 #credits-heading {
@@ -942,7 +948,7 @@ body {
 
 .credits-original-copy {
   position: absolute;
-  top: 14%;
+  top: 6%;
   right: 3%;
   width: 40%;
   color: #080b14;
@@ -954,7 +960,7 @@ body {
 
 .credits-original-copy h3,
 .credits-original-copy p {
-  margin: 0 0 1.5cqw;
+  margin: 0 0 0.9cqw;
 }
 
 .credits-original-copy h3 {
@@ -969,92 +975,41 @@ body {
 }
 
 .credits-adaptation {
-  display: grid;
-  gap: 0.75cqw;
-  justify-items: center;
-  padding: 1.25cqw 3%;
-  border-top: 1px solid rgb(8 11 20 / 35%);
-  color: #080b14;
-  background: transparent;
-  font-family: "Trigger Knight Calibri 14", sans-serif;
-  font-size: 2.2cqw;
-  line-height: 1.2;
-  text-align: center;
+  position: absolute;
+  top: 70%;
+  right: 3%;
+  z-index: 2;
+  width: 40%;
+  margin: 0;
+  padding: 0.15rem 0.3rem;
+  color: #e4d5b2;
+  background: rgb(8 11 20 / 36%);
+  border-radius: 0.1rem;
+  font-family: "Trigger Knight Calibri 12", sans-serif;
+  font-size: clamp(0.48rem, 1.55vw, 0.65rem);
+  line-height: 1.15;
+  text-align: right;
+  text-shadow:
+    -1px -1px 0 #080b14,
+    1px -1px 0 #080b14,
+    -1px 1px 0 #080b14,
+    1px 1px 0 #080b14;
 }
 
 .credits-adaptation a {
-  color: #080b14;
+  display: block;
+  color: inherit;
   font: inherit;
   text-decoration: underline;
 }
 
 .credits-adaptation a:focus-visible {
-  outline: 1px solid #080b14;
-  outline-offset: 0.2cqw;
+  outline: 1px solid #57c8ee;
+  outline-offset: 2px;
 }
 
 .credits-adaptation p {
-  max-width: 38rem;
   margin: 0;
-}
-
-@container (max-width: 24rem) {
-  .credits-original-art {
-    min-height: 38rem;
-    aspect-ratio: auto;
-  }
-
-  .credits-hero {
-    width: 100%;
-    height: 12rem;
-    background-position: left bottom;
-    opacity: 0.45;
-  }
-
-  #credits-heading {
-    top: 9.5rem;
-    bottom: auto;
-    left: 0.75rem;
-    font-size: 1.5rem;
-  }
-
-  #credits-heading > span {
-    top: 0.25rem;
-  }
-
-  #credits-heading::before {
-    top: 70%;
-    left: -0.75rem;
-    width: 15rem;
-    height: 0.65rem;
-  }
-
-  #credits-screen.credits-screen .credits-heading-row button {
-    top: 0.75rem;
-    left: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    font-size: 0.9rem;
-  }
-
-  .credits-original-copy {
-    position: relative;
-    top: auto;
-    right: auto;
-    width: auto;
-    padding: 12rem 0.75rem 0.75rem;
-    font-size: 0.9rem;
-  }
-
-  .credits-original-copy h3,
-  .credits-original-copy p {
-    margin-bottom: 0.35rem;
-  }
-
-  .credits-adaptation {
-    gap: 0.5rem;
-    padding: 0.75rem;
-    font-size: 0.9rem;
-  }
 }
 
 .foundation:fullscreen > #credits-screen.credits-screen {
