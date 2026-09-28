@@ -1700,12 +1700,14 @@ export class CanvasPresentation implements PresentationPort {
       const point = mapCanvasPointer(this.#canvas, frame.current.camera, event);
       this.#canvas.dataset.pointerRegion =
         point === null ? "letterbox" : "world";
-      this.#pointerWorld = point === null ? undefined : point;
+      // Only valid world positions may move the rendered in-game cursor.
+      if (point !== null) {
+        this.#pointerWorld = point;
+      }
       this.#draw();
     });
     this.#canvas.addEventListener("pointerleave", () => {
       delete this.#canvas.dataset.pointerRegion;
-      this.#pointerWorld = undefined;
       this.#draw();
     });
   }
