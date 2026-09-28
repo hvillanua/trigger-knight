@@ -7,8 +7,6 @@
   --trigger-knight-logo-image: url("../assets/original/images/268.png");
   --trigger-knight-hand-cursor:
     url("../assets/original/images/12.png") 4 2, pointer;
-  --trigger-knight-result-cursor:
-    url("../assets/original/images/12.png") 4 2, none;
 }
 
 @font-face {
@@ -1045,7 +1043,7 @@ body {
 .gameplay-stage canvas {
   width: 100%;
   height: 100%;
-  cursor: default;
+  cursor: var(--trigger-knight-hand-cursor);
   border: 1px solid transparent;
   border-radius: 0;
   box-shadow: none;
@@ -1056,12 +1054,9 @@ body {
   cursor: none;
 }
 
-#title-screen,
-#title-screen *,
-.gameplay-stage[data-tutorial-page],
-.gameplay-stage[data-tutorial-page] *,
-.gameplay-stage[data-paused="true"],
-.gameplay-stage[data-paused="true"] * {
+/* The original SWF attaches one default cursor movie clip for every screen. */
+.foundation,
+.foundation * {
   cursor: var(--trigger-knight-hand-cursor);
 }
 
@@ -1782,11 +1777,6 @@ body {
 
 /* The original score screen is a fixed 480x320 composition. Container query
  * units keep its artwork and typography aligned when the stage scales down. */
-#run-result,
-#run-result * {
-  cursor: var(--trigger-knight-result-cursor);
-}
-
 #run-result.run-result {
   width: 100%;
   height: auto;

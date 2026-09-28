@@ -89,7 +89,7 @@ test("projects the complete 480x320 world camera into wide and tall output", asy
   await expect(canvas).toHaveAttribute("data-events", "");
 });
 
-test("restores the physical cursor over letterboxed gameplay edges", async ({
+test("keeps the original game cursor over letterboxed gameplay edges", async ({
   page,
 }) => {
   await page.goto("/?manual=1");
@@ -136,8 +136,74 @@ test("restores the physical cursor over letterboxed gameplay edges", async ({
     };
   });
 
-  expect(cursors.letterbox).toEqual({ cursor: "default", region: "letterbox" });
+  expect(cursors.letterbox.region).toBe("letterbox");
+  expect(cursors.letterbox.cursor).toContain("/12.png");
   expect(cursors.world).toEqual({ cursor: "none", region: "world" });
+});
+
+test("keeps the game cursor over the world-space gameplay margins", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Start run" }).click();
+  await page.getByRole("button", { name: "Dismiss tutorial" }).click();
+
+  const cursors = await page
+    .getByRole("img", { name: "Trigger Knight game view" })
+    .evaluate((element) => {
+      if (!(element instanceof HTMLCanvasElement)) {
+        throw new Error("Expected a Canvas element");
+      }
+
+      const rect = element.getBoundingClientRect();
+      const camera = element.dataset.worldCamera?.split(",").map(Number);
+      const projection = element.dataset.projectionViewport
+        ?.split(",")
+        .map(Number);
+      if (camera === undefined || projection === undefined) {
+        throw new Error("Missing public Canvas projection");
+      }
+
+      const scale = projection[2]! / camera[2]!;
+      const styles = getComputedStyle(element);
+      const borderLeft = Number.parseFloat(styles.borderLeftWidth) || 0;
+      const borderTop = Number.parseFloat(styles.borderTopWidth) || 0;
+      const moveToWorldX = (worldX: number) => {
+        const backingX = projection[0]! + (worldX - camera[0]!) * scale;
+        element.dispatchEvent(
+          new PointerEvent("pointermove", {
+            bubbles: true,
+            clientX:
+              rect.left +
+              borderLeft +
+              (backingX / element.width) * element.clientWidth,
+            clientY:
+              rect.top +
+              borderTop +
+              ((projection[1]! + (160 - camera[1]!) * scale) / element.height) *
+                element.clientHeight,
+            pointerId: 3,
+            pointerType: "mouse",
+          }),
+        );
+        return {
+          cursor: getComputedStyle(element).cursor,
+          region: element.getAttribute("data-pointer-region"),
+        };
+      };
+
+      return {
+        leftMargin: moveToWorldX(12),
+        center: moveToWorldX(240),
+        rightMargin: moveToWorldX(468),
+      };
+    });
+
+  expect(cursors).toEqual({
+    leftMargin: { cursor: "none", region: "world" },
+    center: { cursor: "none", region: "world" },
+    rightMargin: { cursor: "none", region: "world" },
+  });
 });
 
 test("interpolates public observations without mutating gameplay", async ({

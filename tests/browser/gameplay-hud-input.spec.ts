@@ -110,7 +110,7 @@ test("hides the physical cursor over the gameplay canvas", async ({ page }) => {
   await expect(page.locator("#game-canvas")).toHaveCSS("cursor", "none");
 });
 
-test("uses the original hand cursor on the title and tutorial screens", async ({
+test("uses the original hand cursor across non-game screens", async ({
   page,
 }) => {
   await page.goto("/?manual=1");
@@ -146,6 +146,25 @@ test("uses the original hand cursor on the title and tutorial screens", async ({
   });
   expect(titleCursors.title).toContain("/12.png");
   expect(titleCursors.start).toContain("/12.png");
+
+  const screenCursor = async (selector: string): Promise<string> =>
+    page
+      .locator(selector)
+      .evaluate((element) => getComputedStyle(element).cursor);
+
+  await page.getByRole("button", { name: "View achievements" }).click();
+  await expect(page.locator("#collections-screen")).toBeVisible();
+  expect(await screenCursor("#collections-screen")).toContain("/12.png");
+
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+  await expect(page.locator("#settings-screen")).toBeVisible();
+  expect(await screenCursor("#settings-screen")).toContain("/12.png");
+
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await page.getByRole("button", { name: "Credits", exact: true }).click();
+  await expect(page.locator("#credits-screen")).toBeVisible();
+  expect(await screenCursor("#credits-screen")).toContain("/12.png");
 });
 
 test("keeps the original hand cursor visible over pause controls", async ({
@@ -372,7 +391,7 @@ test("uses the Canvas item prompt for one touch-style battle activation", async 
       throw new Error("Missing public Canvas projection");
     }
     const scale = projection[2]! / camera[2]!;
-    const backingX = projection[0]! + (110 - camera[0]!) * scale;
+    const backingX = projection[0]! + (12 - camera[0]!) * scale;
     const backingY = projection[1]! + (176 - camera[1]!) * scale;
     const styles = getComputedStyle(canvas);
     const borderLeft = Number.parseFloat(styles.borderLeftWidth) || 0;
