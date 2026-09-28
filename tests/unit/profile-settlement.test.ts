@@ -199,8 +199,8 @@ describe("completed-run profile settlement", () => {
 
       expect(settled.tutorialPreference).toBe(tutorialPreference);
       expect(
-        gameplayEngine.createRun({ ...config, initialProfile: settled }).lifecycle
-          .tutorialPage,
+        gameplayEngine.createRun({ ...config, initialProfile: settled })
+          .lifecycle.tutorialPage,
       ).toBe(0);
     },
   );
