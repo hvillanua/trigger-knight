@@ -1012,6 +1012,20 @@ body {
   margin: 0;
 }
 
+@supports (width: 1cqw) {
+  .foundation:fullscreen > #credits-screen.credits-screen .credits-adaptation {
+    padding: 0.5cqw 0.75cqw;
+    font-size: 2cqw;
+  }
+
+  .foundation:fullscreen
+    > #credits-screen.credits-screen
+    .credits-adaptation
+    a:focus-visible {
+    outline-offset: 0.4cqw;
+  }
+}
+
 .foundation:fullscreen > #credits-screen.credits-screen {
   max-height: 100%;
 }
