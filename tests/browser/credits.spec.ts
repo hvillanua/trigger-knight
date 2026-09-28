@@ -35,6 +35,21 @@ test("opens credits and returns to the title with focus restored", async ({
   await expect(credits).toContainText(
     "This browser version is a fan-made adaptation of Trigger Knight for modern browsers. It is not the original Flash release.",
   );
+  const creditsAssets = await credits.evaluate(() => {
+    const sky = document.querySelector<HTMLElement>(".credits-sky");
+    const hero = document.querySelector<HTMLElement>(".credits-hero");
+    if (sky === null || hero === null) throw new Error("Missing credits art");
+    return {
+      sky: getComputedStyle(sky).backgroundImage,
+      hero: getComputedStyle(hero).backgroundImage,
+      heroBackgroundColor: getComputedStyle(hero).backgroundColor,
+      heroMask: getComputedStyle(hero).maskImage,
+    };
+  });
+  expect(creditsAssets.sky).toContain("357.jpg");
+  expect(creditsAssets.hero).toContain("533.png");
+  expect(creditsAssets.heroBackgroundColor).toBe("rgba(0, 0, 0, 0)");
+  expect(creditsAssets.heroMask).toContain("533.png");
   await expect(
     credits.locator(".credits-artwork .credits-adaptation"),
   ).toBeVisible();
@@ -72,6 +87,17 @@ test("opens credits and returns to the title with focus restored", async ({
   );
   await expect(facebook).toHaveAttribute("target", "_blank");
   await expect(facebook).toHaveAttribute("rel", "noopener noreferrer");
+  const facebookStyles = await facebook.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return {
+      color: style.color,
+      decoration: style.textDecorationLine,
+      shadow: style.textShadow,
+    };
+  });
+  expect(facebookStyles.color).toBe("rgb(87, 200, 238)");
+  expect(facebookStyles.decoration).toBe("underline");
+  expect(facebookStyles.shadow).toBe("none");
 
   await credits.getByRole("button", { name: "Back" }).click();
   await expect(page.locator("#title-screen")).toBeVisible();

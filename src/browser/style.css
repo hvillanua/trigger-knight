@@ -631,7 +631,8 @@ body {
 }
 
 .title-sky,
-.player-status-sky {
+.player-status-sky,
+.credits-sky {
   position: absolute;
   inset: 0;
   background: var(--trigger-knight-sky-image) 0 0 / auto 100% repeat-x;
@@ -653,7 +654,8 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .title-sky,
-  .player-status-sky {
+  .player-status-sky,
+  .credits-sky {
     animation: none;
   }
 }
@@ -896,6 +898,16 @@ body {
   background-position: left bottom;
   background-size: auto 100%;
   background-repeat: no-repeat;
+  -webkit-mask-image: var(--trigger-knight-title-hero-image);
+  mask-image: var(--trigger-knight-title-hero-image);
+  -webkit-mask-position: left bottom;
+  mask-position: left bottom;
+  -webkit-mask-size: auto 100%;
+  mask-size: auto 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-mode: alpha;
+  mask-mode: alpha;
   pointer-events: none;
 }
 
@@ -998,9 +1010,15 @@ body {
 
 .credits-adaptation a {
   display: block;
-  color: inherit;
-  font: inherit;
-  text-decoration: underline;
+  color: #57c8ee;
+  font-family: system-ui, sans-serif;
+  font-size: 1.05em;
+  font-weight: 700;
+  letter-spacing: normal;
+  text-shadow: none;
+  text-decoration-line: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.15em;
 }
 
 .credits-adaptation a:focus-visible {
@@ -1010,6 +1028,12 @@ body {
 
 .credits-adaptation p {
   margin: 0;
+  color: #f7f1df;
+  font-family: system-ui, sans-serif;
+  font-size: 0.9em;
+  letter-spacing: normal;
+  line-height: 1.25;
+  text-shadow: none;
 }
 
 @supports (width: 1cqw) {
