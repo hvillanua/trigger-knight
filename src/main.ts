@@ -813,6 +813,14 @@ document.addEventListener("keydown", (event) => {
     return;
   }
 
+  const channel = soundChannelForQuickControl(event.code);
+  if (channel !== null) {
+    event.preventDefault();
+    primeSound();
+    soundEffects.toggleChannel(channel);
+    return;
+  }
+
   const observation = latestObservation;
   if (observation === undefined) return;
   if (observation.lifecycle.phase === "ended") {
@@ -830,11 +838,6 @@ document.addEventListener("keydown", (event) => {
     dispatch(commands);
     return;
   }
-  const channel = soundChannelForQuickControl(event.code);
-  if (channel === null) return;
-  event.preventDefault();
-  primeSound();
-  soundEffects.toggleChannel(channel);
 });
 
 gameplayStage.addEventListener("pointerup", (event) => {

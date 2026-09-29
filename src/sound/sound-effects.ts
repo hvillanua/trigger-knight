@@ -1,3 +1,5 @@
+import ORIGINAL_ASSET_URLS from "virtual:trigger-knight/original-assets";
+
 import type {
   GameEvent,
   SoundChannel,
@@ -35,8 +37,11 @@ export const ORIGINAL_SOUND_ASSET_FILE_NAMES = Object.freeze({
   gameMusic: "512_BGMGame.mp3",
 } as const);
 
-const assetUrl = (fileName: string): string =>
-  new URL(`../assets/original/sounds/${fileName}`, import.meta.url).href;
+const assetUrl = (fileName: string): string => {
+  const url = ORIGINAL_ASSET_URLS[`../assets/original/sounds/${fileName}`];
+  if (url === undefined) throw new Error(`Missing original sound: ${fileName}`);
+  return url;
+};
 
 export const GAME_MUSIC_ASSET_URL = assetUrl(
   ORIGINAL_SOUND_ASSET_FILE_NAMES.gameMusic,

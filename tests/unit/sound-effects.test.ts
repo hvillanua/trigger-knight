@@ -274,12 +274,12 @@ describe("browser sound effects", () => {
     const runtime: SoundAudioRuntime = {
       createContext: () => context,
       load: (url) => {
-        if (url.endsWith("514_SFXBattleStart.mp3")) {
+        if (url.includes("514_SFXBattleStart.mp3")) {
           return new Promise<ArrayBuffer>((resolve) => {
             releaseBattle = () => resolve(new ArrayBuffer(8));
           });
         }
-        if (url.endsWith("526_SFXItemUse.mp3")) {
+        if (url.includes("526_SFXItemUse.mp3")) {
           return new Promise<ArrayBuffer>((resolve) => {
             releaseItem = () => resolve(new ArrayBuffer(8));
           });

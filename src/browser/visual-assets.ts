@@ -1,3 +1,5 @@
+import ORIGINAL_ASSET_URLS from "virtual:trigger-knight/original-assets";
+
 import type { VisualAssetPreference } from "../application/settings.js";
 import {
   assetTreatmentForHighResolution,
@@ -40,29 +42,7 @@ export interface VisualAssetPackDependencies {
 const ORIGINAL_IMAGE_ROOT = "../assets/original/";
 const GENERATED_IMAGE_ROOT = "../assets/generated/";
 const HIGH_RESOLUTION_IMAGE_ROOT = `${GENERATED_IMAGE_ROOT}${HIGH_RESOLUTION_ASSET_DIRECTORY}/`;
-
-const ORIGINAL_IMAGE_URLS = Object.freeze({
-  ...import.meta.glob<string>("../assets/original/**/*.png", {
-    eager: true,
-    query: "?url&no-inline",
-    import: "default",
-  }),
-  ...import.meta.glob<string>("../assets/original/**/*.jpg", {
-    eager: true,
-    query: "?url&no-inline",
-    import: "default",
-  }),
-  ...import.meta.glob<string>("../assets/original/**/*.jpeg", {
-    eager: true,
-    query: "?url&no-inline",
-    import: "default",
-  }),
-  ...import.meta.glob<string>("../assets/original/**/*.svg", {
-    eager: true,
-    query: "?url&no-inline",
-    import: "default",
-  }),
-});
+const ORIGINAL_IMAGE_URLS = ORIGINAL_ASSET_URLS;
 
 function originalImageUrl(path: string): string {
   const url = ORIGINAL_IMAGE_URLS[`${ORIGINAL_IMAGE_ROOT}${path}`];

@@ -311,6 +311,24 @@ test("captures, cancels, and rejects conflicting keyboard remaps", async ({
   await expect(page.locator("#binding-toggle-pause")).toHaveValue("KeyQ");
 });
 
+test("keeps sound shortcuts out of editable keyboard bindings", async ({
+  page,
+}) => {
+  await page.goto("/?manual=1");
+  await page.getByRole("button", { name: "Settings", exact: true }).click();
+
+  const pauseBinding = page.locator("#binding-toggle-pause");
+  await pauseBinding.fill("");
+  await pauseBinding.pressSequentially("KeyQ");
+  await expect(pauseBinding).toHaveValue("KeyQ");
+
+  await pauseBinding.fill("KeyM");
+  await expect(pauseBinding).toHaveValue("KeyQ");
+
+  await pauseBinding.fill("KeyS");
+  await expect(pauseBinding).toHaveValue("KeyQ");
+});
+
 test("purchases the current shop from any Canvas click", async ({ page }) => {
   await page.goto("/?manual=1");
   await page.getByRole("button", { name: "Start run" }).click();

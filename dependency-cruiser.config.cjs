@@ -13,7 +13,10 @@ module.exports = {
       severity: "error",
       comment: "Every production dependency must resolve during validation.",
       from: { path: "(^|/)src/" },
-      to: { couldNotResolve: true, pathNot: "^vite/client$" },
+      to: {
+        couldNotResolve: true,
+        pathNot: "^(?:vite/client|virtual:trigger-knight/original-assets)$",
+      },
     },
     {
       name: "layers-do-not-depend-on-composition-root",

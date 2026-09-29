@@ -9,6 +9,7 @@ import type {
 } from "../application/contracts.js";
 import {
   createDefaultSettings,
+  isReservedKeyboardCode,
   normalizeInputBindings,
   normalizeSettings,
   SETTINGS_SCHEMA_VERSION,
@@ -346,7 +347,8 @@ export function createSettingsController(
     });
   }
 
-  for (const input of Object.values(elements.bindingInputs)) {
+  for (const [action, input] of Object.entries(elements.bindingInputs)) {
+    if (!isInputAction(action)) continue;
     input.addEventListener("input", () => {
       const rawBindings: RawInputBindings = {
         togglePause: elements.bindingInputs.togglePause.value,
@@ -359,7 +361,9 @@ export function createSettingsController(
         bindingCapture.replaceBindings(normalizeInputBindings(rawBindings));
         renderKeyboardHints();
       } catch {
-        return;
+        if (isReservedKeyboardCode(input.value)) {
+          input.value = bindingCapture.bindings()[action];
+        }
       }
     });
   }
