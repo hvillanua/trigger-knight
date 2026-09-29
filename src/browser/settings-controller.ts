@@ -346,7 +346,8 @@ export function createSettingsController(
     });
   }
 
-  for (const input of Object.values(elements.bindingInputs)) {
+  for (const [action, input] of Object.entries(elements.bindingInputs)) {
+    if (!isInputAction(action)) continue;
     input.addEventListener("input", () => {
       const rawBindings: RawInputBindings = {
         togglePause: elements.bindingInputs.togglePause.value,
@@ -359,7 +360,7 @@ export function createSettingsController(
         bindingCapture.replaceBindings(normalizeInputBindings(rawBindings));
         renderKeyboardHints();
       } catch {
-        return;
+        input.value = bindingCapture.bindings()[action];
       }
     });
   }
