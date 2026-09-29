@@ -15,6 +15,57 @@ import {
 import type { PixelDensity } from "./visual-assets.js";
 export type { PixelDensity } from "./visual-assets.js";
 
+interface CachedVisualImage {
+  readonly url: string;
+  readonly imageConstructor: typeof Image;
+  readonly promise: Promise<HTMLImageElement>;
+}
+
+const VISUAL_IMAGE_CACHE_KEY = Symbol.for("trigger-knight.visual-image-cache");
+
+// Keep unchanged decoded images alive when Vite replaces this module during HMR.
+function visualImageCache(): Map<string, CachedVisualImage> {
+  const host = globalThis as typeof globalThis & {
+    [key: symbol]: unknown;
+  };
+  const cached = host[VISUAL_IMAGE_CACHE_KEY];
+  if (cached instanceof Map) {
+    return cached as Map<string, CachedVisualImage>;
+  }
+  const cache = new Map<string, CachedVisualImage>();
+  host[VISUAL_IMAGE_CACHE_KEY] = cache;
+  return cache;
+}
+
+function visualImageCacheKey(url: string): string {
+  const queryStart = url.indexOf("?");
+  return queryStart === -1 ? url : url.slice(0, queryStart);
+}
+
+function loadVisualImage(url: string): Promise<HTMLImageElement> {
+  const ImageConstructor = globalThis.Image;
+  const cache = visualImageCache();
+  const key = visualImageCacheKey(url);
+  const cached = cache.get(key);
+  if (cached?.url === url && cached.imageConstructor === ImageConstructor) {
+    return cached.promise;
+  }
+
+  const promise = new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new ImageConstructor();
+    image.decoding = "async";
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error(`Image asset failed: ${url}`));
+    image.src = url;
+  });
+  cache.set(key, { url, imageConstructor: ImageConstructor, promise });
+  void promise.catch(() => {
+    const entry = cache.get(key);
+    if (entry?.promise === promise) cache.delete(key);
+  });
+  return promise;
+}
+
 export interface VisualImage {
   readonly image: HTMLImageElement;
   readonly pixelDensity: PixelDensity;
@@ -376,8 +427,6 @@ export function createVisualAtlas(
       source: AssetSource,
       save: (image: VisualImage) => void,
     ): void => {
-      const image = new Image();
-      image.decoding = "async";
       const settle = (): void => {
         pending -= 1;
         if (pending !== 0) return;
@@ -386,29 +435,29 @@ export function createVisualAtlas(
           loaded === 0 ? "unavailable" : failed > 0 ? "partial" : "ready";
         onStatusChange(status);
       };
-      image.onload = () => {
-        save(Object.freeze({ image, pixelDensity: source.pixelDensity }));
-        loaded += 1;
-        settle();
-      };
-      image.onerror = () => {
-        failed += 1;
-        settle();
-      };
-      image.src = source.url;
+      void loadVisualImage(source.url).then(
+        (image) => {
+          save(Object.freeze({ image, pixelDensity: source.pixelDensity }));
+          loaded += 1;
+          settle();
+        },
+        () => {
+          failed += 1;
+          settle();
+        },
+      );
     };
     const loadOptional = (
       source: AssetSource,
       save: (image: VisualImage) => void,
     ): void => {
-      const image = new Image();
-      image.decoding = "async";
-      image.onload = () => {
-        save(Object.freeze({ image, pixelDensity: source.pixelDensity }));
-        if (coreSettled && status === "ready") onStatusChange(status);
-      };
-      image.onerror = () => undefined;
-      image.src = source.url;
+      void loadVisualImage(source.url).then(
+        (image) => {
+          save(Object.freeze({ image, pixelDensity: source.pixelDensity }));
+          if (coreSettled && status === "ready") onStatusChange(status);
+        },
+        () => undefined,
+      );
     };
     for (const id of Object.keys(sources.animationFrames) as ActorSpriteId[]) {
       const assetSources = sources.animationFrames[id];

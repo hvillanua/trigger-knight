@@ -1,7 +1,12 @@
 import { availableParallelism } from "node:os";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vitest/config";
 
+import { originalAssetCatalog } from "./build/original-image-catalog.js";
+
 export default defineConfig({
+  plugins: [originalAssetCatalog(path.dirname(fileURLToPath(import.meta.url)))],
   test: {
     environment: "node",
     // VITEST_MAX_WORKERS and --maxWorkers can override this measured default.

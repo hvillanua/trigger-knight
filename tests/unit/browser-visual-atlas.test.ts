@@ -65,6 +65,28 @@ describe("approved visual atlas", () => {
     expect(requests).toContain(ORIGINAL_ANIMATION_URLS.hero[16]);
   });
 
+  it("reuses an unchanged image across atlas instances", () => {
+    const requests: string[] = [];
+    class ImageStub {
+      onload?: () => void;
+      onerror?: () => void;
+      decoding = "";
+
+      set src(url: string) {
+        requests.push(url);
+        queueMicrotask(() => this.onload?.());
+      }
+    }
+    vi.stubGlobal("Image", ImageStub);
+
+    createVisualAtlas(() => undefined);
+    const firstRequestCount = requests.length;
+    createVisualAtlas(() => undefined);
+
+    expect(firstRequestCount).toBeGreaterThan(0);
+    expect(requests).toHaveLength(firstRequestCount);
+  });
+
   it("settles failed assets without substituting another image", async () => {
     vi.stubGlobal(
       "Image",
@@ -77,6 +99,7 @@ describe("approved visual atlas", () => {
     );
     const statuses: string[] = [];
     const atlas = createVisualAtlas((status) => statuses.push(status));
+    await Promise.resolve();
     await Promise.resolve();
     expect(statuses).toEqual(["unavailable"]);
     expect(
@@ -99,6 +122,7 @@ describe("approved visual atlas", () => {
     );
     const atlas = createVisualAtlas(() => undefined);
     await Promise.resolve();
+    await Promise.resolve();
     expect(atlas.status).toBe("partial");
     expect(atlas.originalFrames.hero?.[16]).toBeDefined();
     expect(atlas.originalFrames.hero?.[17]).toBeUndefined();
@@ -120,6 +144,7 @@ describe("approved visual atlas", () => {
     );
 
     const atlas = createVisualAtlas(() => undefined, highResolutionPack);
+    await Promise.resolve();
     await Promise.resolve();
 
     expect(atlas.treatment.id).toBe("high-res");
