@@ -1,6 +1,5 @@
 import type { ArmorName, WeaponName } from "./contracts.js";
 
-/** Equipment names used by the original-v1.3 ruleset and its public collection. */
 export const ORIGINAL_V13_WEAPON_NAMES = Object.freeze([
   "Dagger",
   "Sword",
@@ -14,7 +13,6 @@ export const ORIGINAL_V13_WEAPON_NAMES = Object.freeze([
   "Astral Sword",
 ] as const satisfies readonly WeaponName[]);
 
-/** Equipment names used by the original-v1.3 ruleset and its public collection. */
 export const ORIGINAL_V13_ARMOR_NAMES = Object.freeze([
   "Clothing",
   "Protector",
