@@ -20,9 +20,9 @@ unreviewed research output remain outside production.
 
 - [`PRD.md`](PRD.md) — product scope and requirements. This is the product contract to use when breaking the work into implementation tasks.
 - [`TDD.md`](TDD.md) — durable architecture, system boundaries, and the public contracts between gameplay, presentation, persistence, and simulation.
-- [`TODO.md`](TODO.md) — ordered capability milestones and their completion conditions. Ticket decomposition will be added later.
 
-Ticket-level sequencing and implementation details belong in tickets created when that work is ready to begin; they are intentionally not prescribed here.
+Ticket-level sequencing and implementation details belong in tickets created when
+that work is ready to begin. They are intentionally not prescribed here.
 
 ## Compatibility corpus
 
