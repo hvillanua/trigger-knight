@@ -318,11 +318,15 @@ test("keeps sound shortcuts out of editable keyboard bindings", async ({
   await page.getByRole("button", { name: "Settings", exact: true }).click();
 
   const pauseBinding = page.locator("#binding-toggle-pause");
+  await pauseBinding.fill("");
+  await pauseBinding.pressSequentially("KeyQ");
+  await expect(pauseBinding).toHaveValue("KeyQ");
+
   await pauseBinding.fill("KeyM");
-  await expect(pauseBinding).toHaveValue("KeyP");
+  await expect(pauseBinding).toHaveValue("KeyQ");
 
   await pauseBinding.fill("KeyS");
-  await expect(pauseBinding).toHaveValue("KeyP");
+  await expect(pauseBinding).toHaveValue("KeyQ");
 });
 
 test("purchases the current shop from any Canvas click", async ({ page }) => {

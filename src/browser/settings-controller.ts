@@ -9,6 +9,7 @@ import type {
 } from "../application/contracts.js";
 import {
   createDefaultSettings,
+  isReservedKeyboardCode,
   normalizeInputBindings,
   normalizeSettings,
   SETTINGS_SCHEMA_VERSION,
@@ -360,7 +361,9 @@ export function createSettingsController(
         bindingCapture.replaceBindings(normalizeInputBindings(rawBindings));
         renderKeyboardHints();
       } catch {
-        input.value = bindingCapture.bindings()[action];
+        if (isReservedKeyboardCode(input.value)) {
+          input.value = bindingCapture.bindings()[action];
+        }
       }
     });
   }
