@@ -3,13 +3,6 @@ import type { ProfileStorageError } from "./persistence.js";
 export const SETTINGS_SCHEMA_VERSION = 2 as const;
 export const LEGACY_SETTINGS_SCHEMA_VERSION = 1 as const;
 
-export const VISUAL_ASSET_PREFERENCES = Object.freeze([
-  "original",
-  "high-res",
-] as const);
-
-export type VisualAssetPreference = (typeof VISUAL_ASSET_PREFERENCES)[number];
-
 /** Portable KeyboardEvent.code values accepted by the settings UI. */
 const SUPPORTED_KEYBOARD_CODES = Object.freeze([
   "Backquote",
@@ -164,7 +157,6 @@ export interface BrowserSettings {
   readonly schemaVersion: typeof SETTINGS_SCHEMA_VERSION;
   readonly bindings: InputBindings;
   readonly sound: SoundPreferences;
-  readonly visualAssets: VisualAssetPreference;
 }
 
 export type SettingsLoadResult =
@@ -218,7 +210,6 @@ export function createDefaultSettings(): BrowserSettings {
     schemaVersion: SETTINGS_SCHEMA_VERSION,
     bindings: Object.freeze({ ...DEFAULT_INPUT_BINDINGS }),
     sound: Object.freeze({ muted: false, volume: 1 }),
-    visualAssets: "original",
   });
 }
 
@@ -252,14 +243,6 @@ function binding(value: unknown, field: string): KeyboardCode {
     );
   }
   return value;
-}
-
-function visualAssetPreference(value: unknown): VisualAssetPreference {
-  if (value === "original") return "original";
-  if (value === "high-res" || value === "swinir-2x") {
-    return "high-res";
-  }
-  throw new TypeError("Settings visualAssets must be a supported preference");
 }
 
 /** Validates binding values without applying the saved-settings conflict rule. */
@@ -317,7 +300,7 @@ export function normalizeSettings(input: unknown): BrowserSettings {
   if (
     !hasExactKeys(
       input,
-      isLegacy
+      isLegacy || !Object.hasOwn(input, "visualAssets")
         ? ["schemaVersion", "bindings", "sound"]
         : ["schemaVersion", "bindings", "sound", "visualAssets"],
     ) ||
@@ -345,8 +328,5 @@ export function normalizeSettings(input: unknown): BrowserSettings {
     schemaVersion: SETTINGS_SCHEMA_VERSION,
     bindings: normalizedBindings,
     sound: Object.freeze({ muted: sound.muted, volume: volume(sound.volume) }),
-    visualAssets: isLegacy
-      ? "original"
-      : visualAssetPreference(input.visualAssets),
   });
 }

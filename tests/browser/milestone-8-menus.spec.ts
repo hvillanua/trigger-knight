@@ -428,7 +428,7 @@ test("keeps the settings rail keyboard reachable in a short narrow viewport", as
   const controls = page.locator(
     "#settings-back, #settings-form input, #settings-form select, #settings-form button",
   );
-  await expect(controls).toHaveCount(15);
+  await expect(controls).toHaveCount(14);
   for (let index = 0; index < (await controls.count()); index += 1) {
     const control = controls.nth(index);
     await control.scrollIntoViewIfNeeded();
@@ -496,7 +496,6 @@ test("persists settings independently and reloads them through the menu", async 
       useCarriedItem: "KeyI",
     },
     sound: { muted: true, volume: 0.35 },
-    visualAssets: "original",
   });
 
   await page.reload();
@@ -511,46 +510,6 @@ test("persists settings independently and reloads them through the menu", async 
   await page.getByRole("button", { name: "Back", exact: true }).click();
   await page.getByRole("button", { name: "Settings", exact: true }).click();
   await expect(page.locator("#sound-volume")).toHaveValue("0.35");
-});
-
-test("persists the visual asset choice and reports reload state", async ({
-  page,
-}) => {
-  await page.goto("/?manual=1");
-  await page.getByRole("button", { name: "Settings", exact: true }).click();
-
-  await page.locator("#visual-assets").selectOption("high-res");
-  await page.getByRole("button", { name: "Save settings" }).click();
-  await expect(page.locator("#settings-status")).toHaveText(
-    "Settings saved. Reload the page to apply visual assets.",
-  );
-  await expect
-    .poll(() =>
-      page.evaluate((key) => {
-        const raw = window.localStorage.getItem(key);
-        return raw === null
-          ? null
-          : (JSON.parse(raw) as { visualAssets?: string });
-      }, SETTINGS_STORAGE_KEY),
-    )
-    .toMatchObject({ visualAssets: "high-res" });
-
-  await page.reload();
-  await page.getByRole("button", { name: "Settings", exact: true }).click();
-  await expect(page.locator("#visual-assets")).toHaveValue("high-res");
-  const visualStatus = await page
-    .locator("#game-status")
-    .getAttribute("data-visual-assets-status");
-  expect(["high-res", "fallback"]).toContain(visualStatus);
-  if (visualStatus === "fallback") {
-    await expect(page.locator("#settings-status")).toContainText(
-      "High-resolution assets are unavailable. Using Original.",
-    );
-  } else {
-    await expect(page.locator("#settings-status")).toHaveText(
-      "Settings loaded.",
-    );
-  }
 });
 
 test("does not request generated assets for an Original startup", async ({

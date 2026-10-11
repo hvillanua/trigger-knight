@@ -93,7 +93,6 @@ export type {
 export type { GameplayEngine, StepResult } from "./gameplay-engine.js";
 export type { RunConfig } from "./run-config.js";
 export type {
-  VisualAssetPreference,
   InputBindings,
   KeyboardCode,
   RawInputBindings,

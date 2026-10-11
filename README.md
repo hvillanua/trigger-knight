@@ -18,23 +18,10 @@ npm run dev
 On Linux hosts that need Chromium system packages, run
 `npm run setup:browser -- --with-deps` instead.
 
-Open `http://127.0.0.1:5173/`. The default visual asset pack is Original.
-
-To install the optional high-resolution pack, copy one complete treatment
-directory from the [asset experiment repository](https://github.com/hvillanua/trigger-knight-asset-experiment)
-into `src/assets/generated/high-res/`, including its `manifest.json`, then run:
-
-```sh
-mkdir -p src/assets/generated/high-res
-rsync -a --delete \
-  ../trigger-knight-asset-experiment/assets/generated/swinir-2x/ \
-  src/assets/generated/high-res/
-npm run verify:asset-pack
-```
-
-Replace `swinir-2x` with the treatment directory you selected. The runtime
-uses only the approved optional directory. It does not import from the
-archival `original/` or `exports/` directories.
+Open `http://127.0.0.1:5173/`. The browser app loads visual assets from
+`src/assets/original/`. To use replacement artwork, replace files in that
+directory while keeping their paths and filenames. The runtime does not import
+from archival `original/` or `exports/` directories.
 
 ## Check changes
 

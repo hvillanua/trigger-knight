@@ -13,14 +13,9 @@ The browser sound adapter consumes the staged original sound exports under
 its registry. The tutorial presentation consumes the reviewed copy under
 [`tutorial/`](tutorial/).
 
-The optional high-resolution runtime pack is not shipped in this repository.
-Install one complete generated treatment from the public asset experiment
-repository under `generated/high-res/`, including its `manifest.json`, then run
-`npm run verify:asset-pack`. The runtime treats that fixed directory as one
-high-resolution slot while the manifest retains the selected generator and
-provenance metadata. Only generated image files are runtime inputs; original
-fonts and sounds remain under `original/`. The directory is ignored so
-generated image packs do not enter application commits accidentally.
+Visual asset replacements belong in `original/` and should keep the existing
+paths and filenames so the runtime catalog can discover them. Record the
+replacement source and rights in neighboring provenance metadata.
 
 The Canvas presentation loads the numbered Hero, Dragon, Goblin, Golem, and Wolf
 frames from their existing entity directories. It selects pose sequences using
