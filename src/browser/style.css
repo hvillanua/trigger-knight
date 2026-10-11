@@ -977,20 +977,23 @@ body {
     1px 1px 0 #080b14;
 }
 
-.credits-adaptation a {
-  display: block;
+.mintsphere-link {
   color: #57c8ee;
-  font-family: system-ui, sans-serif;
-  font-size: 1.05em;
-  font-weight: 700;
-  letter-spacing: normal;
-  text-shadow: none;
   text-decoration-line: underline;
   text-decoration-thickness: 0.08em;
   text-underline-offset: 0.15em;
 }
 
-.credits-adaptation a:focus-visible {
+.credits-adaptation a {
+  display: block;
+  font-family: system-ui, sans-serif;
+  font-size: 1.05em;
+  font-weight: 700;
+  letter-spacing: normal;
+  text-shadow: none;
+}
+
+.mintsphere-link:focus-visible {
   outline: 1px solid #57c8ee;
   outline-offset: 2px;
 }

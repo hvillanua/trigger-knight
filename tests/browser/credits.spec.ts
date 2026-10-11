@@ -11,6 +11,9 @@ test("opens credits and returns to the title with focus restored", async ({
   const titleFacebook = page.locator(".title-attribution").getByRole("link", {
     name: "Mintsphere on Facebook (opens in a new tab)",
   });
+  await expect(titleFacebook).toHaveText("Mintsphere");
+  await expect(titleFacebook).toHaveCSS("color", "rgb(87, 200, 238)");
+  await expect(titleFacebook).toHaveCSS("text-decoration-line", "underline");
   await expect(titleFacebook).toHaveAttribute(
     "href",
     "https://www.facebook.com/Mintsphere",
