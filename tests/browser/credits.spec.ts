@@ -8,6 +8,15 @@ test("opens credits and returns to the title with focus restored", async ({
   await expect(page.locator(".title-attribution")).toContainText(
     "Fan made modern-browser adaptation. Original game by Mintsphere.",
   );
+  const titleFacebook = page.locator(".title-attribution").getByRole("link", {
+    name: "Mintsphere on Facebook (opens in a new tab)",
+  });
+  await expect(titleFacebook).toHaveAttribute(
+    "href",
+    "https://www.facebook.com/Mintsphere",
+  );
+  await expect(titleFacebook).toHaveAttribute("target", "_blank");
+  await expect(titleFacebook).toHaveAttribute("rel", "noopener noreferrer");
   const creditsButton = page.getByRole("button", { name: "Credits" });
   await creditsButton.click();
 
