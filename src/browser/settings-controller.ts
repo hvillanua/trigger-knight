@@ -29,7 +29,6 @@ export interface SettingsControllerElements {
   readonly form: HTMLFormElement;
   readonly tutorialPreference: HTMLInputElement;
   readonly titleTutorialToggle: HTMLInputElement;
-  readonly visualAssets: HTMLSelectElement;
   readonly soundMuted: HTMLInputElement;
   readonly soundVolume: HTMLInputElement;
   readonly soundVolumeValue: HTMLOutputElement;
@@ -130,7 +129,6 @@ export function createSettingsController(
       options.readProfile().tutorialPreference === "enabled";
     elements.tutorialPreference.checked = tutorialsEnabled;
     elements.titleTutorialToggle.checked = tutorialsEnabled;
-    elements.visualAssets.value = settings.visualAssets;
     elements.soundMuted.checked = settings.sound.muted;
     elements.soundVolume.value = String(settings.sound.volume);
     elements.soundVolumeValue.value = `${Math.round(settings.sound.volume * 100)}%`;
@@ -213,7 +211,6 @@ export function createSettingsController(
         muted: elements.soundMuted.checked,
         volume: elements.soundVolume.valueAsNumber,
       },
-      visualAssets: elements.visualAssets.value,
     });
   };
 
@@ -291,8 +288,6 @@ export function createSettingsController(
       options.onProfileChanged(profileSave.profile);
     }
 
-    const visualAssetsChanged =
-      settings.visualAssets !== options.readSettings().visualAssets;
     const settingsSave = options.saveSettings(settings);
     if (settingsSave.status !== "saved") {
       setStatus(
@@ -308,11 +303,7 @@ export function createSettingsController(
     render(settingsSave.settings);
     renderKeyboardHints();
     elements.bindingPrompt.textContent = BINDING_PROMPT_DEFAULT;
-    setStatus(
-      visualAssetsChanged
-        ? "Settings saved. Reload the page to apply visual assets."
-        : "Settings saved.",
-    );
+    setStatus("Settings saved.");
     presentUiAction("confirm");
   });
 

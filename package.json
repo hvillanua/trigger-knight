@@ -19,7 +19,6 @@
     "prepare": "npm run setup:hooks",
     "setup:browser": "playwright install chromium",
     "setup:hooks": "node build/install-git-hooks.mjs",
-    "verify:asset-pack": "node tooling/verify-runtime-asset-pack.mjs",
     "simulate": "npm run --silent build:simulation && node --expose-gc build/run-simulation.mjs",
     "test": "npm run test:unit && npm run test:browser",
     "test:unit": "vitest run",
